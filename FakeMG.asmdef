@@ -1,0 +1,19 @@
+{
+    "name": "FakeMG",
+    "rootNamespace": "FakeMG",
+    "references": [
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:75469ad4d38634e559750d17036d5f7c",
+        "GUID:ad968d605628d06499b62cdc30f11cf8",
+        "GUID:5d15a193d62147e4fb8ee9a9be7fb3b6"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
