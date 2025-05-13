@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FakeMG {
+namespace FakeMG.FakeMGFramework {
     public class TargetFollower : MonoBehaviour {
         [Tooltip("The target transform to follow")]
         public Transform target;

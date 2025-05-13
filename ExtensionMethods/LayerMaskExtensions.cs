@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FakeMG.ExtensionMethods {
+namespace FakeMG.FakeMGFramework.ExtensionMethods {
     public static class LayerMaskExtensions {
         public static bool ContainLayer(this LayerMask mask, int layer) {
             return mask == (mask | (1 << layer));

@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.Timer {
+namespace FakeMG.FakeMGFramework.Timer {
     public class CountDownTimer : MonoBehaviour {
         [SerializeField] private bool runOnStart;
         [SerializeField] private float timeToWait;

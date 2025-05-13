@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-namespace FakeMG.Timer.Tests {
+namespace FakeMG.FakeMGFramework.Timer.Tests {
     public class TimerTests {
         [Test]
         public void Initialization_SetsCorrectValues() {

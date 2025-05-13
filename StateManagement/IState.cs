@@ -1,4 +1,4 @@
-﻿namespace FakeMG.StateMachine {
+﻿namespace FakeMG.FakeMGFramework.StateManagement {
     public interface IState {
         public void Tick();
         public void OnEnter();

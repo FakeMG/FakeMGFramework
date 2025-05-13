@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using FakeMG.SaveLoad.Simple.Storages;
+using FakeMG.FakeMGFramework.SaveLoad.Simple.Storages;
 using UnityEngine;
 
-namespace FakeMG.SaveLoad.Simple {
+namespace FakeMG.FakeMGFramework.SaveLoad.Simple {
     public class SaveLoadSystem : MonoBehaviour {
         [SerializeField] private StorageType storageType = StorageType.PlayerPrefs;
         public static SaveLoadSystem Instance { get; private set; }

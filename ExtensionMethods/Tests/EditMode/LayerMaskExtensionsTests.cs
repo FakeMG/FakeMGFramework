@@ -1,7 +1,7 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace FakeMG.ExtensionMethods.Tests {
+namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
     public class LayerMaskExtensionsTests {
         [Test]
         public void ContainLayer_LayerIsInMask_ReturnsTrue() {

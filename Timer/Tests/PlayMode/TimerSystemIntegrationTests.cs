@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.TestTools;
 
-namespace FakeMG.Timer.Tests {
+namespace FakeMG.FakeMGFramework.Timer.Tests {
     public class TimerSystemIntegrationTests {
         private GameObject _timerGameObject;
         private GameObject _textGameObject;

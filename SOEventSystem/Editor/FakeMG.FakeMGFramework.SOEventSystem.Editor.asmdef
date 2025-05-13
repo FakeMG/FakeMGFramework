@@ -1,5 +1,5 @@
 {
-    "name": "FakeMG.SOEventSystem.Editor",
+    "name": "FakeMG.FakeMGFramework.SOEventSystem.Editor",
     "rootNamespace": "",
     "references": [
         "GUID:6ce9c02b47be2ca41ae7d84dcaec625a"

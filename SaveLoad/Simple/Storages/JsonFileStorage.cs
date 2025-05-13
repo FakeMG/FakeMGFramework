@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace FakeMG.SaveLoad.Simple.Storages {
+namespace FakeMG.FakeMGFramework.SaveLoad.Simple.Storages {
     public class JsonFileStorage : ISaveStorage {
         private string GetPath(string saveId) =>
             Path.Combine(Application.persistentDataPath, $"{saveId}.json");

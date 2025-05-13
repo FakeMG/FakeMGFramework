@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using UnityEngine;
 
-namespace FakeMG.SaveLoad.Simple.Storages {
+namespace FakeMG.FakeMGFramework.SaveLoad.Simple.Storages {
     public class PlayerPrefsStorage : ISaveStorage {
         private readonly JsonSerializerSettings _jsonSettings = new() {
             TypeNameHandling = TypeNameHandling.All

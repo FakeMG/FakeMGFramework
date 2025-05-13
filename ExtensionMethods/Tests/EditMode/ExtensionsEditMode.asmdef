@@ -2,9 +2,9 @@
     "name": "ExtensionsEditMode",
     "rootNamespace": "",
     "references": [
-        "UnityEngine.TestRunner",
-        "UnityEditor.TestRunner",
-        "FakeMG"
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:0acc523941302664db1f4e527237feb3",
+        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a"
     ],
     "includePlatforms": [
         "Editor"

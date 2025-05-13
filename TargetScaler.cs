@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FakeMG {
+namespace FakeMG.FakeMGFramework {
     public class TargetScaler : MonoBehaviour {
         [Tooltip("The target transform to match scale with")]
         public Transform target;

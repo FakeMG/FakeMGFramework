@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace FakeMG.SaveLoad.Advanced {
+namespace FakeMG.FakeMGFramework.SaveLoad.Advanced {
     public static class VersionMigrator {
         public static void MigrateSaveData(string slotKey, string saveVersion) {
             Debug.Log($"Migrating save data from version {saveVersion} to {Application.version}");

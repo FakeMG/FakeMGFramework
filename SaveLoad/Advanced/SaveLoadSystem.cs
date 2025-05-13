@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace FakeMG.SaveLoad.Advanced {
+namespace FakeMG.FakeMGFramework.SaveLoad.Advanced {
     public class SaveLoadSystem : MonoBehaviour {
         [SerializeField] private bool enableAutoSave = true;
         [SerializeField] private int maxAutoSaves = 5;

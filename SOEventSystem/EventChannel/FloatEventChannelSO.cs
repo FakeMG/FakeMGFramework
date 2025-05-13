@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FakeMG.SOEventSystem.EventChannel {
+namespace FakeMG.FakeMGFramework.SOEventSystem.EventChannel {
     /// <summary>
     /// A Scriptable Object-based event that passes a float as a payload.
     /// </summary>

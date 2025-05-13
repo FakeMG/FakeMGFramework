@@ -1,7 +1,7 @@
 ﻿using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.TargetFinder {
+namespace FakeMG.FakeMGFramework.TargetFinder {
     public class TargetLayerFinder : TargetFinder {
         [Title("Target Layer Finder")]
         [SerializeField] private LayerMask targetLayerMask;

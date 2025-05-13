@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-namespace FakeMG.ExtensionMethods.Tests {
+namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
     public class IntExtensionsTests {
         [Test]
         public void WrapValue_ValueWithinRange_ReturnsValue() {

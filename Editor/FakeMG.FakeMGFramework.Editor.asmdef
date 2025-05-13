@@ -1,6 +1,6 @@
 {
-    "name": "FakeMG.Editor",
-    "rootNamespace": "",
+    "name": "FakeMG.FakeMGFramework.Editor",
+    "rootNamespace": "FakeMG.FakeMGFramework.Editor",
     "references": [],
     "includePlatforms": [
         "Editor"

@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace FakeMG.Timer {
+namespace FakeMG.FakeMGFramework.Timer {
     public class TimerTextUIUpdater : MonoBehaviour {
         [SerializeField] private TextMeshProUGUI timerText;
         private readonly char[] _timeFormatBuffer = new char[5]; // "MM:SS"

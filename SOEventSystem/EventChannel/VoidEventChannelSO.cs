@@ -2,7 +2,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.SOEventSystem.EventChannel {
+namespace FakeMG.FakeMGFramework.SOEventSystem.EventChannel {
     /// <summary>
     /// General Event Channel that carries no extra data.
     /// </summary>

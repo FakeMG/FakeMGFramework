@@ -1,8 +1,8 @@
 ﻿using System;
-using FakeMG.SaveLoad.Advanced;
+using FakeMG.FakeMGFramework.SaveLoad.Advanced;
 using UnityEngine;
 
-namespace FakeMG.SaveLoad {
+namespace FakeMG.FakeMGFramework.SaveLoad {
     public abstract class Saveable : MonoBehaviour {
         [HideInInspector]
         [SerializeField] private string uniqueId;

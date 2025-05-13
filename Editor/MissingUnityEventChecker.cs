@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.Editor {
+namespace FakeMG.Framework.Editor {
     [InitializeOnLoad]
     public class MissingUnityEventChecker : MonoBehaviour {
         static MissingUnityEventChecker() {
@@ -93,14 +94,14 @@ namespace FakeMG.Editor {
 
         private static bool FunctionExistAsPublicInTarget(UnityEngine.Object target, string functionName) {
             Type type = target.GetType();
-            MethodInfo targetInfo = type.GetMethod(functionName);
-            return targetInfo != null;
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+            return methods.Any(method => method.Name == functionName);
         }
 
         private static bool FunctionExistAsPrivateInTarget(UnityEngine.Object target, string functionName) {
             Type type = target.GetType();
-            MethodInfo targetInfo = type.GetMethod(functionName, BindingFlags.Instance | BindingFlags.NonPublic);
-            return targetInfo != null;
+            MethodInfo[] methods = type.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic);
+            return methods.Any(method => method.Name == functionName);
         }
     }
 }

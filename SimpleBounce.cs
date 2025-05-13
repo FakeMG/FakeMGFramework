@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace FakeMG {
+namespace FakeMG.FakeMGFramework {
     public class SimpleBounce : MonoBehaviour {
         [SerializeField] private float shootForce = 5f;
         [SerializeField] private float gravity = -15f;

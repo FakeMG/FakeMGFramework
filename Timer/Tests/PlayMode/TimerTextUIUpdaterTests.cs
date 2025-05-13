@@ -2,7 +2,7 @@ using NUnit.Framework;
 using TMPro;
 using UnityEngine;
 
-namespace FakeMG.Timer.Tests {
+namespace FakeMG.FakeMGFramework.Timer.Tests {
     public class TimerTextUIUpdaterTests {
         private GameObject _textGameObject;
         private TextMeshProUGUI _timerText;

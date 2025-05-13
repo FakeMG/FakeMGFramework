@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.TestTools;
 
-namespace FakeMG.Timer.Tests {
+namespace FakeMG.FakeMGFramework.Timer.Tests {
     public class CountDownTimerTests {
         private GameObject _timerGameObject;
         private CountDownTimer _countDownTimer;

@@ -1,9 +1,9 @@
 using System.Collections;
-using FakeMG.SOEventSystem.EventChannel;
+using FakeMG.FakeMGFramework.SOEventSystem.EventChannel;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.SOEventSystem.PayloadAdapter {
+namespace FakeMG.FakeMGFramework.SOEventSystem.PayloadAdapter {
     public abstract class GenericPayloadAdapter<T> : MonoBehaviour {
         [SerializeField] protected GenericEventChannelSO<T> channel;
         [SerializeField] private float delay;

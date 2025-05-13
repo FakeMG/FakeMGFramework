@@ -3,7 +3,7 @@ using System.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.TargetFinder {
+namespace FakeMG.FakeMGFramework.TargetFinder {
     public abstract class TargetFinder : MonoBehaviour {
         [Title("Target Finder")]
         [SerializeField] protected float radius = 10f;

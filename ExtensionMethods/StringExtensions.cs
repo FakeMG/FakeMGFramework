@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace FakeMG.ExtensionMethods {
+namespace FakeMG.FakeMGFramework.ExtensionMethods {
     public static class StringExtensions {
         private static string SeparateNumberWithComma(this string number) {
             StringBuilder sb = new StringBuilder(number);

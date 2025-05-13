@@ -1,4 +1,4 @@
-namespace FakeMG.Timer {
+namespace FakeMG.FakeMGFramework.Timer {
     public class Timer {
         public float TimeToWait { get; private set; }
         public float CurrentTimeLeftInSeconds { get; private set; }

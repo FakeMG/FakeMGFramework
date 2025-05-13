@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FakeMG.SOEventSystem.EventChannel {
+namespace FakeMG.FakeMGFramework.SOEventSystem.EventChannel {
     /// <summary>
     /// This is a ScriptableObject-based event that carries a GameObject as a payload.
     /// </summary>

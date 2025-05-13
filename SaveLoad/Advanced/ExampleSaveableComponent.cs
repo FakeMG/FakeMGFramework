@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace FakeMG.SaveLoad.Advanced {
+namespace FakeMG.FakeMGFramework.SaveLoad.Advanced {
     public class ExampleSaveableComponent : Saveable {
         [SerializeField] private int health = 100;
         [SerializeField] private Vector3 position;

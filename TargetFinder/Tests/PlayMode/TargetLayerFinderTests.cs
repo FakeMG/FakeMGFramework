@@ -3,7 +3,7 @@ using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace FakeMG.TargetFinder.Tests {
+namespace FakeMG.FakeMGFramework.TargetFinder.Tests {
     public class TargetLayerFinderTests {
         private GameObject _finderObject;
         private TargetLayerFinder _finder;

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Reflection;
-using FakeMG.SOEventSystem.EventChannel;
-using FakeMG.SOEventSystem.PayloadAdapter;
+using FakeMG.FakeMGFramework.SOEventSystem.EventChannel;
+using FakeMG.FakeMGFramework.SOEventSystem.PayloadAdapter;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
