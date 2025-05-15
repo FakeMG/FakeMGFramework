@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace FakeMG.Framework.Editor {
+namespace FakeMG.FakeMGFramework.Editor {
     public class SceneSwitcherWindow : EditorWindow {
         private const string EDITOR_PREFS_KEY = "SceneSwitcher_ScenePaths";
         private List<string> _scenePaths = new();

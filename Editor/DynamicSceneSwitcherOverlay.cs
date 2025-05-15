@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FakeMG.Framework.Editor {
+namespace FakeMG.FakeMGFramework.Editor {
     [Overlay(typeof(SceneView), "Scene Switcher (Auto)", true)]
     public class DynamicSceneSwitcherOverlay : Overlay {
         public override VisualElement CreatePanelContent() {

@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.Framework.Editor {
+namespace FakeMG.FakeMGFramework.Editor {
     [InitializeOnLoad]
     public class MissingUnityEventChecker : MonoBehaviour {
         static MissingUnityEventChecker() {

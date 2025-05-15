@@ -2,7 +2,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FakeMG.Framework.Editor {
+namespace FakeMG.FakeMGFramework.Editor {
     public static class DefaultFolders {
         [MenuItem("Tools/Create Default Folders", priority = 200)]
         public static void CreateDefaultFolders() {
