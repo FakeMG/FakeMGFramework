@@ -99,10 +99,6 @@ namespace FakeMG.FakeMGFramework {
             
             onReleaseEvent.Invoke(releasedObject);
         }
-        
-        public bool IsDraggingObject(GameObject checkObject) {
-            return _selectedTransform && _selectedTransform.gameObject == checkObject;
-        }
 
         private void Throw() {
             if (!_selectedTransform) return;
@@ -125,6 +121,10 @@ namespace FakeMG.FakeMGFramework {
                 hitPoint.y = dragHeight;
                 _selectedTransform.position = Vector3.Lerp(_selectedTransform.position, hitPoint, 0.1f);
             }
+        }
+
+        public bool IsDraggingObject(GameObject checkObject) {
+            return _selectedTransform && _selectedTransform.gameObject == checkObject;
         }
     }
 }
