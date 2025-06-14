@@ -20,8 +20,11 @@ namespace FakeMG.FakeMGFramework.Editor {
             }
         }
 
-        [MenuItem("Tools/Check Missing Unity Events In Scene", priority = 200)]
+        [MenuItem("FakeMG/Check Missing Unity Events In Scene")]
         public static void CheckMissingUnityEvents() {
+            int totalEventsChecked = 0;
+            int issuesFound = 0;
+            
             GameObject[] allGameObjects =
                 FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 
@@ -37,16 +40,25 @@ namespace FakeMG.FakeMGFramework.Editor {
                     foreach (FieldInfo field in fields) {
                         if (typeof(UnityEventBase).IsAssignableFrom(field.FieldType)) {
                             if (field.GetValue(component) is UnityEventBase unityEvent) {
-                                Check(unityEvent, component);
+                                int eventIssues = Check(unityEvent, component);
+                                totalEventsChecked += unityEvent.GetPersistentEventCount();
+                                issuesFound += eventIssues;
                             }
                         }
                     }
                 }
             }
+            
+            if (issuesFound == 0) {
+                Debug.Log($"Unity Event Check Complete: All {totalEventsChecked} events are properly configured.");
+            } else {
+                Debug.Log($"Unity Event Check Complete: {issuesFound} issues found out of {totalEventsChecked} events checked.");
+            }
         }
 
-        private static void Check(UnityEventBase unityEventBase, Component component) {
+        private static int Check(UnityEventBase unityEventBase, Component component) {
             int eventCount = unityEventBase.GetPersistentEventCount();
+            int issuesFound = 0;
 
             for (int i = 0; i < eventCount; i++) {
                 UnityEngine.Object target = unityEventBase.GetPersistentTarget(i);
@@ -54,12 +66,14 @@ namespace FakeMG.FakeMGFramework.Editor {
 
                 if (target == null) {
                     Debug.LogWarning("Object doesn't exist: " + target.name, component.gameObject);
+                    issuesFound++;
                     continue;
                 }
 
                 string objectFullNameWithNamespace = target.GetType().FullName;
                 if (!ClassExist(objectFullNameWithNamespace)) {
                     Debug.LogWarning("Class doesn't exist: " + objectFullNameWithNamespace, component.gameObject);
+                    issuesFound++;
                     continue;
                 }
 
@@ -72,13 +86,17 @@ namespace FakeMG.FakeMGFramework.Editor {
                         "Function is private: " + methodName + " - " + objectFullNameWithNamespace + ": "
                         + component,
                         component.gameObject);
+                    issuesFound++;
                 } else {
                     Debug.LogWarning(
                         "Function doesn't exist: " + methodName + " - " + objectFullNameWithNamespace + ": "
                         + component,
                         component.gameObject);
+                    issuesFound++;
                 }
             }
+            
+            return issuesFound;
         }
 
         private static bool ClassExist(string className) {

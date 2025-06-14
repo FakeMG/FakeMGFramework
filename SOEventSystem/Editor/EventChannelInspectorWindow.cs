@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace FakeMG.SOEventSystem.Editor {
     public class EventChannelInspectorWindow : EditorWindow {
-        [MenuItem("Window/Event Channel Inspector")]
+        [MenuItem("FakeMG/Event Channel Inspector")]
         public static void ShowWindow() {
             GetWindow<EventChannelInspectorWindow>("Event Channel Inspector");
         }
