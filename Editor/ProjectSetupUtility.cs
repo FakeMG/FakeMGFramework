@@ -3,8 +3,8 @@ using UnityEditor;
 using UnityEngine;
 
 namespace FakeMG.FakeMGFramework.Editor {
-    public static class DefaultFolders {
-        [MenuItem("Tools/Create Default Folders", priority = 200)]
+    public static class ProjectSetupUtility {
+        [MenuItem("FakeMG/Create Default Folders")]
         public static void CreateDefaultFolders() {
             CreateFolder("_Project/Feature", 
                 "Script", 
@@ -28,7 +28,7 @@ namespace FakeMG.FakeMGFramework.Editor {
             }
         }
 
-        [MenuItem("Tools/Add Necessary Packages", priority = 200)]
+        [MenuItem("FakeMG/Add Necessary Packages")]
         public static void AddNecessaryPackages() {
             UnityEditor.PackageManager.Client.Add("com.unity.cinemachine");
             UnityEditor.PackageManager.Client.Add("com.unity.addressables");
