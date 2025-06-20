@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace FakeMG.FakeMGFramework.UI {
     public class PopupSlideAnimator : MonoBehaviour {
@@ -17,6 +18,10 @@ namespace FakeMG.FakeMGFramework.UI {
         [SerializeField] private Ease showEase = Ease.OutBack;
         [SerializeField] private Ease hideEase = Ease.InBack;
         [SerializeField] private Direction slideDirection = Direction.Bottom;
+        
+        [Header("Events")]
+        [SerializeField] private UnityEvent OnStart;
+        [SerializeField] private UnityEvent OnFinished;
         
         public enum Direction {
             Top,
@@ -62,13 +67,16 @@ namespace FakeMG.FakeMGFramework.UI {
             if (_isShowing) return;
             _isShowing = true;
             
+            OnStart?.Invoke();
             
             if (animate) {
                 canvasGroup.gameObject.SetActive(true);
-                canvasGroup.transform.DOLocalMove(targetPosition, animationDuration).SetEase(showEase).SetLink(rectTransform.gameObject);
+                canvasGroup.transform.DOLocalMove(targetPosition, animationDuration).SetEase(showEase).SetLink(rectTransform.gameObject)
+                    .OnComplete(() => OnFinished?.Invoke());
                 canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject);
             } else {
                 ShowImmediate();
+                OnFinished?.Invoke();
             }
         }
         
@@ -77,12 +85,18 @@ namespace FakeMG.FakeMGFramework.UI {
             if (!_isShowing) return;
             _isShowing = false;
             
+            OnStart?.Invoke();
+            
             if (animate) {
                 canvasGroup.transform.DOLocalMove(_hiddenPosition, animationDuration).SetEase(hideEase).SetLink(rectTransform.gameObject)
-                    .OnComplete(() => canvasGroup.gameObject.SetActive(false));
+                    .OnComplete(() => {
+                        canvasGroup.gameObject.SetActive(false);
+                        OnFinished?.Invoke();
+                    });
                 canvasGroup.DOFade(0f, animationDuration).SetLink(canvasGroup.gameObject).SetDelay(animationDuration * 0.5f);
             } else {
                 HideImmediate();
+                OnFinished?.Invoke();
             }
         }
         

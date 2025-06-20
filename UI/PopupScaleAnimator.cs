@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace FakeMG.FakeMGFramework.UI {
     public class PopupScaleAnimator : MonoBehaviour {
@@ -9,6 +10,10 @@ namespace FakeMG.FakeMGFramework.UI {
         [SerializeField] private Ease showEase = Ease.OutBack;
         [SerializeField] private Ease hideEase = Ease.InBack;
         [SerializeField] private Vector3 targetScale = Vector3.one;
+        
+        [Header("Events")]
+        [SerializeField] private UnityEvent OnStart;
+        [SerializeField] private UnityEvent OnFinished;
         
         private readonly Vector3 _initialScale = Vector3.zero;
         private bool _isShowing;
@@ -23,15 +28,18 @@ namespace FakeMG.FakeMGFramework.UI {
             if (_isShowing) return;
             _isShowing = true;
             
+            OnStart?.Invoke();
 
             if (animate) {
                 canvasGroup.gameObject.SetActive(true);
                 canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject);
                 canvasGroup.transform.DOScale(targetScale, animationDuration)
                     .SetEase(showEase)
-                    .SetLink(canvasGroup.gameObject);
+                    .SetLink(canvasGroup.gameObject)
+                    .OnComplete(() => OnFinished?.Invoke());
             } else {
                 ShowImmediate();
+                OnFinished?.Invoke();
             }
         }
         
@@ -40,14 +48,20 @@ namespace FakeMG.FakeMGFramework.UI {
             if (!_isShowing) return;
             _isShowing = false;
 
+            OnStart?.Invoke();
+
             if (animate) {
                 canvasGroup.DOFade(0f, animationDuration).SetLink(canvasGroup.gameObject).SetDelay(animationDuration * 0.5f);
                 canvasGroup.transform.DOScale(_initialScale, animationDuration)
                     .SetEase(hideEase)
                     .SetLink(canvasGroup.gameObject)
-                    .OnComplete(() => canvasGroup.gameObject.SetActive(false));
+                    .OnComplete(() => {
+                        canvasGroup.gameObject.SetActive(false);
+                        OnFinished?.Invoke();
+                    });
             } else {
                 HideImmediate();
+                OnFinished?.Invoke();
             }
         }
         
