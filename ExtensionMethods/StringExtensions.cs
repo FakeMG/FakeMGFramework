@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using UnityEngine;
 
 namespace FakeMG.FakeMGFramework.ExtensionMethods {
     public static class StringExtensions {
@@ -25,18 +27,48 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods {
         }
         
         public static string SeparateTextByUpperCase(this string text) {
-            var result = "";
+            if (string.IsNullOrEmpty(text)) return text;
+            
+            var result = new StringBuilder();
+            
             for (var i = 0; i < text.Length; i++) {
-                if (i != 0 && char.IsUpper(text[i])) {
-                    result += " ";
-                }
+                var currentChar = text[i];
+                
+                if (i > 0 && char.IsUpper(currentChar)) {
+                    var previousChar = text[i - 1];
+                    bool shouldAddSpace = !char.IsWhiteSpace(previousChar);
 
-                result += text[i];
+                    if (char.IsUpper(previousChar))
+                    {
+                        bool isNotLastChar = i + 1 < text.Length;
+                        if (isNotLastChar)
+                        {
+                            var nextChar = text[i + 1];
+                            if (char.IsUpper(nextChar))
+                            {
+                                shouldAddSpace = false;
+                            }
+                        }
+                        else
+                        {
+                            shouldAddSpace = false;
+                        }
+                    }
+                    
+                    if (shouldAddSpace) {
+                        result.Append(' ');
+                    }
+                }
+                
+                result.Append(currentChar);
             }
 
-            // first letter to upper case
-            result = char.ToUpper(result[0]) + result.Substring(1);
-            return result;
+            var resultString = result.ToString();
+            if (resultString.Length > 0) {
+                resultString = char.ToUpper(resultString[0]) + resultString.Substring(1);
+            }
+            
+            return resultString;
         }
     }
 }
