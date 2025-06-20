@@ -61,7 +61,7 @@ namespace FakeMG.FakeMGFramework.UI
         public void DisableButton()
         {
             _isDisabled = true;
-            ChangeColor(hoverColor);
+            ChangeColor(disabledColor);
         }
 
         public void DisableButtonWithoutColorChange()
@@ -159,18 +159,18 @@ namespace FakeMG.FakeMGFramework.UI
             switch (buttonState)
             {
                 case State.Normal:
-                    visual.transform.DOScale(_normalScale, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
-                        .SetLink(gameObject);
+                    visual?.transform.DOScale(_normalScale, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
+                            .SetLink(gameObject);
                     ChangeColor(normalColor);
                     break;
                 case State.Hover:
-                    visual.transform.DOScale(_normalScale * HOVER_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
-                        .SetLink(gameObject);
+                    visual?.transform.DOScale(_normalScale * HOVER_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
+                            .SetLink(gameObject);
                     ChangeColor(hoverColor);
                     break;
                 case State.Pressed:
-                    visual.transform.DOScale(_normalScale * PRESS_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
-                        .SetLink(gameObject);
+                    visual?.transform.DOScale(_normalScale * PRESS_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
+                            .SetLink(gameObject);
                     ChangeColor(hoverColor);
                     break;
                 case State.Disabled:
