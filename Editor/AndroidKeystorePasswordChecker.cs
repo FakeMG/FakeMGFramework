@@ -1,4 +1,5 @@
-﻿using UnityEditor.Build;
+﻿#if UNITY_ANDROID
+using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
 namespace FakeMG.FakeMGFramework.Editor {
@@ -34,3 +35,4 @@ namespace FakeMG.FakeMGFramework.Editor {
         }
     }
 }
+#endif
