@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿﻿using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
@@ -78,24 +78,23 @@ namespace FakeMG.FakeMGFramework {
             return false;
         }
 
-        public void SpawnImageWithCustomSettings(Vector3 spawnPos, Vector3 targetPos,
-            float customScaleDuration, float customMoveDuration,
-            Ease customScaleEase, Ease customMoveEase) {
-            RectTransform spawnedUI = SpawnUI(spawnPos);
+public void SpawnImageWithCustomSettings(Vector3 spawnPos, Vector3 targetPos,
+        float customScaleDuration, float customMoveDuration,
+        Ease customScaleEase, Ease customMoveEase) {
+        RectTransform spawnedUI = SpawnUI(spawnPos);
 
-            Sequence customSequence = DOTween.Sequence();
-            customSequence.Append(spawnedUI.DOScale(Vector3.one, customScaleDuration).SetEase(customScaleEase)
-                .SetLink(spawnedUI.gameObject));
-            customSequence.Append(spawnedUI.DOAnchorPos(targetPos, customMoveDuration).SetEase(customMoveEase)
-                .SetLink(spawnedUI.gameObject));
-        }
-
+        Sequence customSequence = DOTween.Sequence();
+        customSequence.Append(spawnedUI.DOScale(Vector3.one, customScaleDuration).SetEase(customScaleEase)
+            .SetLink(spawnedUI.gameObject));
+        customSequence.Append(spawnedUI.DOMove(targetPos, customMoveDuration).SetEase(customMoveEase)
+            .SetLink(spawnedUI.gameObject));
+}
         public void SpawnUIWithSimultaneousAnimation(Vector3 spawnPosition, Vector3 targetPosition) {
             RectTransform spawnedImage = SpawnUI(spawnPosition);
 
             // Scale and move simultaneously
-            spawnedImage.DOScale(Vector3.one, scaleDuration).SetEase(scaleEase);
-            spawnedImage.DOAnchorPos(targetPosition, moveDuration).SetEase(moveEase);
+            spawnedImage.DOScale(Vector3.one, scaleDuration).SetEase(scaleEase).SetLink(spawnedImage.gameObject);
+            spawnedImage.DOMove(targetPosition, moveDuration).SetEase(moveEase).SetLink(spawnedImage.gameObject);
         }
 
         private RectTransform SpawnUI(Vector3 worldPosition) {
