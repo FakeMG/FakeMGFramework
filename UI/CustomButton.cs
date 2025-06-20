@@ -21,11 +21,11 @@ namespace FakeMG.FakeMGFramework.UI
         private List<Image> _images;
         private List<TextMeshProUGUI> _textMeshProUGUIs;
         private Vector3 _normalScale;
-        
+
         private const float HOVER_SCALE_MULTIPLIER = 0.95f;
         private const float PRESS_SCALE_MULTIPLIER = 0.85f;
         private const float ANIMATION_DURATION = 0.1f;
-        
+
         private bool _isDisabled;
         private bool _isDragging;
 
@@ -60,6 +60,11 @@ namespace FakeMG.FakeMGFramework.UI
         {
             _isDisabled = true;
             ChangeColor(hoverColor);
+        }
+
+        public void DisableButtonWithoutColorChange()
+        {
+            _isDisabled = true;
         }
 
         public void EnableButton()
@@ -131,7 +136,7 @@ namespace FakeMG.FakeMGFramework.UI
 
             _isDragging = false;
         }
-        
+
         private void ChangeColor(Color color)
         {
             if (_images == null) return;
@@ -139,7 +144,7 @@ namespace FakeMG.FakeMGFramework.UI
             {
                 image.CrossFadeColor(color, ANIMATION_DURATION, true, true);
             }
-            
+
             if (_textMeshProUGUIs == null) return;
             foreach (var text in _textMeshProUGUIs)
             {
