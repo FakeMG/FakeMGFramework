@@ -14,6 +14,8 @@ namespace FakeMG.FakeMGFramework.UI
     {
         [SerializeField] private Color normalColor = new(1f, 1f, 1f, 1f);
         [SerializeField] private Color hoverColor = new(0.7f, 0.7f, 0.7f, 1f);
+        [SerializeField] private Color disabledColor = new(0.4f, 0.4f, 0.4f, 1f);
+        [SerializeField] private Transform visual;
         [SerializeField] private ScrollRect scrollRect;
         public UnityEvent onClick;
 
@@ -41,10 +43,10 @@ namespace FakeMG.FakeMGFramework.UI
         {
             _rectTransform = GetComponent<RectTransform>();
 
-            _images = GetComponentsInChildren<Image>(true).ToList();
-            _textMeshProUGUIs = GetComponentsInChildren<TextMeshProUGUI>(true).ToList();
+            _images = GetComponentsInChildren<Image>(true).Where(img => img.gameObject != gameObject).ToList();
+            _textMeshProUGUIs = GetComponentsInChildren<TextMeshProUGUI>(true).Where(text => text.gameObject != gameObject).ToList();
 
-            _normalScale = transform.localScale;
+            _normalScale = visual.transform.localScale;
             if (_normalScale == Vector3.zero)
             {
                 _normalScale = Vector3.one; // Default to one if scale is zero
@@ -157,21 +159,22 @@ namespace FakeMG.FakeMGFramework.UI
             switch (buttonState)
             {
                 case State.Normal:
-                    transform.DOScale(_normalScale, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
+                    visual.transform.DOScale(_normalScale, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
                         .SetLink(gameObject);
                     ChangeColor(normalColor);
                     break;
                 case State.Hover:
-                    transform.DOScale(_normalScale * HOVER_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
+                    visual.transform.DOScale(_normalScale * HOVER_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
                         .SetLink(gameObject);
                     ChangeColor(hoverColor);
                     break;
                 case State.Pressed:
-                    transform.DOScale(_normalScale * PRESS_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
+                    visual.transform.DOScale(_normalScale * PRESS_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
                         .SetLink(gameObject);
+                    ChangeColor(hoverColor);
                     break;
                 case State.Disabled:
-                    ChangeColor(hoverColor);
+                    ChangeColor(disabledColor);
                     break;
             }
         }
