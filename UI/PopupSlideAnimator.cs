@@ -1,12 +1,9 @@
 ﻿using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FakeMG.FakeMGFramework.UI {
-    public class PopupSlideAnimator : MonoBehaviour {
-        [Header("Root Canvas")]
-        [SerializeField] private RectTransform canvasRect;
+    public class PopupSlideAnimator : PopupAnimator {
 
         [Header("Target UI")]
         [SerializeField] private CanvasGroup canvasGroup;
@@ -19,18 +16,13 @@ namespace FakeMG.FakeMGFramework.UI {
         [SerializeField] private Ease hideEase = Ease.InBack;
         [SerializeField] private Direction slideDirection = Direction.Bottom;
 
-        [Header("Events")]
-        [SerializeField] private UnityEvent onStart;
-        [SerializeField] private UnityEvent onFinished;
-
         public enum Direction {
             Top,
             Right,
             Bottom,
             Left
         }
-
-
+        
         private Vector3 _hiddenPosition;
         private bool _isShowing;
 
@@ -63,30 +55,30 @@ namespace FakeMG.FakeMGFramework.UI {
         }
 
         [Button]
-        public void Show(bool animate = true) {
+        public override void Show(bool animate = true) {
             if (_isShowing) return;
             _isShowing = true;
 
-            onStart?.Invoke();
+            onShowStart?.Invoke();
             if (animate) {
                 canvasGroup.gameObject.SetActive(true);
                 var sequence = DOTween.Sequence();
                 sequence.Append(canvasGroup.transform.DOLocalMove(targetPosition, animationDuration).SetEase(showEase)
                     .SetLink(rectTransform.gameObject));
                 sequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
-                sequence.OnComplete(() => onFinished?.Invoke());
+                sequence.OnComplete(() => onShowFinished?.Invoke());
             } else {
                 ShowImmediate();
-                onFinished?.Invoke();
+                onShowFinished?.Invoke();
             }
         }
 
         [Button]
-        public void Hide(bool animate = true) {
+        public override void Hide(bool animate = true) {
             if (!_isShowing) return;
             _isShowing = false;
 
-            onStart?.Invoke();
+            onHideStart?.Invoke();
             if (animate) {
                 var sequence = DOTween.Sequence();
                 sequence.Append(canvasGroup.transform.DOLocalMove(_hiddenPosition, animationDuration).SetEase(hideEase)
@@ -95,11 +87,11 @@ namespace FakeMG.FakeMGFramework.UI {
                     .SetDelay(animationDuration * 0.5f));
                 sequence.OnComplete(() => {
                     canvasGroup.gameObject.SetActive(false);
-                    onFinished?.Invoke();
+                    onHideFinished?.Invoke();
                 });
             } else {
                 HideImmediate();
-                onFinished?.Invoke();
+                onHideFinished?.Invoke();
             }
         }
 

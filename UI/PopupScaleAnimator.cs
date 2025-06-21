@@ -1,19 +1,17 @@
 ﻿using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FakeMG.FakeMGFramework.UI {
-    public class PopupScaleAnimator : MonoBehaviour {
+    public class PopupScaleAnimator : PopupAnimator {
+        [Header("Target UI")]
         [SerializeField] private CanvasGroup canvasGroup;
+        
+        [Header("Animation Settings")]
         [SerializeField] private float animationDuration = 0.3f;
         [SerializeField] private Ease showEase = Ease.OutBack;
         [SerializeField] private Ease hideEase = Ease.InBack;
         [SerializeField] private Vector3 targetScale = Vector3.one;
-
-        [Header("Events")]
-        [SerializeField] private UnityEvent onStart;
-        [SerializeField] private UnityEvent onFinished;
 
         private readonly Vector3 _initialScale = Vector3.zero;
         private bool _isShowing;
@@ -24,11 +22,11 @@ namespace FakeMG.FakeMGFramework.UI {
         }
 
         [Button]
-        public void Show(bool animate = true) {
+        public override void Show(bool animate = true) {
             if (_isShowing) return;
             _isShowing = true;
 
-            onStart?.Invoke();
+            onShowStart?.Invoke();
 
             if (animate) {
                 canvasGroup.gameObject.SetActive(true);
@@ -37,19 +35,19 @@ namespace FakeMG.FakeMGFramework.UI {
                     .SetEase(showEase)
                     .SetLink(canvasGroup.gameObject));
                 sequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
-                sequence.OnComplete(() => onFinished?.Invoke());
+                sequence.OnComplete(() => onShowFinished?.Invoke());
             } else {
                 ShowImmediate();
-                onFinished?.Invoke();
+                onShowFinished?.Invoke();
             }
         }
 
         [Button]
-        public void Hide(bool animate = true) {
+        public override void Hide(bool animate = true) {
             if (!_isShowing) return;
             _isShowing = false;
 
-            onStart?.Invoke();
+            onHideStart?.Invoke();
 
             if (animate) {
                 var sequence = DOTween.Sequence();
@@ -60,11 +58,11 @@ namespace FakeMG.FakeMGFramework.UI {
                     .SetDelay(animationDuration * 0.5f));
                 sequence.OnComplete(() => {
                     canvasGroup.gameObject.SetActive(false);
-                    onFinished?.Invoke();
+                    onHideFinished?.Invoke();
                 });
             } else {
                 HideImmediate();
-                onFinished?.Invoke();
+                onHideFinished?.Invoke();
             }
         }
 
