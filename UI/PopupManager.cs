@@ -20,8 +20,7 @@ namespace FakeMG.FakeMGFramework.UI
         [Required]
         [SerializeField] private Image blackBackgroundPrefab;
 
-        private readonly Stack<PopupAnimator> _popupStack = new();
-        private readonly Stack<Image> _backgroundStack = new();
+        private readonly Dictionary<PopupAnimator, Image> _popupDict = new();
 
         private void Start()
         {
@@ -29,10 +28,8 @@ namespace FakeMG.FakeMGFramework.UI
             {
                 if (child.TryGetComponent(out PopupAnimator popupAnimator))
                 {
-                    popupAnimator.onShowStart.AddListener(ShowBackground);
-                    popupAnimator.onHideStart.AddListener(HideBackground);
-
                     popupAnimator.onShowStart.AddListener(() => OnPopupOpen(popupAnimator));
+                    popupAnimator.onHideStart.AddListener(() => HideBackground(popupAnimator));
                     popupAnimator.onHideFinished.AddListener(() => OnPopupClose(popupAnimator));
                 }
                 else
@@ -42,65 +39,62 @@ namespace FakeMG.FakeMGFramework.UI
             }
         }
 
-        public void OnPopupOpen(PopupAnimator popupAnimator)
+        private void OnPopupOpen(PopupAnimator popupAnimator)
         {
-            if (_popupStack.Contains(popupAnimator))
+            if (_popupDict.ContainsKey(popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupAnimator.name} is already in the stack!");
+                Debug.LogWarning($"Popup {popupAnimator.name} is already open!");
                 return;
             }
 
+            // Show the new popup on top of other popups
+            int topIndex = _popupDict.Count > 0 ? _popupDict.Count * 2 : 0;
+
+            var background = ShowBackground();
+            background.transform.SetSiblingIndex(topIndex);
+
             popupAnimator.transform.SetParent(transform);
-            popupAnimator.transform.SetSiblingIndex(_popupStack.Count * 2 + 1);
-            _popupStack.Push(popupAnimator);
-        }
-        
-        public void OnPopupClose(PopupAnimator popupAnimator)
-        {
-            if (_popupStack.Count > 0)
-            {
-                PopupAnimator topPopup = _popupStack.Peek();
-                if (topPopup != popupAnimator)
-                {
-                    Debug.LogWarning($"Attempted to close {popupAnimator.name} but the top popup is {topPopup.name}. Only the top popup can be closed.");
-                    return;
-                }
-                _popupStack.Pop();
-                popupAnimator.transform.SetAsLastSibling();
-            }
-            else
-            {
-                Debug.LogWarning("Attempted to close a popup but the popup stack is empty.");
-            }
+            popupAnimator.transform.SetSiblingIndex(topIndex + 1);
+
+            _popupDict.Add(popupAnimator, background);
         }
 
-        public void ShowBackground()
+        private Image ShowBackground()
         {
             Image background = Instantiate(blackBackgroundPrefab, transform);
             background.gameObject.SetActive(true);
-            background.transform.SetSiblingIndex(_backgroundStack.Count * 2);
-            _backgroundStack.Push(background);
 
             Color backgroundColor = background.color;
             backgroundColor.a = 0f;
             background.color = backgroundColor;
             background.DOFade(BACKGROUND_FADE_ALPHA, BACKGROUND_FADE_DURATION);
+
+            return background;
         }
 
-        public void HideBackground()
+        private void HideBackground(PopupAnimator popupAnimator)
         {
-            if (_backgroundStack.Count > 0)
+            if (!_popupDict.TryGetValue(popupAnimator, out var background))
             {
-                Image background = _backgroundStack.Pop();
-                if (background)
-                {
-                    background.DOFade(0f, BACKGROUND_FADE_DURATION).OnComplete(() => Destroy(background.gameObject));
-                }
+                Debug.LogWarning($"Popup {popupAnimator.name} does not have an associated background to hide.");
+                return;
             }
-            else
+
+            if (background)
             {
-                Debug.LogWarning("Attempted to hide background but the background stack is empty.");
+                background.DOFade(0f, BACKGROUND_FADE_DURATION).OnComplete(() => Destroy(background.gameObject));
             }
+        }
+
+        private void OnPopupClose(PopupAnimator popupAnimator)
+        {
+            if (!_popupDict.Remove(popupAnimator)) {
+                Debug.LogWarning($"Popup {popupAnimator.name} is not open!");
+            }
+
+            // The popup is disabled, so we move it to the end of the hierarchy
+            // to ensure it doesn't interfere with the opened popups.
+            popupAnimator.transform.SetAsLastSibling();
         }
     }
 }
