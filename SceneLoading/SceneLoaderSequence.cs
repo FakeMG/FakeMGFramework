@@ -74,6 +74,28 @@ namespace FakeMG.FakeMGFramework.SceneLoading {
 
             UnloadScenesAsync().Forget();
         }
+
+        public void ReloadScenesSequential()
+        {
+            if (IsBusy)
+            {
+                Debug.LogWarning("SceneLoaderSequence is busy. Cannot reload scenes.");
+                return;
+            }
+
+            ReloadScenesSequentialAsync().Forget();
+        }
+
+        public void ReloadScenesParallel()
+        {
+            if (IsBusy)
+            {
+                Debug.LogWarning("SceneLoaderSequence is busy. Cannot reload scenes.");
+                return;
+            }
+
+            ReloadScenesParallelAsync().Forget();
+        }
     
         public bool AreAllScenesLoaded()
         {
@@ -246,6 +268,114 @@ namespace FakeMG.FakeMGFramework.SceneLoading {
 
             // Return true if the scene was loaded before and is now unloaded
             return wasLoaded && !loader.IsSceneLoaded;
+        }
+
+        private async UniTaskVoid ReloadScenesSequentialAsync()
+        {
+            if (sceneLoaders == null || sceneLoaders.Count == 0)
+            {
+                Debug.LogWarning("No scene loaders configured.");
+                return;
+            }
+
+            IsLoading = true;
+
+            var validLoaders = sceneLoaders.Where(loader => loader != null).ToList();
+            int successCount = 0;
+            int totalCount = validLoaders.Count;
+
+            foreach (var loader in validLoaders)
+            {
+                if (!loader.IsSceneLoaded)
+                {
+                    Debug.LogWarning($"Scene {loader.SceneReference.editorAsset?.name} is not loaded. Skipping reload.");
+                    continue;
+                }
+
+                bool reloadSuccess = await ReloadSingleSceneAsync(loader);
+
+                if (reloadSuccess)
+                {
+                    successCount++;
+                }
+            }
+
+            IsLoading = false;
+
+            if (successCount > 0)
+            {
+                Debug.Log($"Successfully reloaded {successCount} scenes sequentially.");
+                onAllScenesLoaded?.Invoke();
+            }
+            else
+            {
+                Debug.LogWarning("No scenes were reloaded.");
+            }
+        }
+
+        private async UniTaskVoid ReloadScenesParallelAsync()
+        {
+            if (sceneLoaders == null || sceneLoaders.Count == 0)
+            {
+                Debug.LogWarning("No scene loaders configured.");
+                return;
+            }
+
+            IsLoading = true;
+
+            var validLoaders = sceneLoaders.Where(loader => loader != null && loader.IsSceneLoaded).ToList();
+            int totalCount = validLoaders.Count;
+
+            if (totalCount == 0)
+            {
+                Debug.LogWarning("No loaded scenes to reload.");
+                IsLoading = false;
+                return;
+            }
+
+            List<UniTask<bool>> reloadTasks = new();
+
+            foreach (var loader in validLoaders)
+            {
+                reloadTasks.Add(ReloadSingleSceneAsync(loader));
+            }
+
+            var results = await UniTask.WhenAll(reloadTasks);
+
+            int successCount = results.Count(result => result);
+
+            IsLoading = false;
+
+            if (successCount > 0)
+            {
+                Debug.Log($"Successfully reloaded {successCount} scenes in parallel.");
+                onAllScenesLoaded?.Invoke();
+            }
+            else
+            {
+                Debug.LogWarning("No scenes were reloaded successfully.");
+            }
+        }
+
+        private async UniTask<bool> ReloadSingleSceneAsync(SceneLoader loader)
+        {
+            bool wasLoaded = loader.IsSceneLoaded;
+
+            if (!wasLoaded)
+            {
+                return false;
+            }
+
+            loader.ReloadScene();
+
+            // Wait for the loader to finish reloading
+            while (loader.IsBusy)
+            {
+                await UniTask.Yield();
+            }
+
+            // Return true if the scene is loaded after reload
+            return loader.IsSceneLoaded;
         }
     
         private void OnDestroy()
