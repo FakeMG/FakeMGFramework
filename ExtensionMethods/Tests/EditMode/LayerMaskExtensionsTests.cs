@@ -1,10 +1,13 @@
 using NUnit.Framework;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
-    public class LayerMaskExtensionsTests {
+namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests
+{
+    public class LayerMaskExtensionsTests
+    {
         [Test]
-        public void ContainLayer_LayerIsInMask_ReturnsTrue() {
+        public void ContainLayer_LayerIsInMask_ReturnsTrue()
+        {
             // Arrange
             int layer = 5;
             LayerMask mask = 1 << layer;
@@ -17,7 +20,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void ContainLayer_LayerIsNotInMask_ReturnsFalse() {
+        public void ContainLayer_LayerIsNotInMask_ReturnsFalse()
+        {
             // Arrange
             int layerInMask = 5;
             int layerNotInMask = 7;
@@ -31,7 +35,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void ContainLayer_EmptyMask_ReturnsFalse() {
+        public void ContainLayer_EmptyMask_ReturnsFalse()
+        {
             // Arrange
             int layer = 5;
             LayerMask emptyMask = 0;
@@ -44,7 +49,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void ContainLayer_MultipleLayers_ChecksCorrectly() {
+        public void ContainLayer_MultipleLayers_ChecksCorrectly()
+        {
             // Arrange
             int layer1 = 3;
             int layer2 = 5;
@@ -56,12 +62,13 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
             Assert.IsFalse(mask.ContainLayer(layer2), "Should not contain layer 5");
             Assert.IsTrue(mask.ContainLayer(layer3), "Should contain layer 8");
         }
-        
+
         [Test]
-        public void ContainLayerMasks_WhenMaskContainsAllLayersOfMaskB_ReturnsTrue() {
+        public void ContainLayerMasks_WhenMaskContainsAllLayersOfMaskB_ReturnsTrue()
+        {
             // Arrange
             LayerMask mask = (1 << 3) | (1 << 5) | (1 << 7); // Layers 3, 5, and 7
-            LayerMask maskB = (1 << 3) | (1 << 5);          // Layers 3 and 5
+            LayerMask maskB = (1 << 3) | (1 << 5); // Layers 3 and 5
 
             // Act
             bool result = mask.ContainLayerMasks(maskB);
@@ -71,10 +78,11 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void ContainLayerMasks_WhenMaskMissingLayersFromMaskB_ReturnsFalse() {
+        public void ContainLayerMasks_WhenMaskMissingLayersFromMaskB_ReturnsFalse()
+        {
             // Arrange
-            LayerMask mask = (1 << 3) | (1 << 7);           // Layers 3 and 7
-            LayerMask maskB = (1 << 3) | (1 << 5);          // Layers 3 and 5
+            LayerMask mask = (1 << 3) | (1 << 7); // Layers 3 and 7
+            LayerMask maskB = (1 << 3) | (1 << 5); // Layers 3 and 5
 
             // Act
             bool result = mask.ContainLayerMasks(maskB);
@@ -84,10 +92,11 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void ContainLayerMasks_WithEmptyMaskB_ReturnsTrue() {
+        public void ContainLayerMasks_WithEmptyMaskB_ReturnsTrue()
+        {
             // Arrange
-            LayerMask mask = (1 << 3) | (1 << 5);           // Layers 3 and 5
-            LayerMask emptyMask = 0;                        // No layers
+            LayerMask mask = (1 << 3) | (1 << 5); // Layers 3 and 5
+            LayerMask emptyMask = 0; // No layers
 
             // Act
             bool result = mask.ContainLayerMasks(emptyMask);
@@ -97,10 +106,11 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void ContainLayerMasks_WithEmptyMask_ReturnsFalseForNonEmptyMaskB() {
+        public void ContainLayerMasks_WithEmptyMask_ReturnsFalseForNonEmptyMaskB()
+        {
             // Arrange
-            LayerMask emptyMask = 0;                        // No layers
-            LayerMask maskB = (1 << 3);                     // Layer 3
+            LayerMask emptyMask = 0; // No layers
+            LayerMask maskB = (1 << 3); // Layer 3
 
             // Act
             bool result = emptyMask.ContainLayerMasks(maskB);
@@ -110,7 +120,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void ContainLayerMasks_IdenticalMasks_ReturnsTrue() {
+        public void ContainLayerMasks_IdenticalMasks_ReturnsTrue()
+        {
             // Arrange
             LayerMask mask = (1 << 3) | (1 << 5) | (1 << 7); // Layers 3, 5, and 7
             LayerMask identicalMask = (1 << 3) | (1 << 5) | (1 << 7); // Same layers
@@ -123,7 +134,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void AddLayerMasks_WithNoOverlap_CombinesMasks() {
+        public void AddLayerMasks_WithNoOverlap_CombinesMasks()
+        {
             // Arrange
             LayerMask mask1 = 1 << 3; // Layer 3
             LayerMask mask2 = 1 << 5; // Layer 5
@@ -139,7 +151,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void AddLayerMasks_WithOverlap_CombinesCorrectly() {
+        public void AddLayerMasks_WithOverlap_CombinesCorrectly()
+        {
             // Arrange
             LayerMask mask1 = (1 << 3) | (1 << 5); // Layers 3 and 5
             LayerMask mask2 = (1 << 5) | (1 << 7); // Layers 5 and 7
@@ -156,7 +169,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void RemoveLayerMasks_WithPresentLayer_RemovesLayers() {
+        public void RemoveLayerMasks_WithPresentLayer_RemovesLayers()
+        {
             // Arrange
             LayerMask original = (1 << 3) | (1 << 5) | (1 << 7); // Layers 3, 5, and 7
             LayerMask toRemove = (1 << 5); // Layer 5
@@ -174,7 +188,8 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests {
         }
 
         [Test]
-        public void RemoveLayerMasks_WithNonPresentLayer_Unchanged() {
+        public void RemoveLayerMasks_WithNonPresentLayer_Unchanged()
+        {
             // Arrange
             LayerMask original = (1 << 3) | (1 << 7); // Layers 3 and 7
             LayerMask toRemove = (1 << 5); // Layer 5 (not in original)

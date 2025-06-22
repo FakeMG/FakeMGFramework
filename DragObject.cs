@@ -2,15 +2,21 @@
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-namespace FakeMG.FakeMGFramework {
-    public class DragObject : MonoBehaviour {
+namespace FakeMG.FakeMGFramework
+{
+    public class DragObject : MonoBehaviour
+    {
         private static DragObject _instance;
-        public static DragObject Instance {
-            get {
+
+        public static DragObject Instance
+        {
+            get
+            {
                 if (_instance) return _instance;
-                
+
                 var instances = FindObjectsByType<DragObject>(FindObjectsSortMode.None);
-                if (instances.Length > 0) {
+                if (instances.Length > 0)
+                {
                     return instances[0];
                 }
 
@@ -35,16 +41,19 @@ namespace FakeMG.FakeMGFramework {
 
         private Plane _dragPlane;
 
-        private void Awake() {
-            if (Instance && Instance != this) {
+        private void Awake()
+        {
+            if (Instance && Instance != this)
+            {
                 Destroy(gameObject);
                 return;
             }
-            
+
             Instance = this;
         }
 
-        private void Start() {
+        private void Start()
+        {
             _mainCamera = Camera.main;
             _selectAction = InputSystem.actions["Select"];
             _pointerMovementAction = InputSystem.actions["Pointer Movement"];
@@ -53,14 +62,18 @@ namespace FakeMG.FakeMGFramework {
             _selectAction.canceled += OnRelease;
         }
 
-        private void Update() {
-            if (IsDragging) {
+        private void Update()
+        {
+            if (IsDragging)
+            {
                 Drag();
             }
         }
 
-        private void OnDestroy() {
-            if (Instance == this) {
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
                 Instance = null;
             }
 
@@ -68,14 +81,17 @@ namespace FakeMG.FakeMGFramework {
             _selectAction.canceled -= OnRelease;
         }
 
-        private void OnSelect(InputAction.CallbackContext context) {
+        private void OnSelect(InputAction.CallbackContext context)
+        {
             Ray ray = _mainCamera.ScreenPointToRay(_pointerMovementAction.ReadValue<Vector2>());
-            if (Physics.Raycast(ray, out RaycastHit hit, 100, dragLayerMask)) {
+            if (Physics.Raycast(ray, out RaycastHit hit, 100, dragLayerMask))
+            {
                 IsDragging = true;
                 _selectedTransform = hit.transform;
                 _dragPlane = new Plane(Vector3.up, new Vector3(0, 0, 0));
-                
-                if (hit.collider.TryGetComponent(out _selectedRigidbody)) {
+
+                if (hit.collider.TryGetComponent(out _selectedRigidbody))
+                {
                     _selectedRigidbody.isKinematic = true;
                 }
 
@@ -83,12 +99,14 @@ namespace FakeMG.FakeMGFramework {
             }
         }
 
-        private void OnRelease(InputAction.CallbackContext context) {
+        private void OnRelease(InputAction.CallbackContext context)
+        {
             if (!IsDragging) return;
 
             IsDragging = false;
 
-            if (_selectedRigidbody) {
+            if (_selectedRigidbody)
+            {
                 _selectedRigidbody.isKinematic = false;
                 Throw();
                 _selectedRigidbody = null;
@@ -96,34 +114,38 @@ namespace FakeMG.FakeMGFramework {
 
             var releasedObject = _selectedTransform ? _selectedTransform.gameObject : null;
             _selectedTransform = null;
-            
+
             onReleaseEvent.Invoke(releasedObject);
         }
 
-        private void Throw() {
+        private void Throw()
+        {
             if (!_selectedTransform) return;
-            
+
             Vector3 throwVector = _selectedTransform.position - _lastObjectPosition;
             float throwSpeed = throwVector.magnitude / Time.deltaTime;
             throwSpeed = Mathf.Clamp(throwSpeed, 0, 20);
             _selectedRigidbody.linearVelocity = throwVector.normalized * throwSpeed;
         }
 
-        private void Drag() {
+        private void Drag()
+        {
             if (!_selectedTransform) return;
-            
+
             _lastObjectPosition = _selectedTransform.position;
-            
+
             Ray ray = _mainCamera.ScreenPointToRay(_pointerMovementAction.ReadValue<Vector2>());
-            
-            if (_dragPlane.Raycast(ray, out float enter)) {
+
+            if (_dragPlane.Raycast(ray, out float enter))
+            {
                 Vector3 hitPoint = ray.GetPoint(enter);
                 hitPoint.y = dragHeight;
                 _selectedTransform.position = Vector3.Lerp(_selectedTransform.position, hitPoint, 0.1f);
             }
         }
 
-        public bool IsDraggingObject(GameObject checkObject) {
+        public bool IsDraggingObject(GameObject checkObject)
+        {
             return _selectedTransform && _selectedTransform.gameObject == checkObject;
         }
     }

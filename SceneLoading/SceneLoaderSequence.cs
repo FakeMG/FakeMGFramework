@@ -4,12 +4,13 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.FakeMGFramework.SceneLoading {
+namespace FakeMG.FakeMGFramework.SceneLoading
+{
     public class SceneLoaderSequence : MonoBehaviour
     {
         [Header("Scene Loaders")]
         [SerializeField] private List<SceneLoader> sceneLoaders = new();
-    
+
         [Header("Events")]
         public UnityEvent onAllScenesLoaded;
         public UnityEvent onAllScenesUnloaded;
@@ -18,12 +19,12 @@ namespace FakeMG.FakeMGFramework.SceneLoading {
         public bool IsUnloading { get; private set; }
         public bool IsBusy => IsLoading || IsUnloading;
         public List<SceneLoader> SceneLoaders => sceneLoaders;
-    
+
         private void Awake()
         {
             ValidateSceneLoaders();
         }
-    
+
         private void ValidateSceneLoaders()
         {
             var duplicates = sceneLoaders
@@ -31,10 +32,11 @@ namespace FakeMG.FakeMGFramework.SceneLoading {
                 .GroupBy(loader => loader.SceneReference.AssetGUID)
                 .Where(group => group.Count() > 1)
                 .ToList();
-            
+
             if (duplicates.Any())
             {
-                Debug.LogError("SceneLoaderSequence: Duplicate scene references found! Each scene can only appear once in the sequence.");
+                Debug.LogError(
+                    "SceneLoaderSequence: Duplicate scene references found! Each scene can only appear once in the sequence.");
                 foreach (var duplicate in duplicates)
                 {
                     Debug.LogError($"Duplicate scene: {duplicate.First().SceneReference.editorAsset?.name}");
@@ -96,14 +98,14 @@ namespace FakeMG.FakeMGFramework.SceneLoading {
 
             ReloadScenesParallelAsync().Forget();
         }
-    
+
         public bool AreAllScenesLoaded()
         {
             return sceneLoaders
                 .Where(loader => loader != null)
                 .All(loader => loader.IsSceneLoaded);
         }
-    
+
         public int GetLoadedSceneCount()
         {
             return sceneLoaders
@@ -288,7 +290,8 @@ namespace FakeMG.FakeMGFramework.SceneLoading {
             {
                 if (!loader.IsSceneLoaded)
                 {
-                    Debug.LogWarning($"Scene {loader.SceneReference.editorAsset?.name} is not loaded. Skipping reload.");
+                    Debug.LogWarning(
+                        $"Scene {loader.SceneReference.editorAsset?.name} is not loaded. Skipping reload.");
                     continue;
                 }
 
@@ -377,7 +380,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading {
             // Return true if the scene is loaded after reload
             return loader.IsSceneLoaded;
         }
-    
+
         private void OnDestroy()
         {
             // Clean up - unload all scenes

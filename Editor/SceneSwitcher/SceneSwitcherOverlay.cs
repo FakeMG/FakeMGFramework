@@ -7,21 +7,28 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher {
+namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
+{
     [Overlay(typeof(SceneView), "Scene Switcher", true)]
-    public class SceneSwitcherOverlay : Overlay {
+    public class SceneSwitcherOverlay : Overlay
+    {
         private VisualElement _sceneContainer;
 
-        public override VisualElement CreatePanelContent() {
-            var mainContainer = new VisualElement {
-                style = {
+        public override VisualElement CreatePanelContent()
+        {
+            var mainContainer = new VisualElement
+            {
+                style =
+                {
                     minWidth = 0,
                     minHeight = 0
                 }
             };
 
-            _sceneContainer = new VisualElement {
-                style = {
+            _sceneContainer = new VisualElement
+            {
+                style =
+                {
                     flexDirection = FlexDirection.Row,
                     flexWrap = Wrap.Wrap,
                     paddingTop = 4,
@@ -38,26 +45,32 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher {
             return mainContainer;
         }
 
-        private void RefreshSceneButtons() {
+        private void RefreshSceneButtons()
+        {
             _sceneContainer.Clear();
 
             var scenePaths = GetScenePathsFromWindow();
-            
-            for (int i = 0; i < scenePaths.Count; i++) {
+
+            for (int i = 0; i < scenePaths.Count; i++)
+            {
                 string scenePath = scenePaths[i];
                 if (string.IsNullOrWhiteSpace(scenePath) || !File.Exists(scenePath)) continue;
 
                 string label = Path.GetFileNameWithoutExtension(scenePath);
                 int sceneNumber = i + 1;
 
-                var button = new Button(() => {
-                    if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) {
+                var button = new Button(() =>
+                {
+                    if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                    {
                         EditorSceneManager.OpenScene(scenePath);
                     }
-                }) {
+                })
+                {
                     text = $"{sceneNumber}. {label}",
                     tooltip = $"Switch to {label} (Shift+{sceneNumber})",
-                    style = {
+                    style =
+                    {
                         paddingLeft = 6,
                         paddingRight = 6,
                         marginRight = 2,
@@ -70,19 +83,22 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher {
             }
         }
 
-        private List<string> GetScenePathsFromWindow() {
+        private List<string> GetScenePathsFromWindow()
+        {
             return EditorPrefs.GetString(SceneSwitcherWindow.EDITOR_PREFS_KEY, "")
                 .Split(';')
                 .ToList();
         }
 
-        public override void OnCreated() {
+        public override void OnCreated()
+        {
             base.OnCreated();
             EditorApplication.projectChanged += RefreshSceneButtons;
             SceneSwitcherWindow.OnScenesUpdated += RefreshSceneButtons;
         }
 
-        public override void OnWillBeDestroyed() {
+        public override void OnWillBeDestroyed()
+        {
             base.OnWillBeDestroyed();
             EditorApplication.projectChanged -= RefreshSceneButtons;
             SceneSwitcherWindow.OnScenesUpdated -= RefreshSceneButtons;

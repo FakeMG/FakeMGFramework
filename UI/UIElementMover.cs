@@ -1,10 +1,12 @@
-﻿﻿using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework {
-    public class UIElementMover : MonoBehaviour {
+namespace FakeMG.FakeMGFramework.UI
+{
+    public class UIElementMover : MonoBehaviour
+    {
         [Header("Prefab Settings")]
         public RectTransform uiPrefab;
         public Canvas targetCanvas;
@@ -19,14 +21,17 @@ namespace FakeMG.FakeMGFramework {
         public int numberOfObjects = 5;
         public float spreadRadius = 50f;
 
-        public void SpawnAndMoveMultipleUIs(Vector3 spawnPosition, Vector3 targetPosition, float staggerDelay = 0) {
+        public void SpawnAndMoveMultipleUIs(Vector3 spawnPosition, Vector3 targetPosition, float staggerDelay = 0)
+        {
             StartCoroutine(SpawnUIsWithDelay(spawnPosition, targetPosition, staggerDelay));
         }
 
-        private IEnumerator SpawnUIsWithDelay(Vector3 centerSpawnPosition, Vector3 targetPosition, float delay) {
+        private IEnumerator SpawnUIsWithDelay(Vector3 centerSpawnPosition, Vector3 targetPosition, float delay)
+        {
             List<Vector3> usedPositions = new List<Vector3>();
 
-            for (int i = 0; i < numberOfObjects; i++) {
+            for (int i = 0; i < numberOfObjects; i++)
+            {
                 Vector3 randomSpawnPos = GetRandomNonOverlappingPosition(centerSpawnPosition, usedPositions);
                 usedPositions.Add(randomSpawnPos);
 
@@ -35,7 +40,8 @@ namespace FakeMG.FakeMGFramework {
             }
         }
 
-        public void SpawnAndMoveUI(Vector3 spawnPosition, Vector3 targetPosition) {
+        public void SpawnAndMoveUI(Vector3 spawnPosition, Vector3 targetPosition)
+        {
             RectTransform spawnedUI = SpawnUI(spawnPosition);
 
             Sequence animationSequence = DOTween.Sequence();
@@ -48,13 +54,15 @@ namespace FakeMG.FakeMGFramework {
             animationSequence.OnComplete(() => { Debug.Log("Image animation completed!"); });
         }
 
-        private Vector3 GetRandomNonOverlappingPosition(Vector3 center, List<Vector3> usedPositions) {
+        private Vector3 GetRandomNonOverlappingPosition(Vector3 center, List<Vector3> usedPositions)
+        {
             Vector3 randomPos;
             int attempts = 0;
             int maxAttempts = 50; // Prevent infinite loop
             float minDistance = 30f; // Minimum distance between objects to avoid overlap
 
-            do {
+            do
+            {
                 // Generate random position within circle around center
                 Vector2 randomCircle = Random.insideUnitCircle * spreadRadius;
                 randomPos = center + new Vector3(randomCircle.x, randomCircle.y, 0);
@@ -69,8 +77,10 @@ namespace FakeMG.FakeMGFramework {
             return randomPos;
         }
 
-        private bool IsPositionTooClose(Vector3 position, List<Vector3> existingPositions, float minDistance) {
-            foreach (Vector3 existingPos in existingPositions) {
+        private bool IsPositionTooClose(Vector3 position, List<Vector3> existingPositions, float minDistance)
+        {
+            foreach (Vector3 existingPos in existingPositions)
+            {
                 if (Vector3.Distance(position, existingPos) < minDistance)
                     return true;
             }
@@ -78,18 +88,22 @@ namespace FakeMG.FakeMGFramework {
             return false;
         }
 
-public void SpawnImageWithCustomSettings(Vector3 spawnPos, Vector3 targetPos,
-        float customScaleDuration, float customMoveDuration,
-        Ease customScaleEase, Ease customMoveEase) {
-        RectTransform spawnedUI = SpawnUI(spawnPos);
+        public void SpawnImageWithCustomSettings(
+            Vector3 spawnPos, Vector3 targetPos,
+            float customScaleDuration, float customMoveDuration,
+            Ease customScaleEase, Ease customMoveEase)
+        {
+            RectTransform spawnedUI = SpawnUI(spawnPos);
 
-        Sequence customSequence = DOTween.Sequence();
-        customSequence.Append(spawnedUI.DOScale(Vector3.one, customScaleDuration).SetEase(customScaleEase)
-            .SetLink(spawnedUI.gameObject));
-        customSequence.Append(spawnedUI.DOMove(targetPos, customMoveDuration).SetEase(customMoveEase)
-            .SetLink(spawnedUI.gameObject));
-}
-        public void SpawnUIWithSimultaneousAnimation(Vector3 spawnPosition, Vector3 targetPosition) {
+            Sequence customSequence = DOTween.Sequence();
+            customSequence.Append(spawnedUI.DOScale(Vector3.one, customScaleDuration).SetEase(customScaleEase)
+                .SetLink(spawnedUI.gameObject));
+            customSequence.Append(spawnedUI.DOMove(targetPos, customMoveDuration).SetEase(customMoveEase)
+                .SetLink(spawnedUI.gameObject));
+        }
+
+        public void SpawnUIWithSimultaneousAnimation(Vector3 spawnPosition, Vector3 targetPosition)
+        {
             RectTransform spawnedImage = SpawnUI(spawnPosition);
 
             // Scale and move simultaneously
@@ -97,7 +111,8 @@ public void SpawnImageWithCustomSettings(Vector3 spawnPos, Vector3 targetPos,
             spawnedImage.DOMove(targetPosition, moveDuration).SetEase(moveEase).SetLink(spawnedImage.gameObject);
         }
 
-        private RectTransform SpawnUI(Vector3 worldPosition) {
+        private RectTransform SpawnUI(Vector3 worldPosition)
+        {
             RectTransform spawnedUI = Instantiate(uiPrefab, targetCanvas.transform);
 
             spawnedUI.gameObject.SetActive(true);

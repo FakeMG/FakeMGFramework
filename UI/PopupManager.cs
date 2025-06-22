@@ -16,7 +16,7 @@ namespace FakeMG.FakeMGFramework.UI
     {
         private const float BACKGROUND_FADE_ALPHA = 0.8f;
         private const float BACKGROUND_FADE_DURATION = 0.3f;
-        
+
         [Required]
         [SerializeField] private Image blackBackgroundPrefab;
 
@@ -34,7 +34,8 @@ namespace FakeMG.FakeMGFramework.UI
                 }
                 else
                 {
-                    Debug.LogError($"Child {child.name} does not have a PopupAnimator component. Please ensure all children of PopupManager have this component.");
+                    Debug.LogError(
+                        $"Child {child.name} does not have a PopupAnimator component. Please ensure all children of PopupManager have this component.");
                 }
             }
         }
@@ -88,7 +89,8 @@ namespace FakeMG.FakeMGFramework.UI
 
         private void OnPopupClose(PopupAnimator popupAnimator)
         {
-            if (!_popupDict.Remove(popupAnimator)) {
+            if (!_popupDict.Remove(popupAnimator))
+            {
                 Debug.LogWarning($"Popup {popupAnimator.name} is not open!");
             }
 

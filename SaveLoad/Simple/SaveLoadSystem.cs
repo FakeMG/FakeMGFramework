@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using FakeMG.FakeMGFramework.SaveLoad.Simple.Storages;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SaveLoad.Simple {
-    public class SaveLoadSystem : MonoBehaviour {
+namespace FakeMG.FakeMGFramework.SaveLoad.Simple
+{
+    public class SaveLoadSystem : MonoBehaviour
+    {
         [SerializeField] private StorageType storageType = StorageType.PlayerPrefs;
         public static SaveLoadSystem Instance { get; private set; }
 
@@ -12,13 +14,16 @@ namespace FakeMG.FakeMGFramework.SaveLoad.Simple {
         private const string SAVE_KEY = "SaveFile";
         private ISaveStorage _storage;
 
-        private enum StorageType {
+        private enum StorageType
+        {
             PlayerPrefs,
             JsonFile
         }
 
-        private void Awake() {
-            if (Instance && Instance != this) {
+        private void Awake()
+        {
+            if (Instance && Instance != this)
+            {
                 Destroy(gameObject);
                 return;
             }
@@ -26,8 +31,10 @@ namespace FakeMG.FakeMGFramework.SaveLoad.Simple {
             Instance = this;
         }
 
-        private void Start() {
-            switch (storageType) {
+        private void Start()
+        {
+            switch (storageType)
+            {
                 case StorageType.PlayerPrefs:
                     _storage = new PlayerPrefsStorage();
                     break;
@@ -40,64 +47,84 @@ namespace FakeMG.FakeMGFramework.SaveLoad.Simple {
         }
 
         #region Saveable Registration
-        public void RegisterSaveable(Saveable saveable, string uniqueId) {
-            if (string.IsNullOrEmpty(uniqueId)) {
+        public void RegisterSaveable(Saveable saveable, string uniqueId)
+        {
+            if (string.IsNullOrEmpty(uniqueId))
+            {
                 Debug.LogError("Saveable component registered with invalid ID.");
                 return;
             }
 
-            if (_saveables.ContainsKey(uniqueId)) {
+            if (_saveables.ContainsKey(uniqueId))
+            {
                 Debug.LogWarning($"Saveable with ID {uniqueId} already registered. Overwriting.");
                 _saveables[uniqueId] = saveable;
-            } else {
+            }
+            else
+            {
                 _saveables.Add(uniqueId, saveable);
             }
         }
 
-        public void UnregisterSaveable(string uniqueId) {
+        public void UnregisterSaveable(string uniqueId)
+        {
             _saveables.Remove(uniqueId);
         }
         #endregion
 
-        public void SaveGame() {
-            try {
+        public void SaveGame()
+        {
+            try
+            {
                 SaveProfile profile = CaptureProfile();
                 _storage.Save(SAVE_KEY, profile);
 
                 Debug.Log($"Game saved to {SAVE_KEY}");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Debug.LogError($"Failed to manual save game: {e.Message}");
             }
         }
 
-        public void LoadGame(string saveKey) {
-            if (!_storage.FileExists(saveKey)) {
+        public void LoadGame(string saveKey)
+        {
+            if (!_storage.FileExists(saveKey))
+            {
                 Debug.LogWarning($"No save file found for {saveKey}.");
                 return;
             }
 
-            try {
+            try
+            {
                 var loadedProfile = _storage.Load(saveKey);
                 ApplyProfile(loadedProfile);
 
                 Debug.Log($"Game loaded from {saveKey}");
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Debug.LogError($"Failed to load game from {saveKey}: {e.Message}");
             }
         }
 
-        private SaveProfile CaptureProfile() {
+        private SaveProfile CaptureProfile()
+        {
             var profile = new SaveProfile();
-            foreach (var kvp in _saveables) {
+            foreach (var kvp in _saveables)
+            {
                 profile.Data[kvp.Key] = kvp.Value.CaptureState();
             }
 
             return profile;
         }
 
-        private void ApplyProfile(SaveProfile profile) {
-            foreach (var kvp in profile.Data) {
-                if (_saveables.TryGetValue(kvp.Key, out var savable)) {
+        private void ApplyProfile(SaveProfile profile)
+        {
+            foreach (var kvp in profile.Data)
+            {
+                if (_saveables.TryGetValue(kvp.Key, out var savable))
+                {
                     savable.RestoreState(kvp.Value);
                 }
             }
@@ -105,7 +132,8 @@ namespace FakeMG.FakeMGFramework.SaveLoad.Simple {
     }
 
     [Serializable]
-    public class SaveProfile {
+    public class SaveProfile
+    {
         public Dictionary<string, object> Data = new();
     }
 }

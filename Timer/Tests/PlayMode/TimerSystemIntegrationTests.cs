@@ -4,8 +4,10 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.TestTools;
 
-namespace FakeMG.FakeMGFramework.Timer.Tests {
-    public class TimerSystemIntegrationTests {
+namespace FakeMG.FakeMGFramework.Timer.Tests
+{
+    public class TimerSystemIntegrationTests
+    {
         private GameObject _timerGameObject;
         private GameObject _textGameObject;
         private CountDownTimer _countDownTimer;
@@ -13,11 +15,12 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         private TMPro.TextMeshProUGUI _timerText;
 
         [SetUp]
-        public void Setup() {
+        public void Setup()
+        {
             // Set up CountDownTimer
             _timerGameObject = new GameObject("TimerTestObject");
             _countDownTimer = _timerGameObject.AddComponent<CountDownTimer>();
-            
+
             _countDownTimer.onSecondReducedEvent = new UnityEvent<int>();
             _countDownTimer.onTimerEndEvent = new UnityEvent();
             _countDownTimer.onWarningSecondReducedEvent = new UnityEvent<int>();
@@ -34,13 +37,15 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [TearDown]
-        public void TearDown() {
+        public void TearDown()
+        {
             Object.Destroy(_timerGameObject);
             Object.Destroy(_textGameObject);
         }
 
         [UnityTest]
-        public IEnumerator Integration_ConnectsAndUpdatesUI() {
+        public IEnumerator Integration_ConnectsAndUpdatesUI()
+        {
             // Arrange
             const float testTimeInSecond = 10f;
             string initialText = "";
@@ -63,13 +68,14 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [UnityTest]
-        public IEnumerator AutoStart_InitializesCorrectly() {
+        public IEnumerator AutoStart_InitializesCorrectly()
+        {
             Object.Destroy(_countDownTimer);
             _countDownTimer = _timerGameObject.AddComponent<CountDownTimer>();
             _countDownTimer.onSecondReducedEvent = new UnityEvent<int>();
             _countDownTimer.onTimerEndEvent = new UnityEvent();
             _countDownTimer.onWarningSecondReducedEvent = new UnityEvent<int>();
-            
+
             // Set properties using reflection since they're serialized private fields
             var runOnStartField = typeof(CountDownTimer).GetField("runOnStart",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);

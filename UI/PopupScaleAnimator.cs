@@ -2,11 +2,13 @@
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI {
-    public class PopupScaleAnimator : PopupAnimator {
+namespace FakeMG.FakeMGFramework.UI
+{
+    public class PopupScaleAnimator : PopupAnimator
+    {
         [Header("Target UI")]
         [SerializeField] private CanvasGroup canvasGroup;
-        
+
         [Header("Animation Settings")]
         [SerializeField] private float animationDuration = 0.3f;
         [SerializeField] private Ease showEase = Ease.OutBack;
@@ -16,19 +18,22 @@ namespace FakeMG.FakeMGFramework.UI {
         private readonly Vector3 _initialScale = Vector3.zero;
         private bool _isShowing;
 
-        private void Start() {
+        private void Start()
+        {
             canvasGroup.alpha = 0f;
             canvasGroup.transform.localScale = _initialScale;
         }
 
         [Button]
-        public override void Show(bool animate = true) {
+        public override void Show(bool animate = true)
+        {
             if (_isShowing) return;
             _isShowing = true;
 
             onShowStart?.Invoke();
 
-            if (animate) {
+            if (animate)
+            {
                 canvasGroup.gameObject.SetActive(true);
                 var sequence = DOTween.Sequence();
                 sequence.Join(canvasGroup.transform.DOScale(targetScale, animationDuration)
@@ -36,43 +41,52 @@ namespace FakeMG.FakeMGFramework.UI {
                     .SetLink(canvasGroup.gameObject));
                 sequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
                 sequence.OnComplete(() => onShowFinished?.Invoke());
-            } else {
+            }
+            else
+            {
                 ShowImmediate();
                 onShowFinished?.Invoke();
             }
         }
 
         [Button]
-        public override void Hide(bool animate = true) {
+        public override void Hide(bool animate = true)
+        {
             if (!_isShowing) return;
             _isShowing = false;
 
             onHideStart?.Invoke();
 
-            if (animate) {
+            if (animate)
+            {
                 var sequence = DOTween.Sequence();
                 sequence.Join(canvasGroup.transform.DOScale(_initialScale, animationDuration)
                     .SetEase(hideEase)
                     .SetLink(canvasGroup.gameObject));
                 sequence.Join(canvasGroup.DOFade(0f, animationDuration).SetLink(canvasGroup.gameObject)
                     .SetDelay(animationDuration * 0.5f));
-                sequence.OnComplete(() => {
+                sequence.OnComplete(() =>
+                {
                     canvasGroup.gameObject.SetActive(false);
                     onHideFinished?.Invoke();
                 });
-            } else {
+            }
+            else
+            {
                 HideImmediate();
                 onHideFinished?.Invoke();
             }
         }
 
-        private void ShowImmediate() {
+        private void ShowImmediate()
+        {
             canvasGroup.gameObject.SetActive(true);
             canvasGroup.alpha = 1f;
             canvasGroup.transform.localScale = targetScale;
         }
 
-        private void HideImmediate() {
+        private void HideImmediate()
+        {
             canvasGroup.alpha = 0f;
             canvasGroup.transform.localScale = _initialScale;
             canvasGroup.gameObject.SetActive(false);

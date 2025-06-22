@@ -3,8 +3,10 @@ using System.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.TargetFinder {
-    public abstract class TargetFinder : MonoBehaviour {
+namespace FakeMG.FakeMGFramework.TargetFinder
+{
+    public abstract class TargetFinder : MonoBehaviour
+    {
         [Title("Target Finder")]
         [SerializeField] protected float radius = 10f;
         [SerializeField] private float targetDetectionInterval = 1f;
@@ -33,65 +35,81 @@ namespace FakeMG.FakeMGFramework.TargetFinder {
 
         private bool _isTargetInRange;
 
-        protected virtual void OnEnable() {
+        protected virtual void OnEnable()
+        {
             _isActive = true;
             StartTargetFinding();
         }
 
-        private void Start() {
+        private void Start()
+        {
             _waitForSeconds = new WaitForSeconds(targetDetectionInterval);
 
             StartCoroutine(FindTarget());
         }
 
-        protected virtual void OnDisable() {
+        protected virtual void OnDisable()
+        {
             _isActive = false;
             StopTargetFinding();
         }
 
-        private void StartTargetFinding() {
+        private void StartTargetFinding()
+        {
             StopTargetFinding();
             _findTargetCoroutine = StartCoroutine(FindTarget());
         }
 
-        private void StopTargetFinding() {
-            if (_findTargetCoroutine != null) {
+        private void StopTargetFinding()
+        {
+            if (_findTargetCoroutine != null)
+            {
                 StopCoroutine(_findTargetCoroutine);
                 _findTargetCoroutine = null;
             }
         }
 
-        public void SetRadius(float newRadius) {
+        public void SetRadius(float newRadius)
+        {
             radius = newRadius;
         }
 
-        private IEnumerator FindTarget() {
-            while (_isActive) {
+        private IEnumerator FindTarget()
+        {
+            while (_isActive)
+            {
                 GameObject selectedTarget = ChooseATargetInRange();
 
-                if (requireLineOfSight && selectedTarget) {
-                    if (!HasLineOfSight(selectedTarget)) {
+                if (requireLineOfSight && selectedTarget)
+                {
+                    if (!HasLineOfSight(selectedTarget))
+                    {
                         selectedTarget = null;
                     }
                 }
 
-                if (selectedTarget && selectedTarget != Target) {
+                if (selectedTarget && selectedTarget != Target)
+                {
                     Target = selectedTarget;
 
-                    if (_isActive) {
+                    if (_isActive)
+                    {
                         OnNewTargetFound?.Invoke(selectedTarget);
                     }
                 }
 
-                if (!selectedTarget && _isTargetInRange) {
+                if (!selectedTarget && _isTargetInRange)
+                {
                     Target = null;
                     _isTargetInRange = false;
-                    if (_isActive) {
+                    if (_isActive)
+                    {
                         OnTargetLost?.Invoke();
                     }
                 }
 
-                if (Target && _isActive) {
+                if (Target && _isActive)
+                {
                     _isTargetInRange = true;
                     OnTargetInRange?.Invoke(Target);
                 }
@@ -102,11 +120,12 @@ namespace FakeMG.FakeMGFramework.TargetFinder {
 
         protected abstract GameObject ChooseATargetInRange();
 
-        private bool HasLineOfSight(GameObject target) {
+        private bool HasLineOfSight(GameObject target)
+        {
             Vector3 direction = target.transform.position - transform.position;
 
             float distance = direction.magnitude;
-            
+
             // Check if positions are too close to get a meaningful direction
             if (distance < 0.5f) return true;
 
@@ -115,24 +134,28 @@ namespace FakeMG.FakeMGFramework.TargetFinder {
                 : Check3DLineOfSight(direction.normalized, distance);
         }
 
-        private bool Check2DLineOfSight(Vector2 direction, float distance) {
+        private bool Check2DLineOfSight(Vector2 direction, float distance)
+        {
             RaycastHit2D hit = Physics2D.Raycast(transform.position, direction.normalized, distance, obstacleLayerMask);
             return !hit.collider;
         }
 
-        private bool Check3DLineOfSight(Vector3 direction, float distance) {
+        private bool Check3DLineOfSight(Vector3 direction, float distance)
+        {
             bool hasHit = Physics.Raycast(transform.position, direction.normalized, out RaycastHit hit, distance,
                 obstacleLayerMask);
             return !hasHit;
         }
 
-        private void OnDrawGizmos() {
+        private void OnDrawGizmos()
+        {
             if (!showGizmos) return;
 
             Gizmos.color = radiusColor;
             Gizmos.DrawWireSphere(transform.position, radius);
 
-            if (Target) {
+            if (Target)
+            {
                 Gizmos.color = lineColor;
                 Gizmos.DrawLine(transform.position, Target.transform.position);
             }

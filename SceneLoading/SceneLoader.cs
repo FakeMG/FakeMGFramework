@@ -238,6 +238,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
             {
                 Debug.Log($"Successfully reloaded scene: {sceneName}");
             }
+
             return loadSuccess;
         }
 
@@ -248,6 +249,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
             {
                 Addressables.UnloadSceneAsync(_loadedScene.Value);
             }
+
             _loadedScene = null;
         }
     }

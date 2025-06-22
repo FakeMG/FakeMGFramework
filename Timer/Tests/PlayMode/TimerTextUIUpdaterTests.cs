@@ -2,14 +2,17 @@ using NUnit.Framework;
 using TMPro;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Timer.Tests {
-    public class TimerTextUIUpdaterTests {
+namespace FakeMG.FakeMGFramework.Timer.Tests
+{
+    public class TimerTextUIUpdaterTests
+    {
         private GameObject _textGameObject;
         private TextMeshProUGUI _timerText;
         private TimerTextUIUpdater _timerTextUpdater;
 
         [SetUp]
-        public void Setup() {
+        public void Setup()
+        {
             _textGameObject = new GameObject("TextTestObject");
             _timerText = _textGameObject.AddComponent<TextMeshProUGUI>();
             _timerTextUpdater = _textGameObject.AddComponent<TimerTextUIUpdater>();
@@ -21,12 +24,14 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [TearDown]
-        public void TearDown() {
+        public void TearDown()
+        {
             Object.Destroy(_textGameObject);
         }
 
         [Test]
-        public void UpdateUI_FormatsTimeCorrectly() {
+        public void UpdateUI_FormatsTimeCorrectly()
+        {
             // Test case 1: zero seconds
             _timerTextUpdater.UpdateUI(0);
             Assert.AreEqual("00:00", _timerText.text, "Should display 00:00 for zero seconds");
@@ -49,7 +54,8 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [Test]
-        public void UpdateUI_HandlesNegativeValues() {
+        public void UpdateUI_HandlesNegativeValues()
+        {
             // Timer should display 00:00 for negative values
             _timerTextUpdater.UpdateUI(-10);
             Assert.AreEqual("00:00", _timerText.text, "Should display 00:00 for negative seconds");

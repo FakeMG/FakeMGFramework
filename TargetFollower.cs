@@ -1,7 +1,9 @@
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework {
-    public class TargetFollower : MonoBehaviour {
+namespace FakeMG.FakeMGFramework
+{
+    public class TargetFollower : MonoBehaviour
+    {
         [Tooltip("The target transform to follow")]
         public Transform target;
 
@@ -12,7 +14,7 @@ namespace FakeMG.FakeMGFramework {
         public bool followY = true;
         [Tooltip("Whether to follow the target on the Z axis")]
         public bool followZ = true;
-        
+
         [Header("Offset Values")]
         [Tooltip("Offset on the X axis")]
         public float offsetX;
@@ -26,7 +28,8 @@ namespace FakeMG.FakeMGFramework {
 
         private Vector3 _velocity = Vector3.zero;
 
-        private void LateUpdate() {
+        private void LateUpdate()
+        {
             if (!target)
                 return;
 
@@ -34,10 +37,10 @@ namespace FakeMG.FakeMGFramework {
 
             if (followX)
                 targetPosition.x = target.position.x + offsetX;
-            
+
             if (followY)
                 targetPosition.y = target.position.y + offsetY;
-            
+
             if (followZ)
                 targetPosition.z = target.position.z + offsetZ;
 

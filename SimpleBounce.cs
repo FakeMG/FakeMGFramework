@@ -1,8 +1,10 @@
 ﻿using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace FakeMG.FakeMGFramework {
-    public class SimpleBounce : MonoBehaviour {
+namespace FakeMG.FakeMGFramework
+{
+    public class SimpleBounce : MonoBehaviour
+    {
         [SerializeField] private float shootForce = 5f;
         [SerializeField] private float gravity = -15f;
         [SerializeField] private int bounceCount = 2;
@@ -14,19 +16,23 @@ namespace FakeMG.FakeMGFramework {
         private int _currentBounces;
         private bool _isFalling = true;
 
-        private void Update() {
-            if (_isFalling) {
+        private void Update()
+        {
+            if (_isFalling)
+            {
                 _velocity += new Vector3(0, gravity * Time.deltaTime, 0);
-            
+
                 transform.position += _velocity * Time.deltaTime;
-            
-                if (transform.position.y <= groundY) {
+
+                if (transform.position.y <= groundY)
+                {
                     BounceOrStop();
                 }
             }
         }
 
-        public void ShootObject() {
+        public void ShootObject()
+        {
             Vector3 randomDirection =
                 new Vector3(Random.Range(-1f, 1f), Random.Range(0.8f, 1f), Random.Range(-1f, 1f))
                     .normalized;
@@ -37,8 +43,10 @@ namespace FakeMG.FakeMGFramework {
             _currentBounces = 0;
         }
 
-        private void BounceOrStop() {
-            if (_currentBounces < bounceCount) {
+        private void BounceOrStop()
+        {
+            if (_currentBounces < bounceCount)
+            {
                 // Bounce logic: reverse Y velocity and reduce its magnitude
                 _velocity.y = -_velocity.y * 0.5f;
                 _velocity.x *= velocityXZDamping;
@@ -48,7 +56,9 @@ namespace FakeMG.FakeMGFramework {
 
                 // Ensure the object stays above the ground
                 transform.position = new Vector3(transform.position.x, groundY + 0.01f, transform.position.z);
-            } else {
+            }
+            else
+            {
                 // Stop the object
                 _isFalling = false;
                 _currentBounces = 0;

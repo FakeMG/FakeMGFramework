@@ -4,13 +4,16 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.TestTools;
 
-namespace FakeMG.FakeMGFramework.Timer.Tests {
-    public class CountDownTimerTests {
+namespace FakeMG.FakeMGFramework.Timer.Tests
+{
+    public class CountDownTimerTests
+    {
         private GameObject _timerGameObject;
         private CountDownTimer _countDownTimer;
 
         [SetUp]
-        public void Setup() {
+        public void Setup()
+        {
             _timerGameObject = new GameObject("TimerTestObject");
             _countDownTimer = _timerGameObject.AddComponent<CountDownTimer>();
             //init all the unity events
@@ -22,12 +25,14 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [TearDown]
-        public void TearDown() {
+        public void TearDown()
+        {
             Object.Destroy(_timerGameObject);
         }
 
         [UnityTest]
-        public IEnumerator SetTimeToWait_InitializesTimer() {
+        public IEnumerator SetTimeToWait_InitializesTimer()
+        {
             // Arrange
             const float testTime = 10f;
             bool secondEventTriggered = false;
@@ -49,7 +54,8 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [UnityTest]
-        public IEnumerator RunsCorrectly_WhenStarted() {
+        public IEnumerator RunsCorrectly_WhenStarted()
+        {
             // Arrange
             const float testTime = 2f;
             int secondEventCallCount = 0;
@@ -73,7 +79,8 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [UnityTest]
-        public IEnumerator WarningEvents_TriggerCorrectly() {
+        public IEnumerator WarningEvents_TriggerCorrectly()
+        {
             // Arrange
             const float testTime = 7f; // Time longer than warning period
             const float warningPeriod = 5f;
@@ -106,7 +113,8 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [UnityTest]
-        public IEnumerator AddTime_ExtendsCurrentTime() {
+        public IEnumerator AddTime_ExtendsCurrentTime()
+        {
             // Arrange
             const float initialTime = 2f;
             const float additionalTime = 3f;

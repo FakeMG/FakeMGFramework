@@ -44,7 +44,8 @@ namespace FakeMG.FakeMGFramework.UI
             _rectTransform = GetComponent<RectTransform>();
 
             _images = GetComponentsInChildren<Image>(true).Where(img => img.gameObject != gameObject).ToList();
-            _textMeshProUGUIs = GetComponentsInChildren<TextMeshProUGUI>(true).Where(text => text.gameObject != gameObject).ToList();
+            _textMeshProUGUIs = GetComponentsInChildren<TextMeshProUGUI>(true)
+                .Where(text => text.gameObject != gameObject).ToList();
 
             _normalScale = visual.transform.localScale;
             if (_normalScale == Vector3.zero)
@@ -160,17 +161,19 @@ namespace FakeMG.FakeMGFramework.UI
             {
                 case State.Normal:
                     visual?.transform.DOScale(_normalScale, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
-                            .SetLink(gameObject);
+                        .SetLink(gameObject);
                     ChangeColor(normalColor);
                     break;
                 case State.Hover:
-                    visual?.transform.DOScale(_normalScale * HOVER_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
-                            .SetLink(gameObject);
+                    visual?.transform.DOScale(_normalScale * HOVER_SCALE_MULTIPLIER, ANIMATION_DURATION)
+                        .SetEase(Ease.InOutQuad).SetUpdate(true)
+                        .SetLink(gameObject);
                     ChangeColor(hoverColor);
                     break;
                 case State.Pressed:
-                    visual?.transform.DOScale(_normalScale * PRESS_SCALE_MULTIPLIER, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
-                            .SetLink(gameObject);
+                    visual?.transform.DOScale(_normalScale * PRESS_SCALE_MULTIPLIER, ANIMATION_DURATION)
+                        .SetEase(Ease.InOutQuad).SetUpdate(true)
+                        .SetLink(gameObject);
                     ChangeColor(hoverColor);
                     break;
                 case State.Disabled:

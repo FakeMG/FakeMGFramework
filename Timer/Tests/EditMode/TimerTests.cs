@@ -1,9 +1,12 @@
 using NUnit.Framework;
 
-namespace FakeMG.FakeMGFramework.Timer.Tests {
-    public class TimerTests {
+namespace FakeMG.FakeMGFramework.Timer.Tests
+{
+    public class TimerTests
+    {
         [Test]
-        public void Initialization_SetsCorrectValues() {
+        public void Initialization_SetsCorrectValues()
+        {
             // Arrange & Act
             const float expectedTime = 10f;
             var timer = new Timer(expectedTime);
@@ -15,7 +18,8 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [Test]
-        public void Tick_DecreasesTimeCorrectly() {
+        public void Tick_DecreasesTimeCorrectly()
+        {
             // Arrange
             const float startTime = 5f;
             const float deltaTime = 1f;
@@ -31,7 +35,8 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [Test]
-        public void Tick_Finished_ReturnsTrue() {
+        public void Tick_Finished_ReturnsTrue()
+        {
             // Arrange
             const float startTime = 2f;
             var timer = new Timer(startTime);
@@ -49,7 +54,8 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
         }
 
         [Test]
-        public void SetTime_ResetsTimer() {
+        public void SetTime_ResetsTimer()
+        {
             // Arrange
             var timer = new Timer(10f);
             timer.Tick(5f); // Timer at 5 seconds
@@ -60,11 +66,13 @@ namespace FakeMG.FakeMGFramework.Timer.Tests {
 
             // Assert
             Assert.AreEqual(newTime, timer.TimeToWait, "TimeToWait should be updated");
-            Assert.AreEqual(newTime, timer.CurrentTimeLeftInSeconds, "CurrentTimeInSeconds should be reset to new time");
+            Assert.AreEqual(newTime, timer.CurrentTimeLeftInSeconds,
+                "CurrentTimeInSeconds should be reset to new time");
         }
 
         [Test]
-        public void AddTime_PositiveValue_IncreasesCurrentTime() {
+        public void AddTime_PositiveValue_IncreasesCurrentTime()
+        {
             // Arrange
             const float startTime = 10f;
             var timer = new Timer(startTime);
