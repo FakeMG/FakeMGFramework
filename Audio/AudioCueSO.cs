@@ -11,6 +11,9 @@ namespace FakeMG.FakeMGFramework.Audio
         public float fadeInDuration;
         public bool fadeOut;
         public float fadeOutDuration;
+        [Tooltip("Time in seconds to wait before the audio cue can be played again")]
+        [Range(0f, 10f)]
+        public float replayDelay;
         [SerializeField] private AudioClipsGroup[] _audioClipGroups;
 
         public AudioClip[] GetClips()
