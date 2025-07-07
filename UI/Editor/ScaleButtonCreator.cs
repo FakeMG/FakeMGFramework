@@ -5,15 +5,15 @@ using UnityEngine.UI;
 
 namespace FakeMG.FakeMGFramework.UI.Editor
 {
-    public static class CustomButtonCreator
+    public static class ScaleButtonCreator
     {
-        [MenuItem("GameObject/UI/Custom Button", false, 2001)]
+        [MenuItem("GameObject/UI/Scale Button", false, 2001)]
         public static void CreateCustomButton(MenuCommand menuCommand)
         {
             GameObject parent = menuCommand.context as GameObject;
 
             // Create main button GameObject
-            GameObject buttonGameObject = new GameObject("Custom Button");
+            GameObject buttonGameObject = new GameObject("Scale Button");
             GameObjectUtility.SetParentAndAlign(buttonGameObject, parent);
 
             // Add RectTransform and set default size
@@ -56,22 +56,22 @@ namespace FakeMG.FakeMGFramework.UI.Editor
             textComponent.alignment = TextAlignmentOptions.Center;
 
             // Add CustomButton component and configure it
-            CustomButton customButton = buttonGameObject.AddComponent<CustomButton>();
+            ScaleButton scaleButton = buttonGameObject.AddComponent<ScaleButton>();
 
             // Use reflection to set the visual field since it's serialized
-            SerializedObject serializedButton = new SerializedObject(customButton);
+            SerializedObject serializedButton = new SerializedObject(scaleButton);
             SerializedProperty visualProperty = serializedButton.FindProperty("visual");
             visualProperty.objectReferenceValue = visualGameObject.transform;
             serializedButton.ApplyModifiedProperties();
 
             // Register undo and select the created object
-            Undo.RegisterCreatedObjectUndo(buttonGameObject, "Create Custom Button");
+            Undo.RegisterCreatedObjectUndo(buttonGameObject, "Create Scale Button");
             Selection.activeGameObject = buttonGameObject;
         }
 
         // Validate that we can only create UI elements under a Canvas
-        [MenuItem("GameObject/UI/Custom Button", true)]
-        public static bool ValidateCreateCustomButton()
+        [MenuItem("GameObject/UI/Scale Button", true)]
+        public static bool ValidateCreateScaleButton()
         {
             return Selection.activeGameObject == null ||
                    Selection.activeGameObject.GetComponentInParent<Canvas>() != null;
