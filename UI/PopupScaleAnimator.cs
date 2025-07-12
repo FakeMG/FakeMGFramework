@@ -20,14 +20,16 @@ namespace FakeMG.FakeMGFramework.UI
 
         private void Start()
         {
-            canvasGroup.alpha = 0f;
-            canvasGroup.transform.localScale = _initialScale;
+            HideImmediate();
         }
 
         [Button]
         public override void Show(bool animate = true)
         {
             if (_isShowing) return;
+
+            CurrentSequence?.Kill();
+            
             _isShowing = true;
 
             onShowStart?.Invoke();
@@ -35,12 +37,16 @@ namespace FakeMG.FakeMGFramework.UI
             if (animate)
             {
                 canvasGroup.gameObject.SetActive(true);
-                var sequence = DOTween.Sequence();
-                sequence.Join(canvasGroup.transform.DOScale(targetScale, animationDuration)
+                CurrentSequence = DOTween.Sequence();
+                CurrentSequence.Join(canvasGroup.transform.DOScale(targetScale, animationDuration)
                     .SetEase(showEase)
                     .SetLink(canvasGroup.gameObject));
-                sequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
-                sequence.OnComplete(() => onShowFinished?.Invoke());
+                CurrentSequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
+                CurrentSequence.OnComplete(() => 
+                {
+                    CurrentSequence = null;
+                    onShowFinished?.Invoke();
+                });
             }
             else
             {
@@ -53,20 +59,24 @@ namespace FakeMG.FakeMGFramework.UI
         public override void Hide(bool animate = true)
         {
             if (!_isShowing) return;
+
+            CurrentSequence?.Kill();
+            
             _isShowing = false;
 
             onHideStart?.Invoke();
 
             if (animate)
             {
-                var sequence = DOTween.Sequence();
-                sequence.Join(canvasGroup.transform.DOScale(_initialScale, animationDuration)
+                CurrentSequence = DOTween.Sequence();
+                CurrentSequence.Join(canvasGroup.transform.DOScale(_initialScale, animationDuration)
                     .SetEase(hideEase)
                     .SetLink(canvasGroup.gameObject));
-                sequence.Join(canvasGroup.DOFade(0f, animationDuration).SetLink(canvasGroup.gameObject)
+                CurrentSequence.Join(canvasGroup.DOFade(0f, animationDuration).SetLink(canvasGroup.gameObject)
                     .SetDelay(animationDuration * 0.5f));
-                sequence.OnComplete(() =>
+                CurrentSequence.OnComplete(() =>
                 {
+                    CurrentSequence = null;
                     canvasGroup.gameObject.SetActive(false);
                     onHideFinished?.Invoke();
                 });
