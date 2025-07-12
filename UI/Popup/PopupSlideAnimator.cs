@@ -2,7 +2,7 @@
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI
+namespace FakeMG.FakeMGFramework.UI.Popup
 {
     public class PopupSlideAnimator : PopupAnimator
     {

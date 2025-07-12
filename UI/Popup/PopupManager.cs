@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.UI;
 using DG.Tweening;
 using Sirenix.OdinInspector;
+using UnityEngine;
+using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.UI
+namespace FakeMG.FakeMGFramework.UI.Popup
 {
     /// <summary>
     /// Manages the display and layering of popup windows with animated black backgrounds.
