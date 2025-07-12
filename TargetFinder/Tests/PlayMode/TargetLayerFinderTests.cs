@@ -1,9 +1,10 @@
 using System.Collections;
+using FakeMG.FakeMGFramework.TargetFinder;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
 
-namespace FakeMG.FakeMGFramework.TargetFinder.Tests
+namespace TargetFinder.PlayMode
 {
     public class TargetLayerFinderTests
     {
@@ -32,11 +33,11 @@ namespace FakeMG.FakeMGFramework.TargetFinder.Tests
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             findClosestTargetField.SetValue(_finder, true);
 
-            var radiusField = typeof(TargetFinder).GetField("radius",
+            var radiusField = typeof(FakeMG.FakeMGFramework.TargetFinder.TargetFinder).GetField("radius",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             radiusField.SetValue(_finder, 5f);
 
-            var targetDetectionInterval = typeof(TargetFinder).GetField("targetDetectionInterval",
+            var targetDetectionInterval = typeof(FakeMG.FakeMGFramework.TargetFinder.TargetFinder).GetField("targetDetectionInterval",
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
             _interval = (float)targetDetectionInterval.GetValue(_finder);
         }

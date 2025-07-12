@@ -1,7 +1,8 @@
+using FakeMG.FakeMGFramework.ExtensionMethods;
 using NUnit.Framework;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests
+namespace ExtensionMethods.EditMode
 {
     public class LayerMaskExtensionsTests
     {

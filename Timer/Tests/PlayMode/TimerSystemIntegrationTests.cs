@@ -1,10 +1,11 @@
 using System.Collections;
+using FakeMG.FakeMGFramework.Timer;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.TestTools;
 
-namespace FakeMG.FakeMGFramework.Timer.Tests
+namespace Timer.PlayMode
 {
     public class TimerSystemIntegrationTests
     {

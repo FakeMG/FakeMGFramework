@@ -1,8 +1,9 @@
+using FakeMG.FakeMGFramework.Timer;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Timer.Tests
+namespace Timer.PlayMode
 {
     public class TimerTextUIUpdaterTests
     {

@@ -1,6 +1,7 @@
+using FakeMG.FakeMGFramework.ExtensionMethods;
 using NUnit.Framework;
 
-namespace FakeMG.FakeMGFramework.ExtensionMethods.Tests
+namespace ExtensionMethods.EditMode
 {
     public class IntExtensionsTests
     {
