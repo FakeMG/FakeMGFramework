@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
 {
-    /// <summary>
-    /// Tab transition animator with horizontal sliding transitions and button animations
-    /// </summary>
     public class SlidingTabTransition : TabTransitionBase
     {
         [SerializeField] private RectTransform canvasRectTransform;

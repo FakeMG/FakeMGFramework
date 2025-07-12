@@ -14,6 +14,8 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
 
         public override void AnimateSelection()
         {
+            buttonIconRect.DOKill();
+            
             Vector3 targetScale = Vector3.one * buttonScaleMultiplier;
             float targetY = buttonYOffset;
 
@@ -23,6 +25,8 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
 
         public override void AnimateDeselection()
         {
+            buttonIconRect.DOKill();
+            
             Vector3 targetScale = Vector3.one;
             float targetY = 0f;
 
@@ -32,12 +36,16 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
 
         public override void InstantlySelect()
         {
+            buttonIconRect.DOKill();
+            
             buttonIconRect.localScale = Vector3.one * buttonScaleMultiplier;
             buttonIconRect.anchoredPosition = new Vector2(buttonIconRect.anchoredPosition.x, buttonYOffset);
         }
         
         public override void InstantlyDeselect()
         {
+            buttonIconRect.DOKill();
+            
             buttonIconRect.localScale = Vector3.one;
             buttonIconRect.anchoredPosition = new Vector2(buttonIconRect.anchoredPosition.x, 0f);
         }

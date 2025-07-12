@@ -4,14 +4,12 @@ using UnityEngine;
 
 namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
 {
-    /// <summary>
-    /// Tab transition animator with scale-based transitions
-    /// </summary>
     public class ScaleTabTransition : TabTransitionBase
     {
         [Header("Scale Animation Settings")]
         [SerializeField] private float scaleDownMultiplier = 0.8f;
-        [SerializeField] private float overshootScale = 1.1f;
+        [SerializeField, Tooltip("Controls the overshoot amount for the OutBack ease. Higher values = more overshoot.")] 
+        private float overshootScale = 1.1f;
 
         public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null)
         {
@@ -30,7 +28,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
             toTab.TabContent.gameObject.SetActive(true);
             toTab.TabContent.localScale = Vector3.zero;
             toTab.TabContent.DOScale(Vector3.one, animationDuration)
-                .SetEase(Ease.OutBack)
+                .SetEase(Ease.OutBack, overshootScale)
                 .SetLink(toTab.TabContent.gameObject)
                 .OnComplete(() =>
                 {

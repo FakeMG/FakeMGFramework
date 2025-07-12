@@ -5,32 +5,37 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
 {
     public class TabButtonScale : TabButtonBase
     {
-        [SerializeField] private CanvasGroup buttonBackground;
-        [SerializeField] private RectTransform buttonIconRect;
+        [SerializeField] private RectTransform tabButton;
         [SerializeField] protected float animationDuration = 0.3f;
 
         public override void AnimateSelection()
         {
+            tabButton.DOKill();
+            
             Vector3 targetScale = Vector3.one * 1.2f;
-            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(Ease.OutBounce).SetLink(buttonIconRect.gameObject);
+            tabButton.DOScale(targetScale, animationDuration).SetEase(Ease.OutBounce).SetLink(tabButton.gameObject);
         }
 
         public override void AnimateDeselection()
         {
+            tabButton.DOKill();
+            
             Vector3 targetScale = Vector3.one;
-            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(Ease.OutQuad).SetLink(buttonIconRect.gameObject);
+            tabButton.DOScale(targetScale, animationDuration).SetEase(Ease.OutQuad).SetLink(tabButton.gameObject);
         }
 
         public override void InstantlySelect()
         {
-            buttonIconRect.localScale = Vector3.one * 1.2f;
-            buttonBackground.alpha = 1f; // Ensure background is fully visible
+            tabButton.DOKill();
+            
+            tabButton.localScale = Vector3.one * 1.2f;
         }
         
         public override void InstantlyDeselect()
         {
-            buttonIconRect.localScale = Vector3.one;
-            buttonBackground.alpha = 0.5f; // Ensure background is semi-transparent
+            tabButton.DOKill();
+            
+            tabButton.localScale = Vector3.one;
         }
     }
 }

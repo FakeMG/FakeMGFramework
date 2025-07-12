@@ -49,10 +49,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab
             for (int i = 0; i < tabs.Count; i++)
             {
                 int tabIndex = i;
-                if (tabs[i].TabButton != null)
-                {
-                    tabs[i].TabButton.onClick.AddListener(() => SwitchToTab(tabIndex));
-                }
+                tabs[i].TabButton.button.onClick.AddListener(() => SwitchToTab(tabIndex));
             }
         }
 
@@ -64,8 +61,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab
 
             AnimateButtonSelectionChange(previousTabIndex, tabIndex);
 
-            transition.PlayTabTransitionAnimation(tabs[previousTabIndex], tabs[tabIndex], previousTabIndex,
-                tabIndex);
+            transition.PlayTabTransitionAnimation(tabs[previousTabIndex], tabs[tabIndex], previousTabIndex, tabIndex);
 
             _currentActiveTabIndex = tabIndex;
             onTabChanged?.Invoke(tabIndex);

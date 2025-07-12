@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
 {
-    /// <summary>
-    /// Tab transition animator with fade in/out transitions
-    /// </summary>
     public class FadeTabTransition : TabTransitionBase
     {
         public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null)
