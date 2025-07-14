@@ -8,7 +8,7 @@ namespace FakeMG.FakeMGFramework.UI.Editor
     public static class ScaleButtonCreator
     {
         [MenuItem("GameObject/UI/Scale Button", false, 2001)]
-        public static void CreateCustomButton(MenuCommand menuCommand)
+        public static void CreateScaleButton(MenuCommand menuCommand)
         {
             GameObject parent = menuCommand.context as GameObject;
 
@@ -55,14 +55,9 @@ namespace FakeMG.FakeMGFramework.UI.Editor
             textComponent.color = Color.black;
             textComponent.alignment = TextAlignmentOptions.Center;
 
-            // Add CustomButton component and configure it
+            // Add ScaleButton component and configure it
             ScaleButton scaleButton = buttonGameObject.AddComponent<ScaleButton>();
-
-            // Use reflection to set the visual field since it's serialized
-            SerializedObject serializedButton = new SerializedObject(scaleButton);
-            SerializedProperty visualProperty = serializedButton.FindProperty("visual");
-            visualProperty.objectReferenceValue = visualGameObject.transform;
-            serializedButton.ApplyModifiedProperties();
+            scaleButton.targetGraphic = visualGameObject.GetComponent<Image>();
 
             // Register undo and select the created object
             Undo.RegisterCreatedObjectUndo(buttonGameObject, "Create Scale Button");
