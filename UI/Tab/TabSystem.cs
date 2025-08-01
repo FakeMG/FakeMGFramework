@@ -13,7 +13,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab
 
         public UnityEvent<int> onTabChanged;
 
-        private int _currentActiveTabIndex = -1;
+        private int _currentActiveTabIndex;
 
         private void Start()
         {

@@ -14,8 +14,8 @@ namespace FakeMG.FakeMGFramework.UI.Popup
     /// </summary>
     public class PopupManager : MonoBehaviour
     {
-        private const float BACKGROUND_FADE_ALPHA = 0.8f;
         private const float BACKGROUND_FADE_DURATION = 0.3f;
+        private float _backgroundFadeAlpha = 0.95f;
 
         [Required]
         [SerializeField] private Image blackBackgroundPrefab;
@@ -24,13 +24,15 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
         private void Start()
         {
+            _backgroundFadeAlpha = blackBackgroundPrefab.color.a;
+
             foreach (Transform child in transform)
             {
                 if (child.TryGetComponent(out PopupAnimator popupAnimator))
                 {
                     popupAnimator.onShowStart.AddListener(() => OnPopupOpen(popupAnimator));
                     popupAnimator.onHideStart.AddListener(() => HideBackground(popupAnimator));
-                    popupAnimator.onHideFinished.AddListener(() => OnPopupClose(popupAnimator));
+                    popupAnimator.onHideFinished.AddListener(() => OnPopupFinishClosing(popupAnimator));
                 }
                 else
                 {
@@ -68,7 +70,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             Color backgroundColor = background.color;
             backgroundColor.a = 0f;
             background.color = backgroundColor;
-            background.DOFade(BACKGROUND_FADE_ALPHA, BACKGROUND_FADE_DURATION);
+            background.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION).SetLink(background.gameObject);
 
             return background;
         }
@@ -83,12 +85,17 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
             if (background)
             {
-                background.DOFade(0f, BACKGROUND_FADE_DURATION).OnComplete(() => Destroy(background.gameObject));
+                background.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(background.gameObject);
             }
         }
 
-        private void OnPopupClose(PopupAnimator popupAnimator)
+        private void OnPopupFinishClosing(PopupAnimator popupAnimator)
         {
+            if (_popupDict.TryGetValue(popupAnimator, out var background))
+            {
+                Destroy(background.gameObject);
+            }
+            
             if (!_popupDict.Remove(popupAnimator))
             {
                 Debug.LogWarning($"Popup {popupAnimator.name} is not open!");
