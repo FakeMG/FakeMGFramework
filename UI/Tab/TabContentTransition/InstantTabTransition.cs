@@ -21,6 +21,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
         public override void ActivateTabContent(TabData tab)
         {
             tab.TabContent.gameObject.SetActive(true);
+            tab.onTabSelected?.Invoke();
         }
 
         public override void DeactivateTabContent(TabData tab)
