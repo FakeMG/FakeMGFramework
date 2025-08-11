@@ -1,4 +1,5 @@
 ﻿using Cysharp.Threading.Tasks;
+using System;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Events;
@@ -12,6 +13,10 @@ namespace FakeMG.FakeMGFramework.SceneLoading
     {
         [Header("Scene Settings")]
         [SerializeField] private AssetReference sceneReference;
+        [SerializeField] private bool loadOnStart;
+        [Tooltip("Delay in seconds before loading the scene on start.")]
+        [SerializeField] private float loadOnStartDelay;
+        [SerializeField] private LoadSceneMode defaultLoadMode = LoadSceneMode.Additive;
 
         [Header("Events")]
         public UnityEvent onSceneLoaded;
@@ -22,12 +27,41 @@ namespace FakeMG.FakeMGFramework.SceneLoading
         private AsyncOperationHandle<SceneInstance>? _loadedScene;
 
         public bool IsLoading { get; private set; }
-
         public bool IsUnloading { get; private set; }
-
         public bool IsBusy => IsLoading || IsUnloading;
         public bool IsSceneLoaded => _loadedScene.HasValue && _loadedScene.Value.IsValid();
         public AssetReference SceneReference => sceneReference;
+
+        private void Start()
+        {
+            if (loadOnStart)
+            {
+                LoadSceneWithDelayOnStartAsync().Forget();
+            }
+        }
+        
+        private async UniTaskVoid LoadSceneWithDelayOnStartAsync()
+        {
+            try
+            {
+                if (loadOnStartDelay > 0)
+                {
+                    // Using a cancellation token ensures that if the GameObject is destroyed
+                    // during the delay, the task is cancelled cleanly.
+                    await UniTask.Delay(TimeSpan.FromSeconds(loadOnStartDelay), ignoreTimeScale: false, cancellationToken: this.GetCancellationTokenOnDestroy());
+                }
+
+                await LoadSceneAsync(defaultLoadMode);
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.Log("Scene loading was cancelled because the SceneLoader object was destroyed.");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"An unexpected error occurred during delayed scene load: {ex.Message}");
+            }
+        }
 
         public void LoadSceneAdditive()
         {
@@ -87,14 +121,14 @@ namespace FakeMG.FakeMGFramework.SceneLoading
             }
         }
 
-        private async UniTaskVoid LoadSceneAsync(LoadSceneMode loadMode)
+        private async UniTask LoadSceneAsync(LoadSceneMode loadMode)
         {
             try
             {
                 IsLoading = true;
                 await LoadSceneInternalAsync(loadMode);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"Unexpected error during scene loading: {ex.Message}");
                 onSceneLoadFailed?.Invoke($"Unexpected error: {ex.Message}");
@@ -116,7 +150,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
 
             if (IsSceneLoaded)
             {
-                Debug.LogWarning($"Scene {sceneReference.editorAsset?.name} is already loaded.");
+                Debug.LogWarning($"Scene {name} is already loaded.");
                 return true;
             }
 
@@ -137,7 +171,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
                 return true;
             }
 
-            string errorMsg = $"Failed to load scene: {sceneReference.editorAsset?.name}";
+            string errorMsg = $"Failed to load scene: {name}";
             Debug.LogError(errorMsg);
             onSceneLoadFailed?.Invoke(errorMsg);
             return false;
@@ -150,7 +184,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
                 IsUnloading = true;
                 await UnloadSceneInternalAsync();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"Unexpected error during scene unloading: {ex.Message}");
                 onSceneUnloadFailed?.Invoke($"Unexpected error: {ex.Message}");
@@ -165,7 +199,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
         {
             if (!IsSceneLoaded || !_loadedScene.HasValue)
             {
-                Debug.LogWarning($"Scene {sceneReference.editorAsset?.name} is not loaded or already unloaded.");
+                Debug.LogWarning($"Scene {name} is not loaded or already unloaded.");
                 return true;
             }
 
@@ -197,7 +231,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
                 IsUnloading = true;
                 await ReloadSceneInternalAsync();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogError($"Unexpected error during scene reloading: {ex.Message}");
             }
@@ -219,7 +253,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
 
             if (!IsSceneLoaded)
             {
-                Debug.LogWarning($"Scene {sceneReference.editorAsset?.name} is not loaded. Loading it instead.");
+                Debug.LogWarning($"Scene {name} is not loaded. Loading it instead.");
                 return await LoadSceneInternalAsync(LoadSceneMode.Additive);
             }
 
@@ -233,10 +267,9 @@ namespace FakeMG.FakeMGFramework.SceneLoading
             // Then load it again
             bool loadSuccess = await LoadSceneInternalAsync(LoadSceneMode.Additive);
 
-            string sceneName = sceneReference.editorAsset?.name ?? "Unknown";
             if (loadSuccess)
             {
-                Debug.Log($"Successfully reloaded scene: {sceneName}");
+                Debug.Log($"Successfully reloaded scene: {name}");
             }
 
             return loadSuccess;
