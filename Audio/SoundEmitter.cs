@@ -19,18 +19,16 @@ namespace FakeMG.FakeMGFramework.Audio
             _audioSource.ignoreListenerPause = false;
         }
 
-        public void Play(
-            AudioClip clip, AudioConfigurationSO settings, bool hasToLoop,
-            Vector3 position = default)
+        public void Play(AudioClip clip, AudioConfigurationSO settings, AudioCueSO audioCue, Vector3 position = default)
         {
             _audioSource.clip = clip;
-            settings.ApplyTo(_audioSource);
+            settings.ApplyToWithVariations(_audioSource, audioCue);
             _audioSource.transform.position = position;
-            _audioSource.loop = hasToLoop;
-            _audioSource.time = hasToLoop ? Random.Range(0f, clip.length) : 0f;
+            _audioSource.loop = audioCue.looping;
+            _audioSource.time = audioCue.randomStartTime ? Random.Range(0f, clip.length) : 0f;
             _audioSource.Play();
 
-            if (!hasToLoop)
+            if (!audioCue.looping)
             {
                 StartCoroutine(FinishedPlaying(clip.length));
             }
@@ -73,12 +71,13 @@ namespace FakeMG.FakeMGFramework.Audio
             }
         }
 
-        public void FadeInAudioClip(AudioClip musicClip, AudioConfigurationSO settings, float duration)
+        public void FadeInAudioClip(AudioClip musicClip, AudioConfigurationSO settings, AudioCueSO audioCue)
         {
-            Play(musicClip, settings, true);
+            Play(musicClip, settings, audioCue);
+            float targetVolume = _audioSource.volume; // Get the volume after variations are applied
             _audioSource.volume = 0f;
 
-            _audioSource.DOFade(settings.volume, duration);
+            _audioSource.DOFade(targetVolume, audioCue.fadeInDuration);
         }
 
         public void FadeOutAudioClip(float duration)

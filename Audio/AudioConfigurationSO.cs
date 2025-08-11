@@ -24,7 +24,7 @@ namespace FakeMG.FakeMGFramework.Audio
         [Range(-1f, 1f)] public float panStereo;
         [Range(0f, 1.1f)] public float reverbZoneMix = 1f;
 
-        [Header("Spatialisation")]
+        [Header("Spatialization")]
         [Range(0f, 1f)] public float spatialBlend = 1f;
         public AudioRolloffMode rollOffMode = AudioRolloffMode.Logarithmic;
         [Range(0.01f, 5f)] public float minDistance = 0.1f;
@@ -48,7 +48,7 @@ namespace FakeMG.FakeMGFramework.Audio
             VeryLow = 256,
         }
 
-        public void ApplyTo(AudioSource audioSource)
+        private void ApplyTo(AudioSource audioSource)
         {
             audioSource.outputAudioMixerGroup = outputAudioMixerGroup;
             audioSource.mute = mute;
@@ -68,6 +68,25 @@ namespace FakeMG.FakeMGFramework.Audio
             audioSource.maxDistance = maxDistance;
             audioSource.ignoreListenerVolume = ignoreListenerVolume;
             audioSource.ignoreListenerPause = ignoreListenerPause;
+        }
+
+        public void ApplyToWithVariations(AudioSource audioSource, AudioCueSO audioCue)
+        {
+            // Apply base configuration first
+            ApplyTo(audioSource);
+
+            // Apply random variations if specified
+            if (audioCue.randomVolume > 0f)
+            {
+                float volumeMultiplier = Random.Range(1f - audioCue.randomVolume, 1f + audioCue.randomVolume);
+                audioSource.volume = Mathf.Clamp01(audioSource.volume * volumeMultiplier);
+            }
+
+            if (audioCue.randomPitch > 0f)
+            {
+                float pitchMultiplier = Random.Range(1f - audioCue.randomPitch, 1f + audioCue.randomPitch);
+                audioSource.pitch = Mathf.Clamp(audioSource.pitch * pitchMultiplier, -3f, 3f);
+            }
         }
     }
 }

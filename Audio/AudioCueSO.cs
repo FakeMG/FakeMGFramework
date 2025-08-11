@@ -14,6 +14,17 @@ namespace FakeMG.FakeMGFramework.Audio
         [Tooltip("Time in seconds to wait before the audio cue can be played again")]
         [Range(0f, 10f)]
         public float replayDelay;
+
+        [Header("Randomization")]
+        [Tooltip("Random volume variation range. Final volume = base volume * Random.Range(1 - randomVolume, 1 + randomVolume)")]
+        [Range(0f, 1f)]
+        public float randomVolume;
+        [Tooltip("Random pitch variation range. Final pitch = base pitch * Random.Range(1 - randomPitch, 1 + randomPitch)")]
+        [Range(0f, 1f)]
+        public float randomPitch;
+        [Tooltip("When enabled, starts audio playback at a random time within the clip duration")]
+        public bool randomStartTime;
+
         [SerializeField] private AudioClipsGroup[] _audioClipGroups;
 
         public AudioClip[] GetClips()

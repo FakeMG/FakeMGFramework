@@ -1,4 +1,4 @@
-﻿﻿﻿using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using FakeMG.FakeMGFramework.SOEventSystem.EventChannel;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -7,6 +7,16 @@ namespace FakeMG.FakeMGFramework.Audio
 {
     public class AudioManager : MonoBehaviour
     {
+        // Audio mixer parameter names
+        private const string MASTER_VOLUME_PARAM = "MasterVolume";
+        private const string MUSIC_VOLUME_PARAM = "MusicVolume";
+        private const string SFX_VOLUME_PARAM = "SFXVolume";
+
+        // PlayerPrefs keys
+        private const string MASTER_VOLUME_PREF = "MasterVolume";
+        private const string MUSIC_VOLUME_PREF = "MusicVolume";
+        private const string SFX_VOLUME_PREF = "SFXVolume";
+
         [Header("Prefab")]
         [SerializeField] private SoundEmitter soundEmitterPrefab;
         [SerializeField] private SoundEmitter musicSoundEmitter;
@@ -49,8 +59,8 @@ namespace FakeMG.FakeMGFramework.Audio
             _soundEmitterQueue = new Queue<SoundEmitter>();
             _soundEmitterVault = new SoundEmitterVault();
 
-            var sfxVolume = PlayerPrefs.GetFloat("SFXVolume", 1);
-            var musicVolume = PlayerPrefs.GetFloat("MusicVolume", 1);
+            var sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_PREF, 1);
+            var musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_PREF, 1);
             ChangeSfxVolume(sfxVolume);
             ChangeMusicVolume(musicVolume);
             ChangeMasterVolume(1);
@@ -58,7 +68,6 @@ namespace FakeMG.FakeMGFramework.Audio
 
         private void OnDestroy()
         {
-            // Clean up all pooled emitters
             CleanPool();
 
             // Stop any playing music
@@ -82,36 +91,47 @@ namespace FakeMG.FakeMGFramework.Audio
         private void ChangeMasterVolume(float newVolume)
         {
             float clampedVolume = Mathf.Max(newVolume, 0.0001f);
-            SetGroupVolume("MasterVolume", Mathf.Log10(clampedVolume) * 20);
-            PlayerPrefs.SetFloat("MasterVolume", newVolume);
+            SetGroupVolume(MASTER_VOLUME_PARAM, Mathf.Log10(clampedVolume) * 20);
+            PlayerPrefs.SetFloat(MASTER_VOLUME_PREF, newVolume);
             PlayerPrefs.Save();
         }
 
         private void ChangeMusicVolume(float newVolume)
         {
             float clampedVolume = Mathf.Max(newVolume, 0.0001f);
-            SetGroupVolume("MusicVolume", Mathf.Log10(clampedVolume) * 20);
-            PlayerPrefs.SetFloat("MusicVolume", newVolume);
+            SetGroupVolume(MUSIC_VOLUME_PARAM, Mathf.Log10(clampedVolume) * 20);
+            PlayerPrefs.SetFloat(MUSIC_VOLUME_PREF, newVolume);
             PlayerPrefs.Save();
         }
 
         private void ChangeSfxVolume(float newVolume)
         {
             float clampedVolume = Mathf.Max(newVolume, 0.0001f);
-            SetGroupVolume("SFXVolume", Mathf.Log10(clampedVolume) * 20);
-            PlayerPrefs.SetFloat("SFXVolume", newVolume);
+            SetGroupVolume(SFX_VOLUME_PARAM, Mathf.Log10(clampedVolume) * 20);
+            PlayerPrefs.SetFloat(SFX_VOLUME_PREF, newVolume);
             PlayerPrefs.Save();
+        }
+
+        public void ToggleMusicVolume(bool isEnabled)
+        {
+            ChangeMusicVolume(isEnabled ? 1 : 0);
+        }
+
+        public void ToggleSfxVolume(bool isEnabled)
+        {
+            ChangeSfxVolume(isEnabled ? 1 : 0);
         }
 
         private void SetGroupVolume(string parameterName, float volume)
         {
             bool volumeSet = audioMixer.SetFloat(parameterName, volume);
             if (!volumeSet)
+            {
                 Debug.LogError("The AudioMixer parameter was not found");
+            }
         }
 
-        private AudioCueKey PlayMusicTrack(
-            AudioCueSO audioCue, AudioConfigurationSO audioConfiguration,
+        private AudioCueKey PlayMusicTrack(AudioCueSO audioCue, AudioConfigurationSO audioConfiguration,
             Vector3 positionInSpace, Transform parent = null)
         {
             float fadeDuration = 2f;
@@ -121,14 +141,13 @@ namespace FakeMG.FakeMGFramework.Audio
                 AudioClip songToPlay = audioCue.GetClips()[0];
 
                 //If the same song is already playing, do nothing
-                if (musicSoundEmitter.GetClip() == songToPlay)
-                    return AudioCueKey.Invalid;
+                if (musicSoundEmitter.GetClip() == songToPlay) return AudioCueKey.Invalid;
 
                 //Music is already playing, need to fade it out
                 musicSoundEmitter.FadeOutAudioClip(fadeDuration);
             }
 
-            musicSoundEmitter.FadeInAudioClip(audioCue.GetClips()[0], audioConfiguration, audioCue.fadeInDuration);
+            musicSoundEmitter.FadeInAudioClip(audioCue.GetClips()[0], audioConfiguration, audioCue);
             musicSoundEmitter.IgnoreListenerPause();
 
             return AudioCueKey.Invalid; //No need to return a valid key for music
@@ -145,8 +164,7 @@ namespace FakeMG.FakeMGFramework.Audio
             return false;
         }
 
-        private AudioCueKey PlayAudioCue(
-            AudioCueSO audioCueSO, AudioConfigurationSO settings,
+        private AudioCueKey PlayAudioCue(AudioCueSO audioCueSO, AudioConfigurationSO settings,
             Vector3 position = default, Transform parent = null)
         {
             AudioClip[] clipsToPlay = audioCueSO.GetClips();
@@ -177,11 +195,11 @@ namespace FakeMG.FakeMGFramework.Audio
                 {
                     if (audioCueSO.fadeIn)
                     {
-                        soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO.fadeInDuration);
+                        soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO);
                     }
                     else
                     {
-                        soundEmitter.Play(audioClip, settings, audioCueSO.looping, position);
+                        soundEmitter.Play(audioClip, settings, audioCueSO, position);
                     }
 
                     soundEmitter.OnSoundFinishedPlaying += CleanEmitter;
@@ -265,6 +283,7 @@ namespace FakeMG.FakeMGFramework.Audio
                                 break;
                             }
                         }
+
                         shouldRemoveKey = allEmittersStopped;
                     }
 

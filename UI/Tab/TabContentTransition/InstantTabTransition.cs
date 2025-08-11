@@ -4,8 +4,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
 {
     public class InstantTabTransition : TabTransitionBase
     {
-        public override void PlayTabTransitionAnimation(
-            TabData fromTab, TabData toTab, int fromIndex, int toIndex,
+        public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex,
             Action onComplete = null)
         {
             SwitchTabInstantly(fromTab, toTab, onComplete);
