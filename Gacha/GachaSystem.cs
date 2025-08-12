@@ -10,6 +10,8 @@ namespace FakeMG.FakeMGFramework.Gacha
         [SerializeField, ValidateInput("ValidateProbabilities", "All probabilities must add up to 1.0")]
         private List<GachaRewardData> rewards;
 
+        public List<GachaRewardData> Rewards => rewards;
+
         private bool ValidateProbabilities()
         {
             if (rewards == null || rewards.Count == 0) return true;

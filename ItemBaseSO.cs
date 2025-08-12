@@ -19,31 +19,33 @@ namespace FakeMG.FakeMGFramework
         [PreviewField(75, ObjectFieldAlignment.Left)]
         [SerializeField] private AssetReferenceT<Sprite> iconSpriteAsset;
         [SerializeField] private Dictionary<ItemBaseSO, int> _price = new();
-        
+
         public string ID => id;
         public string ItemName => itemName;
         public string Description => description;
         public AssetReferenceT<Sprite> IconSpriteAsset => iconSpriteAsset;
         public Dictionary<ItemBaseSO, int> Price => _price;
-        
+
+#if UNITY_EDITOR
         [Button("Set ID from Name")]
-        public void SetIDFromName()
+        private void SetIDFromName()
         {
             id = itemName.Replace(" ", "_").ToLowerInvariant();
         }
-        
+
         [Button("Set ID from File Name")]
-        public void SetIDFromFileName()
+        private void SetIDFromFileName()
         {
             if (string.IsNullOrEmpty(name)) return;
             id = name.Replace(" ", "_").ToLowerInvariant();
         }
-        
+
         [Button("Set Name from File Name")]
-        public void SetNameFromFileName()
+        private void SetNameFromFileName()
         {
             if (string.IsNullOrEmpty(name)) return;
             itemName = name.Replace("_", " ");
         }
+#endif
     }
 }
