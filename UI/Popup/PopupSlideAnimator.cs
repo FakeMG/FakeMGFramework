@@ -1,5 +1,4 @@
 ﻿using DG.Tweening;
-using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace FakeMG.FakeMGFramework.UI.Popup
@@ -8,7 +7,6 @@ namespace FakeMG.FakeMGFramework.UI.Popup
     {
         [Header("Target UI")]
         [SerializeField] protected RectTransform canvasRect;
-        [SerializeField] private CanvasGroup canvasGroup;
         [SerializeField] private RectTransform rectTransform;
 
         [Header("Animation Settings")]
@@ -27,12 +25,10 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         }
 
         private Vector3 _hiddenPosition;
-        private bool _isShowing;
 
         private void Start()
         {
             _hiddenPosition = CalculateHiddenPosition();
-            HideImmediate();
         }
 
         private Vector3 CalculateHiddenPosition()
@@ -60,75 +56,37 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             return hidden;
         }
 
-        [Button]
-        public override void Show(bool animate = true)
+        protected override Sequence GetShowSequence()
         {
-            if (_isShowing) return;
+            var sequence = DOTween.Sequence();
+            sequence.Append(canvasGroup.transform.DOLocalMove(targetPosition, animationDuration)
+                .SetEase(showEase)
+                .SetLink(rectTransform.gameObject));
+            sequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
 
-            CurrentSequence?.Kill();
-            
-            _isShowing = true;
-
-            onShowStart?.Invoke();
-            if (animate)
-            {
-                canvasGroup.gameObject.SetActive(true);
-                CurrentSequence = DOTween.Sequence();
-                CurrentSequence.Append(canvasGroup.transform.DOLocalMove(targetPosition, animationDuration).SetEase(showEase)
-                    .SetLink(rectTransform.gameObject));
-                CurrentSequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
-                CurrentSequence.OnComplete(() => 
-                {
-                    CurrentSequence = null;
-                    onShowFinished?.Invoke();
-                });
-            }
-            else
-            {
-                ShowImmediate();
-                onShowFinished?.Invoke();
-            }
+            return sequence;
         }
 
-        [Button]
-        public override void Hide(bool animate = true)
+        protected override Sequence GetHideSequence()
         {
-            if (!_isShowing) return;
-
-            CurrentSequence?.Kill();
-            
-            _isShowing = false;
-
-            onHideStart?.Invoke();
-            if (animate)
-            {
-                CurrentSequence = DOTween.Sequence();
-                CurrentSequence.Append(canvasGroup.transform.DOLocalMove(_hiddenPosition, animationDuration).SetEase(hideEase)
-                    .SetLink(rectTransform.gameObject));
-                CurrentSequence.Join(canvasGroup.DOFade(0f, animationDuration).SetLink(canvasGroup.gameObject)
-                    .SetDelay(animationDuration * 0.5f));
-                CurrentSequence.OnComplete(() =>
-                {
-                    CurrentSequence = null;
-                    canvasGroup.gameObject.SetActive(false);
-                    onHideFinished?.Invoke();
-                });
-            }
-            else
-            {
-                HideImmediate();
-                onHideFinished?.Invoke();
-            }
+            var sequence = DOTween.Sequence();
+            sequence.Append(canvasGroup.transform.DOLocalMove(_hiddenPosition, animationDuration)
+                .SetEase(hideEase)
+                .SetLink(rectTransform.gameObject));
+            sequence.Join(canvasGroup.DOFade(0f, animationDuration)
+                .SetLink(canvasGroup.gameObject)
+                .SetDelay(animationDuration * 0.5f));
+            return sequence;
         }
 
-        private void ShowImmediate()
+        protected override void ShowImmediate()
         {
             canvasGroup.gameObject.SetActive(true);
             canvasGroup.transform.localPosition = targetPosition;
             canvasGroup.alpha = 1f;
         }
 
-        private void HideImmediate()
+        protected override void HideImmediate()
         {
             canvasGroup.transform.localPosition = _hiddenPosition;
             canvasGroup.alpha = 0f;

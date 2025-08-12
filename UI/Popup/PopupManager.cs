@@ -7,8 +7,7 @@ using UnityEngine.UI;
 namespace FakeMG.FakeMGFramework.UI.Popup
 {
     /// <summary>
-    /// Manages the display and layering of popup windows with animated black backgrounds.
-    /// Handles popup stacking, background creation/destruction, and fade animations.
+    /// Handles popup stacking, background creation/destruction.
     /// <para></para>
     /// IMPORTANT: All popup GameObjects must be direct children of this PopupManager and have a PopupAnimator component.
     /// </summary>
@@ -26,19 +25,15 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         {
             _backgroundFadeAlpha = blackBackgroundPrefab.color.a;
 
-            foreach (Transform child in transform)
+            var animators = GetComponentsInChildren<PopupAnimator>(true);
+
+            foreach (var animator in animators)
             {
-                if (child.TryGetComponent(out PopupAnimator popupAnimator))
-                {
-                    popupAnimator.onShowStart.AddListener(() => OnPopupOpen(popupAnimator));
-                    popupAnimator.onHideStart.AddListener(() => HideBackground(popupAnimator));
-                    popupAnimator.onHideFinished.AddListener(() => OnPopupFinishClosing(popupAnimator));
-                }
-                else
-                {
-                    Debug.LogError(
-                        $"Child {child.name} does not have a PopupAnimator component. Please ensure all children of PopupManager have this component.");
-                }
+                animator.onShowStart.AddListener(() => OnPopupOpen(animator));
+                animator.onHideStart.AddListener(() => HideBackground(animator));
+                animator.onHideFinished.AddListener(() => OnPopupFinishClosing(animator));
+
+                animator.Hide(false); // Ensure the popup is hidden initially
             }
         }
 
@@ -95,10 +90,10 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             {
                 Destroy(background.gameObject);
             }
-            
+
             if (!_popupDict.Remove(popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupAnimator.name} is not open!");
+                Debug.LogWarning($"Popup {popupAnimator.name} is not in the popup dictionary!");
             }
 
             // The popup is disabled, so we move it to the end of the hierarchy
