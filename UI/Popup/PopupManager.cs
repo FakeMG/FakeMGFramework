@@ -2,6 +2,7 @@
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace FakeMG.FakeMGFramework.UI.Popup
@@ -18,6 +19,10 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
         [Required]
         [SerializeField] private Image blackBackgroundPrefab;
+        public UnityEvent onShowStart = new();
+        public UnityEvent onShowFinished = new();
+        public UnityEvent onHideStart = new();
+        public UnityEvent onHideFinished = new();
 
         private readonly Dictionary<PopupAnimator, Image> _popupDict = new();
 
@@ -29,11 +34,17 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
             foreach (var animator in animators)
             {
-                animator.onShowStart.AddListener(() => OnPopupOpen(animator));
-                animator.onHideStart.AddListener(() => HideBackground(animator));
-                animator.onHideFinished.AddListener(() => OnPopupFinishClosing(animator));
-
                 animator.Hide(false); // Ensure the popup is hidden initially
+
+                animator.onShowStart.AddListener(() => OnPopupOpen(animator));
+                animator.onShowStart.AddListener(onShowStart.Invoke);
+                animator.onShowFinished.AddListener(onShowFinished.Invoke);
+
+                animator.onHideStart.AddListener(() => HideBackground(animator));
+                animator.onHideStart.AddListener(onHideStart.Invoke);
+
+                animator.onHideFinished.AddListener(() => OnPopupFinishClosing(animator));
+                animator.onHideFinished.AddListener(onHideFinished.Invoke);
             }
         }
 
