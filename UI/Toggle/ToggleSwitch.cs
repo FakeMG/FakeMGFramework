@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
@@ -22,8 +21,7 @@ namespace FakeMG.FakeMGFramework.UI.Toggle
 
         private Coroutine _animateSliderCoroutine;
 
-        [Header("Events")]
-        [SerializeField] private UnityEvent<bool> onValueChanged;
+        public event Action<bool> OnValueChanged;
 
         private ToggleSwitchGroupManager _toggleSwitchGroupManager;
 
@@ -139,7 +137,7 @@ namespace FakeMG.FakeMGFramework.UI.Toggle
 
             if (_previousValue != IsOn)
             {
-                onValueChanged?.Invoke(IsOn);
+                OnValueChanged?.Invoke(IsOn);
             }
 
             if (_animateSliderCoroutine != null)
@@ -157,7 +155,7 @@ namespace FakeMG.FakeMGFramework.UI.Toggle
 
             if (_previousValue != IsOn)
             {
-                onValueChanged?.Invoke(IsOn);
+                OnValueChanged?.Invoke(IsOn);
             }
 
             SetVisualState(IsOn ? MAX_VALUE : MIN_VALUE);
@@ -177,7 +175,7 @@ namespace FakeMG.FakeMGFramework.UI.Toggle
 
                     float lerpFactor = slideEase.Evaluate(time / animationDuration);
                     float currentValue = Mathf.Lerp(startValue, endValue, lerpFactor);
-                    
+
                     SetVisualState(currentValue);
 
                     yield return null;
