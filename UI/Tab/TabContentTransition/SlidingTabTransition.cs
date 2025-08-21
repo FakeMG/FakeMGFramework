@@ -38,7 +38,6 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
                     .SetLink(newTab.TabContent.gameObject)
                     .OnComplete(() =>
                     {
-                        newTab.onTabSelected?.Invoke();
                         onComplete?.Invoke();
                     });
             }
@@ -79,7 +78,6 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
             tab.TabContent.gameObject.SetActive(true);
             var tabPosition = tab.TabContent.anchoredPosition;
             tab.TabContent.anchoredPosition = new Vector2(0, tabPosition.y);
-            tab.onTabSelected?.Invoke();
         }
 
         public override void DeactivateTabContent(TabData tab)

@@ -8,7 +8,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
     {
         [Header("Scale Animation Settings")]
         [SerializeField] private float scaleDownMultiplier = 0.8f;
-        [SerializeField, Tooltip("Controls the overshoot amount for the OutBack ease. Higher values = more overshoot.")] 
+        [SerializeField, Tooltip("Controls the overshoot amount for the OutBack ease. Higher values = more overshoot.")]
         private float overshootScale = 1.1f;
 
         public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null)
@@ -32,7 +32,6 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
                 .SetLink(toTab.TabContent.gameObject)
                 .OnComplete(() =>
                 {
-                    toTab.onTabSelected?.Invoke();
                     onComplete?.Invoke();
                 });
         }
@@ -41,20 +40,19 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
         {
             StopTabContentAnimations(fromTab);
             StopTabContentAnimations(toTab);
-            
+
             ActivateTabContent(toTab);
             DeactivateTabContent(fromTab);
-            
+
             onComplete?.Invoke();
         }
-        
+
         public override void ActivateTabContent(TabData tab)
         {
             tab.TabContent.gameObject.SetActive(true);
             tab.TabContent.localScale = Vector3.one;
-            tab.onTabSelected?.Invoke();
         }
-        
+
         public override void DeactivateTabContent(TabData tab)
         {
             tab.TabContent.gameObject.SetActive(false);

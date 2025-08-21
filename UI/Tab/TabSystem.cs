@@ -1,7 +1,7 @@
+using System;
 using System.Collections.Generic;
 using FakeMG.FakeMGFramework.UI.Tab.TabContentTransition;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FakeMG.FakeMGFramework.UI.Tab
 {
@@ -11,8 +11,9 @@ namespace FakeMG.FakeMGFramework.UI.Tab
         [SerializeField] protected int defaultActiveTabIndex;
         [SerializeField] protected TabTransitionBase transition;
 
-        public UnityEvent<int> onTabChanged;
+        public event Action<int> OnTabChanged;
 
+        private List<Action> _onTabSelectedEvents = new();
         private int _currentActiveTabIndex;
 
         private void Start()
@@ -22,10 +23,10 @@ namespace FakeMG.FakeMGFramework.UI.Tab
             if (IsValidTabIndex(defaultActiveTabIndex))
             {
                 ShowDefaultTabContent();
-                tabs[defaultActiveTabIndex].onTabSelected?.Invoke();
                 tabs[defaultActiveTabIndex].TabButton.InstantlySelect();
                 _currentActiveTabIndex = defaultActiveTabIndex;
-                onTabChanged?.Invoke(defaultActiveTabIndex);
+                _onTabSelectedEvents[defaultActiveTabIndex]?.Invoke();
+                OnTabChanged?.Invoke(defaultActiveTabIndex);
             }
         }
 
@@ -46,11 +47,32 @@ namespace FakeMG.FakeMGFramework.UI.Tab
 
         private void InitializeTabs()
         {
+            // Initialize the events list to match the number of tabs
+            _onTabSelectedEvents.Clear();
+            for (int i = 0; i < tabs.Count; i++)
+            {
+                _onTabSelectedEvents.Add(null);
+            }
+
             for (int i = 0; i < tabs.Count; i++)
             {
                 int tabIndex = i;
                 tabs[i].TabButton.button.onClick.AddListener(() => SwitchToTab(tabIndex));
             }
+        }
+
+        public void SubscribeToTabSelected(int tabIndex, Action action)
+        {
+            if (!IsValidTabIndex(tabIndex)) return;
+
+            _onTabSelectedEvents[tabIndex] += action;
+        }
+
+        public void UnsubscribeFromTabSelected(int tabIndex, Action action)
+        {
+            if (!IsValidTabIndex(tabIndex)) return;
+
+            _onTabSelectedEvents[tabIndex] -= action;
         }
 
         public void SwitchToTab(int tabIndex)
@@ -64,7 +86,8 @@ namespace FakeMG.FakeMGFramework.UI.Tab
             transition.PlayTabTransitionAnimation(tabs[previousTabIndex], tabs[tabIndex], previousTabIndex, tabIndex);
 
             _currentActiveTabIndex = tabIndex;
-            onTabChanged?.Invoke(tabIndex);
+            _onTabSelectedEvents[tabIndex]?.Invoke();
+            OnTabChanged?.Invoke(tabIndex);
         }
 
         private void AnimateButtonSelectionChange(int previousTabIndex, int newTabIndex)

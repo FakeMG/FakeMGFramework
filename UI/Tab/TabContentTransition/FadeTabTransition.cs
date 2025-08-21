@@ -30,7 +30,6 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
                 .SetLink(toTab.TabContent.gameObject)
                 .OnComplete(() =>
                 {
-                    toTab.onTabSelected?.Invoke();
                     onComplete?.Invoke();
                 });
         }
@@ -61,7 +60,6 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
             tab.TabContent.gameObject.SetActive(true);
             var canvasGroup = GetOrAddCanvasGroup(tab.TabContent);
             canvasGroup.alpha = 1f;
-            tab.onTabSelected?.Invoke();
         }
 
         public override void DeactivateTabContent(TabData tab)

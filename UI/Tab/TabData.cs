@@ -1,7 +1,6 @@
 ﻿using System;
 using FakeMG.FakeMGFramework.UI.Tab.TabButton;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FakeMG.FakeMGFramework.UI.Tab
 {
@@ -12,16 +11,13 @@ namespace FakeMG.FakeMGFramework.UI.Tab
         [SerializeField] private TabButtonBase tabButtonComponent;
         [SerializeField] private RectTransform tabContent;
 
-        public UnityEvent onTabSelected;
-
         public TabButtonBase TabButton => tabButtonComponent;
         public RectTransform TabContent => tabContent;
 
         public bool Equals(TabData other)
         {
             return Equals(tabButtonComponent, other.tabButtonComponent) &&
-                   Equals(tabContent, other.tabContent) &&
-                   Equals(onTabSelected, other.onTabSelected);
+                   Equals(tabContent, other.tabContent);
         }
 
         public override bool Equals(object obj)
@@ -31,7 +27,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(tabButtonComponent, tabContent, onTabSelected);
+            return HashCode.Combine(tabButtonComponent, tabContent);
         }
     }
 }
