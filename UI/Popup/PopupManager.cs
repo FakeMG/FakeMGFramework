@@ -2,7 +2,7 @@
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Events;
+using System;
 using UnityEngine.UI;
 
 namespace FakeMG.FakeMGFramework.UI.Popup
@@ -19,12 +19,16 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
         [Required]
         [SerializeField] private Image blackBackgroundPrefab;
-        public UnityEvent onShowStart = new();
-        public UnityEvent onShowFinished = new();
-        public UnityEvent onHideStart = new();
-        public UnityEvent onHideFinished = new();
+
+        public event Action OnShowStart;
+        public event Action OnShowFinished;
+        public event Action OnHideStart;
+        public event Action OnHideFinished;
 
         private readonly Dictionary<PopupAnimator, Image> _popupDict = new();
+        private readonly
+            Dictionary<PopupAnimator, (Action onShowStart, Action onShowFinished, Action onHideStart, Action
+                onHideFinished)> _eventDelegates = new();
 
         private void Start()
         {
@@ -36,16 +40,58 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             {
                 animator.Hide(false); // Ensure the popup is hidden initially
 
-                animator.onShowStart.AddListener(() => OnPopupOpen(animator));
-                animator.onShowStart.AddListener(onShowStart.Invoke);
-                animator.onShowFinished.AddListener(onShowFinished.Invoke);
+                // capture the loop variable for safe closure
+                var a = animator;
 
-                animator.onHideStart.AddListener(() => HideBackground(animator));
-                animator.onHideStart.AddListener(onHideStart.Invoke);
+                // Create combined delegates for storage
+                Action onShowStartCombined = OnShowStartHandler + new Action(OnShowStartForwarder);
+                Action onShowFinishedCombined = OnShowFinishedHandler;
+                Action onHideStartCombined = OnHideStartHandler + new Action(OnHideStartForwarder);
+                Action onHideFinishedCombined = OnHideFinishedHandler + new Action(OnHideFinishedForwarder);
 
-                animator.onHideFinished.AddListener(() => OnPopupFinishClosing(animator));
-                animator.onHideFinished.AddListener(onHideFinished.Invoke);
+                // Store delegates for proper unsubscription
+                _eventDelegates[a] = (
+                    onShowStartCombined,
+                    onShowFinishedCombined,
+                    onHideStartCombined,
+                    onHideFinishedCombined
+                );
+
+                // Subscribe to popup animator events
+                a.OnShowStart += _eventDelegates[a].onShowStart;
+                a.OnShowFinished += _eventDelegates[a].onShowFinished;
+                a.OnHideStart += _eventDelegates[a].onHideStart;
+                a.OnHideFinished += _eventDelegates[a].onHideFinished;
+                continue;
+
+                void OnShowStartHandler() => OnPopupOpen(a);
+                void OnShowStartForwarder() => OnShowStart?.Invoke();
+                void OnShowFinishedHandler() => OnShowFinished?.Invoke();
+
+                void OnHideStartHandler() => HideBackground(a);
+                void OnHideStartForwarder() => OnHideStart?.Invoke();
+                void OnHideFinishedHandler() => OnPopupFinishClosing(a);
+                void OnHideFinishedForwarder() => OnHideFinished?.Invoke();
             }
+        }
+
+        private void OnDestroy()
+        {
+            foreach (var kvp in _eventDelegates)
+            {
+                var animator = kvp.Key;
+                var delegates = kvp.Value;
+
+                if (animator != null)
+                {
+                    animator.OnShowStart -= delegates.onShowStart;
+                    animator.OnShowFinished -= delegates.onShowFinished;
+                    animator.OnHideStart -= delegates.onHideStart;
+                    animator.OnHideFinished -= delegates.onHideFinished;
+                }
+            }
+
+            _eventDelegates.Clear();
         }
 
         private void OnPopupOpen(PopupAnimator popupAnimator)

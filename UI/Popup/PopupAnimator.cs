@@ -1,7 +1,7 @@
 ﻿using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Events;
+using System;
 
 namespace FakeMG.FakeMGFramework.UI.Popup
 {
@@ -12,14 +12,13 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         [SerializeField] private PopupManager popupManager;
         [SerializeField] protected CanvasGroup canvasGroup;
 
-        [Header("Events")]
-        [SerializeField] public UnityEvent onShowStart;
-        [SerializeField] public UnityEvent onShowFinished;
-        [SerializeField] public UnityEvent onHideStart;
-        [SerializeField] public UnityEvent onHideFinished;
+        public event Action OnShowStart;
+        public event Action OnShowFinished;
+        public event Action OnHideStart;
+        public event Action OnHideFinished;
 
-        private Sequence _currentSequence;
         public bool IsShowing { get; private set; } = true;
+        private Sequence _currentSequence;
 
         [Button]
         public void Show(bool animate = true)
@@ -34,7 +33,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
             IsShowing = true;
 
-            onShowStart?.Invoke();
+            OnShowStart?.Invoke();
 
             if (animate)
             {
@@ -43,13 +42,13 @@ namespace FakeMG.FakeMGFramework.UI.Popup
                 _currentSequence.onComplete += () =>
                 {
                     _currentSequence = null;
-                    onShowFinished?.Invoke();
+                    OnShowFinished?.Invoke();
                 };
             }
             else
             {
                 ShowImmediate();
-                onShowFinished?.Invoke();
+                OnShowFinished?.Invoke();
             }
         }
 
@@ -69,7 +68,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
             IsShowing = false;
 
-            onHideStart?.Invoke();
+            OnHideStart?.Invoke();
 
             if (animate)
             {
@@ -78,13 +77,13 @@ namespace FakeMG.FakeMGFramework.UI.Popup
                 {
                     _currentSequence = null;
                     canvasGroup.gameObject.SetActive(false);
-                    onHideFinished?.Invoke();
+                    OnHideFinished?.Invoke();
                 });
             }
             else
             {
                 HideImmediate();
-                onHideFinished?.Invoke();
+                OnHideFinished?.Invoke();
             }
         }
 
