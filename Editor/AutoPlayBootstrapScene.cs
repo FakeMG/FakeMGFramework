@@ -14,11 +14,15 @@ namespace FakeMG.FakeMGFramework.Editor
 
         static AutoPlayBootstrapScene()
         {
+            _isEnabled = EditorPrefs.GetBool("AutoPlayBootstrapScene_Enabled", false);
+            Menu.SetChecked(MENU_PATH, _isEnabled);
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
         }
 
         private static void OnPlayModeChanged(PlayModeStateChange state)
         {
+            if (!_isEnabled) return;
+
             if (state == PlayModeStateChange.ExitingEditMode)
             {
                 // Save the currently open scene
@@ -60,7 +64,8 @@ namespace FakeMG.FakeMGFramework.Editor
             _isEnabled = !_isEnabled;
             EditorPrefs.SetBool("AutoPlayBootstrapScene_Enabled", _isEnabled);
             Menu.SetChecked(MENU_PATH, _isEnabled);
-            Debug.Log("Auto Play Bootstrap Scene: " + (_isEnabled ? "Enabled" : "Disabled"));
+            string status = _isEnabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>";
+            Debug.Log($"Auto Play Bootstrap Scene: {status}");
         }
     }
 }
