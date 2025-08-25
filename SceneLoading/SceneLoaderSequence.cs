@@ -39,7 +39,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
                     "SceneLoaderSequence: Duplicate scene references found! Each scene can only appear once in the sequence.");
                 foreach (var duplicate in duplicates)
                 {
-                    Debug.LogError($"Duplicate scene: {duplicate.First().SceneReference.editorAsset?.name}");
+                    Debug.LogError($"Duplicate scene: {duplicate.First().gameObject.name}");
                 }
             }
         }
@@ -291,7 +291,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
                 if (!loader.IsSceneLoaded)
                 {
                     Debug.LogWarning(
-                        $"Scene {loader.SceneReference.editorAsset?.name} is not loaded. Skipping reload.");
+                        $"Scene {loader.gameObject.name} is not loaded. Skipping reload.");
                     continue;
                 }
 

@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -73,3 +74,4 @@ namespace FakeMG.FakeMGFramework.UI.Editor
         }
     }
 }
+#endif
