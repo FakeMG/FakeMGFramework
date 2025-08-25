@@ -1,7 +1,7 @@
-﻿using DG.Tweening;
+﻿using System;
+using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using System;
 
 namespace FakeMG.FakeMGFramework.UI.Popup
 {
@@ -9,7 +9,6 @@ namespace FakeMG.FakeMGFramework.UI.Popup
     public abstract class PopupAnimator : MonoBehaviour
     {
         [Required]
-        [SerializeField] private PopupManager popupManager;
         [SerializeField] protected CanvasGroup canvasGroup;
 
         public event Action OnShowStart;
@@ -18,18 +17,33 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         public event Action OnHideFinished;
 
         public bool IsShowing { get; private set; } = true;
+        private Sequence _showSequence;
+        private Sequence _hideSequence;
         private Sequence _currentSequence;
+
+        private void OnDestroy()
+        {
+            _showSequence?.Kill();
+            _hideSequence?.Kill();
+            _currentSequence?.Kill();
+        }
+
+        private void CompleteCurrentAnimation()
+        {
+            if (_currentSequence != null)
+            {
+                _currentSequence.Complete();
+                _currentSequence.onComplete = null;
+                _currentSequence = null;
+            }
+        }
 
         [Button]
         public void Show(bool animate = true)
         {
             if (IsShowing) return;
 
-            if (_currentSequence != null)
-            {
-                _currentSequence.Kill();
-                _currentSequence.onComplete = null;
-            }
+            CompleteCurrentAnimation();
 
             IsShowing = true;
 
@@ -39,11 +53,8 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             {
                 canvasGroup.gameObject.SetActive(true);
                 _currentSequence = GetShowSequence();
-                _currentSequence.onComplete += () =>
-                {
-                    _currentSequence = null;
-                    OnShowFinished?.Invoke();
-                };
+                _currentSequence.Restart();
+                _currentSequence.onComplete += () => { OnShowFinished?.Invoke(); };
             }
             else
             {
@@ -53,18 +64,24 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         }
 
         protected abstract void ShowImmediate();
-        protected abstract Sequence GetShowSequence();
+
+        private Sequence GetShowSequence()
+        {
+            if (_showSequence.IsActive()) return _showSequence;
+
+            _showSequence = CreateShowSequence();
+            _showSequence.SetAutoKill(false);
+            return _showSequence;
+        }
+
+        protected abstract Sequence CreateShowSequence();
 
         [Button]
         public void Hide(bool animate = true)
         {
             if (!IsShowing) return;
 
-            if (_currentSequence != null)
-            {
-                _currentSequence.Kill();
-                _currentSequence.onComplete = null;
-            }
+            CompleteCurrentAnimation();
 
             IsShowing = false;
 
@@ -73,9 +90,9 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             if (animate)
             {
                 _currentSequence = GetHideSequence();
+                _currentSequence.Restart();
                 _currentSequence.OnComplete(() =>
                 {
-                    _currentSequence = null;
                     canvasGroup.gameObject.SetActive(false);
                     OnHideFinished?.Invoke();
                 });
@@ -88,6 +105,16 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         }
 
         protected abstract void HideImmediate();
-        protected abstract Sequence GetHideSequence();
+
+        private Sequence GetHideSequence()
+        {
+            if (_hideSequence.IsActive()) return _hideSequence;
+
+            _hideSequence = CreateHideSequence();
+            _hideSequence.SetAutoKill(false);
+            return _hideSequence;
+        }
+
+        protected abstract Sequence CreateHideSequence();
     }
 }

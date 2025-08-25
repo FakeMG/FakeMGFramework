@@ -1,16 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using System;
+using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
 namespace FakeMG.FakeMGFramework.UI.Popup
 {
     /// <summary>
-    /// Handles popup stacking, background creation/destruction.
-    /// <para></para>
-    /// IMPORTANT: All popup GameObjects must be direct children of this PopupManager and have a PopupAnimator component.
+    /// Handles background stacking, popup creation/destruction.
     /// </summary>
     public class PopupManager : MonoBehaviour
     {
@@ -18,144 +19,197 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         private float _backgroundFadeAlpha = 0.95f;
 
         [Required]
-        [SerializeField] private Image blackBackgroundPrefab;
+        [SerializeField] private Image blackBackground;
 
         public event Action OnShowStart;
         public event Action OnShowFinished;
         public event Action OnHideStart;
         public event Action OnHideFinished;
 
-        private readonly Dictionary<PopupAnimator, Image> _popupDict = new();
-        private readonly
-            Dictionary<PopupAnimator, (Action onShowStart, Action onShowFinished, Action onHideStart, Action
-                onHideFinished)> _eventDelegates = new();
+        [ShowInInspector]
+        private readonly Dictionary<PopupSO, PopupAnimator> _openPopups = new();
+        [ShowInInspector]
+        private readonly Dictionary<PopupSO, PopupAnimator> _loadedPopups = new();
+        private readonly Dictionary<PopupSO, AsyncOperationHandle<GameObject>> _assetHandles = new();
 
         private void Start()
         {
-            _backgroundFadeAlpha = blackBackgroundPrefab.color.a;
+            _backgroundFadeAlpha = blackBackground.color.a;
 
-            var animators = GetComponentsInChildren<PopupAnimator>(true);
-
-            foreach (var animator in animators)
-            {
-                animator.Hide(false); // Ensure the popup is hidden initially
-
-                // capture the loop variable for safe closure
-                var a = animator;
-
-                // Create combined delegates for storage
-                Action onShowStartCombined = OnShowStartHandler + new Action(OnShowStartForwarder);
-                Action onShowFinishedCombined = OnShowFinishedHandler;
-                Action onHideStartCombined = OnHideStartHandler + new Action(OnHideStartForwarder);
-                Action onHideFinishedCombined = OnHideFinishedHandler + new Action(OnHideFinishedForwarder);
-
-                // Store delegates for proper unsubscription
-                _eventDelegates[a] = (
-                    onShowStartCombined,
-                    onShowFinishedCombined,
-                    onHideStartCombined,
-                    onHideFinishedCombined
-                );
-
-                // Subscribe to popup animator events
-                a.OnShowStart += _eventDelegates[a].onShowStart;
-                a.OnShowFinished += _eventDelegates[a].onShowFinished;
-                a.OnHideStart += _eventDelegates[a].onHideStart;
-                a.OnHideFinished += _eventDelegates[a].onHideFinished;
-                continue;
-
-                void OnShowStartHandler() => OnPopupOpen(a);
-                void OnShowStartForwarder() => OnShowStart?.Invoke();
-                void OnShowFinishedHandler() => OnShowFinished?.Invoke();
-
-                void OnHideStartHandler() => HideBackground(a);
-                void OnHideStartForwarder() => OnHideStart?.Invoke();
-                void OnHideFinishedHandler() => OnPopupFinishClosing(a);
-                void OnHideFinishedForwarder() => OnHideFinished?.Invoke();
-            }
+            Color backgroundColor = blackBackground.color;
+            backgroundColor.a = 0f;
+            blackBackground.color = backgroundColor;
         }
 
         private void OnDestroy()
         {
-            foreach (var kvp in _eventDelegates)
+            // Release all cached asset handles
+            foreach (var handle in _assetHandles.Values)
             {
-                var animator = kvp.Key;
-                var delegates = kvp.Value;
-
-                if (animator != null)
+                if (handle.IsValid())
                 {
-                    animator.OnShowStart -= delegates.onShowStart;
-                    animator.OnShowFinished -= delegates.onShowFinished;
-                    animator.OnHideStart -= delegates.onHideStart;
-                    animator.OnHideFinished -= delegates.onHideFinished;
+                    Addressables.Release(handle);
                 }
             }
 
-            _eventDelegates.Clear();
+            _assetHandles.Clear();
+            _loadedPopups.Clear();
         }
 
-        private void OnPopupOpen(PopupAnimator popupAnimator)
+        private void BeforeStart(PopupSO popupSO)
         {
-            if (_popupDict.ContainsKey(popupAnimator))
+            _openPopups[popupSO] = _loadedPopups[popupSO];
+            UpdateSiblingOrderBeforeShow(popupSO);
+            TryShowBackground();
+            OnShowStart?.Invoke();
+        }
+
+        private void AfterShow(PopupSO popupSO)
+        {
+            OnShowFinished?.Invoke();
+        }
+
+        private void BeforeHide(PopupSO popupSO)
+        {
+            TryHideBackground();
+            OnHideStart?.Invoke();
+        }
+
+        private void AfterHide(PopupSO popupSO)
+        {
+            UpdateSiblingOrderAfterHide(popupSO);
+            _openPopups.Remove(popupSO);
+            OnHideFinished?.Invoke();
+        }
+
+        public async UniTask<PopupAnimator> LoadAndInstantiatePopupAsync(PopupSO popupSO)
+        {
+            // Check if already loaded
+            if (_loadedPopups.TryGetValue(popupSO, out var existingPopup) && existingPopup != null)
             {
-                Debug.LogWarning($"Popup {popupAnimator.name} is already open!");
+                return existingPopup;
+            }
+
+            // Load the popup prefab
+            var handle = Addressables.LoadAssetAsync<GameObject>(popupSO.PopupPrefabAsset);
+            await handle;
+
+            if (handle.Status != AsyncOperationStatus.Succeeded)
+            {
+                Debug.LogError($"Failed to load popup prefab: {popupSO.name}");
+                return null;
+            }
+
+            // Instantiate the popup
+            var popupGameObject = Instantiate(handle.Result, transform);
+            var popupAnimator = popupGameObject.GetComponent<PopupAnimator>();
+
+            if (popupAnimator == null)
+            {
+                Debug.LogError(
+                    $"Loaded popup prefab does not have a PopupAnimator component! Popup: {popupSO.name}");
+                Destroy(popupGameObject);
+                Addressables.Release(handle);
+                return null;
+            }
+
+            // Cache the popup and asset handle
+            _loadedPopups[popupSO] = popupAnimator;
+            _assetHandles[popupSO] = handle;
+
+            // Initially hide the popup without animation
+            popupAnimator.Hide(false);
+
+            popupAnimator.OnShowStart += () => BeforeStart(popupSO);
+            popupAnimator.OnShowFinished += () => AfterShow(popupSO);
+            popupAnimator.OnHideStart += () => BeforeHide(popupSO);
+            popupAnimator.OnHideFinished += () => AfterHide(popupSO);
+
+            return popupAnimator;
+        }
+
+        public void UnloadPopup(PopupSO popupSO)
+        {
+            if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
+            {
+                Debug.LogWarning($"Popup {popupSO.name} is not loaded!");
                 return;
             }
 
-            // Show the new popup on top of other popups
-            int topIndex = _popupDict.Count > 0 ? _popupDict.Count * 2 : 0;
+            Destroy(popupAnimator.gameObject);
+            _loadedPopups.Remove(popupSO);
 
-            var background = ShowBackground();
-            background.transform.SetSiblingIndex(topIndex);
-
-            popupAnimator.transform.SetParent(transform);
-            popupAnimator.transform.SetSiblingIndex(topIndex + 1);
-
-            _popupDict.Add(popupAnimator, background);
+            _assetHandles[popupSO].Release();
+            _assetHandles.Remove(popupSO);
         }
 
-        private Image ShowBackground()
+        public void ShowPopupAsync(PopupSO popupSO, bool animate = true)
         {
-            Image background = Instantiate(blackBackgroundPrefab, transform);
-            background.gameObject.SetActive(true);
-
-            Color backgroundColor = background.color;
-            backgroundColor.a = 0f;
-            background.color = backgroundColor;
-            background.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION).SetLink(background.gameObject);
-
-            return background;
-        }
-
-        private void HideBackground(PopupAnimator popupAnimator)
-        {
-            if (!_popupDict.TryGetValue(popupAnimator, out var background))
+            if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupAnimator.name} does not have an associated background to hide.");
+                Debug.LogWarning($"Popup {popupSO.name} is not loaded!");
                 return;
             }
 
-            if (background)
-            {
-                background.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(background.gameObject);
-            }
+            popupAnimator.Show(animate);
         }
 
-        private void OnPopupFinishClosing(PopupAnimator popupAnimator)
+        public void HidePopupAsync(PopupSO popupSO, bool animate = true)
         {
-            if (_popupDict.TryGetValue(popupAnimator, out var background))
+            if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
             {
-                Destroy(background.gameObject);
+                Debug.LogWarning($"Popup {popupSO.name} is not loaded!");
+                return;
             }
 
-            if (!_popupDict.Remove(popupAnimator))
+            popupAnimator.Hide(animate);
+        }
+
+        private void UpdateSiblingOrderBeforeShow(PopupSO popupSO)
+        {
+            blackBackground.transform.SetSiblingIndex(_openPopups.Count - 1);
+            _openPopups[popupSO].transform.SetSiblingIndex(_openPopups.Count);
+        }
+
+        private void UpdateSiblingOrderAfterHide(PopupSO popupSO)
+        {
+            int index = _openPopups[popupSO].transform.GetSiblingIndex();
+            bool isLastPopup = index >= _openPopups.Count - 1;
+            if (_openPopups.Count > 0 && isLastPopup)
             {
-                Debug.LogWarning($"Popup {popupAnimator.name} is not in the popup dictionary!");
+                blackBackground.transform.SetSiblingIndex(_openPopups.Count - 2);
             }
 
-            // The popup is disabled, so we move it to the end of the hierarchy
-            // to ensure it doesn't interfere with the opened popups.
-            popupAnimator.transform.SetAsLastSibling();
+            _openPopups[popupSO].transform.SetAsLastSibling();
+        }
+
+        private void TryShowBackground()
+        {
+            // When showing a popup while the last popup is hiding,
+            // the background is fading out and still active
+            // we still want to show the background. So no check for activeInHierarchy
+            // if (blackBackground.gameObject.activeInHierarchy) return;
+
+            if (_openPopups.Count > 1) return;
+
+            blackBackground.DOKill();
+            blackBackground.gameObject.SetActive(true);
+
+            blackBackground.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
+                .SetLink(blackBackground.gameObject);
+        }
+
+        private void TryHideBackground()
+        {
+            if (!blackBackground.gameObject.activeInHierarchy) return;
+            if (_openPopups.Count > 1) return;
+
+            blackBackground.DOKill();
+
+            blackBackground.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(blackBackground.gameObject).OnComplete(() =>
+            {
+                blackBackground.gameObject.SetActive(false);
+            });
         }
     }
 }

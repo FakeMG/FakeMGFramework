@@ -13,7 +13,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
 
         private readonly Vector3 _initialScale = Vector3.zero;
 
-        protected override Sequence GetShowSequence()
+        protected override Sequence CreateShowSequence()
         {
             var sequence = DOTween.Sequence();
             sequence.Join(canvasGroup.transform.DOScale(targetScale, animationDuration)
@@ -24,7 +24,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             return sequence;
         }
 
-        protected override Sequence GetHideSequence()
+        protected override Sequence CreateHideSequence()
         {
             var sequence = DOTween.Sequence();
             sequence.Join(canvasGroup.transform.DOScale(_initialScale, animationDuration)

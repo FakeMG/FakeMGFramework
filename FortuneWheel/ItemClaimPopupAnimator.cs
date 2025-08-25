@@ -48,7 +48,7 @@ namespace FakeMG.FakeMGFramework.FortuneWheel
             _rewardItems = rewardItems;
         }
 
-        protected override Sequence GetShowSequence()
+        protected override Sequence CreateShowSequence()
         {
             // Clear existing items
             foreach (Transform child in gridLayoutContainer.transform)
@@ -97,7 +97,7 @@ namespace FakeMG.FakeMGFramework.FortuneWheel
             return sequence;
         }
 
-        protected override Sequence GetHideSequence()
+        protected override Sequence CreateHideSequence()
         {
             var sequence = DOTween.Sequence();
             sequence.Join(canvasGroup.DOFade(0f, 0.3f).SetEase(Ease.InCubic)

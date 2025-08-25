@@ -56,7 +56,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             return hidden;
         }
 
-        protected override Sequence GetShowSequence()
+        protected override Sequence CreateShowSequence()
         {
             var sequence = DOTween.Sequence();
             sequence.Append(canvasGroup.transform.DOLocalMove(targetPosition, animationDuration)
@@ -67,7 +67,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             return sequence;
         }
 
-        protected override Sequence GetHideSequence()
+        protected override Sequence CreateHideSequence()
         {
             var sequence = DOTween.Sequence();
             sequence.Append(canvasGroup.transform.DOLocalMove(_hiddenPosition, animationDuration)
