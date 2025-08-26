@@ -1,4 +1,5 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -28,22 +29,23 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             _currentSequence?.Kill();
         }
 
-        private void CompleteCurrentAnimation()
+        private async UniTask CompleteCurrentAnimation()
         {
             if (_currentSequence != null)
             {
                 _currentSequence.Complete();
+                await _currentSequence.AsyncWaitForCompletion();
                 _currentSequence.onComplete = null;
                 _currentSequence = null;
             }
         }
 
         [Button]
-        public void Show(bool animate = true)
+        public async UniTask Show(bool animate = true)
         {
             if (IsShowing) return;
 
-            CompleteCurrentAnimation();
+            await CompleteCurrentAnimation();
 
             IsShowing = true;
 
@@ -54,13 +56,15 @@ namespace FakeMG.FakeMGFramework.UI.Popup
                 canvasGroup.gameObject.SetActive(true);
                 _currentSequence = GetShowSequence();
                 _currentSequence.Restart();
-                _currentSequence.onComplete += () => { OnShowFinished?.Invoke(); };
+                await _currentSequence.AsyncWaitForCompletion();
+                // _currentSequence.onComplete += () => { OnShowFinished?.Invoke(); };
             }
             else
             {
                 ShowImmediate();
-                OnShowFinished?.Invoke();
             }
+
+            OnShowFinished?.Invoke();
         }
 
         protected abstract void ShowImmediate();
@@ -77,11 +81,11 @@ namespace FakeMG.FakeMGFramework.UI.Popup
         protected abstract Sequence CreateShowSequence();
 
         [Button]
-        public void Hide(bool animate = true)
+        public async UniTask Hide(bool animate = true)
         {
             if (!IsShowing) return;
 
-            CompleteCurrentAnimation();
+            await CompleteCurrentAnimation();
 
             IsShowing = false;
 
@@ -91,17 +95,20 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             {
                 _currentSequence = GetHideSequence();
                 _currentSequence.Restart();
-                _currentSequence.OnComplete(() =>
-                {
-                    canvasGroup.gameObject.SetActive(false);
-                    OnHideFinished?.Invoke();
-                });
+                await _currentSequence.AsyncWaitForCompletion();
+                // _currentSequence.OnComplete(() =>
+                // {
+                //     canvasGroup.gameObject.SetActive(false);
+                //     OnHideFinished?.Invoke();
+                // });
+                canvasGroup.gameObject.SetActive(false);
             }
             else
             {
                 HideImmediate();
-                OnHideFinished?.Invoke();
             }
+
+            OnHideFinished?.Invoke();
         }
 
         protected abstract void HideImmediate();

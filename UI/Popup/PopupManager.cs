@@ -143,7 +143,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
             _assetHandles.Remove(popupSO);
         }
 
-        public void ShowPopupAsync(PopupSO popupSO, bool animate = true)
+        public async UniTask ShowPopupAsync(PopupSO popupSO, bool animate = true)
         {
             if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
             {
@@ -151,10 +151,10 @@ namespace FakeMG.FakeMGFramework.UI.Popup
                 return;
             }
 
-            popupAnimator.Show(animate);
+            await popupAnimator.Show(animate);
         }
 
-        public void HidePopupAsync(PopupSO popupSO, bool animate = true)
+        public async UniTask HidePopupAsync(PopupSO popupSO, bool animate = true)
         {
             if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
             {
@@ -162,7 +162,7 @@ namespace FakeMG.FakeMGFramework.UI.Popup
                 return;
             }
 
-            popupAnimator.Hide(animate);
+            await popupAnimator.Hide(animate);
         }
 
         private void UpdateSiblingOrderBeforeShow(PopupSO popupSO)

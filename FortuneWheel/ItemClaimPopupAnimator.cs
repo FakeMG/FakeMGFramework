@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
@@ -17,7 +18,7 @@ namespace FakeMG.FakeMGFramework.FortuneWheel
         [SerializeField] private Image auraImage;
         [SerializeField] private Transform x2Text;
 
-        private Vector3 _initialTextScale;
+        private Vector3 _initialTextScale; // used in the x2 text animation
         private Dictionary<ItemBaseSO, int> _rewardItems;
 
         private void Start()
@@ -161,14 +162,14 @@ namespace FakeMG.FakeMGFramework.FortuneWheel
             claimWithAdButton.onClick.RemoveAllListeners();
         }
 
-        public void SubscribeToClaimButton(System.Action<int> callback)
+        public void SubscribeToClaimButton(Action<int> callback)
         {
             claimButton.onClick.AddListener(() =>
             {
                 callback?.Invoke(1);
                 claimButton.interactable = false;
                 claimWithAdButton.interactable = false;
-                Hide();
+                Hide().Forget();
             });
 
             claimWithAdButton.onClick.AddListener(() =>
