@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
+namespace FakeMG.Framework.UI.Tab.TabButton
 {
     public class TabButtonChangeSprite : TabButtonBase
     {

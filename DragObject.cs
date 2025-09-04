@@ -2,7 +2,7 @@
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-namespace FakeMG.FakeMGFramework
+namespace FakeMG.Framework
 {
     public class DragObject : MonoBehaviour
     {

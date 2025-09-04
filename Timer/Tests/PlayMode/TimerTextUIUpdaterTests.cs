@@ -1,4 +1,5 @@
-using FakeMG.FakeMGFramework.Timer;
+using System.Reflection;
+using FakeMG.Framework.Timer;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace Timer.PlayMode
 
             // Use reflection to set the private timerText field
             var timerTextField = typeof(TimerTextUIUpdater).GetField("timerText",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance);
             timerTextField.SetValue(_timerTextUpdater, _timerText);
         }
 

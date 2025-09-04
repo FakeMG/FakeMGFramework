@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.Audio;
 
-namespace FakeMG.FakeMGFramework.Audio
+namespace FakeMG.Framework.Audio
 {
     [CreateAssetMenu(menuName = "Audio/AudioConfigurationSO")]
     public class AudioConfigurationSO : ScriptableObject

@@ -9,7 +9,7 @@ namespace Timer.EditMode
         {
             // Arrange & Act
             const float expectedTime = 10f;
-            var timer = new FakeMG.FakeMGFramework.Timer.Timer(expectedTime);
+            var timer = new FakeMG.Framework.Timer.Timer(expectedTime);
 
             // Assert
             Assert.AreEqual(expectedTime, timer.TimeToWait, "TimeToWait should be initialized with constructor value");
@@ -23,7 +23,7 @@ namespace Timer.EditMode
             // Arrange
             const float startTime = 5f;
             const float deltaTime = 1f;
-            var timer = new FakeMG.FakeMGFramework.Timer.Timer(startTime);
+            var timer = new FakeMG.Framework.Timer.Timer(startTime);
 
             // Act
             bool isFinished = timer.Tick(deltaTime);
@@ -39,7 +39,7 @@ namespace Timer.EditMode
         {
             // Arrange
             const float startTime = 2f;
-            var timer = new FakeMG.FakeMGFramework.Timer.Timer(startTime);
+            var timer = new FakeMG.Framework.Timer.Timer(startTime);
 
             // Act
             bool firstTickResult = timer.Tick(1f);
@@ -57,7 +57,7 @@ namespace Timer.EditMode
         public void SetTime_ResetsTimer()
         {
             // Arrange
-            var timer = new FakeMG.FakeMGFramework.Timer.Timer(10f);
+            var timer = new FakeMG.Framework.Timer.Timer(10f);
             timer.Tick(5f); // Timer at 5 seconds
 
             // Act
@@ -75,7 +75,7 @@ namespace Timer.EditMode
         {
             // Arrange
             const float startTime = 10f;
-            var timer = new FakeMG.FakeMGFramework.Timer.Timer(startTime);
+            var timer = new FakeMG.Framework.Timer.Timer(startTime);
             timer.Tick(5f); // Timer at 5 seconds
 
             // Act

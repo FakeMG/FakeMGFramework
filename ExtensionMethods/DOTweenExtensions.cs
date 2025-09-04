@@ -1,7 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.ExtensionMethods
+namespace FakeMG.Framework.ExtensionMethods
 {
     public static class DOTweenUIExtensions
     {
@@ -13,7 +13,7 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods
         {
             //TODO: how to kill previous animation sequence? transform.DOKill() doesn't work because transform is in a Sequence
             Sequence animationSequence = DOTween.Sequence();
-        
+
             animationSequence.Append(transform.DOScale(endScale, duration * 0.3f).SetEase(scaleEase)
                 .SetLink(transform.gameObject));
             animationSequence.Append(transform.DOMove(endPosition, duration * 0.7f).SetEase(moveEase)
@@ -32,12 +32,12 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods
             var initialPosition = canvasGroup.transform.position;
 
             Sequence animationSequence = DOTween.Sequence();
-        
+
             // Scale up animation
             animationSequence.Join(
                 canvasGroup.transform.DOScale(endScale, duration * 0.15f).SetEase(scaleEase)
             );
-        
+
             // Fly up animation (starts during scale up)
             // Use screen percentage instead of fixed height
             float adaptiveFlyHeight = moveScreenPercentage;
@@ -50,10 +50,11 @@ namespace FakeMG.FakeMGFramework.ExtensionMethods
                     adaptiveFlyHeight = rectTransform.rect.height * rectTransform.localScale.y * moveScreenPercentage;
                 }
             }
+
             animationSequence.Join(
                 canvasGroup.transform.DOMoveY(initialPosition.y + adaptiveFlyHeight, duration).SetEase(moveEase)
             );
-        
+
             // Fade out animation (starts after scale up is halfway done)
             animationSequence.Insert(duration * 0.3f,
                 canvasGroup.DOFade(0f, duration * 0.4f).SetEase(fadeEase)

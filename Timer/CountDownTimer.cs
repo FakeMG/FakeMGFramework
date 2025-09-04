@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.FakeMGFramework.Timer
+namespace FakeMG.Framework.Timer
 {
     public class CountDownTimer : MonoBehaviour
     {

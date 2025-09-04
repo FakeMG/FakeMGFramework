@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SaveLoad.Advanced
+namespace FakeMG.Framework.SaveLoad.Advanced
 {
     public class SaveLoadSystem : MonoBehaviour
     {

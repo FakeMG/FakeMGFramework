@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.GridBuilding
+namespace FakeMG.Framework.GridBuilding
 {
     /// <summary>
     /// The Grid system only cares about which cells are occupied

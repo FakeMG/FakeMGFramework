@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.UI.Toggle
+namespace FakeMG.Framework.UI.Toggle
 {
     public class ToggleSwitch : MonoBehaviour, IPointerClickHandler
     {

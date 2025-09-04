@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Globalization;
-using FakeMG.FakeMGFramework.Gacha;
+using FakeMG.Framework.Gacha;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.FakeMGFramework.FortuneWheel
+namespace FakeMG.Framework.FortuneWheel
 {
     public class FortuneWheelGameLogic : MonoBehaviour
     {

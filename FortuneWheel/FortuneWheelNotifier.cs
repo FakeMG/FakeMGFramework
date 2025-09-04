@@ -2,20 +2,20 @@
 using System.Globalization;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.FortuneWheel
+namespace FakeMG.Framework.FortuneWheel
 {
     public class FortuneWheelNotifier : MonoBehaviour
     {
         [SerializeField] private FortuneWheelGameLogic fortuneWheelGameLogic;
         [SerializeField] private GameObject notificationIcon;
-        
+
         private DateTime _lastSpinTime;
-        
+
         private void Start()
         {
             UpdateNotificationIcon();
         }
-        
+
         public void UpdateNotificationIcon()
         {
             string savedLastSpinTime = PlayerPrefs.GetString(FortuneWheelGameLogic.LAST_SPIN_KEY, "");

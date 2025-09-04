@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace FakeMG.FakeMGFramework.ExtensionMethods
+namespace FakeMG.Framework.ExtensionMethods
 {
     public static class StringExtensions
     {

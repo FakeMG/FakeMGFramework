@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace FakeMG.FakeMGFramework
+namespace FakeMG.Framework
 {
     public class SimpleBounce : MonoBehaviour
     {

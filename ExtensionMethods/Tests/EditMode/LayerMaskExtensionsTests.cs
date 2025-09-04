@@ -1,4 +1,4 @@
-using FakeMG.FakeMGFramework.ExtensionMethods;
+using FakeMG.Framework.ExtensionMethods;
 using NUnit.Framework;
 using UnityEngine;
 

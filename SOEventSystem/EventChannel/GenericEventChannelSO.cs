@@ -2,7 +2,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.FakeMGFramework.SOEventSystem.EventChannel
+namespace FakeMG.Framework.SOEventSystem.EventChannel
 {
     public abstract class GenericEventChannelSO<T> : ScriptableObject
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FakeMG.FakeMGFramework.Audio
+namespace FakeMG.Framework.Audio
 {
     public readonly struct AudioCueKey
     {

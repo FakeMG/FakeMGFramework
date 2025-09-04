@@ -1,5 +1,6 @@
 using System.Collections;
-using FakeMG.FakeMGFramework.Timer;
+using System.Reflection;
+using FakeMG.Framework.Timer;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.Events;
@@ -89,7 +90,7 @@ namespace Timer.PlayMode
 
             // Explicitly access and set the field using reflection to override serialized value
             var warningPeriodField = typeof(CountDownTimer).GetField("warningPeriod",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance);
             warningPeriodField.SetValue(_countDownTimer, warningPeriod);
 
             _countDownTimer.onWarningSecondReducedEvent.AddListener(seconds => { warningEventCallCount++; });

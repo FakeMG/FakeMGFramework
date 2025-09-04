@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SaveLoad.Advanced
+namespace FakeMG.Framework.SaveLoad.Advanced
 {
     public class ExampleSaveableComponent : Saveable
     {

@@ -3,13 +3,13 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace FakeMG.FakeMGFramework
+namespace FakeMG.Framework
 {
     /// <summary>
     /// Base class for all items in the game
     /// </summary>
     [CreateAssetMenu(fileName = "ItemSO", menuName = "Item")]
-    public class ItemBaseSO : SerializedScriptableObject
+    public class ItemSO : SerializedScriptableObject
     {
         [Header("Item Info")]
         [Required]
@@ -18,13 +18,13 @@ namespace FakeMG.FakeMGFramework
         [SerializeField, TextArea(3, 5)] protected string description;
         [PreviewField(75, ObjectFieldAlignment.Left)]
         [SerializeField] private AssetReferenceT<Sprite> iconSpriteAsset;
-        [SerializeField] private Dictionary<ItemBaseSO, int> _price = new();
+        [SerializeField] private Dictionary<ItemSO, int> _price = new();
 
         public string ID => id;
         public string ItemName => itemName;
         public string Description => description;
         public AssetReferenceT<Sprite> IconSpriteAsset => iconSpriteAsset;
-        public Dictionary<ItemBaseSO, int> Price => _price;
+        public IReadOnlyDictionary<ItemSO, int> Price => _price;
 
 #if UNITY_EDITOR
         [Button("Set ID from Name")]

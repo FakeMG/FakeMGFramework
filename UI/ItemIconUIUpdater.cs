@@ -1,12 +1,12 @@
 ﻿using Cysharp.Threading.Tasks;
-using FakeMG.FakeMGFramework.ExtensionMethods;
+using FakeMG.Framework.ExtensionMethods;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.UI
+namespace FakeMG.Framework.UI
 {
     public class ItemIconUIUpdater : MonoBehaviour
     {
@@ -35,7 +35,7 @@ namespace FakeMG.FakeMGFramework.UI
             countText.gameObject.SetActive(showCountWhenZero || !string.IsNullOrEmpty(count));
         }
 
-        public async UniTask UpdateUIAsync(ItemBaseSO item, int count)
+        public async UniTask UpdateUIAsync(ItemSO item, int count)
         {
             UnloadHandle();
 

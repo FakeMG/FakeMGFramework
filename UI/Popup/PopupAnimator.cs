@@ -4,7 +4,7 @@ using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Popup
+namespace FakeMG.Framework.UI.Popup
 {
     [RequireComponent(typeof(CanvasGroup))]
     public abstract class PopupAnimator : MonoBehaviour

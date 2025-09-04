@@ -1,5 +1,6 @@
 using System.Collections;
-using FakeMG.FakeMGFramework.TargetFinder;
+using System.Reflection;
+using FakeMG.Framework.TargetFinder;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.TestTools;
@@ -21,24 +22,25 @@ namespace TargetFinder.PlayMode
             _finder = _finderObject.AddComponent<TargetLayerFinder>();
 
             var targetLayerMaskField = typeof(TargetLayerFinder).GetField("targetLayerMask",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance);
             LayerMask layerMask = LayerMask.GetMask(LayerMask.LayerToName(TEST_LAYER));
             targetLayerMaskField.SetValue(_finder, layerMask);
 
             var maxTargetsField = typeof(TargetLayerFinder).GetField("maxTargets",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance);
             maxTargetsField.SetValue(_finder, 10);
 
             var findClosestTargetField = typeof(TargetLayerFinder).GetField("findClosestTarget",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance);
             findClosestTargetField.SetValue(_finder, true);
 
-            var radiusField = typeof(FakeMG.FakeMGFramework.TargetFinder.TargetFinder).GetField("radius",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var radiusField = typeof(FakeMG.Framework.TargetFinder.TargetFinder).GetField("radius",
+                BindingFlags.NonPublic | BindingFlags.Instance);
             radiusField.SetValue(_finder, 5f);
 
-            var targetDetectionInterval = typeof(FakeMG.FakeMGFramework.TargetFinder.TargetFinder).GetField("targetDetectionInterval",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var targetDetectionInterval = typeof(FakeMG.Framework.TargetFinder.TargetFinder).GetField(
+                "targetDetectionInterval",
+                BindingFlags.NonPublic | BindingFlags.Instance);
             _interval = (float)targetDetectionInterval.GetValue(_finder);
         }
 

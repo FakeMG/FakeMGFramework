@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SOEventSystem.EventChannel
+namespace FakeMG.Framework.SOEventSystem.EventChannel
 {
     /// <summary>
     /// This event channel broadcasts and carries Boolean payload.

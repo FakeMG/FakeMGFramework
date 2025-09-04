@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
+namespace FakeMG.Framework.UI.Tab.TabContentTransition
 {
     public class InstantTabTransition : TabTransitionBase
     {

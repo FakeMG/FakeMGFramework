@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.UI
+namespace FakeMG.Framework.UI
 {
     public class ScaleButton : Button
     {
@@ -20,8 +20,8 @@ namespace FakeMG.FakeMGFramework.UI
         protected override void Awake()
         {
             base.Awake();
-            
             _graphics = GetComponentsInChildren<Graphic>(true).Where(graphic => graphic.gameObject != gameObject).ToList();
+
             _textMeshPro = GetComponentsInChildren<TextMeshProUGUI>(true)
                 .Where(text => text.gameObject != gameObject).ToList();
 
@@ -31,7 +31,7 @@ namespace FakeMG.FakeMGFramework.UI
                 _normalScale = Vector3.one;
             }
         }
-        
+
         private void ChangeColor(Color targetColor, bool instant)
         {
             if (_graphics == null) return;
@@ -51,9 +51,9 @@ namespace FakeMG.FakeMGFramework.UI
         {
             if (!gameObject.activeInHierarchy)
                 return;
-            
+
             Color tintColor;
-            
+
             switch (buttonState)
             {
                 case SelectionState.Normal:
@@ -86,7 +86,7 @@ namespace FakeMG.FakeMGFramework.UI
                     tintColor = Color.black;
                     break;
             }
-                    
+
             ChangeColor(tintColor * colors.colorMultiplier, instant);
         }
     }

@@ -4,7 +4,7 @@ using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.FakeMGFramework.SceneLoading
+namespace FakeMG.Framework.SceneLoading
 {
     public class SceneLoaderSequence : MonoBehaviour
     {

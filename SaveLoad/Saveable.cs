@@ -1,8 +1,9 @@
 ﻿using System;
-using FakeMG.FakeMGFramework.SaveLoad.Advanced;
+using FakeMG.Framework.SaveLoad.Advanced;
+using UnityEditor;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SaveLoad
+namespace FakeMG.Framework.SaveLoad
 {
     public abstract class Saveable : MonoBehaviour
     {
@@ -15,7 +16,7 @@ namespace FakeMG.FakeMGFramework.SaveLoad
             {
                 uniqueId = Guid.NewGuid().ToString();
 #if UNITY_EDITOR
-                UnityEditor.EditorUtility.SetDirty(this); // Mark as dirty to save the new ID
+                EditorUtility.SetDirty(this); // Mark as dirty to save the new ID
 #endif
             }
 

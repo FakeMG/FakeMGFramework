@@ -1,7 +1,7 @@
 ﻿using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Popup
+namespace FakeMG.Framework.UI.Popup
 {
     public class PopupScaleAnimator : PopupAnimator
     {

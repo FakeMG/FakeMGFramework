@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Timer
+namespace FakeMG.Framework.Timer
 {
     public class TimerTextUIUpdater : MonoBehaviour
     {

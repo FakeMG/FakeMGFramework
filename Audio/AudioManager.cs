@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using FakeMG.FakeMGFramework.SOEventSystem.EventChannel;
+using FakeMG.Framework.SOEventSystem.EventChannel;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace FakeMG.FakeMGFramework.Audio
+namespace FakeMG.Framework.Audio
 {
     public class AudioManager : MonoBehaviour
     {
@@ -264,7 +264,8 @@ namespace FakeMG.FakeMGFramework.Audio
             // Clean emitter from vault with thread safety
             lock (_vaultLock)
             {
-                bool isFound = _soundEmitterVault.Get(soundEmitter.AudioCueKey, out List<SoundEmitter> soundEmitterList);
+                bool isFound =
+                    _soundEmitterVault.Get(soundEmitter.AudioCueKey, out List<SoundEmitter> soundEmitterList);
                 if (isFound)
                 {
                     // First, remove the current emitter from the list

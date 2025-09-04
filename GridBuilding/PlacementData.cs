@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.GridBuilding
+namespace FakeMG.Framework.GridBuilding
 {
     [Serializable]
     public class PlacementData

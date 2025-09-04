@@ -8,7 +8,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.UI.Popup
+namespace FakeMG.Framework.UI.Popup
 {
     /// <summary>
     /// Handles background stacking, popup creation/destruction.

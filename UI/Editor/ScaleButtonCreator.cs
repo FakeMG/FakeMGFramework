@@ -4,7 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.UI.Editor
+namespace FakeMG.Framework.UI.Editor
 {
     public static class ScaleButtonCreator
     {

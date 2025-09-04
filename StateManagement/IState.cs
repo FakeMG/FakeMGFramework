@@ -1,4 +1,4 @@
-﻿namespace FakeMG.FakeMGFramework.StateManagement
+﻿namespace FakeMG.Framework.StateManagement
 {
     public interface IState
     {

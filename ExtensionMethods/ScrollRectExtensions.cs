@@ -1,8 +1,8 @@
-﻿using UnityEngine;
-using DG.Tweening;
+﻿using DG.Tweening;
+using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.ExtensionMethods
+namespace FakeMG.Framework.ExtensionMethods
 {
     public static class ScrollRectExtension
     {

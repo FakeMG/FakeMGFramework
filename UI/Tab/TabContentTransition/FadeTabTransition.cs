@@ -2,7 +2,7 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
+namespace FakeMG.Framework.UI.Tab.TabContentTransition
 {
     public class FadeTabTransition : TabTransitionBase
     {
@@ -41,6 +41,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
             {
                 canvasGroup = rectTransform.gameObject.AddComponent<CanvasGroup>();
             }
+
             return canvasGroup;
         }
 
@@ -54,7 +55,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
 
             onComplete?.Invoke();
         }
-        
+
         public override void ActivateTabContent(TabData tab)
         {
             tab.TabContent.gameObject.SetActive(true);

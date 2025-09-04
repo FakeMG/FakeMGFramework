@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace FakeMG.FakeMGFramework
+namespace FakeMG.Framework
 {
     /// <summary>
     /// <para>

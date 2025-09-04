@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
-using FakeMG.FakeMGFramework.UI.Tab.TabContentTransition;
+using FakeMG.Framework.UI.Tab.TabContentTransition;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Tab
+namespace FakeMG.Framework.UI.Tab
 {
     public class TabSystem : MonoBehaviour
     {

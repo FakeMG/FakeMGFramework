@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace FakeMG.FakeMGFramework
+namespace FakeMG.Framework
 {
     public abstract class SOReference<T> : ScriptableObject where T : Object
     {

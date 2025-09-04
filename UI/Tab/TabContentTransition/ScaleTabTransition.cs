@@ -2,7 +2,7 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
+namespace FakeMG.Framework.UI.Tab.TabContentTransition
 {
     public class ScaleTabTransition : TabTransitionBase
     {

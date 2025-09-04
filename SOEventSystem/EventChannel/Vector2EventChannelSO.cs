@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SOEventSystem.EventChannel
+namespace FakeMG.Framework.SOEventSystem.EventChannel
 {
     /// <summary>
     /// General Event Channel that broadcasts and carries Vector2 payload.

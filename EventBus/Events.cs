@@ -1,4 +1,4 @@
-﻿namespace FakeMG.FakeMGFramework.EventBus
+﻿namespace FakeMG.Framework.EventBus
 {
     public interface IEvent { }
 

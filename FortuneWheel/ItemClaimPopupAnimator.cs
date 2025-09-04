@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using FakeMG.FakeMGFramework.UI;
-using FakeMG.FakeMGFramework.UI.Popup;
+using FakeMG.Framework.UI;
+using FakeMG.Framework.UI.Popup;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.FortuneWheel
+namespace FakeMG.Framework.FortuneWheel
 {
     public class ItemClaimPopupAnimator : PopupAnimator
     {
@@ -19,7 +19,7 @@ namespace FakeMG.FakeMGFramework.FortuneWheel
         [SerializeField] private Transform x2Text;
 
         private Vector3 _initialTextScale; // used in the x2 text animation
-        private Dictionary<ItemBaseSO, int> _rewardItems;
+        private Dictionary<ItemSO, int> _rewardItems;
 
         private void Start()
         {
@@ -44,7 +44,7 @@ namespace FakeMG.FakeMGFramework.FortuneWheel
             x2Text.gameObject.SetActive(false);
         }
 
-        public void SetRewards(Dictionary<ItemBaseSO, int> rewardItems)
+        public void SetRewards(Dictionary<ItemSO, int> rewardItems)
         {
             _rewardItems = rewardItems;
         }

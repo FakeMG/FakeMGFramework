@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.SceneLoading
+namespace FakeMG.Framework.SceneLoading
 {
     public enum EaseType
     {
@@ -19,7 +19,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
         [SerializeField] private CanvasGroup transitionScreen;
         [SerializeField] private Image backgroundColor;
         [SerializeField] private RectTransform logo;
-    
+
         [Header("Show Animation Settings")]
         [SerializeField] private float showDuration;
         [SerializeField] private Vector2 showPosition = new(0, 0);
@@ -52,7 +52,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
         {
             transitionScreen.gameObject.SetActive(false);
             transitionScreen.alpha = 0f;
-            
+
             logo.anchoredPosition = hidePosition;
             logo.localScale = Vector3.one * hideScale;
             logo.rotation = Quaternion.Euler(0, 0, hideRotation);
@@ -94,46 +94,51 @@ namespace FakeMG.FakeMGFramework.SceneLoading
             {
                 yield return StartCoroutine(processCoroutine());
             }
+
             StartHideAnimation();
         }
 
         private IEnumerator ShowAnimationCoroutine()
         {
             onShowAnimationStart?.Invoke();
-        
+
             transitionScreen.gameObject.SetActive(true);
             transitionScreen.alpha = 1f;
-        
-            backgroundColor.color = new Color(backgroundColor.color.r, backgroundColor.color.g, backgroundColor.color.b, 0);
-        
-            var positionTween = ApplyEase(logo.DOAnchorPos(showPosition, showDuration), showEaseType, showEase, showEaseCurve);
+
+            backgroundColor.color =
+                new Color(backgroundColor.color.r, backgroundColor.color.g, backgroundColor.color.b, 0);
+
+            var positionTween = ApplyEase(logo.DOAnchorPos(showPosition, showDuration), showEaseType, showEase,
+                showEaseCurve);
             ApplyEase(logo.DOScale(Vector3.one * showScale, showDuration), showEaseType, showEase, showEaseCurve);
-            ApplyEase(logo.DORotate(new Vector3(0, 0, showRotation), showDuration, RotateMode.FastBeyond360), showEaseType, showEase, showEaseCurve);
-        
+            ApplyEase(logo.DORotate(new Vector3(0, 0, showRotation), showDuration, RotateMode.FastBeyond360),
+                showEaseType, showEase, showEaseCurve);
+
             yield return positionTween.WaitForCompletion();
             yield return backgroundColor.DOFade(1f, colorFadeDuration).WaitForCompletion();
-            
+
             onShowAnimationComplete?.Invoke();
         }
 
         private void StartHideAnimation()
         {
             onHideAnimationStart?.Invoke();
-        
+
             backgroundColor.DOFade(0f, colorFadeDuration).OnComplete(() =>
             {
                 ApplyEase(logo.DOAnchorPos(hidePosition, hideDuration), hideEaseType, hideEase, hideEaseCurve);
                 ApplyEase(logo.DOScale(Vector3.one * hideScale, hideDuration), hideEaseType, hideEase, hideEaseCurve);
                 ApplyEase(logo.DORotate(new Vector3(0, 0, hideRotation), hideDuration, RotateMode.FastBeyond360),
                     hideEaseType, hideEase, hideEaseCurve);
-            
-                transitionScreen.DOFade(0f, transitionScreenFadeDuration).SetDelay(hideDuration).OnComplete(() => {
+
+                transitionScreen.DOFade(0f, transitionScreenFadeDuration).SetDelay(hideDuration).OnComplete(() =>
+                {
                     transitionScreen.gameObject.SetActive(false);
                     onHideAnimationComplete?.Invoke();
                 });
             });
         }
-    
+
         private Tween ApplyEase(Tween tween, EaseType easeType, Ease predefinedEase, AnimationCurve customCurve)
         {
             if (easeType == EaseType.Predefined)
@@ -144,6 +149,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
             {
                 tween.SetEase(customCurve);
             }
+
             return tween;
         }
     }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace FakeMG.FakeMGFramework.UI
+namespace FakeMG.Framework.UI
 {
     public class UIGroupSpawner : MonoBehaviour
     {
@@ -63,7 +63,7 @@ namespace FakeMG.FakeMGFramework.UI
 
                 RectTransform spawnedUI = SpawnUI(randomSpawnPos);
                 onSpawned?.Invoke(spawnedUI);
-                
+
                 yield return new WaitForSeconds(delay);
             }
         }

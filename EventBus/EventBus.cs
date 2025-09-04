@@ -1,6 +1,6 @@
 using System;
 
-namespace FakeMG.FakeMGFramework.EventBus
+namespace FakeMG.Framework.EventBus
 {
     public static class EventBus<T> where T : IEvent
     {

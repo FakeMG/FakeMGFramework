@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using FakeMG.FakeMGFramework.SaveLoad.Simple.Storages;
+using FakeMG.Framework.SaveLoad.Simple.Storages;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SaveLoad.Simple
+namespace FakeMG.Framework.SaveLoad.Simple
 {
     public class SaveLoadSystem : MonoBehaviour
     {

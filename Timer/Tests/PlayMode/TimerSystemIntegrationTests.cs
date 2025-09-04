@@ -1,6 +1,8 @@
 using System.Collections;
-using FakeMG.FakeMGFramework.Timer;
+using System.Reflection;
+using FakeMG.Framework.Timer;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.TestTools;
@@ -13,7 +15,7 @@ namespace Timer.PlayMode
         private GameObject _textGameObject;
         private CountDownTimer _countDownTimer;
         private TimerTextUIUpdater _timerTextUpdater;
-        private TMPro.TextMeshProUGUI _timerText;
+        private TextMeshProUGUI _timerText;
 
         [SetUp]
         public void Setup()
@@ -28,12 +30,12 @@ namespace Timer.PlayMode
 
             // Set up TimerTextUIUpdater
             _textGameObject = new GameObject("TextTestObject");
-            _timerText = _textGameObject.AddComponent<TMPro.TextMeshProUGUI>();
+            _timerText = _textGameObject.AddComponent<TextMeshProUGUI>();
             _timerTextUpdater = _textGameObject.AddComponent<TimerTextUIUpdater>();
 
             // Use reflection to set the private timerText field
             var timerTextField = typeof(TimerTextUIUpdater).GetField("timerText",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance);
             timerTextField.SetValue(_timerTextUpdater, _timerText);
         }
 
@@ -79,7 +81,7 @@ namespace Timer.PlayMode
 
             // Set properties using reflection since they're serialized private fields
             var runOnStartField = typeof(CountDownTimer).GetField("runOnStart",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                BindingFlags.NonPublic | BindingFlags.Instance);
             runOnStartField.SetValue(_countDownTimer, true);
 
             _countDownTimer.SetTimeToWait(5f);

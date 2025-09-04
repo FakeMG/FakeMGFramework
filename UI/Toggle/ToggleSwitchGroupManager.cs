@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Toggle
+namespace FakeMG.Framework.UI.Toggle
 {
     public class ToggleSwitchGroupManager : MonoBehaviour
     {
@@ -10,7 +10,7 @@ namespace FakeMG.FakeMGFramework.UI.Toggle
 
         [Header("Toggle Options")]
         [SerializeField] private bool allCanBeToggledOff;
-        
+
         private readonly List<ToggleSwitch> _toggleSwitches = new();
 
         private void Awake()
@@ -26,9 +26,9 @@ namespace FakeMG.FakeMGFramework.UI.Toggle
         {
             if (_toggleSwitches.Contains(toggleSwitch))
                 return;
-            
+
             _toggleSwitches.Add(toggleSwitch);
-            
+
             toggleSwitch.SetupForManager(this);
         }
 
@@ -37,15 +37,15 @@ namespace FakeMG.FakeMGFramework.UI.Toggle
             bool areAllToggledOff = true;
             foreach (var button in _toggleSwitches)
             {
-                if (!button.IsOn) 
+                if (!button.IsOn)
                     continue;
-                
+
                 areAllToggledOff = false;
                 break;
             }
 
             if (!areAllToggledOff || allCanBeToggledOff) return;
-            
+
             if (initialToggleSwitch != null)
                 initialToggleSwitch.ToggleByGroupManager(true);
             else

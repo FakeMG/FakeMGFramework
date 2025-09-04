@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Audio
+namespace FakeMG.Framework.Audio
 {
     [CreateAssetMenu(menuName = "Audio/AudioCueSO")]
     public class AudioCueSO : ScriptableObject

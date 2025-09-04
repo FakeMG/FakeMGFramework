@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FakeMG.FakeMGFramework.StateManagement
+namespace FakeMG.Framework.StateManagement
 {
     public class StateMachine
     {

@@ -1,9 +1,9 @@
 using System.Collections;
-using FakeMG.FakeMGFramework.SOEventSystem.EventChannel;
+using FakeMG.Framework.SOEventSystem.EventChannel;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.FakeMGFramework.SOEventSystem.PayloadAdapter
+namespace FakeMG.Framework.SOEventSystem.PayloadAdapter
 {
     public class VoidPayloadAdapter : MonoBehaviour
     {

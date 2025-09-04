@@ -1,4 +1,4 @@
-namespace FakeMG.FakeMGFramework.Timer
+namespace FakeMG.Framework.Timer
 {
     public class Timer
     {

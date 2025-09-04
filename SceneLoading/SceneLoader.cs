@@ -1,5 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
-using System;
+﻿using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Events;
@@ -7,7 +7,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 
-namespace FakeMG.FakeMGFramework.SceneLoading
+namespace FakeMG.Framework.SceneLoading
 {
     public class SceneLoader : MonoBehaviour
     {
@@ -39,7 +39,7 @@ namespace FakeMG.FakeMGFramework.SceneLoading
                 LoadSceneWithDelayOnStartAsync().Forget();
             }
         }
-        
+
         private async UniTaskVoid LoadSceneWithDelayOnStartAsync()
         {
             try
@@ -48,7 +48,8 @@ namespace FakeMG.FakeMGFramework.SceneLoading
                 {
                     // Using a cancellation token ensures that if the GameObject is destroyed
                     // during the delay, the task is cancelled cleanly.
-                    await UniTask.Delay(TimeSpan.FromSeconds(loadOnStartDelay), ignoreTimeScale: false, cancellationToken: this.GetCancellationTokenOnDestroy());
+                    await UniTask.Delay(TimeSpan.FromSeconds(loadOnStartDelay), ignoreTimeScale: false,
+                        cancellationToken: this.GetCancellationTokenOnDestroy());
                 }
 
                 await LoadSceneAsync(defaultLoadMode);

@@ -2,7 +2,7 @@ using System;
 using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
+namespace FakeMG.Framework.UI.Tab.TabContentTransition
 {
     public class SlidingTabTransition : TabTransitionBase
     {
@@ -12,7 +12,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
         {
             // Calculate slide direction (positive = from right, negative = from left)
             int direction = toIndex > fromIndex ? 1 : -1;
-            
+
             AnimateTabTransitionWithSlide(fromTab, toTab, direction, onComplete);
         }
 
@@ -20,7 +20,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
         {
             // Get canvas width for calculating the slide amount
             float canvasWidth = canvasRectTransform.rect.width;
-            
+
             StopTabContentAnimations(newTab);
             StopTabContentAnimations(currentTab);
 
@@ -72,7 +72,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabContentTransition
 
             onComplete?.Invoke();
         }
-        
+
         public override void ActivateTabContent(TabData tab)
         {
             tab.TabContent.gameObject.SetActive(true);

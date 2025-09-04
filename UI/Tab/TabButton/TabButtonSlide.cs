@@ -1,7 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
+namespace FakeMG.Framework.UI.Tab.TabButton
 {
     public class TabButtonSlide : TabButtonBase
     {
@@ -15,37 +15,41 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
         public override void AnimateSelection()
         {
             buttonIconRect.DOKill();
-            
+
             Vector3 targetScale = Vector3.one * buttonScaleMultiplier;
             float targetY = buttonYOffset;
 
-            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(scaleEase).SetLink(buttonIconRect.gameObject);
-            buttonIconRect.DOAnchorPosY(targetY, animationDuration).SetEase(moveYEase).SetLink(buttonIconRect.gameObject);
+            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(scaleEase)
+                .SetLink(buttonIconRect.gameObject);
+            buttonIconRect.DOAnchorPosY(targetY, animationDuration).SetEase(moveYEase)
+                .SetLink(buttonIconRect.gameObject);
         }
 
         public override void AnimateDeselection()
         {
             buttonIconRect.DOKill();
-            
+
             Vector3 targetScale = Vector3.one;
             float targetY = 0f;
 
-            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(scaleEase).SetLink(buttonIconRect.gameObject);
-            buttonIconRect.DOAnchorPosY(targetY, animationDuration).SetEase(moveYEase).SetLink(buttonIconRect.gameObject);
+            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(scaleEase)
+                .SetLink(buttonIconRect.gameObject);
+            buttonIconRect.DOAnchorPosY(targetY, animationDuration).SetEase(moveYEase)
+                .SetLink(buttonIconRect.gameObject);
         }
 
         public override void InstantlySelect()
         {
             buttonIconRect.DOKill();
-            
+
             buttonIconRect.localScale = Vector3.one * buttonScaleMultiplier;
             buttonIconRect.anchoredPosition = new Vector2(buttonIconRect.anchoredPosition.x, buttonYOffset);
         }
-        
+
         public override void InstantlyDeselect()
         {
             buttonIconRect.DOKill();
-            
+
             buttonIconRect.localScale = Vector3.one;
             buttonIconRect.anchoredPosition = new Vector2(buttonIconRect.anchoredPosition.x, 0f);
         }

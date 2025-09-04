@@ -3,7 +3,7 @@ using System.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.TargetFinder
+namespace FakeMG.Framework.TargetFinder
 {
     public abstract class TargetFinder : MonoBehaviour
     {

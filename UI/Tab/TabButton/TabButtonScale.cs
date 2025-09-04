@@ -1,7 +1,7 @@
 using DG.Tweening;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
+namespace FakeMG.Framework.UI.Tab.TabButton
 {
     public class TabButtonScale : TabButtonBase
     {
@@ -11,7 +11,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
         public override void AnimateSelection()
         {
             tabButton.DOKill();
-            
+
             Vector3 targetScale = Vector3.one * 1.2f;
             tabButton.DOScale(targetScale, animationDuration).SetEase(Ease.OutBounce).SetLink(tabButton.gameObject);
         }
@@ -19,7 +19,7 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
         public override void AnimateDeselection()
         {
             tabButton.DOKill();
-            
+
             Vector3 targetScale = Vector3.one;
             tabButton.DOScale(targetScale, animationDuration).SetEase(Ease.OutQuad).SetLink(tabButton.gameObject);
         }
@@ -27,14 +27,14 @@ namespace FakeMG.FakeMGFramework.UI.Tab.TabButton
         public override void InstantlySelect()
         {
             tabButton.DOKill();
-            
+
             tabButton.localScale = Vector3.one * 1.2f;
         }
-        
+
         public override void InstantlyDeselect()
         {
             tabButton.DOKill();
-            
+
             tabButton.localScale = Vector3.one;
         }
     }

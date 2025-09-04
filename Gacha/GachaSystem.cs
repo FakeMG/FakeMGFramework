@@ -3,7 +3,7 @@ using System.Linq;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Gacha
+namespace FakeMG.Framework.Gacha
 {
     public class GachaSystem : MonoBehaviour
     {

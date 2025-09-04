@@ -1,8 +1,8 @@
 ﻿using System;
-using FakeMG.FakeMGFramework.UI.Tab.TabButton;
+using FakeMG.Framework.UI.Tab.TabButton;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.UI.Tab
+namespace FakeMG.Framework.UI.Tab
 {
     [Serializable]
     public struct TabData : IEquatable<TabData>

@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using FakeMG.FakeMGFramework.Audio;
-using FakeMG.FakeMGFramework.Gacha;
-using FakeMG.FakeMGFramework.UI;
+using FakeMG.Framework.Audio;
+using FakeMG.Framework.Gacha;
+using FakeMG.Framework.UI;
 using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.FakeMGFramework.FortuneWheel
+namespace FakeMG.Framework.FortuneWheel
 {
     public class FortuneWheelVisual : MonoBehaviour
     {
@@ -162,7 +162,7 @@ namespace FakeMG.FakeMGFramework.FortuneWheel
                 exitButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
             });
 
-            var rewardItems = new Dictionary<ItemBaseSO, int>
+            var rewardItems = new Dictionary<ItemSO, int>
             {
                 { gachaSystem.Rewards[rewardIndex].rewardObject, gachaSystem.Rewards[rewardIndex].amount }
             };

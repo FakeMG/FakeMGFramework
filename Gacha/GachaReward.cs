@@ -1,11 +1,11 @@
 ﻿using System;
 
-namespace FakeMG.FakeMGFramework.Gacha
+namespace FakeMG.Framework.Gacha
 {
     [Serializable]
     public class GachaRewardData
     {
-        public ItemBaseSO rewardObject;
+        public ItemSO rewardObject;
         public float probability;
         public int amount = 1;
     }

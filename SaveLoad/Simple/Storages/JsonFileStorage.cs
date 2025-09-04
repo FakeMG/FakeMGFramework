@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.SaveLoad.Simple.Storages
+namespace FakeMG.Framework.SaveLoad.Simple.Storages
 {
     public class JsonFileStorage : ISaveStorage
     {

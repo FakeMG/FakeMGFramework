@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Audio
+namespace FakeMG.Framework.Audio
 {
     [CreateAssetMenu(menuName = "Audio/AudioCueEventChannel")]
     public class AudioCueEventChannelSO : ScriptableObject
@@ -8,7 +8,7 @@ namespace FakeMG.FakeMGFramework.Audio
         public event AudioCuePlayAction OnAudioCuePlayRequested;
         public event AudioCueStopAction OnAudioCueStopRequested;
         public event AudioCueFinishAction OnAudioCueFinishRequested;
-        
+
         public AudioCueKey RaisePlayEvent(
             AudioCueSO audioCue, AudioConfigurationSO audioConfiguration,
             Vector3 positionInSpace = default, Transform parent = null)
