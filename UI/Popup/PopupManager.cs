@@ -118,7 +118,7 @@ namespace FakeMG.Framework.UI.Popup
             _assetHandles[popupSO] = handle;
 
             // Initially hide the popup without animation
-            popupAnimator.Hide(false);
+            await popupAnimator.Hide(false);
 
             popupAnimator.OnShowStart += () => BeforeStart(popupSO);
             popupAnimator.OnShowFinished += () => AfterShow(popupSO);

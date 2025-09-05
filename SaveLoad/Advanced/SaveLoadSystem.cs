@@ -20,6 +20,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         private const string AUTO_SAVE_KEY = "AutoSave_";
         public const string METADATA_KEY = "Metadata";
 
+        public event Action OnLoadingComplete;
+
         private void Awake()
         {
             if (Instance && Instance != this)
@@ -38,6 +40,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 _autoSaveTimer = autoSaveInterval;
             }
 
+            RefreshSaveables();
             LoadMostRecentSave();
         }
 
@@ -54,28 +57,31 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         }
 
         #region Saveable Registration
-        public void RegisterSaveable(Saveable saveable, string uniqueId)
+        public void RefreshSaveables()
         {
-            if (string.IsNullOrEmpty(uniqueId))
-            {
-                Debug.LogError("Saveable component registered with invalid ID.");
-                return;
-            }
+            _saveables.Clear();
 
-            if (_saveables.ContainsKey(uniqueId))
+            Saveable[] saveables = GetComponentsInChildren<Saveable>(true);
+
+            foreach (var saveable in saveables)
             {
-                Debug.LogWarning($"Saveable with ID {uniqueId} already registered. Overwriting.");
+                string uniqueId = saveable.GetUniqueId();
+
+                if (string.IsNullOrEmpty(uniqueId))
+                {
+                    Debug.LogError($"Saveable component on {saveable.name} has invalid ID.");
+                    continue;
+                }
+
+                if (_saveables.ContainsKey(uniqueId))
+                {
+                    Debug.LogWarning($"Duplicate Saveable ID {uniqueId} found on {saveable.name}. Overwriting.");
+                }
+
                 _saveables[uniqueId] = saveable;
             }
-            else
-            {
-                _saveables.Add(uniqueId, saveable);
-            }
-        }
 
-        public void UnregisterSaveable(string uniqueId)
-        {
-            _saveables.Remove(uniqueId);
+            Debug.Log($"Registered {_saveables.Count} Saveable components.");
         }
         #endregion
 
@@ -97,7 +103,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 foreach (var saveable in _saveables)
                 {
                     var data = saveable.Value.CaptureState();
-                    ES3.Save(saveable.Key, data, manualSaveKey);
+                    var saveableID = saveable.Key;
+                    ES3.Save(saveableID, data, manualSaveKey);
                 }
 
                 Debug.Log($"Game saved to {manualSaveKey}");
@@ -126,7 +133,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 foreach (var saveable in _saveables)
                 {
                     var data = saveable.Value.CaptureState();
-                    ES3.Save(saveable.Key, data, autoSaveKey);
+                    var saveableID = saveable.Key;
+                    ES3.Save(saveableID, data, autoSaveKey);
                 }
 
                 ManageAutoSaveFiles();
@@ -135,40 +143,6 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             catch (Exception e)
             {
                 Debug.LogError($"Failed to auto-save game: {e.Message}");
-            }
-        }
-
-        public void LoadGame(string saveKey)
-        {
-            if (!ES3.FileExists(saveKey))
-            {
-                Debug.LogWarning($"No save file found for {saveKey}.");
-                return;
-            }
-
-            try
-            {
-                SaveMetadata metadata = ES3.Load(METADATA_KEY, saveKey, new SaveMetadata());
-
-                if (metadata.gameVersion != Application.version)
-                {
-                    VersionMigrator.MigrateSaveData(saveKey, metadata.gameVersion);
-                }
-
-                foreach (var saveable in _saveables)
-                {
-                    if (ES3.KeyExists(saveable.Key, saveKey))
-                    {
-                        object data = ES3.Load(saveable.Key, saveKey);
-                        saveable.Value.RestoreState(data);
-                    }
-                }
-
-                Debug.Log($"Game loaded from {saveKey}, saved at {metadata.Timestamp}");
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to load game from {saveKey}: {e.Message}");
             }
         }
 
@@ -196,7 +170,57 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             }
             else
             {
-                Debug.Log("No save files found. Starting new game.");
+                LoadDefaultData();
+            }
+        }
+
+        private void LoadDefaultData()
+        {
+            foreach (var saveable in _saveables)
+            {
+                saveable.Value.RestoreDefaultState();
+            }
+
+            OnLoadingComplete?.Invoke();
+            Debug.Log("Initialized default data for all Saveables - no existing save found.");
+        }
+
+        public void LoadGame(string saveKey)
+        {
+            if (!ES3.FileExists(saveKey))
+            {
+                Debug.LogWarning($"No save file found for {saveKey}.");
+                return;
+            }
+
+            try
+            {
+                SaveMetadata metadata = ES3.Load(METADATA_KEY, saveKey, new SaveMetadata());
+
+                if (metadata.gameVersion != Application.version)
+                {
+                    VersionMigrator.MigrateSaveData(saveKey, metadata.gameVersion);
+                }
+
+                foreach (var saveable in _saveables)
+                {
+                    if (ES3.KeyExists(saveable.Key, saveKey))
+                    {
+                        object data = ES3.Load(saveable.Key, saveKey);
+                        saveable.Value.RestoreState(data);
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"No data found for {saveable.Key} in {saveKey}.");
+                    }
+                }
+
+                Debug.Log($"Game loaded from {saveKey}, saved at {metadata.Timestamp}");
+                OnLoadingComplete?.Invoke();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to load game from {saveKey}: {e.Message}");
             }
         }
 

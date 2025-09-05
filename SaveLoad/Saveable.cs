@@ -1,34 +1,31 @@
 ﻿using System;
-using FakeMG.Framework.SaveLoad.Advanced;
-using UnityEditor;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace FakeMG.Framework.SaveLoad
 {
     public abstract class Saveable : MonoBehaviour
     {
-        [HideInInspector]
+        [ReadOnly]
         [SerializeField] private string uniqueId;
 
-        private void Start()
+        private object _cachedData;
+
+        private void Reset()
         {
             if (string.IsNullOrEmpty(uniqueId))
             {
                 uniqueId = Guid.NewGuid().ToString();
-#if UNITY_EDITOR
-                EditorUtility.SetDirty(this); // Mark as dirty to save the new ID
-#endif
             }
-
-            SaveLoadSystem.Instance.RegisterSaveable(this, uniqueId);
         }
 
-        private void OnDestroy()
+        public string GetUniqueId()
         {
-            SaveLoadSystem.Instance.UnregisterSaveable(uniqueId);
+            return uniqueId;
         }
 
         public abstract object CaptureState();
         public abstract void RestoreState(object data);
+        public abstract void RestoreDefaultState();
     }
 }

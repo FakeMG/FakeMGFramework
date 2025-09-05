@@ -43,4 +43,13 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             }
         }
     }
+
+    [Serializable]
+    // Test data
+    public class PlayerData
+    {
+        public int health;
+        public Vector3 position;
+        public BoxCollider boxCollider;
+    }
 }

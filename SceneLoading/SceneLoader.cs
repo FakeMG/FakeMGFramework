@@ -46,8 +46,8 @@ namespace FakeMG.Framework.SceneLoading
             {
                 if (loadOnStartDelay > 0)
                 {
-                    // Using a cancellation token ensures that if the GameObject is destroyed
-                    // during the delay, the task is cancelled cleanly.
+                    // Using a cancellation token ensures that if the GameObject is destroyed during the delay,
+                    // the task is canceled cleanly.
                     await UniTask.Delay(TimeSpan.FromSeconds(loadOnStartDelay), ignoreTimeScale: false,
                         cancellationToken: this.GetCancellationTokenOnDestroy());
                 }
