@@ -13,7 +13,6 @@ namespace FakeMG.Framework.SaveLoad.Advanced
     public class DataApplicationManager : MonoBehaviour
     {
         [Header("Timeout Settings")]
-        [SerializeField] private float registrationTimeoutSeconds = 5f;
         [SerializeField] private float applicationTimeoutSeconds = 10f;
 
         [Header("Debug")]
