@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace FakeMG.FakeMGFramework.Editor
@@ -10,16 +11,15 @@ namespace FakeMG.FakeMGFramework.Editor
         public static void CreateDefaultFolders()
         {
             CreateFolder("_Project/Feature",
-                "Script",
-                "Shader",
-                "ScriptableObject",
-                "Prefab",
-                "Sprite",
-                "Texture",
-                "Material",
-                "Model",
-                "Animation",
-                "Audio");
+                "Shaders",
+                "ScriptableObjects",
+                "Prefabs",
+                "Sprites",
+                "Textures",
+                "Materials",
+                "Models",
+                "Animations",
+                "Audios");
 
             AssetDatabase.Refresh();
         }
@@ -36,9 +36,9 @@ namespace FakeMG.FakeMGFramework.Editor
         [MenuItem("FakeMG/Add Necessary Packages")]
         public static void AddNecessaryPackages()
         {
-            UnityEditor.PackageManager.Client.Add("com.unity.cinemachine");
-            UnityEditor.PackageManager.Client.Add("com.unity.addressables");
-            UnityEditor.PackageManager.Client.Add("com.unity.localization");
+            Client.Add("com.unity.cinemachine");
+            Client.Add("com.unity.addressables");
+            Client.Add("com.unity.localization");
         }
     }
 }
