@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sirenix.OdinInspector;
 using UnityEngine;
@@ -24,7 +24,7 @@ namespace FakeMG.Framework.SceneLoading
         [SerializeField] private float showDuration;
         [SerializeField] private Vector2 showPosition = new(0, 0);
         [SerializeField] private float showScale = 1f;
-        [SerializeField] private float showRotation = 0f;
+        [SerializeField] private float showRotation;
         [SerializeField] private EaseType showEaseType = EaseType.Predefined;
         [SerializeField, ShowIf("showEaseType", EaseType.Predefined)] private Ease showEase = Ease.Linear;
         [SerializeField, ShowIf("showEaseType", EaseType.CustomCurve)] private AnimationCurve showEaseCurve;
@@ -58,47 +58,41 @@ namespace FakeMG.Framework.SceneLoading
             logo.rotation = Quaternion.Euler(0, 0, hideRotation);
         }
 
-        public void Show(Action process)
+#if UNITY_EDITOR
+        [Button]
+        private void Show()
         {
-            StartCoroutine(ShowWithProcess(process));
-        }
-
-        public void Show(Func<IEnumerator> processCoroutine)
-        {
-            StartCoroutine(ShowWithProcessCoroutine(processCoroutine));
+            ShowAsync().Forget();
         }
 
         [Button]
-        public void Show()
+        private void Hide()
         {
-            StartCoroutine(ShowAnimationCoroutine());
+            HideAsync().Forget();
         }
+#endif
 
-        [Button]
-        public void Hide()
+        public async UniTask PlayTransitionAsync(Action process)
         {
-            StartHideAnimation();
-        }
-
-        private IEnumerator ShowWithProcess(Action process)
-        {
-            yield return StartCoroutine(ShowAnimationCoroutine());
+            await ShowAsync();
             process?.Invoke();
-            StartHideAnimation();
+            await HideAsync();
         }
 
-        private IEnumerator ShowWithProcessCoroutine(Func<IEnumerator> processCoroutine)
+        public async UniTask PlayTransitionAsync(Func<UniTask> processTask)
         {
-            yield return StartCoroutine(ShowAnimationCoroutine());
-            if (processCoroutine != null)
+            await ShowAsync();
+
+            if (processTask != null)
             {
-                yield return StartCoroutine(processCoroutine());
+                await processTask();
             }
 
-            StartHideAnimation();
+            await HideAsync();
         }
 
-        private IEnumerator ShowAnimationCoroutine()
+        //TODO: protection from multiple calls or call Hide() before Show() finishs
+        private async UniTask ShowAsync()
         {
             onShowAnimationStart?.Invoke();
 
@@ -108,38 +102,42 @@ namespace FakeMG.Framework.SceneLoading
             backgroundColor.color =
                 new Color(backgroundColor.color.r, backgroundColor.color.g, backgroundColor.color.b, 0);
 
-            var positionTween = ApplyEase(logo.DOAnchorPos(showPosition, showDuration), showEaseType, showEase,
-                showEaseCurve);
-            ApplyEase(logo.DOScale(Vector3.one * showScale, showDuration), showEaseType, showEase, showEaseCurve);
-            ApplyEase(logo.DORotate(new Vector3(0, 0, showRotation), showDuration, RotateMode.FastBeyond360),
-                showEaseType, showEase, showEaseCurve);
+            var positionUniTask =
+                ApplyEase(logo.DOAnchorPos(showPosition, showDuration), showEaseType, showEase, showEaseCurve);
+            var scaleUniTask =
+                ApplyEase(logo.DOScale(Vector3.one * showScale, showDuration), showEaseType, showEase, showEaseCurve);
+            var rotateUniTask =
+                ApplyEase(logo.DORotate(new Vector3(0, 0, showRotation), showDuration, RotateMode.FastBeyond360),
+                    showEaseType, showEase, showEaseCurve);
 
-            yield return positionTween.WaitForCompletion();
-            yield return backgroundColor.DOFade(1f, colorFadeDuration).WaitForCompletion();
+            await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
+            await backgroundColor.DOFade(1f, colorFadeDuration).ToUniTask();
 
             onShowAnimationComplete?.Invoke();
         }
 
-        private void StartHideAnimation()
+        private async UniTask HideAsync()
         {
             onHideAnimationStart?.Invoke();
 
-            backgroundColor.DOFade(0f, colorFadeDuration).OnComplete(() =>
-            {
+            await backgroundColor.DOFade(0f, colorFadeDuration).ToUniTask();
+
+            var positionUniTask =
                 ApplyEase(logo.DOAnchorPos(hidePosition, hideDuration), hideEaseType, hideEase, hideEaseCurve);
+            var scaleUniTask =
                 ApplyEase(logo.DOScale(Vector3.one * hideScale, hideDuration), hideEaseType, hideEase, hideEaseCurve);
+            var rotateUniTask =
                 ApplyEase(logo.DORotate(new Vector3(0, 0, hideRotation), hideDuration, RotateMode.FastBeyond360),
                     hideEaseType, hideEase, hideEaseCurve);
 
-                transitionScreen.DOFade(0f, transitionScreenFadeDuration).SetDelay(hideDuration).OnComplete(() =>
-                {
-                    transitionScreen.gameObject.SetActive(false);
-                    onHideAnimationComplete?.Invoke();
-                });
-            });
+            await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
+            await transitionScreen.DOFade(0f, transitionScreenFadeDuration).ToUniTask();
+
+            transitionScreen.gameObject.SetActive(false);
+            onHideAnimationComplete?.Invoke();
         }
 
-        private Tween ApplyEase(Tween tween, EaseType easeType, Ease predefinedEase, AnimationCurve customCurve)
+        private UniTask ApplyEase(Tween tween, EaseType easeType, Ease predefinedEase, AnimationCurve customCurve)
         {
             if (easeType == EaseType.Predefined)
             {
@@ -150,7 +148,7 @@ namespace FakeMG.Framework.SceneLoading
                 tween.SetEase(customCurve);
             }
 
-            return tween;
+            return tween.ToUniTask();
         }
     }
 }
