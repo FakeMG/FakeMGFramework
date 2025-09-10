@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace FakeMG.Framework.SaveLoad.Advanced
@@ -10,7 +11,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
     /// Manages data application for systems in loaded scenes.
     /// Handles registration, timeout management, and completion tracking.
     /// </summary>
-    public class DataApplicationManager : MonoBehaviour
+    public class DataApplicationManager : Singleton<DataApplicationManager>
     {
         [Header("Timeout Settings")]
         [SerializeField] private float applicationTimeoutSeconds = 10f;
@@ -18,33 +19,19 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         [Header("Debug")]
         [SerializeField] private bool enableDebugLogs = true;
 
-        public static DataApplicationManager Instance { get; private set; }
-
-        private readonly Dictionary<string, List<IDataRequester>> _sceneRequesters = new();
-        private readonly Dictionary<string, HashSet<IDataRequester>> _pendingRequesters = new();
+        private readonly Dictionary<string, List<DataRequester>> _sceneRequesters = new();
+        private readonly Dictionary<string, HashSet<DataRequester>> _pendingRequesters = new();
         private readonly Dictionary<string, UniTaskCompletionSource<bool>> _sceneCompletionSources = new();
 
         public event Action<string> OnSceneDataApplicationComplete;
-        public event Action<string, IDataRequester> OnSystemDataApplicationComplete;
-        public event Action<string, IDataRequester, string> OnSystemDataApplicationFailed;
-
-        private void Awake()
-        {
-            if (Instance && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
+        public event Action<string, DataRequester> OnSystemDataApplicationComplete;
+        public event Action<string, DataRequester, string> OnSystemDataApplicationFailed;
 
         #region Helper Methods
         /// <summary>
         /// Get a readable identifier for a system for logging purposes
         /// </summary>
-        private string GetSystemIdentifier(IDataRequester requester)
+        private string GetSystemIdentifier(DataRequester requester)
         {
             if (requester is MonoBehaviour monoBehaviour)
             {
@@ -56,10 +43,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         #endregion
 
         #region System Registration
-        /// <summary>
-        /// Register a system that needs data for a specific scene
-        /// </summary>
-        public void RegisterDataRequester(IDataRequester requester)
+        public void RegisterDataRequester(DataRequester requester)
         {
             if (requester == null)
             {
@@ -71,7 +55,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
             if (!_sceneRequesters.ContainsKey(sceneName))
             {
-                _sceneRequesters[sceneName] = new List<IDataRequester>();
+                _sceneRequesters[sceneName] = new List<DataRequester>();
             }
 
             _sceneRequesters[sceneName].Add(requester);
@@ -83,10 +67,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             }
         }
 
-        /// <summary>
-        /// Unregister a system
-        /// </summary>
-        public void UnregisterDataRequester(IDataRequester requester)
+        public void UnregisterDataRequester(DataRequester requester)
         {
             if (requester == null) return;
 
@@ -122,12 +103,6 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         /// </summary>
         public async UniTask<bool> ApplyDataForSceneAsync(string sceneName)
         {
-            if (SaveLoadSystem.Instance == null)
-            {
-                Debug.LogError("SaveLoadSystem instance not found");
-                return false;
-            }
-
             if (!_sceneRequesters.ContainsKey(sceneName) || _sceneRequesters[sceneName].Count == 0)
             {
                 if (enableDebugLogs)
@@ -147,7 +122,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             // Set up completion tracking
             var completionSource = new UniTaskCompletionSource<bool>();
             _sceneCompletionSources[sceneName] = completionSource;
-            _pendingRequesters[sceneName] = new HashSet<IDataRequester>(_sceneRequesters[sceneName]);
+            _pendingRequesters[sceneName] = new HashSet<DataRequester>(_sceneRequesters[sceneName]);
 
             // Start application for all systems
             foreach (var requester in _sceneRequesters[sceneName])
@@ -164,7 +139,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             if (!hasResultLeft) // Timeout occurred
             {
                 Debug.LogError(
-                    $"[DataApplicationManager] Timeout applying data for scene {sceneName}. Remaining systems: {string.Join(", ", _pendingRequesters[sceneName].Select(r => GetSystemIdentifier(r)))}");
+                    $"[DataApplicationManager] Timeout applying data for scene {sceneName}. Remaining systems: {string.Join(", ", _pendingRequesters[sceneName].Select(GetSystemIdentifier))}");
 
                 // Complete with failure, but continue
                 completionSource.TrySetResult(false);
@@ -186,7 +161,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             return success;
         }
 
-        private async UniTask ApplyDataForRequesterAsync(string sceneName, IDataRequester requester)
+        private async UniTask ApplyDataForRequesterAsync(string sceneName, DataRequester requester)
         {
             try
             {
@@ -213,7 +188,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             }
         }
 
-        private void MarkRequesterComplete(string sceneName, IDataRequester requester)
+        private void MarkRequesterComplete(string sceneName, DataRequester requester)
         {
             if (_pendingRequesters.ContainsKey(sceneName))
             {
@@ -230,7 +205,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
         #region Public API
         /// <summary>
-        /// Wait for data application to complete for a specific scene
+        /// Wait for the data application to complete for a specific scene
         /// </summary>
         public async UniTask<bool> WaitForSceneDataApplicationAsync(string sceneName, float timeoutSeconds = 30f)
         {
@@ -254,33 +229,24 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             return await completionTask;
         }
 
-        /// <summary>
-        /// Get the number of systems registered for a scene
-        /// </summary>
         public int GetRegisteredSystemCount(string sceneName)
         {
             return _sceneRequesters.TryGetValue(sceneName, out var requester) ? requester.Count : 0;
         }
 
-        /// <summary>
-        /// Get the number of systems still pending for a scene
-        /// </summary>
         public int GetPendingSystemCount(string sceneName)
         {
             return _pendingRequesters.TryGetValue(sceneName, out var pendingRequester) ? pendingRequester.Count : 0;
         }
 
-        /// <summary>
-        /// Check if data application is in progress for a scene
-        /// </summary>
         public bool IsDataApplicationInProgress(string sceneName)
         {
             return _sceneCompletionSources.ContainsKey(sceneName);
         }
         #endregion
 
-        #region Debug
-        [ContextMenu("Log Registered Systems")]
+#if UNITY_EDITOR
+        [Button("Log Registered Systems")]
         private void LogRegisteredSystems()
         {
             Debug.Log("=== DataApplicationManager Registered Systems ===");
@@ -293,6 +259,6 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 }
             }
         }
-        #endregion
+#endif
     }
 }

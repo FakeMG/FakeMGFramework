@@ -16,6 +16,7 @@ namespace FakeMG.Framework.SaveLoad
             if (string.IsNullOrEmpty(uniqueId))
             {
                 uniqueId = Guid.NewGuid().ToString();
+                Debug.LogWarning($"Saveable {name} has no unique ID. Generated one: {uniqueId}");
             }
         }
 

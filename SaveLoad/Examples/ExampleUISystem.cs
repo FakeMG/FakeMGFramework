@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using Cysharp.Threading.Tasks;
-using FakeMG.Framework.SaveLoad.Advanced;
 using UnityEngine;
 
 namespace FakeMG.Framework.SaveLoad.Examples
@@ -10,25 +9,13 @@ namespace FakeMG.Framework.SaveLoad.Examples
     /// Example of how a system would request and apply data using the new workflow.
     /// This system registers with DataApplicationManager and applies data when requested.
     /// </summary>
-    public class ExampleUISystem : MonoBehaviour, IDataRequester
+    public class ExampleUISystem : DataRequester
     {
         [SerializeField] private ExamplePlayerDataSaveableReference playerSaveableRef;
 
-        public string SceneName => gameObject.scene.name;
-
         private string SystemIdentifier => $"{GetType().Name}({name})";
 
-        private void Awake()
-        {
-            DataApplicationManager.Instance.RegisterDataRequester(this);
-        }
-
-        private void OnDestroy()
-        {
-            DataApplicationManager.Instance.UnregisterDataRequester(this);
-        }
-
-        public async UniTask ApplyDataAsync()
+        public override async UniTask ApplyDataAsync()
         {
             Debug.Log($"[{SystemIdentifier}] Starting data application...");
 

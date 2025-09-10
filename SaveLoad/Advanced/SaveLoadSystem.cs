@@ -5,12 +5,11 @@ using UnityEngine;
 
 namespace FakeMG.Framework.SaveLoad.Advanced
 {
-    public class SaveLoadSystem : MonoBehaviour
+    public class SaveLoadSystem : Singleton<SaveLoadSystem>
     {
         [SerializeField] private bool enableAutoSave = true;
         [SerializeField] private int maxAutoSaves = 5;
         [SerializeField] private float autoSaveInterval = 300f;
-        public static SaveLoadSystem Instance { get; private set; }
 
         private readonly Dictionary<string, Saveable> _saveables = new();
 
@@ -21,17 +20,6 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         public const string METADATA_KEY = "Metadata";
 
         public event Action OnLoadingComplete;
-
-        private void Awake()
-        {
-            if (Instance && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            Instance = this;
-        }
 
         private void Start()
         {
@@ -90,10 +78,11 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         {
             try
             {
-                string manualSaveKey = $"{MANUAL_SAVE_KEY}{DateTime.Now.Ticks}";
+                DateTime now = DateTime.Now;
+                string manualSaveKey = $"{MANUAL_SAVE_KEY}{now.Ticks}";
                 SaveMetadata metadata = new SaveMetadata
                 {
-                    Timestamp = DateTime.Now,
+                    Timestamp = now,
                     isAutoSave = false,
                     gameVersion = Application.version,
                 };
@@ -119,26 +108,28 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         {
             try
             {
-                string autoSaveKey = $"{AUTO_SAVE_KEY}{DateTime.Now.Ticks}";
+                // Avoid out of sync between key and metadata
+                DateTime now = DateTime.Now;
+                string autoSaveKey = $"{AUTO_SAVE_KEY}{now.Ticks}";
                 SaveMetadata metadata = new SaveMetadata
                 {
-                    Timestamp = DateTime.Now,
+                    Timestamp = now,
                     isAutoSave = true,
                     gameVersion = Application.version
                 };
 
                 // Save metadata
                 ES3.Save(METADATA_KEY, metadata, autoSaveKey);
+                ManageAutoSaveFiles();
+                Debug.Log($"Auto-save created: {autoSaveKey}");
 
                 foreach (var saveable in _saveables)
                 {
-                    var data = saveable.Value.CaptureState();
                     var saveableID = saveable.Key;
+                    var data = saveable.Value.CaptureState();
+                    if (data == null) continue;
                     ES3.Save(saveableID, data, autoSaveKey);
                 }
-
-                ManageAutoSaveFiles();
-                Debug.Log($"Auto-save created: {autoSaveKey}");
             }
             catch (Exception e)
             {
@@ -190,6 +181,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             if (!ES3.FileExists(saveKey))
             {
                 Debug.LogWarning($"No save file found for {saveKey}.");
+                LoadDefaultData();
                 return;
             }
 
@@ -197,10 +189,11 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             {
                 SaveMetadata metadata = ES3.Load(METADATA_KEY, saveKey, new SaveMetadata());
 
-                if (metadata.gameVersion != Application.version)
-                {
-                    VersionMigrator.MigrateSaveData(saveKey, metadata.gameVersion);
-                }
+                // TODO: Implement migration logic
+                // if (metadata.gameVersion != Application.version)
+                // {
+                //     VersionMigrator.MigrateSaveData(saveKey, metadata.gameVersion);
+                // }
 
                 foreach (var saveable in _saveables)
                 {
@@ -229,8 +222,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             List<SaveMetadata> metadata = new();
 
             string[] saveFiles = ES3.GetFiles()
-                .Where(f => f.StartsWith(MANUAL_SAVE_KEY) || f.StartsWith(AUTO_SAVE_KEY))
-                .ToArray();
+                .Where(f => f.StartsWith(MANUAL_SAVE_KEY) || f.StartsWith(AUTO_SAVE_KEY)).ToArray();
 
             foreach (string file in saveFiles)
             {
