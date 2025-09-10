@@ -32,14 +32,21 @@ namespace FakeMG.Framework.GridBuilding
 
         public void RegisterBlock(Vector3 worldPosition, GameObject blockInstance, string instanceID)
         {
-            Vector3Int cellPosition = grid.WorldToCell(worldPosition);
+            Vector3Int pivotCell = grid.WorldToCell(worldPosition);
             List<Vector3Int> occupiedCells = GetOccupiedCells(blockInstance);
-            var placementData = new PlacementData(cellPosition, occupiedCells, instanceID);
 
+            var placementData = new PlacementData(pivotCell, occupiedCells, instanceID);
+            _gridData[pivotCell] = placementData;
+
+            // Remove unnecessary data to optimize memory
+            var optimizedPlacementData = new PlacementData(pivotCell, new List<Vector3Int>(), instanceID);
             // Add to grid data dictionary
             foreach (Vector3Int cell in occupiedCells)
             {
-                _gridData[cell] = placementData;
+                if (cell != pivotCell)
+                {
+                    _gridData[cell] = optimizedPlacementData;
+                }
             }
         }
 
@@ -48,13 +55,16 @@ namespace FakeMG.Framework.GridBuilding
             Vector3Int cellPosition = grid.WorldToCell(worldPosition);
             if (_gridData.TryGetValue(cellPosition, out var placementData))
             {
+                var occupiedCells = _gridData[placementData.pivotCell].occupiedCells;
+                instanceID = placementData.instanceID;
+
                 // Remove from grid data dictionary
-                foreach (Vector3Int cell in placementData.OccupiedCells)
+                foreach (Vector3Int cell in occupiedCells)
                 {
                     _gridData.Remove(cell);
-                    instanceID = placementData.InstanceID;
-                    return true;
                 }
+
+                return true;
             }
 
             instanceID = null;

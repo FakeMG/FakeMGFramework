@@ -7,15 +7,15 @@ namespace FakeMG.Framework.GridBuilding
     [Serializable]
     public class PlacementData
     {
-        public string InstanceID { get; private set; }
-        public Vector3Int PivotCell { get; set; }
-        public readonly List<Vector3Int> OccupiedCells;
+        public string instanceID;
+        public Vector3Int pivotCell;
+        public List<Vector3Int> occupiedCells;
 
         public PlacementData(Vector3Int pivotCell, List<Vector3Int> occupiedCells, string instanceID)
         {
-            PivotCell = pivotCell;
-            OccupiedCells = occupiedCells;
-            InstanceID = instanceID;
+            this.pivotCell = pivotCell;
+            this.occupiedCells = occupiedCells;
+            this.instanceID = instanceID;
         }
     }
 }
