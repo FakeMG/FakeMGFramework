@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 365ee0a8698607e4ba533e0fa59e3b7e, type: 3}
+  m_Name: SceneSwitcherData
+  m_EditorClassIdentifier: 
+  scene1: {fileID: 102900000, guid: df0ef06f2efc0b749ba12ad99493a779, type: 3}
+  scene2: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
+  scene3: {fileID: 102900000, guid: 2b7f5e311d29733458d310d6c481b13a, type: 3}
+  scene4: {fileID: 0}
+  scene5: {fileID: 0}
+  scene6: {fileID: 0}
+  scene7: {fileID: 0}
+  scene8: {fileID: 0}
+  scene9: {fileID: 0}

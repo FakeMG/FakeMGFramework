@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.Overlays;
 using UnityEditor.SceneManagement;
@@ -13,9 +11,12 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
     public class SceneSwitcherOverlay : Overlay
     {
         private VisualElement _sceneContainer;
+        private SceneSwitcherDataSO _data;
 
         public override VisualElement CreatePanelContent()
         {
+            _data = SceneSwitcherDataSO.GetOrCreate();
+
             var mainContainer = new VisualElement
             {
                 style =
@@ -47,23 +48,32 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
 
         private void RefreshSceneButtons()
         {
+            if (_sceneContainer == null) return;
+
             _sceneContainer.Clear();
 
-            var scenePaths = GetScenePathsFromWindow();
-
-            for (int i = 0; i < scenePaths.Count; i++)
+            if (_data == null)
             {
-                string scenePath = scenePaths[i];
+                _data = SceneSwitcherDataSO.GetOrCreate();
+            }
+
+            for (int i = 0; i < 9; i++)
+            {
+                var sceneAsset = _data.GetSceneAtIndex(i);
+                if (!sceneAsset) continue;
+
+                string scenePath = AssetDatabase.GetAssetPath(sceneAsset);
                 if (string.IsNullOrWhiteSpace(scenePath) || !File.Exists(scenePath)) continue;
 
                 string label = Path.GetFileNameWithoutExtension(scenePath);
                 int sceneNumber = i + 1;
+                string capturedPath = scenePath;
 
                 var button = new Button(() =>
                 {
                     if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                     {
-                        EditorSceneManager.OpenScene(scenePath);
+                        EditorSceneManager.OpenScene(capturedPath);
                     }
                 })
                 {
@@ -81,13 +91,6 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
 
                 _sceneContainer.Add(button);
             }
-        }
-
-        private List<string> GetScenePathsFromWindow()
-        {
-            return EditorPrefs.GetString(SceneSwitcherWindow.EDITOR_PREFS_KEY, "")
-                .Split(';')
-                .ToList();
         }
 
         public override void OnCreated()

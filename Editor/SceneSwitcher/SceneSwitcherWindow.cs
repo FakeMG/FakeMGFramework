@@ -9,22 +9,12 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
 {
     public class SceneSwitcherWindow : EditorWindow
     {
-        public const string EDITOR_PREFS_KEY = "SceneSwitcher_ScenePaths";
         private const string MENU_PATH = "FakeMG/Scene Switcher";
         private const int MAX_SCENES = 9;
 
         public static event Action OnScenesUpdated;
 
-        [SerializeField] private SceneAsset scene1;
-        [SerializeField] private SceneAsset scene2;
-        [SerializeField] private SceneAsset scene3;
-        [SerializeField] private SceneAsset scene4;
-        [SerializeField] private SceneAsset scene5;
-        [SerializeField] private SceneAsset scene6;
-        [SerializeField] private SceneAsset scene7;
-        [SerializeField] private SceneAsset scene8;
-        [SerializeField] private SceneAsset scene9;
-
+        private SceneSwitcherDataSO _data;
         private SerializedObject _serializedObject;
 
         [MenuItem(MENU_PATH + "/Window")]
@@ -35,8 +25,8 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
 
         private void OnEnable()
         {
-            _serializedObject = new SerializedObject(this);
-            LoadSceneList();
+            _data = SceneSwitcherDataSO.GetOrCreate();
+            _serializedObject = new SerializedObject(_data);
         }
 
         private void OnGUI()
@@ -55,59 +45,14 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
 
             if (_serializedObject.ApplyModifiedProperties())
             {
-                SaveSceneList();
+                EditorUtility.SetDirty(_data);
+                AssetDatabase.SaveAssets();
+                OnScenesUpdated?.Invoke();
             }
 
             EditorGUILayout.Space();
             EditorGUILayout.HelpBox("Use Shift + number keys (1-9) to quickly switch between assigned scenes.",
                 MessageType.Info);
-        }
-
-        private void SaveSceneList()
-        {
-            var scenePaths = new List<string>();
-            var sceneAssets = new[] { scene1, scene2, scene3, scene4, scene5, scene6, scene7, scene8, scene9 };
-
-            foreach (var sceneAsset in sceneAssets)
-            {
-                if (sceneAsset)
-                {
-                    string path = AssetDatabase.GetAssetPath(sceneAsset);
-                    scenePaths.Add(path);
-                }
-                else
-                {
-                    scenePaths.Add("");
-                }
-            }
-
-            EditorPrefs.SetString(EDITOR_PREFS_KEY, string.Join(";", scenePaths));
-            OnScenesUpdated?.Invoke();
-        }
-
-        private void LoadSceneList()
-        {
-            var scenePaths = EditorPrefs.GetString(EDITOR_PREFS_KEY, "").Split(';');
-
-            for (int i = 0; i < MAX_SCENES && i < scenePaths.Length; i++)
-            {
-                if (!string.IsNullOrWhiteSpace(scenePaths[i]))
-                {
-                    var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePaths[i]);
-                    switch (i)
-                    {
-                        case 0: scene1 = sceneAsset; break;
-                        case 1: scene2 = sceneAsset; break;
-                        case 2: scene3 = sceneAsset; break;
-                        case 3: scene4 = sceneAsset; break;
-                        case 4: scene5 = sceneAsset; break;
-                        case 5: scene6 = sceneAsset; break;
-                        case 6: scene7 = sceneAsset; break;
-                        case 7: scene8 = sceneAsset; break;
-                        case 8: scene9 = sceneAsset; break;
-                    }
-                }
-            }
         }
 
         [MenuItem(MENU_PATH + "/Switch Scene 1 _#1")]
@@ -166,24 +111,18 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
 
         private static void SwitchToSceneByIndex(int index)
         {
-            var scenePaths = LoadSceneListStatic();
+            var data = SceneSwitcherDataSO.GetOrCreate();
+            var sceneAsset = data.GetSceneAtIndex(index);
 
-            if (index < scenePaths.Count && !string.IsNullOrWhiteSpace(scenePaths[index]))
+            if (sceneAsset)
             {
-                TryOpenSceneStatic(scenePaths[index]);
+                string path = AssetDatabase.GetAssetPath(sceneAsset);
+                TryOpenSceneStatic(path);
             }
             else
             {
                 Debug.LogWarning($"No scene assigned to slot {index + 1}");
             }
-        }
-
-        private static List<string> LoadSceneListStatic()
-        {
-            return EditorPrefs.GetString(EDITOR_PREFS_KEY, "")
-                .Split(';')
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .ToList();
         }
 
         private static void TryOpenSceneStatic(string path)

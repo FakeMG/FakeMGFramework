@@ -15,6 +15,7 @@ namespace FakeMG.Framework.UI.Tab
 
         private List<Action> _onTabSelectedEvents = new();
         private int _currentActiveTabIndex;
+        public int CurrentTabIndex => _currentActiveTabIndex;
 
         private void Start()
         {
