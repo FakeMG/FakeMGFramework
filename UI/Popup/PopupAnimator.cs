@@ -22,6 +22,11 @@ namespace FakeMG.Framework.UI.Popup
         private Sequence _hideSequence;
         private Sequence _currentSequence;
 
+        private void Reset()
+        {
+            canvasGroup = GetComponent<CanvasGroup>();
+        }
+
         private void OnDestroy()
         {
             _showSequence?.Kill();
@@ -51,13 +56,13 @@ namespace FakeMG.Framework.UI.Popup
 
             OnShowStart?.Invoke();
 
+            canvasGroup.gameObject.SetActive(true);
+
             if (animate)
             {
-                canvasGroup.gameObject.SetActive(true);
                 _currentSequence = GetShowSequence();
                 _currentSequence.Restart();
                 await _currentSequence.AsyncWaitForCompletion();
-                // _currentSequence.onComplete += () => { OnShowFinished?.Invoke(); };
             }
             else
             {
@@ -96,17 +101,13 @@ namespace FakeMG.Framework.UI.Popup
                 _currentSequence = GetHideSequence();
                 _currentSequence.Restart();
                 await _currentSequence.AsyncWaitForCompletion();
-                // _currentSequence.OnComplete(() =>
-                // {
-                //     canvasGroup.gameObject.SetActive(false);
-                //     OnHideFinished?.Invoke();
-                // });
-                canvasGroup.gameObject.SetActive(false);
             }
             else
             {
                 HideImmediate();
             }
+
+            canvasGroup.gameObject.SetActive(false);
 
             OnHideFinished?.Invoke();
         }

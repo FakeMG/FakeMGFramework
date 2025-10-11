@@ -27,10 +27,10 @@ namespace FakeMG.Framework.UI.Popup
         public event Action OnHideFinished;
 
         [ShowInInspector]
-        private readonly Dictionary<PopupSO, PopupAnimator> _openPopups = new();
+        private readonly Dictionary<AssetReferenceT<GameObject>, PopupAnimator> _openPopups = new();
         [ShowInInspector]
-        private readonly Dictionary<PopupSO, PopupAnimator> _loadedPopups = new();
-        private readonly Dictionary<PopupSO, AsyncOperationHandle<GameObject>> _assetHandles = new();
+        private readonly Dictionary<AssetReferenceT<GameObject>, PopupAnimator> _loadedPopups = new();
+        private readonly Dictionary<AssetReferenceT<GameObject>, AsyncOperationHandle<GameObject>> _assetHandles = new();
 
         private void Start()
         {
@@ -56,131 +56,130 @@ namespace FakeMG.Framework.UI.Popup
             _loadedPopups.Clear();
         }
 
-        private void BeforeStart(PopupSO popupSO)
+        private void BeforeStart(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            _openPopups[popupSO] = _loadedPopups[popupSO];
-            UpdateSiblingOrderBeforeShow(popupSO);
+            _openPopups[popupPrefabAsset] = _loadedPopups[popupPrefabAsset];
+            UpdateSiblingOrderBeforeShow(popupPrefabAsset);
             TryShowBackground();
             OnShowStart?.Invoke();
         }
 
-        private void AfterShow(PopupSO popupSO)
+        private void AfterShow(AssetReferenceT<GameObject> popupPrefabAsset)
         {
             OnShowFinished?.Invoke();
         }
 
-        private void BeforeHide(PopupSO popupSO)
+        private void BeforeHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
             TryHideBackground();
             OnHideStart?.Invoke();
         }
 
-        private void AfterHide(PopupSO popupSO)
+        private void AfterHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            UpdateSiblingOrderAfterHide(popupSO);
-            _openPopups.Remove(popupSO);
+            UpdateSiblingOrderAfterHide(popupPrefabAsset);
+            _openPopups.Remove(popupPrefabAsset);
             OnHideFinished?.Invoke();
         }
 
-        public async UniTask<PopupAnimator> LoadAndInstantiatePopupAsync(PopupSO popupSO)
+        public async UniTask<GameObject> LoadAndInstantiatePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset)
         {
             // Check if already loaded
-            if (_loadedPopups.TryGetValue(popupSO, out var existingPopup) && existingPopup != null)
+            if (_loadedPopups.TryGetValue(popupPrefabAsset, out var existingPopup) && existingPopup != null)
             {
-                return existingPopup;
+                return existingPopup.gameObject;
             }
 
             // Load the popup prefab
-            var handle = Addressables.LoadAssetAsync<GameObject>(popupSO.PopupPrefabAsset);
+            var handle = Addressables.LoadAssetAsync<GameObject>(popupPrefabAsset);
             await handle;
 
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
-                Debug.LogError($"Failed to load popup prefab: {popupSO.name}");
+                Debug.LogError($"Failed to load popup prefab: {popupPrefabAsset}");
                 return null;
             }
 
             // Instantiate the popup
             var popupGameObject = Instantiate(handle.Result, transform);
-            var popupAnimator = popupGameObject.GetComponent<PopupAnimator>();
 
-            if (popupAnimator == null)
+            if (!popupGameObject.TryGetComponent<PopupAnimator>(out var popupAnimator))
             {
                 Debug.LogError(
-                    $"Loaded popup prefab does not have a PopupAnimator component! Popup: {popupSO.name}");
+                    $"Loaded popup prefab does not have a PopupAnimator component! Popup: {popupGameObject.name}");
                 Destroy(popupGameObject);
                 Addressables.Release(handle);
                 return null;
             }
 
             // Cache the popup and asset handle
-            _loadedPopups[popupSO] = popupAnimator;
-            _assetHandles[popupSO] = handle;
+            _loadedPopups[popupPrefabAsset] = popupAnimator;
+            _assetHandles[popupPrefabAsset] = handle;
 
             // Initially hide the popup without animation
             await popupAnimator.Hide(false);
 
-            popupAnimator.OnShowStart += () => BeforeStart(popupSO);
-            popupAnimator.OnShowFinished += () => AfterShow(popupSO);
-            popupAnimator.OnHideStart += () => BeforeHide(popupSO);
-            popupAnimator.OnHideFinished += () => AfterHide(popupSO);
+            popupAnimator.OnShowStart += () => BeforeStart(popupPrefabAsset);
+            popupAnimator.OnShowFinished += () => AfterShow(popupPrefabAsset);
+            popupAnimator.OnHideStart += () => BeforeHide(popupPrefabAsset);
+            popupAnimator.OnHideFinished += () => AfterHide(popupPrefabAsset);
 
-            return popupAnimator;
+            return popupGameObject;
         }
 
-        public void UnloadPopup(PopupSO popupSO)
+        public void UnloadPopup(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
+            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out var popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupSO.name} is not loaded!");
+                Debug.LogWarning($"Popup {popupPrefabAsset} is not loaded!");
                 return;
             }
 
             Destroy(popupAnimator.gameObject);
-            _loadedPopups.Remove(popupSO);
+            _loadedPopups.Remove(popupPrefabAsset);
 
-            _assetHandles[popupSO].Release();
-            _assetHandles.Remove(popupSO);
+            _assetHandles[popupPrefabAsset].Release();
+            _assetHandles.Remove(popupPrefabAsset);
         }
 
-        public async UniTask ShowPopupAsync(PopupSO popupSO, bool animate = true)
+        public async UniTask ShowPopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
         {
-            if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
+            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out var popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupSO.name} is not loaded!");
+                Debug.LogWarning($"Popup {popupPrefabAsset} is not loaded!");
                 return;
             }
 
             await popupAnimator.Show(animate);
         }
 
-        public async UniTask HidePopupAsync(PopupSO popupSO, bool animate = true)
+        public async UniTask HidePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
         {
-            if (!_loadedPopups.TryGetValue(popupSO, out var popupAnimator))
+            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out var popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupSO.name} is not loaded!");
+                Debug.LogWarning($"Popup {popupPrefabAsset} is not loaded!");
                 return;
             }
 
             await popupAnimator.Hide(animate);
         }
 
-        private void UpdateSiblingOrderBeforeShow(PopupSO popupSO)
+        private void UpdateSiblingOrderBeforeShow(AssetReferenceT<GameObject> popupPrefabAsset)
         {
             blackBackground.transform.SetSiblingIndex(_openPopups.Count - 1);
-            _openPopups[popupSO].transform.SetSiblingIndex(_openPopups.Count);
+            _openPopups[popupPrefabAsset].transform.SetSiblingIndex(_openPopups.Count);
         }
 
-        private void UpdateSiblingOrderAfterHide(PopupSO popupSO)
+        private void UpdateSiblingOrderAfterHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            int index = _openPopups[popupSO].transform.GetSiblingIndex();
+            int index = _openPopups[popupPrefabAsset].transform.GetSiblingIndex();
             bool isLastPopup = index >= _openPopups.Count - 1;
             if (_openPopups.Count > 0 && isLastPopup)
             {
                 blackBackground.transform.SetSiblingIndex(_openPopups.Count - 2);
             }
 
-            _openPopups[popupSO].transform.SetAsLastSibling();
+            _openPopups[popupPrefabAsset].transform.SetAsLastSibling();
         }
 
         private void TryShowBackground()
@@ -189,8 +188,9 @@ namespace FakeMG.Framework.UI.Popup
             // the background is fading out and still active
             // we still want to show the background. So no check for activeInHierarchy
             // if (blackBackground.gameObject.activeInHierarchy) return;
+            // Also, there are 2 popups is in the stack, we need to check _openPopups.Count > 2
 
-            if (_openPopups.Count > 1) return;
+            if (_openPopups.Count > 2) return;
 
             blackBackground.DOKill();
             blackBackground.gameObject.SetActive(true);

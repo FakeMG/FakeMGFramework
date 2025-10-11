@@ -81,7 +81,6 @@ namespace FakeMG.Framework.UI.Popup
 
         protected override void ShowImmediate()
         {
-            canvasGroup.gameObject.SetActive(true);
             canvasGroup.transform.localPosition = targetPosition;
             canvasGroup.alpha = 1f;
         }
@@ -90,7 +89,6 @@ namespace FakeMG.Framework.UI.Popup
         {
             canvasGroup.transform.localPosition = _hiddenPosition;
             canvasGroup.alpha = 0f;
-            canvasGroup.gameObject.SetActive(false);
         }
     }
 }
