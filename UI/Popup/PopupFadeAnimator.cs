@@ -7,8 +7,6 @@ namespace FakeMG.Framework.UI.Popup
     {
         [Header("Animation Settings")]
         [SerializeField] private float animationDuration = 0.3f;
-        [SerializeField] private Ease showEase = Ease.OutBack;
-        [SerializeField] private Ease hideEase = Ease.InBack;
 
         protected override Sequence CreateShowSequence()
         {
