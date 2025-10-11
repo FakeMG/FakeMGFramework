@@ -1,39 +1,48 @@
+using System;
+using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FakeMG.Framework.Timer
 {
     public class CountDownTimer : MonoBehaviour
     {
-        [SerializeField] private bool runOnStart;
-        [SerializeField] private float timeToWait;
         [SerializeField] private float warningPeriod = 5f;
+        [SerializeField] private bool playOnStart = true;
+        [SerializeField] private float timeToWait;
 
-        public UnityEvent onTimerEndEvent;
-        public UnityEvent<int> onSecondReducedEvent;
-        public UnityEvent<int> onWarningSecondReducedEvent;
-
-        private Timer _timer;
+        public float CurrentTimeLeftInSeconds { get; private set; }
         private float _timeSinceLastSecond;
 
-        public float WarningPeriod => warningPeriod;
-        public bool Running { get; private set; }
-        public float CurrentTimeLeftInSeconds => _timer?.CurrentTimeLeftInSeconds ?? 0f;
-        public float TotalTime => _timer?.TimeToWait ?? 0f;
+        private bool _isTimerRunning;
+        private bool _wasRunningBeforePause;
+
+        public bool IsTimerRunning => _isTimerRunning;
+        public bool WasRunningBeforePause => _wasRunningBeforePause;
+
+        public event Action OnTimerStart;
+        public event Action<int> OnSecondReducedEvent;
+        public event Action OnTimerEnd;
+        public event Action<int> OnWarningSecondReducedEvent;
 
         private void Start()
         {
-            if (runOnStart)
+            CurrentTimeLeftInSeconds = timeToWait;
+
+            if (playOnStart)
             {
-                SetTimeToWait(timeToWait);
-                SetRunning(true);
+                SetTime(timeToWait);
+                StartTimer();
             }
         }
 
         private void Update()
         {
-            if (_timer == null || !Running)
-                return;
+            Tick();
+        }
+
+        public bool Tick()
+        {
+            if (!_isTimerRunning) return true;
 
             _timeSinceLastSecond += Time.deltaTime;
 
@@ -42,46 +51,67 @@ namespace FakeMG.Framework.Timer
                 _timeSinceLastSecond = 0f;
 
                 int currentSecond = Mathf.RoundToInt(CurrentTimeLeftInSeconds);
-                onSecondReducedEvent.Invoke(currentSecond);
+                OnSecondReducedEvent?.Invoke(currentSecond);
 
                 if (currentSecond <= warningPeriod)
                 {
-                    onWarningSecondReducedEvent.Invoke(currentSecond);
+                    OnWarningSecondReducedEvent?.Invoke(currentSecond);
                 }
             }
 
-            if (Running && _timer.Tick(Time.deltaTime))
+            CurrentTimeLeftInSeconds -= Time.deltaTime;
+            if (CurrentTimeLeftInSeconds <= 0f)
             {
-                Running = false;
-                onTimerEndEvent.Invoke();
+                CurrentTimeLeftInSeconds = 0f;
+                _isTimerRunning = false;
+                OnSecondReducedEvent?.Invoke(0);
+                OnTimerEnd?.Invoke();
+                return true;
+            }
+
+            return false;
+        }
+
+        public void StartTimer()
+        {
+            _isTimerRunning = true;
+            OnTimerStart?.Invoke();
+        }
+
+        public void PauseTimer()
+        {
+            _wasRunningBeforePause = _isTimerRunning;
+            _isTimerRunning = false;
+        }
+
+        public void ResumeTimer()
+        {
+            _isTimerRunning = true;
+        }
+
+        [Button]
+        public void EndTimer()
+        {
+            CurrentTimeLeftInSeconds = 0f;
+
+            // When the timer is paused, we have to manually invoke the events
+            if (!_isTimerRunning)
+            {
+                OnSecondReducedEvent?.Invoke(0);
+                OnTimerEnd?.Invoke();
             }
         }
 
-        public void SetTimeToWait(float time)
+        public void SetTime(float time)
         {
-            if (_timer == null)
-            {
-                _timer = new Timer(time);
-            }
-            else
-            {
-                _timer.SetTime(time);
-            }
-
             timeToWait = time;
-            Running = false;
-            int currentSecond = Mathf.RoundToInt(time);
-            onSecondReducedEvent.Invoke(currentSecond);
+            CurrentTimeLeftInSeconds = time;
+            OnSecondReducedEvent?.Invoke(Mathf.RoundToInt(time));
         }
 
-        public void SetRunning(bool running)
+        public void AddToCurrentTime(float time)
         {
-            Running = running;
-        }
-
-        public void AddTime(float time)
-        {
-            _timer?.AddTime(time);
+            CurrentTimeLeftInSeconds += time;
         }
     }
 }

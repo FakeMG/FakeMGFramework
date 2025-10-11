@@ -4,7 +4,6 @@ using FakeMG.Framework.Timer;
 using NUnit.Framework;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.TestTools;
 
 namespace Timer.PlayMode
@@ -23,10 +22,6 @@ namespace Timer.PlayMode
             // Set up CountDownTimer
             _timerGameObject = new GameObject("TimerTestObject");
             _countDownTimer = _timerGameObject.AddComponent<CountDownTimer>();
-
-            _countDownTimer.onSecondReducedEvent = new UnityEvent<int>();
-            _countDownTimer.onTimerEndEvent = new UnityEvent();
-            _countDownTimer.onWarningSecondReducedEvent = new UnityEvent<int>();
 
             // Set up TimerTextUIUpdater
             _textGameObject = new GameObject("TextTestObject");
@@ -55,13 +50,13 @@ namespace Timer.PlayMode
             string updatedText = "";
 
             // Connect the CountDownTimer to the TimerTextUIUpdater
-            _countDownTimer.onSecondReducedEvent.AddListener(_timerTextUpdater.UpdateUI);
+            _countDownTimer.OnSecondReducedEvent += _timerTextUpdater.UpdateUI;
 
             // Act
-            _countDownTimer.SetTimeToWait(testTimeInSecond);
+            _countDownTimer.SetTime(testTimeInSecond);
             initialText = _timerText.text;
 
-            _countDownTimer.SetRunning(true);
+            _countDownTimer.StartTimer();
             yield return new WaitUntil(() => _countDownTimer.CurrentTimeLeftInSeconds <= 8f);
             updatedText = _timerText.text;
 
@@ -73,35 +68,36 @@ namespace Timer.PlayMode
         [UnityTest]
         public IEnumerator AutoStart_InitializesCorrectly()
         {
+            // Readding CountDownTimer to ensure fresh state
             Object.Destroy(_countDownTimer);
             _countDownTimer = _timerGameObject.AddComponent<CountDownTimer>();
-            _countDownTimer.onSecondReducedEvent = new UnityEvent<int>();
-            _countDownTimer.onTimerEndEvent = new UnityEvent();
-            _countDownTimer.onWarningSecondReducedEvent = new UnityEvent<int>();
 
             // Set properties using reflection since they're serialized private fields
-            var runOnStartField = typeof(CountDownTimer).GetField("runOnStart",
+            var playOnStartField = typeof(CountDownTimer).GetField("playOnStart",
                 BindingFlags.NonPublic | BindingFlags.Instance);
-            runOnStartField.SetValue(_countDownTimer, true);
+            playOnStartField.SetValue(_countDownTimer, true);
 
-            _countDownTimer.SetTimeToWait(5f);
+            var timeToWaitField = typeof(CountDownTimer).GetField("timeToWait",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+            timeToWaitField.SetValue(_countDownTimer, 5f);
 
             // Connect UI updater
-            _countDownTimer.onSecondReducedEvent.AddListener(_timerTextUpdater.UpdateUI);
+            _countDownTimer.OnSecondReducedEvent += _timerTextUpdater.UpdateUI;
 
             // Let Start() run
             yield return null;
 
             // Assert
-            Assert.IsTrue(_countDownTimer.Running, "Timer should be running after auto-start");
-            Assert.AreEqual(5f, _countDownTimer.TotalTime, "Timer should have correct total time");
+            Assert.IsTrue(_countDownTimer.IsTimerRunning, "Timer should be running after auto-start");
+            // For some reason the timing is slightly off. Maybe due the yield return null above.
+            Assert.That(_countDownTimer.CurrentTimeLeftInSeconds, Is.EqualTo(5f).Within(0.02f), "Timer should have correct initial time");
             Assert.AreEqual("00:05", _timerText.text, "UI should display initial time");
 
             // Let it run a bit
             yield return new WaitForSeconds(2f);
 
             // Assert the time decreases
-            Assert.Less(_countDownTimer.CurrentTimeLeftInSeconds, 5f, "Time should decrease");
+            Assert.Less(_countDownTimer.CurrentTimeLeftInSeconds, 4f, "Time should decrease");
             Assert.AreEqual("00:03", _timerText.text, "UI should update with current time");
         }
     }
