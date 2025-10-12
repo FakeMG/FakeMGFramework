@@ -5,7 +5,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
+namespace FakeMG.Framework.Editor.SceneSwitcher
 {
     [Overlay(typeof(SceneView), "Scene Switcher", true)]
     public class SceneSwitcherOverlay : Overlay

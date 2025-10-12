@@ -2,7 +2,7 @@
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
-namespace FakeMG.FakeMGFramework.Editor {
+namespace FakeMG.Framework.Editor {
     public class AndroidKeystorePasswordChecker
     {
         static AndroidKeystorePasswordChecker()

@@ -7,7 +7,7 @@ namespace FakeMG.Framework.SOEventSystem.EventChannel
     /// <summary>
     /// General Event Channel that carries no extra data.
     /// </summary>
-    [CreateAssetMenu(menuName = "Events/VoidEventChannelSO", fileName = "VoidEventChannel")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/Events/VoidEventChannelSO")]
     public class VoidEventChannelSO : ScriptableObject
     {
         [Tooltip("The action to perform")]

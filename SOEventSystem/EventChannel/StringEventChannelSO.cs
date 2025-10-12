@@ -5,6 +5,6 @@ namespace FakeMG.Framework.SOEventSystem.EventChannel
     /// <summary>
     /// General event channel that broadcasts and carries string payload.
     /// </summary>
-    [CreateAssetMenu(menuName = "Events/StringEventChannelSO", fileName = "StringEventChannel")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/Events/StringEventChannelSO")]
     public class StringEventChannelSO : GenericEventChannelSO<string> { }
 }

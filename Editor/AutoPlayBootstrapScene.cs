@@ -3,19 +3,18 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace FakeMG.FakeMGFramework.Editor
+namespace FakeMG.Framework.Editor
 {
     [InitializeOnLoad]
     public static class AutoPlayBootstrapScene
     {
-        private const string MENU_PATH = "FakeMG/Auto Play Bootstrap Scene";
         private static bool _isEnabled;
         private static string _previousScene;
 
         static AutoPlayBootstrapScene()
         {
             _isEnabled = EditorPrefs.GetBool("AutoPlayBootstrapScene_Enabled", false);
-            Menu.SetChecked(MENU_PATH, _isEnabled);
+            Menu.SetChecked(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP, _isEnabled);
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
         }
 
@@ -58,12 +57,12 @@ namespace FakeMG.FakeMGFramework.Editor
             }
         }
 
-        [MenuItem(MENU_PATH)]
+        [MenuItem(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP)]
         private static void ToggleEnabled()
         {
             _isEnabled = !_isEnabled;
             EditorPrefs.SetBool("AutoPlayBootstrapScene_Enabled", _isEnabled);
-            Menu.SetChecked(MENU_PATH, _isEnabled);
+            Menu.SetChecked(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP, _isEnabled);
             string status = _isEnabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>";
             Debug.Log($"Auto Play Bootstrap Scene: {status}");
         }

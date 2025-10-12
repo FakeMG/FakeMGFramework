@@ -5,6 +5,6 @@ namespace FakeMG.Framework.SOEventSystem.EventChannel
     /// <summary>
     /// A Scriptable Object-based event that passes a float as a payload.
     /// </summary>
-    [CreateAssetMenu(fileName = "FloatEventChannel", menuName = "Events/FloatEventChannelSO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/Events/FloatEventChannelSO")]
     public class FloatEventChannelSO : GenericEventChannelSO<float> { }
 }

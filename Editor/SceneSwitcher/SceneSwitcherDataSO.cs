@@ -1,7 +1,7 @@
 using UnityEditor;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
+namespace FakeMG.Framework.Editor.SceneSwitcher
 {
     public class SceneSwitcherDataSO : ScriptableObject
     {

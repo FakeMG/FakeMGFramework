@@ -3,11 +3,11 @@ using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Editor
+namespace FakeMG.Framework.Editor
 {
     public static class ProjectSetupUtility
     {
-        [MenuItem("FakeMG/Create Default Folders")]
+        [MenuItem(FakeMGEditorMenus.CREATE_DEFAULT_FOLDERS)]
         public static void CreateDefaultFolders()
         {
             CreateFolder("_Project/Feature",
@@ -33,7 +33,7 @@ namespace FakeMG.FakeMGFramework.Editor
             }
         }
 
-        [MenuItem("FakeMG/Add Necessary Packages")]
+        [MenuItem(FakeMGEditorMenus.ADD_NECESSARY_PACKAGES)]
         public static void AddNecessaryPackages()
         {
             Client.Add("com.unity.cinemachine");

@@ -7,11 +7,11 @@ using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace FakeMG.SOEventSystem.Editor
+namespace FakeMG.Framework.SOEventSystem.Editor
 {
     public class EventChannelInspectorWindow : EditorWindow
     {
-        [MenuItem("FakeMG/Event Channel Inspector")]
+        [MenuItem(FakeMGEditorMenus.EVENT_CHANNEL_INSPECTOR)]
         public static void ShowWindow()
         {
             GetWindow<EventChannelInspectorWindow>("Event Channel Inspector");

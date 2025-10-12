@@ -6,6 +6,6 @@ namespace FakeMG.Framework.SOEventSystem.EventChannel
     /// General Event Channel that broadcasts and carries Vector2 payload.
     /// </summary>
     /// 
-    [CreateAssetMenu(menuName = "Events/Vector2EventChannelSO", fileName = "Vector2EventChannel")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/Events/Vector2EventChannelSO")]
     public class Vector2EventChannelSO : GenericEventChannelSO<Vector2> { }
 }

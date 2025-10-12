@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
+namespace FakeMG.Framework.Editor.SceneSwitcher
 {
     public class SceneSwitcherWindow : EditorWindow
     {
-        private const string MENU_PATH = "FakeMG/Scene Switcher";
         private const int MAX_SCENES = 9;
 
         public static event Action OnScenesUpdated;
@@ -17,7 +14,7 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
         private SceneSwitcherDataSO _data;
         private SerializedObject _serializedObject;
 
-        [MenuItem(MENU_PATH + "/Window")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Window")]
         public static void ShowWindow()
         {
             GetWindow<SceneSwitcherWindow>("Scene Switcher");
@@ -55,55 +52,55 @@ namespace FakeMG.FakeMGFramework.Editor.SceneSwitcher
                 MessageType.Info);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 1 _#1")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 1 _#1")]
         public static void SwitchScene1()
         {
             SwitchToSceneByIndex(0);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 2 _#2")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 2 _#2")]
         public static void SwitchScene2()
         {
             SwitchToSceneByIndex(1);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 3 _#3")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 3 _#3")]
         public static void SwitchScene3()
         {
             SwitchToSceneByIndex(2);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 4 _#4")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 4 _#4")]
         public static void SwitchScene4()
         {
             SwitchToSceneByIndex(3);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 5 _#5")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 5 _#5")]
         public static void SwitchScene5()
         {
             SwitchToSceneByIndex(4);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 6 _#6")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 6 _#6")]
         public static void SwitchScene6()
         {
             SwitchToSceneByIndex(5);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 7 _#7")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 7 _#7")]
         public static void SwitchScene7()
         {
             SwitchToSceneByIndex(6);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 8 _#8")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 8 _#8")]
         public static void SwitchScene8()
         {
             SwitchToSceneByIndex(7);
         }
 
-        [MenuItem(MENU_PATH + "/Switch Scene 9 _#9")]
+        [MenuItem(FakeMGEditorMenus.SCENE_SWITCHER + "/Switch Scene 9 _#9")]
         public static void SwitchScene9()
         {
             SwitchToSceneByIndex(8);

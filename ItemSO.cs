@@ -9,7 +9,7 @@ namespace FakeMG.Framework
     /// <summary>
     /// Base class for all items in the game
     /// </summary>
-    [CreateAssetMenu(fileName = "ItemSO", menuName = "Item")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/ItemSO")]
     public class ItemSO : ScriptableObject
     {
         [Header("Item Info")]

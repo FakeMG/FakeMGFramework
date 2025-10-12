@@ -13,7 +13,7 @@ namespace FakeMG.Framework.Database.Editor
     /// </summary>
     public static class DatabaseRebuilderUtility
     {
-        [MenuItem("FakeMG/Rebuild All Databases")]
+        [MenuItem(FakeMGEditorMenus.REBUILD_ALL_DATABASES)]
         public static void RebuildAllDatabases()
         {
             if (!EditorUtility.DisplayDialog(

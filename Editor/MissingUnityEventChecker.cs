@@ -5,7 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.FakeMGFramework.Editor
+namespace FakeMG.Framework.Editor
 {
     [InitializeOnLoad]
     public class MissingUnityEventChecker : MonoBehaviour
@@ -25,7 +25,7 @@ namespace FakeMG.FakeMGFramework.Editor
             }
         }
 
-        [MenuItem("FakeMG/Check Missing Unity Events In Scene")]
+        [MenuItem(FakeMGEditorMenus.CHECK_MISSING_UNITY_EVENTS)]
         public static void CheckMissingUnityEvents()
         {
             int totalEventsChecked = 0;
