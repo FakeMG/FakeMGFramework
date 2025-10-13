@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 44c0c3ac430e4e90b3b8be6ac192c628, type: 3}
+  m_Name: SFX Configuration 3D SO
+  m_EditorClassIdentifier: 
+  outputAudioMixerGroup: {fileID: -2775078417333423215, guid: b8cba562885306045842b4d3ef271da0, type: 2}
+  priorityLevel: 128
+  mute: 0
+  volume: 1
+  pitch: 1
+  panStereo: 0
+  reverbZoneMix: 1
+  spatialBlend: 1
+  rollOffMode: 0
+  minDistance: 1
+  maxDistance: 20
+  spread: 0
+  dopplerLevel: 1
+  bypassEffects: 0
+  bypassListenerEffects: 0
+  bypassReverbZones: 0
+  ignoreListenerVolume: 0
+  ignoreListenerPause: 0
