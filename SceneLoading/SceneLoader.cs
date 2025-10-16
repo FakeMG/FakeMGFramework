@@ -12,7 +12,7 @@ namespace FakeMG.Framework.SceneLoading
     {
         [SerializeField] private DataApplicationManager dataApplicationManager;
 
-        private readonly Dictionary<AssetReference, SceneController> _sceneControllers = new();
+        private readonly Dictionary<string, SceneController> _sceneControllers = new();
 
         public event Action<AssetReference> OnSceneLoaded;
         public event Action<AssetReference> OnSceneUnloaded;
@@ -28,7 +28,8 @@ namespace FakeMG.Framework.SceneLoading
 
         public async UniTask UnloadSceneAsync(AssetReference sceneRef)
         {
-            if (_sceneControllers.TryGetValue(sceneRef, out var sceneController))
+            var key = sceneRef.AssetGUID;
+            if (_sceneControllers.TryGetValue(key, out var sceneController))
             {
                 await sceneController.UnloadSceneAsync();
             }
@@ -40,7 +41,8 @@ namespace FakeMG.Framework.SceneLoading
 
         public async UniTask ReloadSceneAsync(AssetReference sceneRef)
         {
-            if (_sceneControllers.TryGetValue(sceneRef, out var sceneController))
+            var key = sceneRef.AssetGUID;
+            if (_sceneControllers.TryGetValue(key, out var sceneController))
             {
                 await sceneController.ReloadSceneAsync();
                 await dataApplicationManager.ApplyDataForSceneAsync(sceneController.GetLoadedSceneName());
@@ -53,12 +55,14 @@ namespace FakeMG.Framework.SceneLoading
 
         public bool IsSceneLoaded(AssetReference sceneRef)
         {
-            return _sceneControllers.TryGetValue(sceneRef, out var sceneController) && sceneController.IsSceneLoaded;
+            var key = sceneRef.AssetGUID;
+            return _sceneControllers.TryGetValue(key, out var sceneController) && sceneController.IsSceneLoaded;
         }
 
         public void SetActiveScene(AssetReference sceneRef)
         {
-            if (_sceneControllers.TryGetValue(sceneRef, out var sceneController))
+            var key = sceneRef.AssetGUID;
+            if (_sceneControllers.TryGetValue(key, out var sceneController))
             {
                 sceneController.SetActiveScene();
             }
@@ -70,7 +74,8 @@ namespace FakeMG.Framework.SceneLoading
 
         public SceneController GetOrCreateLoader(AssetReference sceneRef)
         {
-            if (_sceneControllers.TryGetValue(sceneRef, out var sceneController)) return sceneController;
+            var key = sceneRef.AssetGUID;
+            if (_sceneControllers.TryGetValue(key, out var sceneController)) return sceneController;
 
             sceneController = new SceneController(sceneRef);
 
@@ -79,7 +84,7 @@ namespace FakeMG.Framework.SceneLoading
             sceneController.OnSceneLoadFailed += msg => OnSceneLoadFailed?.Invoke(sceneRef, msg);
             sceneController.OnSceneUnloadFailed += msg => OnSceneUnloadFailed?.Invoke(sceneRef, msg);
 
-            _sceneControllers[sceneRef] = sceneController;
+            _sceneControllers[key] = sceneController;
             return sceneController;
         }
     }
