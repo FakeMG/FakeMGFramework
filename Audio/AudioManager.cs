@@ -219,8 +219,10 @@ namespace FakeMG.Framework.Audio
                     return false;
             }
 
-            foreach (var emitter in soundEmitters)
+            // Iterate backwards to safely handle modifications during iteration
+            for (int i = soundEmitters.Count - 1; i >= 0; i--)
             {
+                var emitter = soundEmitters[i];
                 if (audioCue.fadeOut)
                 {
                     emitter.FadeOutAudioClip(audioCue.fadeOutDuration);
