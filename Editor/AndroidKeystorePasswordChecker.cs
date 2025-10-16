@@ -23,7 +23,8 @@ namespace FakeMG.Framework.Editor
         public void OnPreprocessBuild(BuildReport report)
         {
             if (report.summary.platform == BuildTarget.Android &&
-                !EditorUserBuildSettings.development)
+                !EditorUserBuildSettings.development &&
+                PlayerSettings.Android.useCustomKeystore)
             {
                 ValidateKeystorePasswords();
             }
@@ -32,9 +33,10 @@ namespace FakeMG.Framework.Editor
 #if !UNITY_6000_0_OR_NEWER
         private static void OnBuildPlayer(BuildPlayerOptions options)
         {
-            // Check for Android release builds
+            // Check for Android release builds with custom keystore
             if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android &&
-                (options.options & BuildOptions.Development) == 0)
+                (options.options & BuildOptions.Development) == 0 &&
+                PlayerSettings.Android.useCustomKeystore)
             {
                 if (!ValidateKeystorePasswords())
                     return; // Cancel build
