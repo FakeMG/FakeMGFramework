@@ -2,7 +2,7 @@
 
 namespace FakeMG.Framework.Audio
 {
-    [CreateAssetMenu(menuName = "Audio/AudioCueEventChannel")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.AUDIO + "/AudioCueEventChannel")]
     public class AudioCueEventChannelSO : ScriptableObject
     {
         public event AudioCuePlayAction OnAudioCuePlayRequested;

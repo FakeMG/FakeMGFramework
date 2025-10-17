@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FakeMG.Framework.Audio
 {
-    [CreateAssetMenu(menuName = "Audio/AudioCueSO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.AUDIO + "/AudioCueSO")]
     public class AudioCueSO : ScriptableObject
     {
         [SerializeField] private bool looping;

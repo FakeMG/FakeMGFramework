@@ -3,7 +3,7 @@ using UnityEngine.Audio;
 
 namespace FakeMG.Framework.Audio
 {
-    [CreateAssetMenu(menuName = "Audio/AudioConfigurationSO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.AUDIO + "/AudioConfigurationSO")]
     public class AudioConfigurationSO : ScriptableObject
     {
         public AudioMixerGroup outputAudioMixerGroup;

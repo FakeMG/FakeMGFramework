@@ -14,5 +14,6 @@ namespace FakeMG.Framework
         public const string SCENE_SWITCHER = ROOT + "/Scene Switcher";
         public const string AUTO_PLAY_BOOTSTRAP = ROOT + "/Auto Play Bootstrap Scene";
         public const string CHECK_MISSING_UNITY_EVENTS = ROOT + "/Check Missing Unity Events In Scene";
+        public const string AUDIO = ROOT + "/Audio";
     }
 }
