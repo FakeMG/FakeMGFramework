@@ -6,26 +6,38 @@ namespace FakeMG.Framework.Audio
     [CreateAssetMenu(menuName = "Audio/AudioCueSO")]
     public class AudioCueSO : ScriptableObject
     {
-        public bool looping;
-        public bool fadeIn;
-        public float fadeInDuration;
-        public bool fadeOut;
-        public float fadeOutDuration;
+        [SerializeField] private bool looping;
+        [SerializeField] private bool fadeIn;
+        [SerializeField] private float fadeInDuration;
+        [SerializeField] private bool fadeOut;
+        [SerializeField] private float fadeOutDuration;
         [Tooltip("Time in seconds to wait before the audio cue can be played again")]
         [Range(0f, 10f)]
-        public float replayDelay;
+        [SerializeField] private float replayDelay;
 
         [Header("Randomization")]
         [Tooltip("Random volume variation range. Final volume = base volume * Random.Range(1 - randomVolume, 1 + randomVolume)")]
         [Range(0f, 1f)]
-        public float randomVolume;
+        [SerializeField] private float randomVolume;
         [Tooltip("Random pitch variation range. Final pitch = base pitch * Random.Range(1 - randomPitch, 1 + randomPitch)")]
         [Range(0f, 1f)]
-        public float randomPitch;
+        [SerializeField] private float randomPitch;
         [Tooltip("When enabled, starts audio playback at a random time within the clip duration")]
-        public bool randomStartTime;
+        [SerializeField] private bool randomStartTime;
 
         [SerializeField] private AudioClipsGroup[] _audioClipGroups;
+
+        private float _lastPlayTime = -1f;
+
+        public bool Looping => looping;
+        public bool FadeIn => fadeIn;
+        public float FadeInDuration => fadeInDuration;
+        public bool FadeOut => fadeOut;
+        public float FadeOutDuration => fadeOutDuration;
+        public float ReplayDelay => replayDelay;
+        public float RandomVolume => randomVolume;
+        public float RandomPitch => randomPitch;
+        public bool RandomStartTime => randomStartTime;
 
         public AudioClip[] GetClips()
         {
@@ -38,6 +50,20 @@ namespace FakeMG.Framework.Audio
             }
 
             return resultingClips;
+        }
+
+        public bool CanPlaySound()
+        {
+            const float defaultLastPlayTime = -1f;
+            const float noDelay = 0f;
+
+            return replayDelay <= noDelay || _lastPlayTime == defaultLastPlayTime ||
+                   Time.time >= _lastPlayTime + replayDelay;
+        }
+
+        public void UpdateLastPlayTime()
+        {
+            _lastPlayTime = Time.time;
         }
     }
 

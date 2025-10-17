@@ -17,7 +17,6 @@ namespace FakeMG.Framework.Audio
         [SerializeField] private bool followParent;
 
         private AudioCueKey _controlKey = AudioCueKey.Invalid;
-        private float _lastPlayTime = -1f;
 
         private void Start()
         {
@@ -41,22 +40,13 @@ namespace FakeMG.Framework.Audio
 
         public void PlayAudioCue()
         {
-            if (CanPlaySound())
+            if (audioCue.CanPlaySound())
             {
                 var transformToUse = followParent ? transform : null;
                 _controlKey =
                     audioCueEventChannel.RaisePlayEvent(audioCue, audioConfiguration, transform.position, transformToUse);
-                _lastPlayTime = Time.time;
+                audioCue.UpdateLastPlayTime();
             }
-        }
-
-        private bool CanPlaySound()
-        {
-            const float defaultLastPlayTime = -1f;
-            const float noDelay = 0f;
-
-            return audioCue.replayDelay <= noDelay || _lastPlayTime == defaultLastPlayTime ||
-                   Time.time >= _lastPlayTime + audioCue.replayDelay;
         }
 
         public void StopAudioCue()

@@ -76,15 +76,15 @@ namespace FakeMG.Framework.Audio
             ApplyTo(audioSource);
 
             // Apply random variations if specified
-            if (audioCue.randomVolume > 0f)
+            if (audioCue.RandomVolume > 0f)
             {
-                float volumeMultiplier = Random.Range(1f - audioCue.randomVolume, 1f + audioCue.randomVolume);
+                float volumeMultiplier = Random.Range(1f - audioCue.RandomVolume, 1f + audioCue.RandomVolume);
                 audioSource.volume = Mathf.Clamp01(audioSource.volume * volumeMultiplier);
             }
 
-            if (audioCue.randomPitch > 0f)
+            if (audioCue.RandomPitch > 0f)
             {
-                float pitchMultiplier = Random.Range(1f - audioCue.randomPitch, 1f + audioCue.randomPitch);
+                float pitchMultiplier = Random.Range(1f - audioCue.RandomPitch, 1f + audioCue.RandomPitch);
                 audioSource.pitch = Mathf.Clamp(audioSource.pitch * pitchMultiplier, -3f, 3f);
             }
         }

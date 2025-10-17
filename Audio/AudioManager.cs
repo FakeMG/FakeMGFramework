@@ -193,7 +193,7 @@ namespace FakeMG.Framework.Audio
 
                 if (soundEmitter)
                 {
-                    if (audioCueSO.fadeIn)
+                    if (audioCueSO.FadeIn)
                     {
                         soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO);
                     }
@@ -223,9 +223,9 @@ namespace FakeMG.Framework.Audio
             for (int i = soundEmitters.Count - 1; i >= 0; i--)
             {
                 var emitter = soundEmitters[i];
-                if (audioCue.fadeOut)
+                if (audioCue.FadeOut)
                 {
-                    emitter.FadeOutAudioClip(audioCue.fadeOutDuration);
+                    emitter.FadeOutAudioClip(audioCue.FadeOutDuration);
                 }
                 else
                 {
