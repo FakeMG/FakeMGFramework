@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Sirenix.OdinInspector;
+using UnityEngine;
 using UnityEngine.Audio;
 
 namespace FakeMG.Framework.Audio
@@ -27,8 +28,12 @@ namespace FakeMG.Framework.Audio
         [Header("Spatialization")]
         [Range(0f, 1f)] public float spatialBlend = 1f;
         public AudioRolloffMode rollOffMode = AudioRolloffMode.Logarithmic;
-        [Range(0.01f, 5f)] public float minDistance = 0.1f;
-        [Range(5f, 100f)] public float maxDistance = 50f;
+        [MinValue(0f)]
+        [OnValueChanged(nameof(ValidateDistances))]
+        public float minDistance = 0.1f;
+        [MinValue(0.01f)]
+        [OnValueChanged(nameof(ValidateDistances))]
+        public float maxDistance = 50f;
         [Range(0, 360)] public int spread;
         [Range(0f, 5f)] public float dopplerLevel = 1f;
 
@@ -39,7 +44,7 @@ namespace FakeMG.Framework.Audio
         public bool ignoreListenerVolume;
         public bool ignoreListenerPause;
 
-        private enum PriorityLevel
+        public enum PriorityLevel
         {
             Highest = 0,
             High = 64,
@@ -86,6 +91,14 @@ namespace FakeMG.Framework.Audio
             {
                 float pitchMultiplier = Random.Range(1f - audioCue.RandomPitch, 1f + audioCue.RandomPitch);
                 audioSource.pitch = Mathf.Clamp(audioSource.pitch * pitchMultiplier, -3f, 3f);
+            }
+        }
+
+        private void ValidateDistances()
+        {
+            if (minDistance > maxDistance)
+            {
+                maxDistance = minDistance;
             }
         }
     }
