@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework.SaveLoad.Advanced;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 
 namespace FakeMG.Framework.SceneLoading
@@ -14,19 +13,19 @@ namespace FakeMG.Framework.SceneLoading
 
         private readonly Dictionary<string, SceneController> _sceneControllers = new();
 
-        public event Action<AssetReference> OnSceneLoaded;
-        public event Action<AssetReference> OnSceneUnloaded;
-        public event Action<AssetReference, string> OnSceneLoadFailed;
-        public event Action<AssetReference, string> OnSceneUnloadFailed;
+        public event Action<AssetReferenceScene> OnSceneLoaded;
+        public event Action<AssetReferenceScene> OnSceneUnloaded;
+        public event Action<AssetReferenceScene, string> OnSceneLoadFailed;
+        public event Action<AssetReferenceScene, string> OnSceneUnloadFailed;
 
-        public async UniTask LoadSceneAsync(AssetReference sceneRef, LoadSceneMode mode = LoadSceneMode.Additive)
+        public async UniTask LoadSceneAsync(AssetReferenceScene sceneRef, LoadSceneMode mode = LoadSceneMode.Additive)
         {
             var loader = GetOrCreateLoader(sceneRef);
             await loader.LoadSceneAsync(mode);
             await dataApplicationManager.ApplyDataForSceneAsync(loader.GetLoadedSceneName());
         }
 
-        public async UniTask UnloadSceneAsync(AssetReference sceneRef)
+        public async UniTask UnloadSceneAsync(AssetReferenceScene sceneRef)
         {
             var key = sceneRef.AssetGUID;
             if (_sceneControllers.TryGetValue(key, out var sceneController))
@@ -39,7 +38,7 @@ namespace FakeMG.Framework.SceneLoading
             }
         }
 
-        public async UniTask ReloadSceneAsync(AssetReference sceneRef)
+        public async UniTask ReloadSceneAsync(AssetReferenceScene sceneRef)
         {
             var key = sceneRef.AssetGUID;
             if (_sceneControllers.TryGetValue(key, out var sceneController))
@@ -53,13 +52,13 @@ namespace FakeMG.Framework.SceneLoading
             }
         }
 
-        public bool IsSceneLoaded(AssetReference sceneRef)
+        public bool IsSceneLoaded(AssetReferenceScene sceneRef)
         {
             var key = sceneRef.AssetGUID;
             return _sceneControllers.TryGetValue(key, out var sceneController) && sceneController.IsSceneLoaded;
         }
 
-        public void SetActiveScene(AssetReference sceneRef)
+        public void SetActiveScene(AssetReferenceScene sceneRef)
         {
             var key = sceneRef.AssetGUID;
             if (_sceneControllers.TryGetValue(key, out var sceneController))
@@ -72,7 +71,7 @@ namespace FakeMG.Framework.SceneLoading
             }
         }
 
-        public SceneController GetOrCreateLoader(AssetReference sceneRef)
+        public SceneController GetOrCreateLoader(AssetReferenceScene sceneRef)
         {
             var key = sceneRef.AssetGUID;
             if (_sceneControllers.TryGetValue(key, out var sceneController)) return sceneController;

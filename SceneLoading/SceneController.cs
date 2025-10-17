@@ -10,21 +10,21 @@ namespace FakeMG.Framework.SceneLoading
 {
     public class SceneController
     {
-        private readonly AssetReference _sceneReference;
+        private readonly AssetReferenceScene _sceneReference;
         private AsyncOperationHandle<SceneInstance>? _loadedScene;
 
         public bool IsLoading { get; private set; }
         public bool IsUnloading { get; private set; }
         public bool IsBusy => IsLoading || IsUnloading;
         public bool IsSceneLoaded => _loadedScene.HasValue && _loadedScene.Value.IsValid();
-        public AssetReference SceneReference => _sceneReference;
+        public AssetReferenceScene SceneReference => _sceneReference;
 
         public event Action OnSceneLoaded;
         public event Action OnSceneUnloaded;
         public event Action<string> OnSceneLoadFailed;
         public event Action<string> OnSceneUnloadFailed;
 
-        public SceneController(AssetReference sceneReference)
+        public SceneController(AssetReferenceScene sceneReference)
         {
             _sceneReference = sceneReference ?? throw new ArgumentNullException(nameof(sceneReference));
         }
