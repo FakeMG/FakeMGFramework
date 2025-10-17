@@ -122,10 +122,10 @@ namespace FakeMG.Framework.FortuneWheel
             // Get current wheel rotation and normalize it
             float currentRotation = NormalizeAngle(wheel.eulerAngles.z);
 
-            // Calculate target angle for chosen reward
+            // Calculate the target angle for the chosen reward
             float targetAngle = NormalizeAngle(GetRewardAngle(fortuneWheelGameLogic.ChosenRewardIndex));
 
-            // Calculate the shortest rotation needed to reach target
+            // Calculate the shortest rotation needed to reach the target
             float angleDifference = Mathf.DeltaAngle(currentRotation, targetAngle);
 
             // Add minimum rotations (ensure at least 2 full rotations)
@@ -163,6 +163,7 @@ namespace FakeMG.Framework.FortuneWheel
                 { gachaSystem.Rewards[rewardIndex].rewardObject, gachaSystem.Rewards[rewardIndex].amount }
             };
             rewardClaimPopupAnimator.SetRewards(rewardItems);
+            // TODO: use the PopupsManager to show the popup instead of directly calling Show()
             rewardClaimPopupAnimator.Show().Forget();
         }
 
