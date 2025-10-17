@@ -21,6 +21,8 @@ namespace FakeMG.Framework.FortuneWheel
         private Vector3 _initialTextScale; // used in the x2 text animation
         private Dictionary<ItemSO, int> _rewardItems;
 
+        public event Action<Action> OnClaimWithAdRequested;
+
         private void Start()
         {
             _initialTextScale = x2Text.localScale;
@@ -166,7 +168,8 @@ namespace FakeMG.Framework.FortuneWheel
         {
             claimButton.onClick.AddListener(() =>
             {
-                callback?.Invoke(1);
+                int multiplier = 1;
+                callback?.Invoke(multiplier);
                 claimButton.interactable = false;
                 claimWithAdButton.interactable = false;
                 Hide().Forget();
@@ -174,19 +177,16 @@ namespace FakeMG.Framework.FortuneWheel
 
             claimWithAdButton.onClick.AddListener(() =>
             {
-                // TODO: Implement ad logic
-                // BounceAdsSdk.ShowRewarded(success =>
-                // {
-                //     if (success)
-                //     {
-                //         x2Text.gameObject.SetActive(true);
-                //         x2Text.DOScale(_initialTextScale, 0.2f).SetEase(Ease.OutBack).SetLink(x2Text.gameObject);
-                //         DOVirtual.DelayedCall(1f, Hide);
-                //         claimButton.interactable = false;
-                //         claimWithAdButton.interactable = false;
-                //         callback?.Invoke(2);
-                //     }
-                // }, "daily_reward_claimX2", "item_id", "?");
+                OnClaimWithAdRequested?.Invoke(() =>
+                {
+                    x2Text.gameObject.SetActive(true);
+                    x2Text.DOScale(_initialTextScale, 0.2f).SetEase(Ease.OutBack).SetLink(x2Text.gameObject);
+                    DOVirtual.DelayedCall(1f, () => Hide().Forget());
+                    claimButton.interactable = false;
+                    claimWithAdButton.interactable = false;
+                    int multiplier = 2;
+                    callback?.Invoke(multiplier);
+                });
             });
         }
     }

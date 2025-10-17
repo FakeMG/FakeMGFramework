@@ -2,7 +2,6 @@
 using System.Globalization;
 using FakeMG.Framework.Gacha;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace FakeMG.Framework.FortuneWheel
 {
@@ -18,7 +17,7 @@ namespace FakeMG.Framework.FortuneWheel
 
         public int ChosenRewardIndex => _chosenRewardIndex;
 
-        public UnityEvent onSpinStarted;
+        public event Action OnSpinStarted;
 
         private void Start()
         {
@@ -43,14 +42,14 @@ namespace FakeMG.Framework.FortuneWheel
             PlayerPrefs.SetString(LAST_SPIN_KEY, _lastSpinTime.ToString(CultureInfo.InvariantCulture));
             PlayerPrefs.Save();
 
-            onSpinStarted?.Invoke();
+            OnSpinStarted?.Invoke();
+
+            //TODO: The reward should be claimed right away to avoid loss if the app crashes
         }
 
-        public void ClaimReward(int multiplier)
+        public void GrantReward(int multiplier)
         {
-            // TODO: Implement reward claiming logic
-            // PlayerDataManager.Instance.AddToInventory(rewards[_chosenRewardIndex].rewardObject,
-            //     rewards[_chosenRewardIndex].amount * multiplier);
+            // TODO: Delegate reward granting logic to another class / event
         }
 
         public bool IsInCooldown()

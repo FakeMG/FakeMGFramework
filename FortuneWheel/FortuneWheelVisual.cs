@@ -51,7 +51,7 @@ namespace FakeMG.Framework.FortuneWheel
             UpdateCooldownUI();
 
             // Subscribe to game logic events
-            fortuneWheelGameLogic.onSpinStarted.AddListener(Rotate);
+            fortuneWheelGameLogic.OnSpinStarted += Rotate;
 
             // Init reward items
             for (int rewardIndex = 0; rewardIndex < gachaSystem.Rewards.Count; rewardIndex++)
@@ -72,10 +72,9 @@ namespace FakeMG.Framework.FortuneWheel
                     Mathf.Cos(angleInRadians) * itemIconRadius,
                     0f
                 );
-                itemIconUI.transform.localPosition = position;
 
                 // Rotate item to face outward from center (angle + 90 degrees for outward orientation)
-                itemIconUI.transform.localRotation = Quaternion.Euler(0, 0, -angle);
+                itemIconUI.transform.SetLocalPositionAndRotation(position, Quaternion.Euler(0, 0, -angle));
             }
         }
 
@@ -87,10 +86,7 @@ namespace FakeMG.Framework.FortuneWheel
         private void OnDestroy()
         {
             // Unsubscribe from events
-            if (fortuneWheelGameLogic)
-            {
-                fortuneWheelGameLogic.onSpinStarted.RemoveListener(Rotate);
-            }
+            fortuneWheelGameLogic.OnSpinStarted -= Rotate;
         }
 
         private void UpdateCooldownUI()
@@ -155,7 +151,7 @@ namespace FakeMG.Framework.FortuneWheel
             rewardClaimPopupAnimator.SubscribeToClaimButton(multiplier =>
             {
                 // confettiParticleSystem.Stop();
-                fortuneWheelGameLogic.ClaimReward(multiplier);
+                fortuneWheelGameLogic.GrantReward(multiplier);
 
                 spinButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
                 spinWithAdButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
@@ -167,7 +163,7 @@ namespace FakeMG.Framework.FortuneWheel
                 { gachaSystem.Rewards[rewardIndex].rewardObject, gachaSystem.Rewards[rewardIndex].amount }
             };
             rewardClaimPopupAnimator.SetRewards(rewardItems);
-            rewardClaimPopupAnimator.Show();
+            rewardClaimPopupAnimator.Show().Forget();
         }
 
         private float GetRewardAngle(int rewardIndex)
