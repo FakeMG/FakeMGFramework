@@ -10,7 +10,7 @@ namespace FakeMG.Framework
         // Add/remove LOGGER_ENABLED in Project Settings > Player > Scripting Define Symbols
 
         [Conditional("LOGGER_ENABLED")]
-        public static void Log(ref bool systemEnabled, string message, Object context = null,
+        public static void Log(bool systemEnabled, string message, Object context = null,
             string customColor = null, [CallerFilePath] string file = "", [CallerMemberName] string member = "")
         {
             if (!systemEnabled) return;
@@ -25,7 +25,7 @@ namespace FakeMG.Framework
         }
 
         [Conditional("LOGGER_ENABLED")]
-        public static void Warning(ref bool systemEnabled, string message, Object context = null,
+        public static void Warning(bool systemEnabled, string message, Object context = null,
             string customColor = null, [CallerFilePath] string file = "", [CallerMemberName] string member = "")
         {
             if (!systemEnabled) return;
