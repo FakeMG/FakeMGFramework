@@ -9,23 +9,23 @@ namespace FakeMG.Framework.Audio
     public class AudioCue : MonoBehaviour
     {
         [Header("Sound definition")]
-        [SerializeField] private AudioCueSO audioCue;
-        [SerializeField] private bool playOnStart;
-        [SerializeField] private float startDelay;
-        [SerializeField] private bool stopOnDisable;
+        [SerializeField] private AudioCueSO _audioCue;
+        [SerializeField] private bool _playOnStart;
+        [SerializeField] private float _startDelay;
+        [SerializeField] private bool _stopOnDisable;
 
         [Header("Event Channel")]
-        [SerializeField] private AudioCueEventChannelSO audioCueEventChannel;
+        [SerializeField] private AudioCueEventChannelSO _audioCueEventChannel;
 
         [Header("Configuration")]
         [SerializeField]
         [EnumToggleButtons]
-        private ConfigurationMode configurationMode = ConfigurationMode.UsePredefined;
+        private ConfigurationMode _configurationMode = ConfigurationMode.UsePredefined;
 
         [SerializeField]
         [ShowIf(nameof(ShowAudioConfiguration))]
         [InlineEditor]
-        private AudioConfigurationSO audioConfiguration;
+        private AudioConfigurationSO _audioConfiguration;
 
         #region Override Settings
         // Output & Priority
@@ -33,236 +33,236 @@ namespace FakeMG.Framework.Audio
         [ShowIf(nameof(ShowOverrideSettings))]
         [FoldoutGroup("Override Settings")]
         [BoxGroup("Override Settings/Output & Priority")]
-        private bool overrideOutputMixerGroup;
+        private bool _overrideOutputMixerGroup;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Output & Priority")]
         [Indent]
-        [EnableIf(nameof(overrideOutputMixerGroup))]
-        private AudioMixerGroup outputAudioMixerGroup;
+        [EnableIf(nameof(_overrideOutputMixerGroup))]
+        private AudioMixerGroup _outputAudioMixerGroup;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Output & Priority")]
-        private bool overridePriority;
+        private bool _overridePriority;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Output & Priority")]
         [Indent]
-        [EnableIf(nameof(overridePriority))]
+        [EnableIf(nameof(_overridePriority))]
         [EnumToggleButtons]
-        private PriorityLevel priorityLevel = PriorityLevel.Standard;
+        private PriorityLevel _priorityLevel = PriorityLevel.Standard;
 
         // Sound Properties
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
-        private bool overrideMute;
+        private bool _overrideMute;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
         [Indent]
-        [EnableIf(nameof(overrideMute))]
-        private bool mute;
+        [EnableIf(nameof(_overrideMute))]
+        private bool _mute;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
-        private bool overrideVolume;
+        private bool _overrideVolume;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
         [Indent]
-        [EnableIf(nameof(overrideVolume))]
+        [EnableIf(nameof(_overrideVolume))]
         [Range(0f, 1f)]
-        private float volume = 1f;
+        private float _volume = 1f;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
-        private bool overridePitch;
+        private bool _overridePitch;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
         [Indent]
-        [EnableIf(nameof(overridePitch))]
+        [EnableIf(nameof(_overridePitch))]
         [Range(-3f, 3f)]
-        private float pitch = 1f;
+        private float _pitch = 1f;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
-        private bool overridePanStereo;
+        private bool _overridePanStereo;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
         [Indent]
-        [EnableIf(nameof(overridePanStereo))]
+        [EnableIf(nameof(_overridePanStereo))]
         [Range(-1f, 1f)]
-        private float panStereo;
+        private float _panStereo;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
-        private bool overrideReverbZoneMix;
+        private bool _overrideReverbZoneMix;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
         [Indent]
-        [EnableIf(nameof(overrideReverbZoneMix))]
+        [EnableIf(nameof(_overrideReverbZoneMix))]
         [Range(0f, 1.1f)]
-        private float reverbZoneMix = 1f;
+        private float _reverbZoneMix = 1f;
 
         // Spatialization
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
-        private bool overrideSpatialBlend;
+        private bool _overrideSpatialBlend;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
         [Indent]
-        [EnableIf(nameof(overrideSpatialBlend))]
+        [EnableIf(nameof(_overrideSpatialBlend))]
         [Range(0f, 1f)]
-        private float spatialBlend = 1f;
+        private float _spatialBlend = 1f;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
-        private bool overrideRollOffMode;
-
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [BoxGroup("Override Settings/Spatialization")]
-        [Indent]
-        [EnableIf(nameof(overrideRollOffMode))]
-        private AudioRolloffMode rollOffMode = AudioRolloffMode.Logarithmic;
-
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [BoxGroup("Override Settings/Spatialization")]
-        private bool overrideMinDistance;
+        private bool _overrideRollOffMode;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
         [Indent]
-        [EnableIf(nameof(overrideMinDistance))]
+        [EnableIf(nameof(_overrideRollOffMode))]
+        private AudioRolloffMode _rollOffMode = AudioRolloffMode.Logarithmic;
+
+        [SerializeField]
+        [ShowIf(nameof(ShowOverrideSettings))]
+        [BoxGroup("Override Settings/Spatialization")]
+        private bool _overrideMinDistance;
+
+        [SerializeField]
+        [ShowIf(nameof(ShowOverrideSettings))]
+        [BoxGroup("Override Settings/Spatialization")]
+        [Indent]
+        [EnableIf(nameof(_overrideMinDistance))]
         [MinValue(0f)]
         [OnValueChanged(nameof(ValidateDistances))]
-        private float minDistance = 0.1f;
+        private float _minDistance = 0.1f;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
-        private bool overrideMaxDistance;
+        private bool _overrideMaxDistance;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
         [Indent]
-        [EnableIf(nameof(overrideMaxDistance))]
+        [EnableIf(nameof(_overrideMaxDistance))]
         [MinValue(0.01f)]
         [OnValueChanged(nameof(ValidateDistances))]
-        private float maxDistance = 50f;
+        private float _maxDistance = 50f;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
-        private bool overrideSpread;
+        private bool _overrideSpread;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
         [Indent]
-        [EnableIf(nameof(overrideSpread))]
+        [EnableIf(nameof(_overrideSpread))]
         [Range(0, 360)]
-        private int spread;
+        private int _spread;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
-        private bool overrideDopplerLevel;
+        private bool _overrideDopplerLevel;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
         [Indent]
-        [EnableIf(nameof(overrideDopplerLevel))]
+        [EnableIf(nameof(_overrideDopplerLevel))]
         [Range(0f, 5f)]
-        private float dopplerLevel = 1f;
+        private float _dopplerLevel = 1f;
 
         // Bypass/Ignore Settings
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Bypass & Ignore")]
-        private bool overrideBypassEffects;
+        private bool _overrideBypassEffects;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Bypass & Ignore")]
         [Indent]
-        [EnableIf(nameof(overrideBypassEffects))]
-        private bool bypassEffects;
+        [EnableIf(nameof(_overrideBypassEffects))]
+        private bool _bypassEffects;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Bypass & Ignore")]
-        private bool overrideBypassListenerEffects;
-
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [BoxGroup("Override Settings/Bypass & Ignore")]
-        [Indent]
-        [EnableIf(nameof(overrideBypassListenerEffects))]
-        private bool bypassListenerEffects;
-
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [BoxGroup("Override Settings/Bypass & Ignore")]
-        private bool overrideBypassReverbZones;
+        private bool _overrideBypassListenerEffects;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Bypass & Ignore")]
         [Indent]
-        [EnableIf(nameof(overrideBypassReverbZones))]
-        private bool bypassReverbZones;
+        [EnableIf(nameof(_overrideBypassListenerEffects))]
+        private bool _bypassListenerEffects;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Bypass & Ignore")]
-        private bool overrideIgnoreListenerVolume;
-
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [BoxGroup("Override Settings/Bypass & Ignore")]
-        [Indent]
-        [EnableIf(nameof(overrideIgnoreListenerVolume))]
-        private bool ignoreListenerVolume;
-
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [BoxGroup("Override Settings/Bypass & Ignore")]
-        private bool overrideIgnoreListenerPause;
+        private bool _overrideBypassReverbZones;
 
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Bypass & Ignore")]
         [Indent]
-        [EnableIf(nameof(overrideIgnoreListenerPause))]
-        private bool ignoreListenerPause;
+        [EnableIf(nameof(_overrideBypassReverbZones))]
+        private bool _bypassReverbZones;
+
+        [SerializeField]
+        [ShowIf(nameof(ShowOverrideSettings))]
+        [BoxGroup("Override Settings/Bypass & Ignore")]
+        private bool _overrideIgnoreListenerVolume;
+
+        [SerializeField]
+        [ShowIf(nameof(ShowOverrideSettings))]
+        [BoxGroup("Override Settings/Bypass & Ignore")]
+        [Indent]
+        [EnableIf(nameof(_overrideIgnoreListenerVolume))]
+        private bool _ignoreListenerVolume;
+
+        [SerializeField]
+        [ShowIf(nameof(ShowOverrideSettings))]
+        [BoxGroup("Override Settings/Bypass & Ignore")]
+        private bool _overrideIgnoreListenerPause;
+
+        [SerializeField]
+        [ShowIf(nameof(ShowOverrideSettings))]
+        [BoxGroup("Override Settings/Bypass & Ignore")]
+        [Indent]
+        [EnableIf(nameof(_overrideIgnoreListenerPause))]
+        private bool _ignoreListenerPause;
         #endregion
 
-        [SerializeField] private bool followParent;
+        [SerializeField] private bool _followParent;
 
         private AudioCueKey _controlKey = AudioCueKey.Invalid;
 
@@ -274,14 +274,14 @@ namespace FakeMG.Framework.Audio
         }
 
         private bool ShowAudioConfiguration() =>
-            configurationMode == ConfigurationMode.UsePredefined || configurationMode == ConfigurationMode.OverridePredefined;
+            _configurationMode == ConfigurationMode.UsePredefined || _configurationMode == ConfigurationMode.OverridePredefined;
 
         private bool ShowOverrideSettings() =>
-            configurationMode == ConfigurationMode.OverridePredefined || configurationMode == ConfigurationMode.FullyCustom;
+            _configurationMode == ConfigurationMode.OverridePredefined || _configurationMode == ConfigurationMode.FullyCustom;
 
         private void Start()
         {
-            if (playOnStart)
+            if (_playOnStart)
             {
                 StartCoroutine(PlayDelayed());
             }
@@ -289,7 +289,7 @@ namespace FakeMG.Framework.Audio
 
         private void OnDisable()
         {
-            if (stopOnDisable)
+            if (_stopOnDisable)
             {
                 StopAudioCue();
             }
@@ -297,30 +297,30 @@ namespace FakeMG.Framework.Audio
 
         private IEnumerator PlayDelayed()
         {
-            yield return new WaitForSeconds(startDelay);
+            yield return new WaitForSeconds(_startDelay);
             PlayAudioCue();
         }
 
         public void PlayAudioCue()
         {
-            if (audioCue.CanPlaySound())
+            if (_audioCue.CanPlaySound())
             {
-                var transformToUse = followParent ? transform : null;
+                var transformToUse = _followParent ? transform : null;
                 var audioConfigToUse = GetAudioConfiguration();
                 _controlKey =
-                    audioCueEventChannel.RaisePlayEvent(audioCue, audioConfigToUse, transform.position, transformToUse);
-                audioCue.UpdateLastPlayTime();
+                    _audioCueEventChannel.RaisePlayEvent(_audioCue, audioConfigToUse, transform.position, transformToUse);
+                _audioCue.UpdateLastPlayTime();
             }
         }
 
         private AudioConfigurationSO GetAudioConfiguration()
         {
-            if (configurationMode == ConfigurationMode.UsePredefined)
+            if (_configurationMode == ConfigurationMode.UsePredefined)
             {
-                return audioConfiguration;
+                return _audioConfiguration;
             }
 
-            if (configurationMode == ConfigurationMode.FullyCustom)
+            if (_configurationMode == ConfigurationMode.FullyCustom)
             {
                 return CreateFullyCustomConfiguration();
             }
@@ -332,31 +332,31 @@ namespace FakeMG.Framework.Audio
         private AudioConfigurationSO CreateFullyCustomConfiguration()
         {
             var customConfig = ScriptableObject.CreateInstance<AudioConfigurationSO>();
-            customConfig.outputAudioMixerGroup = outputAudioMixerGroup;
-            customConfig.Priority = (int)priorityLevel;
-            customConfig.mute = mute;
-            customConfig.volume = volume;
-            customConfig.pitch = pitch;
-            customConfig.panStereo = panStereo;
-            customConfig.reverbZoneMix = reverbZoneMix;
-            customConfig.spatialBlend = spatialBlend;
-            customConfig.rollOffMode = rollOffMode;
-            customConfig.minDistance = minDistance;
-            customConfig.maxDistance = maxDistance;
-            customConfig.spread = spread;
-            customConfig.dopplerLevel = dopplerLevel;
-            customConfig.bypassEffects = bypassEffects;
-            customConfig.bypassListenerEffects = bypassListenerEffects;
-            customConfig.bypassReverbZones = bypassReverbZones;
-            customConfig.ignoreListenerVolume = ignoreListenerVolume;
-            customConfig.ignoreListenerPause = ignoreListenerPause;
+            customConfig.OutputAudioMixerGroup = _outputAudioMixerGroup;
+            customConfig.Priority = (int)_priorityLevel;
+            customConfig.Mute = _mute;
+            customConfig.Volume = _volume;
+            customConfig.Pitch = _pitch;
+            customConfig.PanStereo = _panStereo;
+            customConfig.ReverbZoneMix = _reverbZoneMix;
+            customConfig.SpatialBlend = _spatialBlend;
+            customConfig.RollOffMode = _rollOffMode;
+            customConfig.MinDistance = _minDistance;
+            customConfig.MaxDistance = _maxDistance;
+            customConfig.Spread = _spread;
+            customConfig.DopplerLevel = _dopplerLevel;
+            customConfig.BypassEffects = _bypassEffects;
+            customConfig.BypassListenerEffects = _bypassListenerEffects;
+            customConfig.BypassReverbZones = _bypassReverbZones;
+            customConfig.IgnoreListenerVolume = _ignoreListenerVolume;
+            customConfig.IgnoreListenerPause = _ignoreListenerPause;
 
             return customConfig;
         }
 
         private AudioConfigurationSO CreateOverriddenConfiguration()
         {
-            if (audioConfiguration == null)
+            if (_audioConfiguration == null)
             {
                 Debug.LogWarning("AudioConfiguration is null in Override mode. Using fully custom settings.", this);
                 return CreateFullyCustomConfiguration();
@@ -365,44 +365,44 @@ namespace FakeMG.Framework.Audio
             var overriddenConfig = ScriptableObject.CreateInstance<AudioConfigurationSO>();
 
             // Start with base configuration values
-            overriddenConfig.outputAudioMixerGroup = audioConfiguration.outputAudioMixerGroup;
-            overriddenConfig.Priority = audioConfiguration.Priority;
-            overriddenConfig.mute = audioConfiguration.mute;
-            overriddenConfig.volume = audioConfiguration.volume;
-            overriddenConfig.pitch = audioConfiguration.pitch;
-            overriddenConfig.panStereo = audioConfiguration.panStereo;
-            overriddenConfig.reverbZoneMix = audioConfiguration.reverbZoneMix;
-            overriddenConfig.spatialBlend = audioConfiguration.spatialBlend;
-            overriddenConfig.rollOffMode = audioConfiguration.rollOffMode;
-            overriddenConfig.minDistance = audioConfiguration.minDistance;
-            overriddenConfig.maxDistance = audioConfiguration.maxDistance;
-            overriddenConfig.spread = audioConfiguration.spread;
-            overriddenConfig.dopplerLevel = audioConfiguration.dopplerLevel;
-            overriddenConfig.bypassEffects = audioConfiguration.bypassEffects;
-            overriddenConfig.bypassListenerEffects = audioConfiguration.bypassListenerEffects;
-            overriddenConfig.bypassReverbZones = audioConfiguration.bypassReverbZones;
-            overriddenConfig.ignoreListenerVolume = audioConfiguration.ignoreListenerVolume;
-            overriddenConfig.ignoreListenerPause = audioConfiguration.ignoreListenerPause;
+            overriddenConfig.OutputAudioMixerGroup = _audioConfiguration.OutputAudioMixerGroup;
+            overriddenConfig.Priority = _audioConfiguration.Priority;
+            overriddenConfig.Mute = _audioConfiguration.Mute;
+            overriddenConfig.Volume = _audioConfiguration.Volume;
+            overriddenConfig.Pitch = _audioConfiguration.Pitch;
+            overriddenConfig.PanStereo = _audioConfiguration.PanStereo;
+            overriddenConfig.ReverbZoneMix = _audioConfiguration.ReverbZoneMix;
+            overriddenConfig.SpatialBlend = _audioConfiguration.SpatialBlend;
+            overriddenConfig.RollOffMode = _audioConfiguration.RollOffMode;
+            overriddenConfig.MinDistance = _audioConfiguration.MinDistance;
+            overriddenConfig.MaxDistance = _audioConfiguration.MaxDistance;
+            overriddenConfig.Spread = _audioConfiguration.Spread;
+            overriddenConfig.DopplerLevel = _audioConfiguration.DopplerLevel;
+            overriddenConfig.BypassEffects = _audioConfiguration.BypassEffects;
+            overriddenConfig.BypassListenerEffects = _audioConfiguration.BypassListenerEffects;
+            overriddenConfig.BypassReverbZones = _audioConfiguration.BypassReverbZones;
+            overriddenConfig.IgnoreListenerVolume = _audioConfiguration.IgnoreListenerVolume;
+            overriddenConfig.IgnoreListenerPause = _audioConfiguration.IgnoreListenerPause;
 
             // Apply overrides where specified
-            if (overrideOutputMixerGroup) overriddenConfig.outputAudioMixerGroup = outputAudioMixerGroup;
-            if (overridePriority) overriddenConfig.Priority = (int)priorityLevel;
-            if (overrideMute) overriddenConfig.mute = mute;
-            if (overrideVolume) overriddenConfig.volume = volume;
-            if (overridePitch) overriddenConfig.pitch = pitch;
-            if (overridePanStereo) overriddenConfig.panStereo = panStereo;
-            if (overrideReverbZoneMix) overriddenConfig.reverbZoneMix = reverbZoneMix;
-            if (overrideSpatialBlend) overriddenConfig.spatialBlend = spatialBlend;
-            if (overrideRollOffMode) overriddenConfig.rollOffMode = rollOffMode;
-            if (overrideMinDistance) overriddenConfig.minDistance = minDistance;
-            if (overrideMaxDistance) overriddenConfig.maxDistance = maxDistance;
-            if (overrideSpread) overriddenConfig.spread = spread;
-            if (overrideDopplerLevel) overriddenConfig.dopplerLevel = dopplerLevel;
-            if (overrideBypassEffects) overriddenConfig.bypassEffects = bypassEffects;
-            if (overrideBypassListenerEffects) overriddenConfig.bypassListenerEffects = bypassListenerEffects;
-            if (overrideBypassReverbZones) overriddenConfig.bypassReverbZones = bypassReverbZones;
-            if (overrideIgnoreListenerVolume) overriddenConfig.ignoreListenerVolume = ignoreListenerVolume;
-            if (overrideIgnoreListenerPause) overriddenConfig.ignoreListenerPause = ignoreListenerPause;
+            if (_overrideOutputMixerGroup) overriddenConfig.OutputAudioMixerGroup = _outputAudioMixerGroup;
+            if (_overridePriority) overriddenConfig.Priority = (int)_priorityLevel;
+            if (_overrideMute) overriddenConfig.Mute = _mute;
+            if (_overrideVolume) overriddenConfig.Volume = _volume;
+            if (_overridePitch) overriddenConfig.Pitch = _pitch;
+            if (_overridePanStereo) overriddenConfig.PanStereo = _panStereo;
+            if (_overrideReverbZoneMix) overriddenConfig.ReverbZoneMix = _reverbZoneMix;
+            if (_overrideSpatialBlend) overriddenConfig.SpatialBlend = _spatialBlend;
+            if (_overrideRollOffMode) overriddenConfig.RollOffMode = _rollOffMode;
+            if (_overrideMinDistance) overriddenConfig.MinDistance = _minDistance;
+            if (_overrideMaxDistance) overriddenConfig.MaxDistance = _maxDistance;
+            if (_overrideSpread) overriddenConfig.Spread = _spread;
+            if (_overrideDopplerLevel) overriddenConfig.DopplerLevel = _dopplerLevel;
+            if (_overrideBypassEffects) overriddenConfig.BypassEffects = _bypassEffects;
+            if (_overrideBypassListenerEffects) overriddenConfig.BypassListenerEffects = _bypassListenerEffects;
+            if (_overrideBypassReverbZones) overriddenConfig.BypassReverbZones = _bypassReverbZones;
+            if (_overrideIgnoreListenerVolume) overriddenConfig.IgnoreListenerVolume = _ignoreListenerVolume;
+            if (_overrideIgnoreListenerPause) overriddenConfig.IgnoreListenerPause = _ignoreListenerPause;
 
             return overriddenConfig;
         }
@@ -411,7 +411,7 @@ namespace FakeMG.Framework.Audio
         {
             if (_controlKey != AudioCueKey.Invalid)
             {
-                if (!audioCueEventChannel.RaiseStopEvent(_controlKey, audioCue))
+                if (!_audioCueEventChannel.RaiseStopEvent(_controlKey, _audioCue))
                 {
                     _controlKey = AudioCueKey.Invalid;
                 }
@@ -422,7 +422,7 @@ namespace FakeMG.Framework.Audio
         {
             if (_controlKey != AudioCueKey.Invalid)
             {
-                if (!audioCueEventChannel.RaiseFinishEvent(_controlKey))
+                if (!_audioCueEventChannel.RaiseFinishEvent(_controlKey))
                 {
                     _controlKey = AudioCueKey.Invalid;
                 }
@@ -434,28 +434,28 @@ namespace FakeMG.Framework.Audio
             float minDist = 0.1f;
             float maxDist = 50f;
 
-            if (configurationMode == ConfigurationMode.UsePredefined && audioConfiguration != null)
+            if (_configurationMode == ConfigurationMode.UsePredefined && _audioConfiguration != null)
             {
-                minDist = audioConfiguration.minDistance;
-                maxDist = audioConfiguration.maxDistance;
+                minDist = _audioConfiguration.MinDistance;
+                maxDist = _audioConfiguration.MaxDistance;
             }
-            else if (configurationMode == ConfigurationMode.OverridePredefined)
+            else if (_configurationMode == ConfigurationMode.OverridePredefined)
             {
-                if (audioConfiguration != null)
+                if (_audioConfiguration != null)
                 {
-                    minDist = overrideMinDistance ? minDistance : audioConfiguration.minDistance;
-                    maxDist = overrideMaxDistance ? maxDistance : audioConfiguration.maxDistance;
+                    minDist = _overrideMinDistance ? _minDistance : _audioConfiguration.MinDistance;
+                    maxDist = _overrideMaxDistance ? _maxDistance : _audioConfiguration.MaxDistance;
                 }
                 else
                 {
-                    minDist = minDistance;
-                    maxDist = maxDistance;
+                    minDist = _minDistance;
+                    maxDist = _maxDistance;
                 }
             }
-            else if (configurationMode == ConfigurationMode.FullyCustom)
+            else if (_configurationMode == ConfigurationMode.FullyCustom)
             {
-                minDist = minDistance;
-                maxDist = maxDistance;
+                minDist = _minDistance;
+                maxDist = _maxDistance;
             }
 
             DrawAudioRangeGizmos(minDist, maxDist);
@@ -476,9 +476,9 @@ namespace FakeMG.Framework.Audio
 
         private void ValidateDistances()
         {
-            if (minDistance > maxDistance)
+            if (_minDistance > _maxDistance)
             {
-                maxDistance = minDistance;
+                _maxDistance = _minDistance;
             }
         }
     }

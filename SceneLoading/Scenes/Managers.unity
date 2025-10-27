@@ -163,8 +163,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b4f3efe80742614d8f5e4b2da2069ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  applicationTimeoutSeconds: 10
-  enableDebugLogs: 1
+  _applicationTimeoutSeconds: 10
+  _enableDebugLogs: 1
 --- !u!1001 &787053556
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -282,7 +282,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e98722d2d0ec4cf6ae222a0794f3bb19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dataApplicationManager: {fileID: 69552359}
+  _dataApplicationManager: {fileID: 69552359}
 --- !u!1 &1752159212
 GameObject:
   m_ObjectHideFlags: 0
@@ -328,14 +328,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 576e98ca701b4aabac6b945101479bb9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  soundEmitterPrefab: {fileID: 1387994148951244254, guid: fb5ea760283b7fe4795cda0d8eee18ef, type: 3}
-  musicSoundEmitter: {fileID: 787053558}
-  sfxEventChannel: {fileID: 11400000, guid: d03f5823c57fc3e4a8ae9e7718ac779f, type: 2}
-  musicEventChannel: {fileID: 11400000, guid: 9b0b82c497847e946806fef82b08f463, type: 2}
-  sfxVolumeEventChannel: {fileID: 11400000, guid: 7e128e6a9a1cc934a9ea9bbf976cf717, type: 2}
-  musicVolumeEventChannel: {fileID: 11400000, guid: 9be23eb5bcf322f408b98a5e8d569bc1, type: 2}
-  masterVolumeEventChannel: {fileID: 11400000, guid: 421ed474d4699284b90517f257cda869, type: 2}
-  audioMixer: {fileID: 24100000, guid: b8cba562885306045842b4d3ef271da0, type: 2}
+  _soundEmitterPrefab: {fileID: 1387994148951244254, guid: fb5ea760283b7fe4795cda0d8eee18ef, type: 3}
+  _musicSoundEmitter: {fileID: 787053558}
+  _sfxEventChannel: {fileID: 11400000, guid: d03f5823c57fc3e4a8ae9e7718ac779f, type: 2}
+  _musicEventChannel: {fileID: 11400000, guid: 9b0b82c497847e946806fef82b08f463, type: 2}
+  _sfxVolumeEventChannel: {fileID: 11400000, guid: 7e128e6a9a1cc934a9ea9bbf976cf717, type: 2}
+  _musicVolumeEventChannel: {fileID: 11400000, guid: 9be23eb5bcf322f408b98a5e8d569bc1, type: 2}
+  _masterVolumeEventChannel: {fileID: 11400000, guid: 421ed474d4699284b90517f257cda869, type: 2}
+  _audioMixer: {fileID: 24100000, guid: b8cba562885306045842b4d3ef271da0, type: 2}
 --- !u!1 &1935930987
 GameObject:
   m_ObjectHideFlags: 0
@@ -380,9 +380,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6df41bad26dc481a89b1939a8c95807b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  enableAutoSave: 1
-  maxAutoSaves: 5
-  autoSaveInterval: 300
+  _enableAutoSave: 1
+  _maxAutoSaves: 5
+  _autoSaveInterval: 300
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

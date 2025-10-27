@@ -5,53 +5,53 @@ namespace FakeMG.Framework.UI.Tab.TabButton
 {
     public class TabButtonSlide : TabButtonBase
     {
-        [SerializeField] private RectTransform buttonIconRect;
-        [SerializeField] private float buttonScaleMultiplier = 1.3f;
-        [SerializeField] private float buttonYOffset = 50f;
-        [SerializeField] private float animationDuration = 0.3f;
-        [SerializeField] private Ease scaleEase = Ease.OutQuart;
-        [SerializeField] private Ease moveYEase = Ease.OutBack;
+        [SerializeField] private RectTransform _buttonIconRect;
+        [SerializeField] private float _buttonScaleMultiplier = 1.3f;
+        [SerializeField] private float _buttonYOffset = 50f;
+        [SerializeField] private float _animationDuration = 0.3f;
+        [SerializeField] private Ease _scaleEase = Ease.OutQuart;
+        [SerializeField] private Ease _moveYEase = Ease.OutBack;
 
         public override void AnimateSelection()
         {
-            buttonIconRect.DOKill();
+            _buttonIconRect.DOKill();
 
-            Vector3 targetScale = Vector3.one * buttonScaleMultiplier;
-            float targetY = buttonYOffset;
+            Vector3 targetScale = Vector3.one * _buttonScaleMultiplier;
+            float targetY = _buttonYOffset;
 
-            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(scaleEase)
-                .SetLink(buttonIconRect.gameObject);
-            buttonIconRect.DOAnchorPosY(targetY, animationDuration).SetEase(moveYEase)
-                .SetLink(buttonIconRect.gameObject);
+            _buttonIconRect.DOScale(targetScale, _animationDuration).SetEase(_scaleEase)
+                .SetLink(_buttonIconRect.gameObject);
+            _buttonIconRect.DOAnchorPosY(targetY, _animationDuration).SetEase(_moveYEase)
+                .SetLink(_buttonIconRect.gameObject);
         }
 
         public override void AnimateDeselection()
         {
-            buttonIconRect.DOKill();
+            _buttonIconRect.DOKill();
 
             Vector3 targetScale = Vector3.one;
             float targetY = 0f;
 
-            buttonIconRect.DOScale(targetScale, animationDuration).SetEase(scaleEase)
-                .SetLink(buttonIconRect.gameObject);
-            buttonIconRect.DOAnchorPosY(targetY, animationDuration).SetEase(moveYEase)
-                .SetLink(buttonIconRect.gameObject);
+            _buttonIconRect.DOScale(targetScale, _animationDuration).SetEase(_scaleEase)
+                .SetLink(_buttonIconRect.gameObject);
+            _buttonIconRect.DOAnchorPosY(targetY, _animationDuration).SetEase(_moveYEase)
+                .SetLink(_buttonIconRect.gameObject);
         }
 
         public override void InstantlySelect()
         {
-            buttonIconRect.DOKill();
+            _buttonIconRect.DOKill();
 
-            buttonIconRect.localScale = Vector3.one * buttonScaleMultiplier;
-            buttonIconRect.anchoredPosition = new Vector2(buttonIconRect.anchoredPosition.x, buttonYOffset);
+            _buttonIconRect.localScale = Vector3.one * _buttonScaleMultiplier;
+            _buttonIconRect.anchoredPosition = new Vector2(_buttonIconRect.anchoredPosition.x, _buttonYOffset);
         }
 
         public override void InstantlyDeselect()
         {
-            buttonIconRect.DOKill();
+            _buttonIconRect.DOKill();
 
-            buttonIconRect.localScale = Vector3.one;
-            buttonIconRect.anchoredPosition = new Vector2(buttonIconRect.anchoredPosition.x, 0f);
+            _buttonIconRect.localScale = Vector3.one;
+            _buttonIconRect.anchoredPosition = new Vector2(_buttonIconRect.anchoredPosition.x, 0f);
         }
     }
 }

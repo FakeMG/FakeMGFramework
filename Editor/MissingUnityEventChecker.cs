@@ -83,7 +83,7 @@ namespace FakeMG.Framework.Editor
 
                 if (target == null)
                 {
-                    Debug.LogWarning("Object doesn't exist: " + target.name, component.gameObject);
+                    Debug.LogWarning($"Missing target object in UnityEvent at index {i}", component.gameObject);
                     issuesFound++;
                     continue;
                 }

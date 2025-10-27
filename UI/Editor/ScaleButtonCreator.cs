@@ -58,7 +58,7 @@ namespace FakeMG.Framework.UI.Editor
 
             // Add ScaleButton component and configure it
             ScaleButton scaleButton = buttonGameObject.AddComponent<ScaleButton>();
-            scaleButton.targetGraphic = visualGameObject.GetComponent<Image>();
+            // scaleButton.targetGraphic = visualGameObject.GetComponent<Image>();
 
             // Register undo and select the created object
             Undo.RegisterCreatedObjectUndo(buttonGameObject, "Create Scale Button");

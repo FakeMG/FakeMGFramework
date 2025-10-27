@@ -5,20 +5,20 @@ namespace FakeMG.Framework
     public class TargetScaler : MonoBehaviour
     {
         [Tooltip("The target transform to match scale with")]
-        public Transform target;
+        public Transform Target;
 
         [Header("Scale Options")]
         [Tooltip("Whether to scale on the X axis")]
-        public bool scaleX = true;
+        public bool ScaleX = true;
         [Tooltip("Whether to scale on the Y axis")]
-        public bool scaleY = true;
+        public bool ScaleY = true;
         [Tooltip("Whether to scale on the Z axis")]
-        public bool scaleZ = true;
+        public bool ScaleZ = true;
 
-        public bool relativeScale;
+        public bool RelativeScale;
 
         [Tooltip("How smoothly to scale (0 = instant)")]
-        public float smoothTime = 0.3f;
+        public float SmoothTime = 0.3f;
 
         private Vector3 _velocity = Vector3.zero;
 
@@ -28,38 +28,38 @@ namespace FakeMG.Framework
         private void Start()
         {
             _originalScale = transform.localScale;
-            _originalTargetScale = target.localScale;
+            _originalTargetScale = Target.localScale;
         }
 
         private void LateUpdate()
         {
-            if (!target)
+            if (!Target)
                 return;
 
             Vector3 targetScale = transform.localScale;
 
-            if (scaleX)
+            if (ScaleX)
             {
-                targetScale.x = target.localScale.x;
-                if (relativeScale)
-                    targetScale.x = _originalScale.x * target.transform.localScale.x / _originalTargetScale.x;
+                targetScale.x = Target.localScale.x;
+                if (RelativeScale)
+                    targetScale.x = _originalScale.x * Target.transform.localScale.x / _originalTargetScale.x;
             }
 
-            if (scaleY)
+            if (ScaleY)
             {
-                targetScale.y = target.localScale.y;
-                if (relativeScale)
-                    targetScale.y = _originalScale.y * target.transform.localScale.y / _originalTargetScale.y;
+                targetScale.y = Target.localScale.y;
+                if (RelativeScale)
+                    targetScale.y = _originalScale.y * Target.transform.localScale.y / _originalTargetScale.y;
             }
 
-            if (scaleZ)
+            if (ScaleZ)
             {
-                targetScale.z = target.localScale.z;
-                if (relativeScale)
-                    targetScale.z = _originalScale.z * target.transform.localScale.z / _originalTargetScale.z;
+                targetScale.z = Target.localScale.z;
+                if (RelativeScale)
+                    targetScale.z = _originalScale.z * Target.transform.localScale.z / _originalTargetScale.z;
             }
 
-            transform.localScale = Vector3.SmoothDamp(transform.localScale, targetScale, ref _velocity, smoothTime);
+            transform.localScale = Vector3.SmoothDamp(transform.localScale, targetScale, ref _velocity, SmoothTime);
         }
     }
 }

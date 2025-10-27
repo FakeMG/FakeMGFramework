@@ -18,23 +18,23 @@ namespace FakeMG.Framework.Audio
         private const string SFX_VOLUME_PREF = "SFXVolume";
 
         [Header("Prefab")]
-        [SerializeField] private SoundEmitter soundEmitterPrefab;
-        [SerializeField] private SoundEmitter musicSoundEmitter;
+        [SerializeField] private SoundEmitter _soundEmitterPrefab;
+        [SerializeField] private SoundEmitter _musicSoundEmitter;
 
         [Header("Listening on channels")]
         [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to play SFXs")]
-        [SerializeField] public AudioCueEventChannelSO sfxEventChannel;
-        [SerializeField] public AudioCueEventChannelSO musicEventChannel;
+        [SerializeField] private AudioCueEventChannelSO _sfxEventChannel;
+        [SerializeField] private AudioCueEventChannelSO _musicEventChannel;
 
         [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to change SFXs volume")]
-        [SerializeField] private FloatEventChannelSO sfxVolumeEventChannel;
+        [SerializeField] private FloatEventChannelSO _sfxVolumeEventChannel;
         [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to change Music volume")]
-        [SerializeField] private FloatEventChannelSO musicVolumeEventChannel;
+        [SerializeField] private FloatEventChannelSO _musicVolumeEventChannel;
         [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to change Master volume")]
-        [SerializeField] private FloatEventChannelSO masterVolumeEventChannel;
+        [SerializeField] private FloatEventChannelSO _masterVolumeEventChannel;
 
         [Header("Audio control")]
-        [SerializeField] private AudioMixer audioMixer;
+        [SerializeField] private AudioMixer _audioMixer;
 
         private Queue<SoundEmitter> _soundEmitterQueue;
         private SoundEmitterVault _soundEmitterVault;
@@ -42,16 +42,16 @@ namespace FakeMG.Framework.Audio
 
         private void OnEnable()
         {
-            sfxEventChannel.OnAudioCuePlayRequested += PlayAudioCue;
-            sfxEventChannel.OnAudioCueStopRequested += StopAudioCue;
-            sfxEventChannel.OnAudioCueFinishRequested += FinishAudioCue;
+            _sfxEventChannel.OnAudioCuePlayRequested += PlayAudioCue;
+            _sfxEventChannel.OnAudioCueStopRequested += StopAudioCue;
+            _sfxEventChannel.OnAudioCueFinishRequested += FinishAudioCue;
 
-            musicEventChannel.OnAudioCuePlayRequested += PlayMusicTrack;
-            musicEventChannel.OnAudioCueStopRequested += StopMusicTrack;
+            _musicEventChannel.OnAudioCuePlayRequested += PlayMusicTrack;
+            _musicEventChannel.OnAudioCueStopRequested += StopMusicTrack;
 
-            sfxVolumeEventChannel.OnEventRaised += ChangeSfxVolume;
-            musicVolumeEventChannel.OnEventRaised += ChangeMusicVolume;
-            masterVolumeEventChannel.OnEventRaised += ChangeMasterVolume;
+            _sfxVolumeEventChannel.OnEventRaised += ChangeSfxVolume;
+            _musicVolumeEventChannel.OnEventRaised += ChangeMusicVolume;
+            _masterVolumeEventChannel.OnEventRaised += ChangeMasterVolume;
         }
 
         private void Start()
@@ -71,21 +71,21 @@ namespace FakeMG.Framework.Audio
             CleanPool();
 
             // Stop any playing music
-            if (musicSoundEmitter != null && musicSoundEmitter.IsPlaying())
+            if (_musicSoundEmitter != null && _musicSoundEmitter.IsPlaying())
             {
-                musicSoundEmitter.Stop();
+                _musicSoundEmitter.Stop();
             }
 
-            sfxEventChannel.OnAudioCuePlayRequested -= PlayAudioCue;
-            sfxEventChannel.OnAudioCueStopRequested -= StopAudioCue;
-            sfxEventChannel.OnAudioCueFinishRequested -= FinishAudioCue;
+            _sfxEventChannel.OnAudioCuePlayRequested -= PlayAudioCue;
+            _sfxEventChannel.OnAudioCueStopRequested -= StopAudioCue;
+            _sfxEventChannel.OnAudioCueFinishRequested -= FinishAudioCue;
 
-            musicEventChannel.OnAudioCuePlayRequested -= PlayMusicTrack;
-            musicEventChannel.OnAudioCueStopRequested -= StopMusicTrack;
+            _musicEventChannel.OnAudioCuePlayRequested -= PlayMusicTrack;
+            _musicEventChannel.OnAudioCueStopRequested -= StopMusicTrack;
 
-            sfxVolumeEventChannel.OnEventRaised -= ChangeSfxVolume;
-            musicVolumeEventChannel.OnEventRaised -= ChangeMusicVolume;
-            masterVolumeEventChannel.OnEventRaised -= ChangeMasterVolume;
+            _sfxVolumeEventChannel.OnEventRaised -= ChangeSfxVolume;
+            _musicVolumeEventChannel.OnEventRaised -= ChangeMusicVolume;
+            _masterVolumeEventChannel.OnEventRaised -= ChangeMasterVolume;
         }
 
         private void ChangeMasterVolume(float newVolume)
@@ -124,7 +124,7 @@ namespace FakeMG.Framework.Audio
 
         private void SetGroupVolume(string parameterName, float volume)
         {
-            bool volumeSet = audioMixer.SetFloat(parameterName, volume);
+            bool volumeSet = _audioMixer.SetFloat(parameterName, volume);
             if (!volumeSet)
             {
                 Debug.LogError("The AudioMixer parameter was not found");
@@ -136,28 +136,28 @@ namespace FakeMG.Framework.Audio
         {
             float fadeDuration = 2f;
 
-            if (musicSoundEmitter && musicSoundEmitter.IsPlaying())
+            if (_musicSoundEmitter && _musicSoundEmitter.IsPlaying())
             {
                 AudioClip songToPlay = audioCue.GetClips()[0];
 
                 //If the same song is already playing, do nothing
-                if (musicSoundEmitter.GetClip() == songToPlay) return AudioCueKey.Invalid;
+                if (_musicSoundEmitter.GetClip() == songToPlay) return AudioCueKey.Invalid;
 
                 //Music is already playing, need to fade it out
-                musicSoundEmitter.FadeOutAudioClip(fadeDuration);
+                _musicSoundEmitter.FadeOutAudioClip(fadeDuration);
             }
 
-            musicSoundEmitter.FadeInAudioClip(audioCue.GetClips()[0], audioConfiguration, audioCue);
-            musicSoundEmitter.IgnoreListenerPause();
+            _musicSoundEmitter.FadeInAudioClip(audioCue.GetClips()[0], audioConfiguration, audioCue);
+            _musicSoundEmitter.IgnoreListenerPause();
 
             return AudioCueKey.Invalid; //No need to return a valid key for music
         }
 
         private bool StopMusicTrack(AudioCueKey key, AudioCueSO audioCue)
         {
-            if (musicSoundEmitter && musicSoundEmitter.IsPlaying())
+            if (_musicSoundEmitter && _musicSoundEmitter.IsPlaying())
             {
-                musicSoundEmitter.Stop();
+                _musicSoundEmitter.Stop();
                 return true;
             }
 
@@ -306,7 +306,7 @@ namespace FakeMG.Framework.Audio
                 return soundEmitter;
             }
 
-            soundEmitter = Instantiate(soundEmitterPrefab, transform, true);
+            soundEmitter = Instantiate(_soundEmitterPrefab, transform, true);
             soundEmitter.gameObject.SetActive(true);
             return soundEmitter;
         }

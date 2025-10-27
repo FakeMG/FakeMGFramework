@@ -8,16 +8,16 @@ namespace FakeMG.Framework.UI.Tab
     public struct TabData : IEquatable<TabData>
     {
         [Tooltip("The button component that triggers tab selection (must implement ITabButton)")]
-        [SerializeField] private TabButtonBase tabButtonComponent;
-        [SerializeField] private RectTransform tabContent;
+        [SerializeField] private TabButtonBase _tabButtonComponent;
+        [SerializeField] private RectTransform _tabContent;
 
-        public TabButtonBase TabButton => tabButtonComponent;
-        public RectTransform TabContent => tabContent;
+        public TabButtonBase TabButton => _tabButtonComponent;
+        public RectTransform TabContent => _tabContent;
 
         public bool Equals(TabData other)
         {
-            return Equals(tabButtonComponent, other.tabButtonComponent) &&
-                   Equals(tabContent, other.tabContent);
+            return Equals(_tabButtonComponent, other._tabButtonComponent) &&
+                   Equals(_tabContent, other._tabContent);
         }
 
         public override bool Equals(object obj)
@@ -27,7 +27,7 @@ namespace FakeMG.Framework.UI.Tab
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(tabButtonComponent, tabContent);
+            return HashCode.Combine(_tabButtonComponent, _tabContent);
         }
     }
 }

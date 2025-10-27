@@ -6,7 +6,7 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
 {
     public class SlidingTabTransition : TabTransitionBase
     {
-        [SerializeField] private RectTransform canvasRectTransform;
+        [SerializeField] private RectTransform _canvasRectTransform;
 
         public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null)
         {
@@ -19,7 +19,7 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
         private void AnimateTabTransitionWithSlide(TabData currentTab, TabData newTab, int direction, Action onComplete = null)
         {
             // Get canvas width for calculating the slide amount
-            float canvasWidth = canvasRectTransform.rect.width;
+            float canvasWidth = _canvasRectTransform.rect.width;
 
             StopTabContentAnimations(newTab);
             StopTabContentAnimations(currentTab);
@@ -33,8 +33,8 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
                 newTab.TabContent.anchoredPosition = hiddenPosition;
 
                 // Animate new panel in
-                newTab.TabContent.DOAnchorPosX(0, animationDuration)
-                    .SetEase(animationEase)
+                newTab.TabContent.DOAnchorPosX(0, _animationDuration)
+                    .SetEase(_animationEase)
                     .SetLink(newTab.TabContent.gameObject)
                     .OnComplete(() =>
                     {
@@ -46,8 +46,8 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
             {
                 // Animate current panel out
                 var tabPosition = currentTab.TabContent.anchoredPosition;
-                currentTab.TabContent.DOAnchorPosX(-direction * canvasWidth, animationDuration)
-                    .SetEase(animationEase)
+                currentTab.TabContent.DOAnchorPosX(-direction * canvasWidth, _animationDuration)
+                    .SetEase(_animationEase)
                     .SetLink(currentTab.TabContent.gameObject)
                     .OnComplete(() =>
                     {

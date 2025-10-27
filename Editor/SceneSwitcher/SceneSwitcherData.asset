@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 365ee0a8698607e4ba533e0fa59e3b7e, type: 3}
   m_Name: SceneSwitcherData
   m_EditorClassIdentifier: 
-  scene1: {fileID: 102900000, guid: df16d0fc08cf03441877bae77f041025, type: 3}
-  scene2: {fileID: 102900000, guid: ea02c6146a5ff064a9ade5565d177873, type: 3}
-  scene3: {fileID: 0}
-  scene4: {fileID: 0}
-  scene5: {fileID: 0}
-  scene6: {fileID: 0}
-  scene7: {fileID: 0}
-  scene8: {fileID: 0}
-  scene9: {fileID: 0}
+  _scene1: {fileID: 102900000, guid: df16d0fc08cf03441877bae77f041025, type: 3}
+  _scene2: {fileID: 102900000, guid: ea02c6146a5ff064a9ade5565d177873, type: 3}
+  _scene3: {fileID: 0}
+  _scene4: {fileID: 0}
+  _scene5: {fileID: 0}
+  _scene6: {fileID: 0}
+  _scene7: {fileID: 0}
+  _scene8: {fileID: 0}
+  _scene9: {fileID: 0}

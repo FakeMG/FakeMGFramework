@@ -7,9 +7,9 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 {
     public class SaveLoadSystem : Singleton<SaveLoadSystem>
     {
-        [SerializeField] private bool enableAutoSave = true;
-        [SerializeField] private int maxAutoSaves = 5;
-        [SerializeField] private float autoSaveInterval = 300f;
+        [SerializeField] private bool _enableAutoSave = true;
+        [SerializeField] private int _maxAutoSaves = 5;
+        [SerializeField] private float _autoSaveInterval = 300f;
 
         private readonly Dictionary<string, Saveable> _saveables = new();
 
@@ -23,9 +23,9 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
         private void Start()
         {
-            if (enableAutoSave)
+            if (_enableAutoSave)
             {
-                _autoSaveTimer = autoSaveInterval;
+                _autoSaveTimer = _autoSaveInterval;
             }
 
             RefreshSaveables();
@@ -34,13 +34,13 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
         private void Update()
         {
-            if (!enableAutoSave) return;
+            if (!_enableAutoSave) return;
 
             _autoSaveTimer -= Time.deltaTime;
             if (_autoSaveTimer <= 0)
             {
                 AutoSaveGame();
-                _autoSaveTimer = autoSaveInterval;
+                _autoSaveTimer = _autoSaveInterval;
             }
         }
 
@@ -83,8 +83,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 SaveMetadata metadata = new SaveMetadata
                 {
                     Timestamp = now,
-                    isAutoSave = false,
-                    gameVersion = Application.version,
+                    IsAutoSave = false,
+                    GameVersion = Application.version,
                 };
 
                 ES3.Save(METADATA_KEY, metadata, manualSaveKey);
@@ -114,8 +114,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 SaveMetadata metadata = new SaveMetadata
                 {
                     Timestamp = now,
-                    isAutoSave = true,
-                    gameVersion = Application.version
+                    IsAutoSave = true,
+                    GameVersion = Application.version
                 };
 
                 // Save metadata
@@ -149,7 +149,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 {
                     mostRecentMetaData = metadata;
 
-                    mostRecentSaveKey = metadata.isAutoSave
+                    mostRecentSaveKey = metadata.IsAutoSave
                         ? $"{AUTO_SAVE_KEY}{metadata.Timestamp.Ticks}"
                         : $"{MANUAL_SAVE_KEY}{metadata.Timestamp.Ticks}";
                 }
@@ -251,9 +251,9 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 .OrderBy(f => ES3.Load<SaveMetadata>(METADATA_KEY, f).Timestamp)
                 .ToArray();
 
-            if (autoSaveFiles.Length > maxAutoSaves)
+            if (autoSaveFiles.Length > _maxAutoSaves)
             {
-                for (int i = 0; i < autoSaveFiles.Length - maxAutoSaves; i++)
+                for (int i = 0; i < autoSaveFiles.Length - _maxAutoSaves; i++)
                 {
                     ES3.DeleteFile(autoSaveFiles[i]);
                     Debug.Log($"Deleted old auto-save: {autoSaveFiles[i]}");
@@ -265,7 +265,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         #region Auto-Save Configuration
         public void TriggerAutoSave()
         {
-            if (enableAutoSave)
+            if (_enableAutoSave)
             {
                 AutoSaveGame();
             }
@@ -273,16 +273,16 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
         public void SetAutoSaveInterval(float interval)
         {
-            autoSaveInterval = Mathf.Max(30f, interval);
-            _autoSaveTimer = autoSaveInterval;
+            _autoSaveInterval = Mathf.Max(30f, interval);
+            _autoSaveTimer = _autoSaveInterval;
         }
 
         public void SetAutoSaveEnabled(bool autoSaveEnabled)
         {
-            enableAutoSave = autoSaveEnabled;
+            _enableAutoSave = autoSaveEnabled;
             if (autoSaveEnabled)
             {
-                _autoSaveTimer = autoSaveInterval;
+                _autoSaveTimer = _autoSaveInterval;
             }
         }
         #endregion
@@ -292,7 +292,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
     public class SaveMetadata
     {
         public DateTime Timestamp;
-        public bool isAutoSave;
-        public string gameVersion;
+        public bool IsAutoSave;
+        public string GameVersion;
     }
 }

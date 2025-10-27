@@ -9,13 +9,13 @@ namespace FakeMG.Framework.SaveLoad.Examples
     /// </summary>
     public class ExamplePlayerDataSaveable : Saveable
     {
-        [SerializeField] private ExamplePlayerDataSaveableReference selfReference;
+        [SerializeField] private ExamplePlayerDataSaveableReference _selfReference;
 
         protected void Start()
         {
-            if (selfReference)
+            if (_selfReference)
             {
-                selfReference.Set(this);
+                _selfReference.Set(this);
             }
         }
 

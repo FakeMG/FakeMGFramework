@@ -8,23 +8,23 @@ namespace FakeMG.Framework.ActionMapManagement
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/ActionMapConfigSO")]
     public class ActionMapConfigSO : ScriptableObject
     {
-        [SerializeField] private InputActionAsset inputAsset;
+        [SerializeField] private InputActionAsset _inputAsset;
         [ActionMapName]
-        [SerializeField] private string actionMapName;
-        [SerializeField] private List<ConflictMap> conflictsWith = new();
+        [SerializeField] private string _actionMapName;
+        [SerializeField] private List<ConflictMap> _conflictsWith = new();
 
-        public string ActionMapName => actionMapName; // Public getter
+        public string ActionMapName => _actionMapName; // Public getter
 
         public List<string> ConflictsWith =>
-            conflictsWith.ConvertAll(c => c.actionMapName); // Runtime getter for string list
+            _conflictsWith.ConvertAll(c => c.ActionMapName); // Runtime getter for string list
 
-        public bool isAlwaysEnabled;
+        public bool IsAlwaysEnabled;
     }
 
     [Serializable]
     public class ConflictMap
     {
         [ActionMapName]
-        public string actionMapName;
+        public string ActionMapName;
     }
 }

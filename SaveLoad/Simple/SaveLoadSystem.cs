@@ -7,7 +7,7 @@ namespace FakeMG.Framework.SaveLoad.Simple
 {
     public class SaveLoadSystem : MonoBehaviour
     {
-        [SerializeField] private StorageType storageType = StorageType.PlayerPrefs;
+        [SerializeField] private StorageType _storageType = StorageType.PlayerPrefs;
         public static SaveLoadSystem Instance { get; private set; }
 
         private readonly Dictionary<string, Saveable> _saveables = new();
@@ -33,7 +33,7 @@ namespace FakeMG.Framework.SaveLoad.Simple
 
         private void Start()
         {
-            switch (storageType)
+            switch (_storageType)
             {
                 case StorageType.PlayerPrefs:
                     _storage = new PlayerPrefsStorage();

@@ -5,8 +5,8 @@ namespace FakeMG.Framework.Gacha
     [Serializable]
     public class GachaRewardData
     {
-        public ItemSO rewardObject;
-        public float probability;
-        public int amount = 1;
+        public ItemSO RewardObject;
+        public float Probability;
+        public int Amount = 1;
     }
 }

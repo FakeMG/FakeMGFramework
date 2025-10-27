@@ -14,7 +14,7 @@ namespace FakeMG.Framework.ActionMapManagement.Editor
             EditorGUI.BeginProperty(position, label, property);
 
             // Find the inputAsset from the parent object
-            SerializedProperty inputAssetProp = property.serializedObject.FindProperty("inputAsset");
+            SerializedProperty inputAssetProp = property.serializedObject.FindProperty("_inputAsset");
             InputActionAsset inputAsset = inputAssetProp?.objectReferenceValue as InputActionAsset;
 
             if (!inputAsset)

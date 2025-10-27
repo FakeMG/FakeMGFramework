@@ -15,30 +15,30 @@ namespace FakeMG.Framework.FortuneWheel
     public class FortuneWheelVisual : MonoBehaviour
     {
         [Header("Fortune Wheel")]
-        [SerializeField] private FortuneWheelGameLogic fortuneWheelGameLogic;
-        [SerializeField] private FortuneWheelNotifier fortuneWheelNotifier;
-        [SerializeField] private GachaSystem gachaSystem;
-        [SerializeField] private ItemClaimPopupAnimator rewardClaimPopupAnimator;
-        [SerializeField] private ItemIconUIUpdater rewardItemUIUpdaterPrefab;
+        [SerializeField] private FortuneWheelGameLogic _fortuneWheelGameLogic;
+        [SerializeField] private FortuneWheelNotifier _fortuneWheelNotifier;
+        [SerializeField] private GachaSystem _gachaSystem;
+        [SerializeField] private ItemClaimPopupAnimator _rewardClaimPopupAnimator;
+        [SerializeField] private ItemIconUIUpdater _rewardItemUIUpdaterPrefab;
 
         [Header("Visual Settings")]
-        [SerializeField] private float spinDuration = 3f;
-        [SerializeField] private float itemIconRadius = 200f;
-        [SerializeField] private Transform itemIconContainer;
-        [SerializeField] private Transform wheel;
+        [SerializeField] private float _spinDuration = 3f;
+        [SerializeField] private float _itemIconRadius = 200f;
+        [SerializeField] private Transform _itemIconContainer;
+        [SerializeField] private Transform _wheel;
 
         [Header("Buttons")]
-        [SerializeField] private Button spinButton;
-        [SerializeField] private Button spinWithAdButton;
-        [SerializeField] private Button exitButton;
+        [SerializeField] private Button _spinButton;
+        [SerializeField] private Button _spinWithAdButton;
+        [SerializeField] private Button _exitButton;
 
         [Header("Visual Effects")]
         // [SerializeField] private ParticleSystem confettiParticleSystem;
-        [SerializeField] private AudioCue claimAudioCue;
-        [SerializeField] private AudioCue spinAudioCue;
+        [SerializeField] private AudioCue _claimAudioCue;
+        [SerializeField] private AudioCue _spinAudioCue;
 
         [Header("Cooldown UI")]
-        [SerializeField] private TextMeshProUGUI coolDownText;
+        [SerializeField] private TextMeshProUGUI _coolDownText;
 
         private bool _isRotating;
         private const float MIN_ROTATIONS = 2f;
@@ -51,25 +51,25 @@ namespace FakeMG.Framework.FortuneWheel
             UpdateCooldownUI();
 
             // Subscribe to game logic events
-            fortuneWheelGameLogic.OnSpinStarted += Rotate;
+            _fortuneWheelGameLogic.OnSpinStarted += Rotate;
 
             // Init reward items
-            for (int rewardIndex = 0; rewardIndex < gachaSystem.Rewards.Count; rewardIndex++)
+            for (int rewardIndex = 0; rewardIndex < _gachaSystem.Rewards.Count; rewardIndex++)
             {
-                var reward = gachaSystem.Rewards[rewardIndex];
-                if (!reward.rewardObject) continue;
+                var reward = _gachaSystem.Rewards[rewardIndex];
+                if (!reward.RewardObject) continue;
                 // Spawn item icon UI and put it in the container to form an anticlockwise circle.
                 // The first item will be at the top.
                 // The second item will be at the left of the first item, and so on.
-                var itemIconUI = Instantiate(rewardItemUIUpdaterPrefab, itemIconContainer);
-                itemIconUI.UpdateUIAsync(reward.rewardObject, reward.amount).Forget();
+                var itemIconUI = Instantiate(_rewardItemUIUpdaterPrefab, _itemIconContainer);
+                itemIconUI.UpdateUIAsync(reward.RewardObject, reward.Amount).Forget();
 
                 float angle = GetRewardAngle(rewardIndex);
                 float angleInRadians = angle * Mathf.Deg2Rad;
 
                 Vector3 position = new Vector3(
-                    Mathf.Sin(angleInRadians) * itemIconRadius,
-                    Mathf.Cos(angleInRadians) * itemIconRadius,
+                    Mathf.Sin(angleInRadians) * _itemIconRadius,
+                    Mathf.Cos(angleInRadians) * _itemIconRadius,
                     0f
                 );
 
@@ -86,23 +86,23 @@ namespace FakeMG.Framework.FortuneWheel
         private void OnDestroy()
         {
             // Unsubscribe from events
-            fortuneWheelGameLogic.OnSpinStarted -= Rotate;
+            _fortuneWheelGameLogic.OnSpinStarted -= Rotate;
         }
 
         private void UpdateCooldownUI()
         {
-            if (fortuneWheelGameLogic.IsInCooldown())
+            if (_fortuneWheelGameLogic.IsInCooldown())
             {
-                spinButton.interactable = false;
-                TimeSpan remainingTime = fortuneWheelGameLogic.GetRemainingCooldownTime();
+                _spinButton.interactable = false;
+                TimeSpan remainingTime = _fortuneWheelGameLogic.GetRemainingCooldownTime();
                 int minutes = Mathf.FloorToInt((float)remainingTime.TotalMinutes);
                 int seconds = remainingTime.Seconds;
-                coolDownText.text = $"{minutes:00}:{seconds:00}";
+                _coolDownText.text = $"{minutes:00}:{seconds:00}";
             }
             else
             {
-                spinButton.interactable = true;
-                coolDownText.text = "FREE SPIN";
+                _spinButton.interactable = true;
+                _coolDownText.text = "FREE SPIN";
             }
         }
 
@@ -111,19 +111,19 @@ namespace FakeMG.Framework.FortuneWheel
             if (_isRotating) return;
 
             // Hide buttons
-            spinButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
-            spinWithAdButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
-            exitButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
+            _spinButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
+            _spinWithAdButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
+            _exitButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
 
-            spinAudioCue.PlayAudioCue();
+            _spinAudioCue.PlayAudioCue();
 
             _isRotating = true;
 
             // Get current wheel rotation and normalize it
-            float currentRotation = NormalizeAngle(wheel.eulerAngles.z);
+            float currentRotation = NormalizeAngle(_wheel.eulerAngles.z);
 
             // Calculate the target angle for the chosen reward
-            float targetAngle = NormalizeAngle(GetRewardAngle(fortuneWheelGameLogic.ChosenRewardIndex));
+            float targetAngle = NormalizeAngle(GetRewardAngle(_fortuneWheelGameLogic.ChosenRewardIndex));
 
             // Calculate the shortest rotation needed to reach the target
             float angleDifference = Mathf.DeltaAngle(currentRotation, targetAngle);
@@ -131,40 +131,40 @@ namespace FakeMG.Framework.FortuneWheel
             // Add minimum rotations (ensure at least 2 full rotations)
             float totalRotation = MIN_ROTATIONS * 360f + angleDifference;
 
-            wheel.DORotate(new Vector3(0, 0, wheel.eulerAngles.z + totalRotation), spinDuration,
+            _wheel.DORotate(new Vector3(0, 0, _wheel.eulerAngles.z + totalRotation), _spinDuration,
                     RotateMode.FastBeyond360)
                 .SetEase(Ease.OutQuart)
                 .OnComplete(() =>
                 {
-                    spinAudioCue.StopAudioCue();
+                    _spinAudioCue.StopAudioCue();
                     _isRotating = false;
-                    ShowRewardPopup(fortuneWheelGameLogic.ChosenRewardIndex);
+                    ShowRewardPopup(_fortuneWheelGameLogic.ChosenRewardIndex);
                 });
         }
 
         private void ShowRewardPopup(int rewardIndex)
         {
             // confettiParticleSystem.Play();
-            claimAudioCue.PlayAudioCue();
+            _claimAudioCue.PlayAudioCue();
 
-            rewardClaimPopupAnimator.UnsubscribeAllFromClaimButton();
-            rewardClaimPopupAnimator.SubscribeToClaimButton(multiplier =>
+            _rewardClaimPopupAnimator.UnsubscribeAllFromClaimButton();
+            _rewardClaimPopupAnimator.SubscribeToClaimButton(multiplier =>
             {
                 // confettiParticleSystem.Stop();
-                fortuneWheelGameLogic.GrantReward(multiplier);
+                _fortuneWheelGameLogic.GrantReward(multiplier);
 
-                spinButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
-                spinWithAdButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
-                exitButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
+                _spinButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
+                _spinWithAdButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
+                _exitButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
             });
 
             var rewardItems = new Dictionary<ItemSO, int>
             {
-                { gachaSystem.Rewards[rewardIndex].rewardObject, gachaSystem.Rewards[rewardIndex].amount }
+                { _gachaSystem.Rewards[rewardIndex].RewardObject, _gachaSystem.Rewards[rewardIndex].Amount }
             };
-            rewardClaimPopupAnimator.SetRewards(rewardItems);
+            _rewardClaimPopupAnimator.SetRewards(rewardItems);
             // TODO: use the PopupsManager to show the popup instead of directly calling Show()
-            rewardClaimPopupAnimator.Show().Forget();
+            _rewardClaimPopupAnimator.Show().Forget();
         }
 
         private float GetRewardAngle(int rewardIndex)
@@ -182,7 +182,7 @@ namespace FakeMG.Framework.FortuneWheel
         [Button]
         private void UpdateSegmentAngle()
         {
-            _segmentAngle = 360f / gachaSystem.Rewards.Count;
+            _segmentAngle = 360f / _gachaSystem.Rewards.Count;
         }
     }
 }

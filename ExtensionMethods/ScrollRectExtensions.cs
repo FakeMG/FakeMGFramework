@@ -11,20 +11,20 @@ namespace FakeMG.Framework.ExtensionMethods
             if (scrollRect == null || scrollRect.content == null || target == null) return;
 
             // Compute normalized positions based on content dimensions and clamp to [0,1].
-            const float duration = 0.35f;
+            const float DURATION = 0.35f;
             if (isVertical)
             {
                 float finalNormalizedY = CalculateNormalizedPosition(scrollRect, target, true);
 
                 DOTween.Kill(scrollRect);
-                scrollRect.DOVerticalNormalizedPos(finalNormalizedY, duration).SetEase(Ease.OutQuad);
+                scrollRect.DOVerticalNormalizedPos(finalNormalizedY, DURATION).SetEase(Ease.OutQuad);
             }
             else
             {
                 float finalNormalizedX = CalculateNormalizedPosition(scrollRect, target, false);
 
                 DOTween.Kill(scrollRect);
-                scrollRect.DOHorizontalNormalizedPos(finalNormalizedX, duration).SetEase(Ease.OutQuad);
+                scrollRect.DOHorizontalNormalizedPos(finalNormalizedX, DURATION).SetEase(Ease.OutQuad);
             }
         }
 

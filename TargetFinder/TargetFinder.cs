@@ -8,20 +8,20 @@ namespace FakeMG.Framework.TargetFinder
     public abstract class TargetFinder : MonoBehaviour
     {
         [Title("Target Finder")]
-        [SerializeField] protected float radius = 10f;
-        [SerializeField] private float targetDetectionInterval = 1f;
+        [SerializeField] protected float _radius = 10f;
+        [SerializeField] private float _targetDetectionInterval = 1f;
 
         [Title("Line of Sight")]
-        [SerializeField] private bool requireLineOfSight;
+        [SerializeField] private bool _requireLineOfSight;
         [ShowIf("requireLineOfSight")]
-        [SerializeField] private bool is2DMode;
+        [SerializeField] private bool _is2DMode;
         [ShowIf("requireLineOfSight")]
-        [SerializeField] private LayerMask obstacleLayerMask;
+        [SerializeField] private LayerMask _obstacleLayerMask;
 
         [Title("Debug")]
-        [SerializeField] private bool showGizmos = true;
-        [SerializeField] private Color radiusColor = Color.red;
-        [SerializeField] private Color lineColor = Color.green;
+        [SerializeField] private bool _showGizmos = true;
+        [SerializeField] private Color _radiusColor = Color.red;
+        [SerializeField] private Color _lineColor = Color.green;
 
         private WaitForSeconds _waitForSeconds;
         private Coroutine _findTargetCoroutine;
@@ -43,7 +43,7 @@ namespace FakeMG.Framework.TargetFinder
 
         private void Start()
         {
-            _waitForSeconds = new WaitForSeconds(targetDetectionInterval);
+            _waitForSeconds = new WaitForSeconds(_targetDetectionInterval);
 
             StartCoroutine(FindTarget());
         }
@@ -71,7 +71,7 @@ namespace FakeMG.Framework.TargetFinder
 
         public void SetRadius(float newRadius)
         {
-            radius = newRadius;
+            _radius = newRadius;
         }
 
         private IEnumerator FindTarget()
@@ -80,7 +80,7 @@ namespace FakeMG.Framework.TargetFinder
             {
                 GameObject selectedTarget = ChooseATargetInRange();
 
-                if (requireLineOfSight && selectedTarget)
+                if (_requireLineOfSight && selectedTarget)
                 {
                     if (!HasLineOfSight(selectedTarget))
                     {
@@ -129,34 +129,34 @@ namespace FakeMG.Framework.TargetFinder
             // Check if positions are too close to get a meaningful direction
             if (distance < 0.5f) return true;
 
-            return is2DMode
+            return _is2DMode
                 ? Check2DLineOfSight(direction.normalized, distance)
                 : Check3DLineOfSight(direction.normalized, distance);
         }
 
         private bool Check2DLineOfSight(Vector2 direction, float distance)
         {
-            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction.normalized, distance, obstacleLayerMask);
+            RaycastHit2D hit = Physics2D.Raycast(transform.position, direction.normalized, distance, _obstacleLayerMask);
             return !hit.collider;
         }
 
         private bool Check3DLineOfSight(Vector3 direction, float distance)
         {
             bool hasHit = Physics.Raycast(transform.position, direction.normalized, out RaycastHit hit, distance,
-                obstacleLayerMask);
+                _obstacleLayerMask);
             return !hasHit;
         }
 
         private void OnDrawGizmos()
         {
-            if (!showGizmos) return;
+            if (!_showGizmos) return;
 
-            Gizmos.color = radiusColor;
-            Gizmos.DrawWireSphere(transform.position, radius);
+            Gizmos.color = _radiusColor;
+            Gizmos.DrawWireSphere(transform.position, _radius);
 
             if (Target)
             {
-                Gizmos.color = lineColor;
+                Gizmos.color = _lineColor;
                 Gizmos.DrawLine(transform.position, Target.transform.position);
             }
         }

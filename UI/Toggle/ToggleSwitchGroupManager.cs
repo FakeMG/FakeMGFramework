@@ -6,10 +6,10 @@ namespace FakeMG.Framework.UI.Toggle
     public class ToggleSwitchGroupManager : MonoBehaviour
     {
         [Header("Start Value")]
-        [SerializeField] private ToggleSwitch initialToggleSwitch;
+        [SerializeField] private ToggleSwitch _initialToggleSwitch;
 
         [Header("Toggle Options")]
-        [SerializeField] private bool allCanBeToggledOff;
+        [SerializeField] private bool _allCanBeToggledOff;
 
         private readonly List<ToggleSwitch> _toggleSwitches = new();
 
@@ -44,10 +44,10 @@ namespace FakeMG.Framework.UI.Toggle
                 break;
             }
 
-            if (!areAllToggledOff || allCanBeToggledOff) return;
+            if (!areAllToggledOff || _allCanBeToggledOff) return;
 
-            if (initialToggleSwitch != null)
-                initialToggleSwitch.ToggleByGroupManager(true);
+            if (_initialToggleSwitch != null)
+                _initialToggleSwitch.ToggleByGroupManager(true);
             else
                 _toggleSwitches[0].ToggleByGroupManager(true);
         }
@@ -57,7 +57,7 @@ namespace FakeMG.Framework.UI.Toggle
             if (_toggleSwitches.Count <= 1)
                 return;
 
-            if (allCanBeToggledOff && toggleSwitch.IsOn)
+            if (_allCanBeToggledOff && toggleSwitch.IsOn)
             {
                 foreach (var button in _toggleSwitches)
                 {

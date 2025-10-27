@@ -8,24 +8,24 @@ namespace FakeMG.Framework.Editor
     [InitializeOnLoad]
     public static class AutoPlayBootstrapScene
     {
-        private static bool _isEnabled;
-        private static string _previousScene;
+        private static bool s_isEnabled;
+        private static string s_previousScene;
 
         static AutoPlayBootstrapScene()
         {
-            _isEnabled = EditorPrefs.GetBool("AutoPlayBootstrapScene_Enabled", false);
-            Menu.SetChecked(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP, _isEnabled);
+            s_isEnabled = EditorPrefs.GetBool("AutoPlayBootstrapScene_Enabled", false);
+            Menu.SetChecked(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP, s_isEnabled);
             EditorApplication.playModeStateChanged += OnPlayModeChanged;
         }
 
         private static void OnPlayModeChanged(PlayModeStateChange state)
         {
-            if (!_isEnabled) return;
+            if (!s_isEnabled) return;
 
             if (state == PlayModeStateChange.ExitingEditMode)
             {
                 // Save the currently open scene
-                _previousScene = SceneManager.GetActiveScene().path;
+                s_previousScene = SceneManager.GetActiveScene().path;
 
                 // Ensure there's at least one scene in Build Settings
                 if (EditorBuildSettings.scenes.Length > 0)
@@ -50,9 +50,9 @@ namespace FakeMG.Framework.Editor
             else if (state == PlayModeStateChange.EnteredEditMode)
             {
                 // Restore the previous scene after stopping
-                if (!string.IsNullOrEmpty(_previousScene))
+                if (!string.IsNullOrEmpty(s_previousScene))
                 {
-                    EditorSceneManager.OpenScene(_previousScene);
+                    EditorSceneManager.OpenScene(s_previousScene);
                 }
             }
         }
@@ -60,10 +60,10 @@ namespace FakeMG.Framework.Editor
         [MenuItem(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP)]
         private static void ToggleEnabled()
         {
-            _isEnabled = !_isEnabled;
-            EditorPrefs.SetBool("AutoPlayBootstrapScene_Enabled", _isEnabled);
-            Menu.SetChecked(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP, _isEnabled);
-            string status = _isEnabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>";
+            s_isEnabled = !s_isEnabled;
+            EditorPrefs.SetBool("AutoPlayBootstrapScene_Enabled", s_isEnabled);
+            Menu.SetChecked(FakeMGEditorMenus.AUTO_PLAY_BOOTSTRAP, s_isEnabled);
+            string status = s_isEnabled ? "<color=green>Enabled</color>" : "<color=red>Disabled</color>";
             Debug.Log($"Auto Play Bootstrap Scene: {status}");
         }
     }

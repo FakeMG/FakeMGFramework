@@ -9,19 +9,19 @@ namespace FakeMG.Framework.UI
     public class UIGroupSpawner : MonoBehaviour
     {
         [Header("Prefab Settings")]
-        public RectTransform uiPrefab;
-        public Canvas targetCanvas;
+        public RectTransform UiPrefab;
+        public Canvas TargetCanvas;
 
         [Header("Multiple Spawn Settings")]
-        public int numberOfObjects = 5;
-        public float spreadRadius = 50f;
+        public int NumberOfObjects = 5;
+        public float SpreadRadius = 50f;
 
         private const float MIN_DISTANCE_BETWEEN_OBJECTS = 30f;
         private const int MAX_POSITION_ATTEMPTS = 50;
 
         private RectTransform SpawnUI(Vector3 worldPosition)
         {
-            RectTransform spawnedUI = Instantiate(uiPrefab, targetCanvas.transform);
+            RectTransform spawnedUI = Instantiate(UiPrefab, TargetCanvas.transform);
 
             spawnedUI.gameObject.SetActive(true);
             spawnedUI.transform.position = worldPosition;
@@ -35,7 +35,7 @@ namespace FakeMG.Framework.UI
             List<RectTransform> spawnedUIs = new List<RectTransform>();
             List<Vector3> usedPositions = new List<Vector3>();
 
-            for (int i = 0; i < numberOfObjects; i++)
+            for (int i = 0; i < NumberOfObjects; i++)
             {
                 Vector3 randomSpawnPos = GetRandomNonOverlappingPosition(centerSpawnPosition, usedPositions);
                 usedPositions.Add(randomSpawnPos);
@@ -51,12 +51,12 @@ namespace FakeMG.Framework.UI
         {
             StartCoroutine(SpawnMultipleUIsWithDelay(spawnPosition, staggerDelay, onSpawned));
         }
-        
+
         private IEnumerator SpawnMultipleUIsWithDelay(Vector3 centerSpawnPosition, float delay, Action<RectTransform> onSpawned = null)
         {
             List<Vector3> usedPositions = new List<Vector3>();
 
-            for (int i = 0; i < numberOfObjects; i++)
+            for (int i = 0; i < NumberOfObjects; i++)
             {
                 Vector3 randomSpawnPos = GetRandomNonOverlappingPosition(centerSpawnPosition, usedPositions);
                 usedPositions.Add(randomSpawnPos);
@@ -75,8 +75,8 @@ namespace FakeMG.Framework.UI
 
             do
             {
-                Vector2 randomCircle = Random.insideUnitCircle * spreadRadius;
-                randomPos = center + new Vector3(randomCircle.x, randomCircle.y, 0);
+                Vector2 randomCircle = Random.insideUnitCircle * SpreadRadius;
+                randomPos = center + (Vector3)randomCircle;
                 attempts++;
 
                 if (attempts >= MAX_POSITION_ATTEMPTS)

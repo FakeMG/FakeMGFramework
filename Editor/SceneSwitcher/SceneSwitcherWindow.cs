@@ -35,7 +35,7 @@ namespace FakeMG.Framework.Editor.SceneSwitcher
 
             for (int i = 1; i <= MAX_SCENES; i++)
             {
-                string propertyName = $"scene{i}";
+                string propertyName = $"_scene{i}";
                 SerializedProperty sceneProperty = _serializedObject.FindProperty(propertyName);
                 EditorGUILayout.PropertyField(sceneProperty, new GUIContent($"Scene {i}"));
             }

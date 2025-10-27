@@ -8,12 +8,12 @@ namespace Timer.EditMode
         public void Initialization_SetsCorrectValues()
         {
             // Arrange & Act
-            const float expectedTime = 10f;
-            var timer = new FakeMG.Framework.Timer.Timer(expectedTime);
+            const float EXPECTED_TIME = 10f;
+            var timer = new FakeMG.Framework.Timer.Timer(EXPECTED_TIME);
 
             // Assert
-            Assert.AreEqual(expectedTime, timer.TimeToWait, "TimeToWait should be initialized with constructor value");
-            Assert.AreEqual(expectedTime, timer.CurrentTimeLeftInSeconds,
+            Assert.AreEqual(EXPECTED_TIME, timer.TimeToWait, "TimeToWait should be initialized with constructor value");
+            Assert.AreEqual(EXPECTED_TIME, timer.CurrentTimeLeftInSeconds,
                 "CurrentTimeInSeconds should be initialized with constructor value");
         }
 
@@ -21,15 +21,15 @@ namespace Timer.EditMode
         public void Tick_DecreasesTimeCorrectly()
         {
             // Arrange
-            const float startTime = 5f;
-            const float deltaTime = 1f;
-            var timer = new FakeMG.Framework.Timer.Timer(startTime);
+            const float START_TIME = 5f;
+            const float DELTA_TIME = 1f;
+            var timer = new FakeMG.Framework.Timer.Timer(START_TIME);
 
             // Act
-            bool isFinished = timer.Tick(deltaTime);
+            bool isFinished = timer.Tick(DELTA_TIME);
 
             // Assert
-            Assert.AreEqual(startTime - deltaTime, timer.CurrentTimeLeftInSeconds,
+            Assert.AreEqual(START_TIME - DELTA_TIME, timer.CurrentTimeLeftInSeconds,
                 "Current time should decrease by delta time");
             Assert.IsFalse(isFinished, "Timer should not be finished after one tick");
         }
@@ -38,8 +38,8 @@ namespace Timer.EditMode
         public void Tick_Finished_ReturnsTrue()
         {
             // Arrange
-            const float startTime = 2f;
-            var timer = new FakeMG.Framework.Timer.Timer(startTime);
+            const float START_TIME = 2f;
+            var timer = new FakeMG.Framework.Timer.Timer(START_TIME);
 
             // Act
             bool firstTickResult = timer.Tick(1f);
@@ -61,12 +61,12 @@ namespace Timer.EditMode
             timer.Tick(5f); // Timer at 5 seconds
 
             // Act
-            const float newTime = 20f;
-            timer.SetTime(newTime);
+            const float NEW_TIME = 20f;
+            timer.SetTime(NEW_TIME);
 
             // Assert
-            Assert.AreEqual(newTime, timer.TimeToWait, "TimeToWait should be updated");
-            Assert.AreEqual(newTime, timer.CurrentTimeLeftInSeconds,
+            Assert.AreEqual(NEW_TIME, timer.TimeToWait, "TimeToWait should be updated");
+            Assert.AreEqual(NEW_TIME, timer.CurrentTimeLeftInSeconds,
                 "CurrentTimeInSeconds should be reset to new time");
         }
 
@@ -74,16 +74,16 @@ namespace Timer.EditMode
         public void AddTime_PositiveValue_IncreasesCurrentTime()
         {
             // Arrange
-            const float startTime = 10f;
-            var timer = new FakeMG.Framework.Timer.Timer(startTime);
+            const float START_TIME = 10f;
+            var timer = new FakeMG.Framework.Timer.Timer(START_TIME);
             timer.Tick(5f); // Timer at 5 seconds
 
             // Act
-            const float timeToAdd = 3f;
-            timer.AddTime(timeToAdd);
+            const float TIME_TO_ADD = 3f;
+            timer.AddTime(TIME_TO_ADD);
 
             // Assert
-            Assert.AreEqual(startTime, timer.TimeToWait, "TimeToWait should remain unchanged");
+            Assert.AreEqual(START_TIME, timer.TimeToWait, "TimeToWait should remain unchanged");
             Assert.AreEqual(8f, timer.CurrentTimeLeftInSeconds, "CurrentTimeInSeconds should increase by added time");
         }
     }

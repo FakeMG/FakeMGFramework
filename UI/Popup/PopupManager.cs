@@ -18,27 +18,30 @@ namespace FakeMG.Framework.UI.Popup
         private const float BACKGROUND_FADE_DURATION = 0.3f;
         private float _backgroundFadeAlpha = 0.95f;
 
+        [SerializeField] private PopupManagerRefSO _popupManagerRefSO;
         [Required]
-        [SerializeField] private Image blackBackground;
+        [SerializeField] private Image _blackBackground;
 
         public event Action OnShowStart;
         public event Action OnShowFinished;
         public event Action OnHideStart;
         public event Action OnHideFinished;
 
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         private readonly Dictionary<AssetReferenceT<GameObject>, PopupAnimator> _openPopups = new();
-        [ShowInInspector]
+        [ShowInInspector, ReadOnly]
         private readonly Dictionary<AssetReferenceT<GameObject>, PopupAnimator> _loadedPopups = new();
         private readonly Dictionary<AssetReferenceT<GameObject>, AsyncOperationHandle<GameObject>> _assetHandles = new();
 
         private void Start()
         {
-            _backgroundFadeAlpha = blackBackground.color.a;
+            _backgroundFadeAlpha = _blackBackground.color.a;
 
-            Color backgroundColor = blackBackground.color;
+            Color backgroundColor = _blackBackground.color;
             backgroundColor.a = 0f;
-            blackBackground.color = backgroundColor;
+            _blackBackground.color = backgroundColor;
+
+            _popupManagerRefSO.Set(this);
         }
 
         private void OnDestroy()
@@ -166,7 +169,7 @@ namespace FakeMG.Framework.UI.Popup
 
         private void UpdateSiblingOrderBeforeShow(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            blackBackground.transform.SetSiblingIndex(_openPopups.Count - 1);
+            _blackBackground.transform.SetSiblingIndex(_openPopups.Count - 1);
             _openPopups[popupPrefabAsset].transform.SetSiblingIndex(_openPopups.Count);
         }
 
@@ -176,7 +179,7 @@ namespace FakeMG.Framework.UI.Popup
             bool isLastPopup = index >= _openPopups.Count - 1;
             if (_openPopups.Count > 0 && isLastPopup)
             {
-                blackBackground.transform.SetSiblingIndex(_openPopups.Count - 2);
+                _blackBackground.transform.SetSiblingIndex(_openPopups.Count - 2);
             }
 
             _openPopups[popupPrefabAsset].transform.SetAsLastSibling();
@@ -192,23 +195,23 @@ namespace FakeMG.Framework.UI.Popup
 
             if (_openPopups.Count > 2) return;
 
-            blackBackground.DOKill();
-            blackBackground.gameObject.SetActive(true);
+            _blackBackground.DOKill();
+            _blackBackground.gameObject.SetActive(true);
 
-            blackBackground.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
-                .SetLink(blackBackground.gameObject);
+            _blackBackground.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
+                .SetLink(_blackBackground.gameObject);
         }
 
         private void TryHideBackground()
         {
-            if (!blackBackground.gameObject.activeInHierarchy) return;
+            if (!_blackBackground.gameObject.activeInHierarchy) return;
             if (_openPopups.Count > 1) return;
 
-            blackBackground.DOKill();
+            _blackBackground.DOKill();
 
-            blackBackground.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(blackBackground.gameObject).OnComplete(() =>
+            _blackBackground.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(_blackBackground.gameObject).OnComplete(() =>
             {
-                blackBackground.gameObject.SetActive(false);
+                _blackBackground.gameObject.SetActive(false);
             });
         }
     }

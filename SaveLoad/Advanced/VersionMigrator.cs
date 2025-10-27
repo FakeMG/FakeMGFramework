@@ -20,8 +20,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                         {
                             var newData = new PlayerData
                             {
-                                health = oldData.health,
-                                position = oldData.position
+                                Health = oldData.Health,
+                                Position = oldData.Position
                             };
                             ES3.Save("PlayerStats", newData, slotKey);
                             Debug.Log("Migrated PlayerStats to version 1.1.0");
@@ -34,7 +34,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 }
 
                 SaveMetadata metadata = ES3.Load(SaveLoadSystem.METADATA_KEY, slotKey, new SaveMetadata());
-                metadata.gameVersion = Application.version;
+                metadata.GameVersion = Application.version;
                 ES3.Save(SaveLoadSystem.METADATA_KEY, metadata, slotKey);
             }
             catch (Exception e)
@@ -48,8 +48,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
     // Test data
     public class PlayerData
     {
-        public int health;
-        public Vector3 position;
-        public BoxCollider boxCollider;
+        public int Health;
+        public Vector3 Position;
+        public BoxCollider BoxCollider;
     }
 }

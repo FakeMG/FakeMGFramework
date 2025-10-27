@@ -1,28 +1,12 @@
-﻿using System;
-using Sirenix.OdinInspector;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace FakeMG.Framework.SaveLoad
 {
     public abstract class Saveable : MonoBehaviour
     {
-        [ReadOnly]
-        [SerializeField] private string uniqueId;
-
-        private object _cachedData;
-
-        private void Reset()
-        {
-            if (string.IsNullOrEmpty(uniqueId))
-            {
-                uniqueId = Guid.NewGuid().ToString();
-                Debug.LogWarning($"Saveable {name} has no unique ID. Generated one: {uniqueId}");
-            }
-        }
-
         public string GetUniqueId()
         {
-            return uniqueId;
+            return GetType().ToString();
         }
 
         public abstract object CaptureState();

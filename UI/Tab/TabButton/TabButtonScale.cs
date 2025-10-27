@@ -5,37 +5,37 @@ namespace FakeMG.Framework.UI.Tab.TabButton
 {
     public class TabButtonScale : TabButtonBase
     {
-        [SerializeField] private RectTransform tabButton;
-        [SerializeField] protected float animationDuration = 0.3f;
+        [SerializeField] private RectTransform _tabButton;
+        [SerializeField] protected float _animationDuration = 0.3f;
 
         public override void AnimateSelection()
         {
-            tabButton.DOKill();
+            _tabButton.DOKill();
 
             Vector3 targetScale = Vector3.one * 1.2f;
-            tabButton.DOScale(targetScale, animationDuration).SetEase(Ease.OutBounce).SetLink(tabButton.gameObject);
+            _tabButton.DOScale(targetScale, _animationDuration).SetEase(Ease.OutBounce).SetLink(_tabButton.gameObject);
         }
 
         public override void AnimateDeselection()
         {
-            tabButton.DOKill();
+            _tabButton.DOKill();
 
             Vector3 targetScale = Vector3.one;
-            tabButton.DOScale(targetScale, animationDuration).SetEase(Ease.OutQuad).SetLink(tabButton.gameObject);
+            _tabButton.DOScale(targetScale, _animationDuration).SetEase(Ease.OutQuad).SetLink(_tabButton.gameObject);
         }
 
         public override void InstantlySelect()
         {
-            tabButton.DOKill();
+            _tabButton.DOKill();
 
-            tabButton.localScale = Vector3.one * 1.2f;
+            _tabButton.localScale = Vector3.one * 1.2f;
         }
 
         public override void InstantlyDeselect()
         {
-            tabButton.DOKill();
+            _tabButton.DOKill();
 
-            tabButton.localScale = Vector3.one;
+            _tabButton.localScale = Vector3.one;
         }
     }
 }

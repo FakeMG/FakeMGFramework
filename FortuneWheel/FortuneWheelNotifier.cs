@@ -6,8 +6,8 @@ namespace FakeMG.Framework.FortuneWheel
 {
     public class FortuneWheelNotifier : MonoBehaviour
     {
-        [SerializeField] private FortuneWheelGameLogic fortuneWheelGameLogic;
-        [SerializeField] private GameObject notificationIcon;
+        [SerializeField] private FortuneWheelGameLogic _fortuneWheelGameLogic;
+        [SerializeField] private GameObject _notificationIcon;
 
         private DateTime _lastSpinTime;
 
@@ -28,7 +28,7 @@ namespace FakeMG.Framework.FortuneWheel
                 _lastSpinTime = DateTime.Parse(savedLastSpinTime, CultureInfo.InvariantCulture);
             }
 
-            notificationIcon.SetActive(!fortuneWheelGameLogic.IsInCooldown());
+            _notificationIcon.SetActive(!_fortuneWheelGameLogic.IsInCooldown());
         }
     }
 }

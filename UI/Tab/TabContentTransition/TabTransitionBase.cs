@@ -10,10 +10,10 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
     public abstract class TabTransitionBase : MonoBehaviour
     {
         [Header("Animation Settings")]
-        [SerializeField] protected float animationDuration = 0.3f;
-        [SerializeField] protected Ease animationEase = Ease.OutQuart;
+        [SerializeField] protected float _animationDuration = 0.3f;
+        [SerializeField] protected Ease _animationEase = Ease.OutQuart;
 
-        public float AnimationDuration => animationDuration;
+        public float AnimationDuration => _animationDuration;
 
         public abstract void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null);
         public abstract void SwitchTabInstantly(TabData fromTab, TabData toTab, Action onComplete = null);

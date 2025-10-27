@@ -5,14 +5,14 @@ namespace FakeMG.Framework.Timer
 {
     public class TimerTextUIUpdater : MonoBehaviour
     {
-        [SerializeField] private TextMeshProUGUI timerText;
+        [SerializeField] private TextMeshProUGUI _timerText;
         private readonly char[] _timeFormatBuffer = new char[5]; // "MM:SS"
 
         public void UpdateUI(int currentTimeInSeconds)
         {
             if (currentTimeInSeconds <= 0)
             {
-                timerText.text = "00:00";
+                _timerText.text = "00:00";
                 return;
             }
 
@@ -27,7 +27,7 @@ namespace FakeMG.Framework.Timer
             _timeFormatBuffer[3] = (char)('0' + seconds / 10);
             _timeFormatBuffer[4] = (char)('0' + seconds % 10);
 
-            timerText.SetText(_timeFormatBuffer, 0, 5);
+            _timerText.SetText(_timeFormatBuffer, 0, 5);
         }
     }
 }

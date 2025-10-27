@@ -7,11 +7,11 @@ namespace FakeMG.Framework.ActionMapManagement
 {
     public class ActionMapManager : MonoBehaviour
     {
-        [SerializeField] private InputActionAsset inputActions;
-        [SerializeField] private List<ActionMapConfigSO> allConfigs;
+        [SerializeField] private InputActionAsset _inputActions;
+        [SerializeField] private List<ActionMapConfigSO> _allConfigs;
 
         [Header("Debug")]
-        [SerializeField] private bool enableLogging;
+        [SerializeField] private bool _enableLogging;
 
         // For quick access by name
         private Dictionary<string, ActionMapConfigSO> _configLookup;
@@ -22,10 +22,10 @@ namespace FakeMG.Framework.ActionMapManagement
         private void Awake()
         {
             // Build lookup dictionary
-            _configLookup = allConfigs.ToDictionary(config => config.ActionMapName, config => config);
+            _configLookup = _allConfigs.ToDictionary(config => config.ActionMapName, config => config);
 
             // Enable always-on maps at start
-            foreach (var config in allConfigs.Where(c => c.isAlwaysEnabled))
+            foreach (var config in _allConfigs.Where(c => c.IsAlwaysEnabled))
             {
                 EnableActionMap(config.ActionMapName);
             }
@@ -35,7 +35,7 @@ namespace FakeMG.Framework.ActionMapManagement
         {
             if (!_configLookup.TryGetValue(mapName, out var config))
             {
-                Echo.Warning(enableLogging, $"No config found for action map: {mapName}");
+                Echo.Warning(_enableLogging, $"No config found for action map: {mapName}");
                 return;
             }
 
@@ -47,12 +47,12 @@ namespace FakeMG.Framework.ActionMapManagement
                     continue;
                 }
 
-                if (conflictConfig.isAlwaysEnabled)
+                if (conflictConfig.IsAlwaysEnabled)
                 {
                     continue; // Don't disable always-enabled maps
                 }
 
-                var conflictMap = inputActions.FindActionMap(conflictName);
+                var conflictMap = _inputActions.FindActionMap(conflictName);
                 if (conflictMap != null && conflictMap.enabled)
                 {
                     conflictMap.Disable();
@@ -66,19 +66,19 @@ namespace FakeMG.Framework.ActionMapManagement
 
                     suppressors.Add(mapName);
 
-                    Echo.Log(enableLogging, $"Disabled conflicting action map: {conflictName} due to enabling {mapName}");
+                    Echo.Log(_enableLogging, $"Disabled conflicting action map: {conflictName} due to enabling {mapName}");
                 }
             }
 
             // Enable the map if not already active
-            var map = inputActions.FindActionMap(mapName);
+            var map = _inputActions.FindActionMap(mapName);
             if (map != null && !map.enabled)
             {
                 map.Enable();
                 _activeMaps.Add(mapName);
                 // Clear any suppression entry (since it's now active)
                 _suppressedBy.Remove(mapName);
-                Echo.Log(enableLogging, $"Enabled action map: {mapName}");
+                Echo.Log(_enableLogging, $"Enabled action map: {mapName}");
             }
         }
 
@@ -86,23 +86,23 @@ namespace FakeMG.Framework.ActionMapManagement
         {
             if (!_configLookup.TryGetValue(mapName, out var config))
             {
-                Echo.Warning(enableLogging, $"No config found for action map: {mapName}");
+                Echo.Warning(_enableLogging, $"No config found for action map: {mapName}");
                 return;
             }
 
             // Skip if it's always enabled (explicit disable ignored for them)
-            if (config.isAlwaysEnabled)
+            if (config.IsAlwaysEnabled)
             {
                 return;
             }
 
             // Disable the map if active
-            var map = inputActions.FindActionMap(mapName);
+            var map = _inputActions.FindActionMap(mapName);
             if (map != null && map.enabled)
             {
                 map.Disable();
                 _activeMaps.Remove(mapName);
-                Echo.Log(enableLogging, $"Disabled action map: {mapName}");
+                Echo.Log(_enableLogging, $"Disabled action map: {mapName}");
             }
 
             // Remove this map as a suppressor from any suppressed maps
@@ -114,13 +114,13 @@ namespace FakeMG.Framework.ActionMapManagement
                     if (suppressors.Count == 0)
                     {
                         // No more suppressors—re-enable the map
-                        var suppressedMap = inputActions.FindActionMap(suppressedName);
+                        var suppressedMap = _inputActions.FindActionMap(suppressedName);
                         if (suppressedMap != null)
                         {
                             suppressedMap.Enable();
                             _activeMaps.Add(suppressedName);
                             _suppressedBy.Remove(suppressedName);
-                            Echo.Log(enableLogging, $"Re-enabled action map: {suppressedName} after disabling {mapName}");
+                            Echo.Log(_enableLogging, $"Re-enabled action map: {suppressedName} after disabling {mapName}");
                         }
                     }
                 }
@@ -136,7 +136,7 @@ namespace FakeMG.Framework.ActionMapManagement
             // Disable all non-always-enabled active maps
             foreach (var activeMap in _activeMaps.ToArray())
             {
-                if (!_configLookup[activeMap].isAlwaysEnabled)
+                if (!_configLookup[activeMap].IsAlwaysEnabled)
                 {
                     DisableActionMap(activeMap);
                 }

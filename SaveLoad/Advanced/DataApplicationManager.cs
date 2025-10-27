@@ -14,10 +14,10 @@ namespace FakeMG.Framework.SaveLoad.Advanced
     public class DataApplicationManager : Singleton<DataApplicationManager>
     {
         [Header("Timeout Settings")]
-        [SerializeField] private float applicationTimeoutSeconds = 10f;
+        [SerializeField] private float _applicationTimeoutSeconds = 10f;
 
         [Header("Debug")]
-        [SerializeField] private bool enableDebugLogs = true;
+        [SerializeField] private bool _enableDebugLogs = true;
 
         private readonly Dictionary<string, List<DataRequester>> _sceneRequesters = new();
         private readonly Dictionary<string, HashSet<DataRequester>> _pendingRequesters = new();
@@ -60,7 +60,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
             _sceneRequesters[sceneName].Add(requester);
 
-            if (enableDebugLogs)
+            if (_enableDebugLogs)
             {
                 Debug.Log(
                     $"[DataApplicationManager] Registered {GetSystemIdentifier(requester)} for scene {sceneName}");
@@ -89,7 +89,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 pendingRequester.Remove(requester);
             }
 
-            if (enableDebugLogs)
+            if (_enableDebugLogs)
             {
                 Debug.Log(
                     $"[DataApplicationManager] Unregistered {GetSystemIdentifier(requester)} from scene {sceneName}");
@@ -105,7 +105,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         {
             if (!_sceneRequesters.ContainsKey(sceneName) || _sceneRequesters[sceneName].Count == 0)
             {
-                if (enableDebugLogs)
+                if (_enableDebugLogs)
                 {
                     Debug.Log($"[DataApplicationManager] No systems registered for scene {sceneName}");
                 }
@@ -113,7 +113,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 return true;
             }
 
-            if (enableDebugLogs)
+            if (_enableDebugLogs)
             {
                 Debug.Log(
                     $"[DataApplicationManager] Starting data application for scene {sceneName} with {_sceneRequesters[sceneName].Count} systems");
@@ -131,7 +131,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             }
 
             // Wait for completion or timeout
-            var timeoutTask = UniTask.Delay(TimeSpan.FromSeconds(applicationTimeoutSeconds));
+            var timeoutTask = UniTask.Delay(TimeSpan.FromSeconds(_applicationTimeoutSeconds));
             var completionTask = completionSource.Task;
 
             var (hasResultLeft, hasResultRight) = await UniTask.WhenAny(completionTask, timeoutTask);
@@ -151,7 +151,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             _pendingRequesters.Remove(sceneName);
             _sceneCompletionSources.Remove(sceneName);
 
-            if (enableDebugLogs)
+            if (_enableDebugLogs)
             {
                 Debug.Log(
                     $"[DataApplicationManager] Data application for scene {sceneName} completed. Success: {success}");
@@ -168,7 +168,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 // Apply data
                 await requester.ApplyDataAsync();
 
-                if (enableDebugLogs)
+                if (_enableDebugLogs)
                 {
                     Debug.Log(
                         $"[DataApplicationManager] Successfully applied data for {GetSystemIdentifier(requester)}");

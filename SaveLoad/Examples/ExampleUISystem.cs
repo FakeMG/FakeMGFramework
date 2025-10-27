@@ -11,7 +11,7 @@ namespace FakeMG.Framework.SaveLoad.Examples
     /// </summary>
     public class ExampleUISystem : DataRequester
     {
-        [SerializeField] private ExamplePlayerDataSaveableReference playerSaveableRef;
+        [SerializeField] private ExamplePlayerDataSaveableReference _playerSaveableRef;
 
         private string SystemIdentifier => $"{GetType().Name}({name})";
 

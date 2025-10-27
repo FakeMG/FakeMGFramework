@@ -6,11 +6,11 @@ namespace FakeMG.Framework
 {
     public class Init : MonoBehaviour
     {
-        [SerializeField] private AssetReference sceneAssetReferences;
+        [SerializeField] private AssetReference _sceneAssetReferences;
 
         private void Start()
         {
-            Addressables.LoadSceneAsync(sceneAssetReferences).Completed += handle =>
+            Addressables.LoadSceneAsync(_sceneAssetReferences).Completed += handle =>
             {
                 if (handle.Status == AsyncOperationStatus.Failed)
                 {

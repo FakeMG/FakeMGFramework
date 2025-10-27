@@ -5,7 +5,7 @@ namespace FakeMG.Framework.UI.Tab.TabButton
 {
     public abstract class TabButtonBase : MonoBehaviour
     {
-        public Button button;
+        public Button Button;
 
         public abstract void AnimateSelection();
         public abstract void AnimateDeselection();

@@ -5,8 +5,8 @@ namespace FakeMG.Framework.UI.Tab.TabButton
 {
     public class TabButtonChangeSprite : TabButtonBase
     {
-        [SerializeField] private Sprite selectedSprite;
-        [SerializeField] private Image buttonImage;
+        [SerializeField] private Sprite _selectedSprite;
+        [SerializeField] private Image _buttonImage;
 
         private Sprite _originalSprite;
 
@@ -24,15 +24,15 @@ namespace FakeMG.Framework.UI.Tab.TabButton
         {
             if (!_originalSprite)
             {
-                _originalSprite = buttonImage.sprite;
+                _originalSprite = _buttonImage.sprite;
             }
 
-            buttonImage.sprite = selectedSprite;
+            _buttonImage.sprite = _selectedSprite;
         }
 
         public override void InstantlyDeselect()
         {
-            buttonImage.sprite = _originalSprite;
+            _buttonImage.sprite = _originalSprite;
         }
     }
 }

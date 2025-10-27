@@ -8,15 +8,15 @@ namespace FakeMG.Framework.Gacha
     public class GachaSystem : MonoBehaviour
     {
         [SerializeField, ValidateInput("ValidateProbabilities", "All probabilities must add up to 1.0")]
-        private List<GachaRewardData> rewards;
+        private List<GachaRewardData> _rewards;
 
-        public List<GachaRewardData> Rewards => rewards;
+        public List<GachaRewardData> Rewards => _rewards;
 
         private bool ValidateProbabilities()
         {
-            if (rewards == null || rewards.Count == 0) return true;
+            if (_rewards == null || _rewards.Count == 0) return true;
 
-            float totalProbability = rewards.Sum(reward => reward.probability);
+            float totalProbability = _rewards.Sum(reward => reward.Probability);
             return Mathf.Approximately(totalProbability, 1f);
         }
 
@@ -25,18 +25,18 @@ namespace FakeMG.Framework.Gacha
             float randomValue = Random.value;
             float cumulativeProbability = 0f;
 
-            for (int i = 0; i < rewards.Count; i++)
+            for (int i = 0; i < _rewards.Count; i++)
             {
-                cumulativeProbability += rewards[i].probability;
+                cumulativeProbability += _rewards[i].Probability;
                 if (randomValue <= cumulativeProbability)
                 {
-                    Debug.Log($"Chosen reward index: {i}, Name: {rewards[i].rewardObject.ItemName}");
+                    Debug.Log($"Chosen reward index: {i}, Name: {_rewards[i].RewardObject.ItemName}");
                     return i;
                 }
             }
 
             // Fallback in case of rounding errors
-            return rewards.Count - 1;
+            return _rewards.Count - 1;
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Timer.PlayMode
         private CountDownTimer _countDownTimer;
         private TimerTextUIUpdater _timerTextUpdater;
         private TextMeshProUGUI _timerText;
+        private readonly WaitForSeconds _waitForSeconds2 = new(2f);
 
         [SetUp]
         public void Setup()
@@ -45,7 +46,7 @@ namespace Timer.PlayMode
         public IEnumerator Integration_ConnectsAndUpdatesUI()
         {
             // Arrange
-            const float testTimeInSecond = 10f;
+            const float TEST_TIME_IN_SECOND = 10f;
             string initialText = "";
             string updatedText = "";
 
@@ -53,7 +54,7 @@ namespace Timer.PlayMode
             _countDownTimer.OnSecondReducedEvent += _timerTextUpdater.UpdateUI;
 
             // Act
-            _countDownTimer.SetTime(testTimeInSecond);
+            _countDownTimer.SetTime(TEST_TIME_IN_SECOND);
             initialText = _timerText.text;
 
             _countDownTimer.StartTimer();
@@ -94,7 +95,7 @@ namespace Timer.PlayMode
             Assert.AreEqual("00:05", _timerText.text, "UI should display initial time");
 
             // Let it run a bit
-            yield return new WaitForSeconds(2f);
+            yield return _waitForSeconds2;
 
             // Assert the time decreases
             Assert.Less(_countDownTimer.CurrentTimeLeftInSeconds, 4f, "Time should decrease");

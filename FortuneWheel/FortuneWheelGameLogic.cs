@@ -7,8 +7,8 @@ namespace FakeMG.Framework.FortuneWheel
 {
     public class FortuneWheelGameLogic : MonoBehaviour
     {
-        [SerializeField] private GachaSystem gachaSystem;
-        [SerializeField] public float cooldownDurationMinutes = 30f;
+        [SerializeField] private GachaSystem _gachaSystem;
+        [SerializeField] public float CooldownDurationMinutes = 30f;
 
         public const string LAST_SPIN_KEY = "LastSpin";
 
@@ -36,7 +36,7 @@ namespace FakeMG.Framework.FortuneWheel
         {
             if (IsInCooldown()) return;
 
-            _chosenRewardIndex = gachaSystem.ChooseRandomReward();
+            _chosenRewardIndex = _gachaSystem.ChooseRandomReward();
 
             _lastSpinTime = DateTime.Now;
             PlayerPrefs.SetString(LAST_SPIN_KEY, _lastSpinTime.ToString(CultureInfo.InvariantCulture));
@@ -54,14 +54,14 @@ namespace FakeMG.Framework.FortuneWheel
 
         public bool IsInCooldown()
         {
-            return (DateTime.Now - _lastSpinTime).TotalMinutes < cooldownDurationMinutes;
+            return (DateTime.Now - _lastSpinTime).TotalMinutes < CooldownDurationMinutes;
         }
 
         public TimeSpan GetRemainingCooldownTime()
         {
             if (!IsInCooldown()) return TimeSpan.Zero;
 
-            return TimeSpan.FromMinutes(cooldownDurationMinutes) - (DateTime.Now - _lastSpinTime);
+            return TimeSpan.FromMinutes(CooldownDurationMinutes) - (DateTime.Now - _lastSpinTime);
         }
     }
 }

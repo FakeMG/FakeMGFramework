@@ -6,32 +6,31 @@ namespace FakeMG.Framework.TargetFinder
     public class TargetLayerFinder : TargetFinder
     {
         [Title("Target Layer Finder")]
-        [SerializeField] private LayerMask targetLayerMask;
+        [SerializeField] private LayerMask _targetLayerMask;
         [MinValue(1)]
-        [SerializeField] private int maxTargets = 10;
-        [SerializeField] private bool findClosestTarget = true;
+        [SerializeField] private int _maxTargets = 10;
+        [SerializeField] private bool _findClosestTarget = true;
 
         private Collider[] _colliders;
-        private bool _isInitialized;
 
         private void Awake()
         {
-            _colliders = new Collider[maxTargets];
+            _colliders = new Collider[_maxTargets];
         }
 
         protected override GameObject ChooseATargetInRange()
         {
-            if (_colliders == null || _colliders.Length != maxTargets)
+            if (_colliders == null || _colliders.Length != _maxTargets)
             {
                 Debug.LogWarning("TargetLayerFinder: Collider array not initialized or size mismatch.");
                 return null;
             }
 
-            int hitCount = Physics.OverlapSphereNonAlloc(transform.position, radius, _colliders, targetLayerMask);
+            int hitCount = Physics.OverlapSphereNonAlloc(transform.position, _radius, _colliders, _targetLayerMask);
 
             if (hitCount <= 0) return null;
 
-            if (!findClosestTarget) return _colliders[0]?.gameObject;
+            if (!_findClosestTarget) return _colliders[0]?.gameObject;
 
             GameObject closestTarget = null;
             float closestDistanceSqr = float.MaxValue;

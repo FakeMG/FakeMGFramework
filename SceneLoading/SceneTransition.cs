@@ -16,46 +16,46 @@ namespace FakeMG.Framework.SceneLoading
 
     public class SceneTransition : MonoBehaviour
     {
-        [SerializeField] private CanvasGroup transitionScreen;
-        [SerializeField] private Image backgroundColor;
-        [SerializeField] private RectTransform logo;
+        [SerializeField] private CanvasGroup _transitionScreen;
+        [SerializeField] private Image _backgroundColor;
+        [SerializeField] private RectTransform _logo;
 
         [Header("Show Animation Settings")]
-        [SerializeField] private float showDuration;
-        [SerializeField] private Vector2 showPosition = new(0, 0);
-        [SerializeField] private float showScale = 1f;
-        [SerializeField] private float showRotation;
-        [SerializeField] private EaseType showEaseType = EaseType.Predefined;
-        [SerializeField, ShowIf("showEaseType", EaseType.Predefined)] private Ease showEase = Ease.Linear;
-        [SerializeField, ShowIf("showEaseType", EaseType.CustomCurve)] private AnimationCurve showEaseCurve;
+        [SerializeField] private float _showDuration;
+        [SerializeField] private Vector2 _showPosition = new(0, 0);
+        [SerializeField] private float _showScale = 1f;
+        [SerializeField] private float _showRotation;
+        [SerializeField] private EaseType _showEaseType = EaseType.Predefined;
+        [SerializeField, ShowIf("showEaseType", EaseType.Predefined)] private Ease _showEase = Ease.Linear;
+        [SerializeField, ShowIf("showEaseType", EaseType.CustomCurve)] private AnimationCurve _showEaseCurve;
 
         [Header("Hide Animation Settings")]
-        [SerializeField] private float hideDuration;
-        [SerializeField] private Vector2 hidePosition;
-        [SerializeField] private float hideScale;
-        [SerializeField] private float hideRotation;
-        [SerializeField] private EaseType hideEaseType = EaseType.Predefined;
-        [SerializeField, ShowIf("hideEaseType", EaseType.Predefined)] private Ease hideEase = Ease.Linear;
-        [SerializeField, ShowIf("hideEaseType", EaseType.CustomCurve)] private AnimationCurve hideEaseCurve;
+        [SerializeField] private float _hideDuration;
+        [SerializeField] private Vector2 _hidePosition;
+        [SerializeField] private float _hideScale;
+        [SerializeField] private float _hideRotation;
+        [SerializeField] private EaseType _hideEaseType = EaseType.Predefined;
+        [SerializeField, ShowIf("hideEaseType", EaseType.Predefined)] private Ease _hideEase = Ease.Linear;
+        [SerializeField, ShowIf("hideEaseType", EaseType.CustomCurve)] private AnimationCurve _hideEaseCurve;
 
         [Header("Fade Settings")]
-        [SerializeField] private float colorFadeDuration = 0.5f;
-        [SerializeField] private float transitionScreenFadeDuration = 0.25f;
+        [SerializeField] private float _colorFadeDuration = 0.5f;
+        [SerializeField] private float _transitionScreenFadeDuration = 0.25f;
 
         [Header("Events")]
-        public UnityEvent onShowAnimationStart;
-        public UnityEvent onShowAnimationComplete;
-        public UnityEvent onHideAnimationStart;
-        public UnityEvent onHideAnimationComplete;
+        public UnityEvent OnShowAnimationStart;
+        public UnityEvent OnShowAnimationComplete;
+        public UnityEvent OnHideAnimationStart;
+        public UnityEvent OnHideAnimationComplete;
 
         private void Start()
         {
-            transitionScreen.gameObject.SetActive(false);
-            transitionScreen.alpha = 0f;
+            _transitionScreen.gameObject.SetActive(false);
+            _transitionScreen.alpha = 0f;
 
-            logo.anchoredPosition = hidePosition;
-            logo.localScale = Vector3.one * hideScale;
-            logo.rotation = Quaternion.Euler(0, 0, hideRotation);
+            _logo.anchoredPosition = _hidePosition;
+            _logo.localScale = Vector3.one * _hideScale;
+            _logo.rotation = Quaternion.Euler(0, 0, _hideRotation);
         }
 
 #if UNITY_EDITOR
@@ -94,47 +94,47 @@ namespace FakeMG.Framework.SceneLoading
         //TODO: protection from multiple calls or call Hide() before Show() finishs
         private async UniTask ShowAsync()
         {
-            onShowAnimationStart?.Invoke();
+            OnShowAnimationStart?.Invoke();
 
-            transitionScreen.gameObject.SetActive(true);
-            transitionScreen.alpha = 1f;
+            _transitionScreen.gameObject.SetActive(true);
+            _transitionScreen.alpha = 1f;
 
-            backgroundColor.color =
-                new Color(backgroundColor.color.r, backgroundColor.color.g, backgroundColor.color.b, 0);
+            _backgroundColor.color =
+                new Color(_backgroundColor.color.r, _backgroundColor.color.g, _backgroundColor.color.b, 0);
 
             var positionUniTask =
-                ApplyEase(logo.DOAnchorPos(showPosition, showDuration), showEaseType, showEase, showEaseCurve);
+                ApplyEase(_logo.DOAnchorPos(_showPosition, _showDuration), _showEaseType, _showEase, _showEaseCurve);
             var scaleUniTask =
-                ApplyEase(logo.DOScale(Vector3.one * showScale, showDuration), showEaseType, showEase, showEaseCurve);
+                ApplyEase(_logo.DOScale(Vector3.one * _showScale, _showDuration), _showEaseType, _showEase, _showEaseCurve);
             var rotateUniTask =
-                ApplyEase(logo.DORotate(new Vector3(0, 0, showRotation), showDuration, RotateMode.FastBeyond360),
-                    showEaseType, showEase, showEaseCurve);
+                ApplyEase(_logo.DORotate(new Vector3(0, 0, _showRotation), _showDuration, RotateMode.FastBeyond360),
+                    _showEaseType, _showEase, _showEaseCurve);
 
             await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
-            await backgroundColor.DOFade(1f, colorFadeDuration).ToUniTask();
+            await _backgroundColor.DOFade(1f, _colorFadeDuration).ToUniTask();
 
-            onShowAnimationComplete?.Invoke();
+            OnShowAnimationComplete?.Invoke();
         }
 
         private async UniTask HideAsync()
         {
-            onHideAnimationStart?.Invoke();
+            OnHideAnimationStart?.Invoke();
 
-            await backgroundColor.DOFade(0f, colorFadeDuration).ToUniTask();
+            await _backgroundColor.DOFade(0f, _colorFadeDuration).ToUniTask();
 
             var positionUniTask =
-                ApplyEase(logo.DOAnchorPos(hidePosition, hideDuration), hideEaseType, hideEase, hideEaseCurve);
+                ApplyEase(_logo.DOAnchorPos(_hidePosition, _hideDuration), _hideEaseType, _hideEase, _hideEaseCurve);
             var scaleUniTask =
-                ApplyEase(logo.DOScale(Vector3.one * hideScale, hideDuration), hideEaseType, hideEase, hideEaseCurve);
+                ApplyEase(_logo.DOScale(Vector3.one * _hideScale, _hideDuration), _hideEaseType, _hideEase, _hideEaseCurve);
             var rotateUniTask =
-                ApplyEase(logo.DORotate(new Vector3(0, 0, hideRotation), hideDuration, RotateMode.FastBeyond360),
-                    hideEaseType, hideEase, hideEaseCurve);
+                ApplyEase(_logo.DORotate(new Vector3(0, 0, _hideRotation), _hideDuration, RotateMode.FastBeyond360),
+                    _hideEaseType, _hideEase, _hideEaseCurve);
 
             await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
-            await transitionScreen.DOFade(0f, transitionScreenFadeDuration).ToUniTask();
+            await _transitionScreen.DOFade(0f, _transitionScreenFadeDuration).ToUniTask();
 
-            transitionScreen.gameObject.SetActive(false);
-            onHideAnimationComplete?.Invoke();
+            _transitionScreen.gameObject.SetActive(false);
+            OnHideAnimationComplete?.Invoke();
         }
 
         private UniTask ApplyEase(Tween tween, EaseType easeType, Ease predefinedEase, AnimationCurve customCurve)

@@ -1,93 +1,96 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using DG.Tweening;
-using TMPro;
+﻿using DG.Tweening;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace FakeMG.Framework.UI
 {
-    public class ScaleButton : Button
+    [RequireComponent(typeof(Button))]
+    public class ScaleButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
     {
-        private List<Graphic> _graphics;
-        private List<TextMeshProUGUI> _textMeshPro;
+        [SerializeField] private Transform _targetTransform;
+        [SerializeField] private float _hoverScaleMultiplier = 0.95f;
+        [SerializeField] private float _pressScaleMultiplier = 0.85f;
+        [SerializeField] private float _animationDuration = 0.1f;
+
+        private Button _button;
         private Vector3 _normalScale;
+        private bool _isPointerInside;
+        private bool _isPressed;
 
-        private const float HOVER_SCALE_MULTIPLIER = 0.95f;
-        private const float PRESS_SCALE_MULTIPLIER = 0.85f;
-        private const float ANIMATION_DURATION = 0.1f;
-
-        protected override void Awake()
+        private void Awake()
         {
-            base.Awake();
-            _graphics = GetComponentsInChildren<Graphic>(true).Where(graphic => graphic.gameObject != gameObject).ToList();
+            _button = GetComponent<Button>();
 
-            _textMeshPro = GetComponentsInChildren<TextMeshProUGUI>(true)
-                .Where(text => text.gameObject != gameObject).ToList();
+            if (_targetTransform == null)
+            {
+                _targetTransform = transform;
+            }
 
-            _normalScale = targetGraphic.transform.localScale;
+            _normalScale = _targetTransform.localScale;
             if (_normalScale == Vector3.zero)
             {
                 _normalScale = Vector3.one;
             }
         }
 
-        private void ChangeColor(Color targetColor, bool instant)
+        private void OnDisable()
         {
-            if (_graphics == null) return;
-            foreach (var graphic in _graphics)
-            {
-                graphic.CrossFadeColor(targetColor, instant ? 0f : colors.fadeDuration, true, true);
-            }
+            _targetTransform.localScale = _normalScale;
+            _isPointerInside = false;
+            _isPressed = false;
+        }
 
-            if (_textMeshPro == null) return;
-            foreach (var text in _textMeshPro)
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (!_button.interactable) return;
+
+            _isPointerInside = true;
+            if (!_isPressed)
             {
-                text.CrossFadeColor(targetColor, instant ? 0f : colors.fadeDuration, true, true);
+                AnimateScale(_normalScale * _hoverScaleMultiplier);
             }
         }
 
-        protected override void DoStateTransition(SelectionState buttonState, bool instant)
+        public void OnPointerExit(PointerEventData eventData)
         {
-            if (!gameObject.activeInHierarchy)
-                return;
-
-            Color tintColor;
-
-            switch (buttonState)
+            _isPointerInside = false;
+            if (!_isPressed)
             {
-                case SelectionState.Normal:
-                    targetGraphic?.transform.DOScale(_normalScale, ANIMATION_DURATION).SetEase(Ease.InOutQuad).SetUpdate(true)
-                        .SetLink(gameObject);
-                    tintColor = colors.normalColor;
-                    break;
-                case SelectionState.Highlighted:
-                    targetGraphic?.transform.DOScale(_normalScale * HOVER_SCALE_MULTIPLIER, ANIMATION_DURATION)
-                        .SetEase(Ease.InOutQuad).SetUpdate(true)
-                        .SetLink(gameObject);
-                    tintColor = colors.highlightedColor;
-                    break;
-                case SelectionState.Pressed:
-                    targetGraphic?.transform.DOScale(_normalScale * PRESS_SCALE_MULTIPLIER, ANIMATION_DURATION)
-                        .SetEase(Ease.InOutQuad).SetUpdate(true)
-                        .SetLink(gameObject);
-                    tintColor = colors.pressedColor;
-                    break;
-                case SelectionState.Selected:
-                    targetGraphic?.transform.DOScale(_normalScale, ANIMATION_DURATION)
-                        .SetEase(Ease.InOutQuad).SetUpdate(true)
-                        .SetLink(gameObject);
-                    tintColor = colors.selectedColor;
-                    break;
-                case SelectionState.Disabled:
-                    tintColor = colors.disabledColor;
-                    break;
-                default:
-                    tintColor = Color.black;
-                    break;
+                AnimateScale(_normalScale);
             }
+        }
 
-            ChangeColor(tintColor * colors.colorMultiplier, instant);
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (!_button.interactable) return;
+
+            _isPressed = true;
+            AnimateScale(_normalScale * _pressScaleMultiplier);
+        }
+
+        public void OnPointerUp(PointerEventData eventData)
+        {
+            _isPressed = false;
+
+            if (_isPointerInside && _button.interactable)
+            {
+                AnimateScale(_normalScale * _hoverScaleMultiplier);
+            }
+            else
+            {
+                AnimateScale(_normalScale);
+            }
+        }
+
+        private void AnimateScale(Vector3 targetScale)
+        {
+            if (!gameObject.activeInHierarchy) return;
+
+            _targetTransform.DOScale(targetScale, _animationDuration)
+                .SetEase(Ease.InOutQuad)
+                .SetUpdate(true)
+                .SetLink(gameObject);
         }
     }
 }

@@ -10,9 +10,9 @@ namespace FakeMG.Framework.UI
 {
     public class ItemIconUIUpdater : MonoBehaviour
     {
-        [SerializeField] private Image icon;
-        [SerializeField] private TextMeshProUGUI countText;
-        [SerializeField] private bool showCountWhenZero;
+        [SerializeField] private Image _icon;
+        [SerializeField] private TextMeshProUGUI _countText;
+        [SerializeField] private bool _showCountWhenZero;
 
         private AsyncOperationHandle<Sprite>? _loadedSpriteHandle;
 
@@ -23,16 +23,16 @@ namespace FakeMG.Framework.UI
 
         public void UpdateUI(Sprite newIcon, int count)
         {
-            icon.sprite = newIcon;
-            countText.text = count > 0 ? count.ToShorthand() : string.Empty;
-            countText.gameObject.SetActive(showCountWhenZero || count > 0);
+            _icon.sprite = newIcon;
+            _countText.text = count > 0 ? count.ToShorthand() : string.Empty;
+            _countText.gameObject.SetActive(_showCountWhenZero || count > 0);
         }
 
         public void UpdateUI(Sprite newIcon, string count)
         {
-            icon.sprite = newIcon;
-            countText.text = count;
-            countText.gameObject.SetActive(showCountWhenZero || !string.IsNullOrEmpty(count));
+            _icon.sprite = newIcon;
+            _countText.text = count;
+            _countText.gameObject.SetActive(_showCountWhenZero || !string.IsNullOrEmpty(count));
         }
 
         public async UniTask UpdateUIAsync(ItemSO item, int count)
@@ -47,13 +47,13 @@ namespace FakeMG.Framework.UI
 
                 if (spriteHandle.Status == AsyncOperationStatus.Succeeded)
                 {
-                    icon.sprite = spriteHandle.Result;
+                    _icon.sprite = spriteHandle.Result;
                     _loadedSpriteHandle = spriteHandle;
                 }
             }
 
-            countText.text = count > 0 ? count.ToShorthand() : string.Empty;
-            countText.gameObject.SetActive(showCountWhenZero || count > 0);
+            _countText.text = count > 0 ? count.ToShorthand() : string.Empty;
+            _countText.gameObject.SetActive(_showCountWhenZero || count > 0);
         }
 
         private void UnloadHandle()

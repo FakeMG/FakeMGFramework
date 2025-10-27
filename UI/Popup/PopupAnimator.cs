@@ -10,7 +10,7 @@ namespace FakeMG.Framework.UI.Popup
     public abstract class PopupAnimator : MonoBehaviour
     {
         [Required]
-        [SerializeField] protected CanvasGroup canvasGroup;
+        [SerializeField] protected CanvasGroup _canvasGroup;
 
         public event Action OnShowStart;
         public event Action OnShowFinished;
@@ -24,7 +24,7 @@ namespace FakeMG.Framework.UI.Popup
 
         private void Reset()
         {
-            canvasGroup = GetComponent<CanvasGroup>();
+            _canvasGroup = GetComponent<CanvasGroup>();
         }
 
         private void OnDestroy()
@@ -56,7 +56,7 @@ namespace FakeMG.Framework.UI.Popup
 
             OnShowStart?.Invoke();
 
-            canvasGroup.gameObject.SetActive(true);
+            _canvasGroup.gameObject.SetActive(true);
 
             if (animate)
             {
@@ -107,7 +107,7 @@ namespace FakeMG.Framework.UI.Popup
                 HideImmediate();
             }
 
-            canvasGroup.gameObject.SetActive(false);
+            _canvasGroup.gameObject.SetActive(false);
 
             OnHideFinished?.Invoke();
         }

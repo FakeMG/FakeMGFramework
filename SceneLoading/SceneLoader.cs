@@ -9,7 +9,7 @@ namespace FakeMG.Framework.SceneLoading
 {
     public class SceneLoader : MonoBehaviour
     {
-        [SerializeField] private DataApplicationManager dataApplicationManager;
+        [SerializeField] private DataApplicationManager _dataApplicationManager;
 
         private readonly Dictionary<string, SceneController> _sceneControllers = new();
 
@@ -22,7 +22,7 @@ namespace FakeMG.Framework.SceneLoading
         {
             var loader = GetOrCreateLoader(sceneRef);
             await loader.LoadSceneAsync(mode);
-            await dataApplicationManager.ApplyDataForSceneAsync(loader.GetLoadedSceneName());
+            await _dataApplicationManager.ApplyDataForSceneAsync(loader.GetLoadedSceneName());
         }
 
         public async UniTask UnloadSceneAsync(AssetReferenceScene sceneRef)
@@ -44,7 +44,7 @@ namespace FakeMG.Framework.SceneLoading
             if (_sceneControllers.TryGetValue(key, out var sceneController))
             {
                 await sceneController.ReloadSceneAsync();
-                await dataApplicationManager.ApplyDataForSceneAsync(sceneController.GetLoadedSceneName());
+                await _dataApplicationManager.ApplyDataForSceneAsync(sceneController.GetLoadedSceneName());
             }
             else
             {

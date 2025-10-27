@@ -6,13 +6,13 @@ namespace FakeMG.Framework
 {
     public class DragObject : MonoBehaviour
     {
-        private static DragObject _instance;
+        private static DragObject s_instance;
 
         public static DragObject Instance
         {
             get
             {
-                if (_instance) return _instance;
+                if (s_instance) return s_instance;
 
                 var instances = FindObjectsByType<DragObject>(FindObjectsSortMode.None);
                 if (instances.Length > 0)
@@ -22,13 +22,13 @@ namespace FakeMG.Framework
 
                 return null;
             }
-            private set => _instance = value;
+            private set => s_instance = value;
         }
 
-        [SerializeField] private LayerMask dragLayerMask;
-        [SerializeField] private float dragHeight = 1f;
-        public UnityEvent<GameObject> onSelectEvent;
-        public UnityEvent<GameObject> onReleaseEvent;
+        [SerializeField] private LayerMask _dragLayerMask;
+        [SerializeField] private float _dragHeight = 1f;
+        public UnityEvent<GameObject> OnSelectEvent;
+        public UnityEvent<GameObject> OnReleaseEvent;
 
         public bool IsDragging { get; private set; }
         private Rigidbody _selectedRigidbody;
@@ -84,7 +84,7 @@ namespace FakeMG.Framework
         private void OnSelect(InputAction.CallbackContext context)
         {
             Ray ray = _mainCamera.ScreenPointToRay(_pointerMovementAction.ReadValue<Vector2>());
-            if (Physics.Raycast(ray, out RaycastHit hit, 100, dragLayerMask))
+            if (Physics.Raycast(ray, out RaycastHit hit, 100, _dragLayerMask))
             {
                 IsDragging = true;
                 _selectedTransform = hit.transform;
@@ -95,7 +95,7 @@ namespace FakeMG.Framework
                     _selectedRigidbody.isKinematic = true;
                 }
 
-                onSelectEvent.Invoke(hit.collider.gameObject);
+                OnSelectEvent.Invoke(hit.collider.gameObject);
             }
         }
 
@@ -115,7 +115,7 @@ namespace FakeMG.Framework
             var releasedObject = _selectedTransform ? _selectedTransform.gameObject : null;
             _selectedTransform = null;
 
-            onReleaseEvent.Invoke(releasedObject);
+            OnReleaseEvent.Invoke(releasedObject);
         }
 
         private void Throw()
@@ -139,7 +139,7 @@ namespace FakeMG.Framework
             if (_dragPlane.Raycast(ray, out float enter))
             {
                 Vector3 hitPoint = ray.GetPoint(enter);
-                hitPoint.y = dragHeight;
+                hitPoint.y = _dragHeight;
                 _selectedTransform.position = Vector3.Lerp(_selectedTransform.position, hitPoint, 0.1f);
             }
         }

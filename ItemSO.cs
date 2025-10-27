@@ -12,30 +12,30 @@ namespace FakeMG.Framework
     {
         [Header("Item Info")]
         [Required]
-        [SerializeField] private string id;
-        [SerializeField] private string itemName;
-        [SerializeField, TextArea(3, 5)] protected string description;
+        [SerializeField] private string _id;
+        [SerializeField] private string _itemName;
+        [SerializeField, TextArea(3, 5)] protected string _description;
         [PreviewField(75, ObjectFieldAlignment.Left)]
-        [SerializeField] private AssetReferenceSprite iconSpriteAsset;
-        [SerializeField] private AssetReferenceGameObject prefabAsset;
+        [SerializeField] private AssetReferenceSprite _iconSpriteAsset;
+        [SerializeField] private AssetReferenceGameObject _prefabAsset;
 
-        public string ID => id;
-        public string ItemName => itemName;
-        public string Description => description;
-        public AssetReferenceSprite IconSpriteAsset => iconSpriteAsset;
-        public AssetReferenceGameObject PrefabAsset => prefabAsset;
+        public string ID => _id;
+        public string ItemName => _itemName;
+        public string Description => _description;
+        public AssetReferenceSprite IconSpriteAsset => _iconSpriteAsset;
+        public AssetReferenceGameObject PrefabAsset => _prefabAsset;
 
 #if UNITY_EDITOR
         [Button("Set ID From Name")]
         private void SetIDFromName()
         {
-            id = itemName.Replace(" ", "_").ToLowerInvariant();
+            _id = _itemName.Replace(" ", "_").ToLowerInvariant();
         }
 
         [Button]
         private void SetFileNameFromName()
         {
-            if (string.IsNullOrEmpty(itemName))
+            if (string.IsNullOrEmpty(_itemName))
             {
                 Debug.LogWarning("Item name is empty, cannot set file name.");
                 return;
@@ -44,9 +44,9 @@ namespace FakeMG.Framework
             string assetPath = UnityEditor.AssetDatabase.GetAssetPath(this);
             if (string.IsNullOrEmpty(assetPath)) return;
             string fileName = System.IO.Path.GetFileNameWithoutExtension(assetPath);
-            if (fileName != itemName)
+            if (fileName != _itemName)
             {
-                UnityEditor.AssetDatabase.RenameAsset(assetPath, itemName);
+                UnityEditor.AssetDatabase.RenameAsset(assetPath, _itemName);
                 UnityEditor.AssetDatabase.SaveAssets();
                 UnityEditor.AssetDatabase.Refresh();
             }
@@ -56,14 +56,14 @@ namespace FakeMG.Framework
         private void SetIDFromFileName()
         {
             if (string.IsNullOrEmpty(name)) return;
-            id = name.Replace(" ", "_").ToLowerInvariant();
+            _id = name.Replace(" ", "_").ToLowerInvariant();
         }
 
         [Button]
         private void SetNameFromFileName()
         {
             if (string.IsNullOrEmpty(name)) return;
-            itemName = name.Replace("_", " ");
+            _itemName = name.Replace("_", " ");
         }
 #endif
     }

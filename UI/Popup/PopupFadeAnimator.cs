@@ -6,12 +6,12 @@ namespace FakeMG.Framework.UI.Popup
     public class PopupFadeAnimator : PopupAnimator
     {
         [Header("Animation Settings")]
-        [SerializeField] private float animationDuration = 0.3f;
+        [SerializeField] private float _animationDuration = 0.3f;
 
         protected override Sequence CreateShowSequence()
         {
             var sequence = DOTween.Sequence();
-            sequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
+            sequence.Join(_canvasGroup.DOFade(1f, _animationDuration).SetLink(_canvasGroup.gameObject));
 
             return sequence;
         }
@@ -19,19 +19,19 @@ namespace FakeMG.Framework.UI.Popup
         protected override Sequence CreateHideSequence()
         {
             var sequence = DOTween.Sequence();
-            sequence.Join(canvasGroup.DOFade(0f, animationDuration).SetLink(canvasGroup.gameObject));
+            sequence.Join(_canvasGroup.DOFade(0f, _animationDuration).SetLink(_canvasGroup.gameObject));
 
             return sequence;
         }
 
         protected override void ShowImmediate()
         {
-            canvasGroup.alpha = 1f;
+            _canvasGroup.alpha = 1f;
         }
 
         protected override void HideImmediate()
         {
-            canvasGroup.alpha = 0f;
+            _canvasGroup.alpha = 0f;
         }
     }
 }

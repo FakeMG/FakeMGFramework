@@ -7,42 +7,42 @@ namespace FakeMG.Framework.Audio
     [CreateAssetMenu(menuName = FakeMGEditorMenus.AUDIO + "/AudioConfigurationSO")]
     public class AudioConfigurationSO : ScriptableObject
     {
-        public AudioMixerGroup outputAudioMixerGroup;
+        public AudioMixerGroup OutputAudioMixerGroup;
 
         // Simplified management of priority levels (values are counterintuitive, see enum below)
-        [SerializeField] private PriorityLevel priorityLevel = PriorityLevel.Standard;
+        [SerializeField] private PriorityLevel _priorityLevel = PriorityLevel.Standard;
 
         public int Priority
         {
-            get => (int)priorityLevel;
-            set => priorityLevel = (PriorityLevel)value;
+            get => (int)_priorityLevel;
+            set => _priorityLevel = (PriorityLevel)value;
         }
 
         [Header("Sound properties")]
-        public bool mute;
-        [Range(0f, 1f)] public float volume = 1f;
-        [Range(-3f, 3f)] public float pitch = 1f;
-        [Range(-1f, 1f)] public float panStereo;
-        [Range(0f, 1.1f)] public float reverbZoneMix = 1f;
+        public bool Mute;
+        [Range(0f, 1f)] public float Volume = 1f;
+        [Range(-3f, 3f)] public float Pitch = 1f;
+        [Range(-1f, 1f)] public float PanStereo;
+        [Range(0f, 1.1f)] public float ReverbZoneMix = 1f;
 
         [Header("Spatialization")]
-        [Range(0f, 1f)] public float spatialBlend = 1f;
-        public AudioRolloffMode rollOffMode = AudioRolloffMode.Logarithmic;
+        [Range(0f, 1f)] public float SpatialBlend = 1f;
+        public AudioRolloffMode RollOffMode = AudioRolloffMode.Logarithmic;
         [MinValue(0f)]
         [OnValueChanged(nameof(ValidateDistances))]
-        public float minDistance = 0.1f;
+        public float MinDistance = 0.1f;
         [MinValue(0.01f)]
         [OnValueChanged(nameof(ValidateDistances))]
-        public float maxDistance = 50f;
-        [Range(0, 360)] public int spread;
-        [Range(0f, 5f)] public float dopplerLevel = 1f;
+        public float MaxDistance = 50f;
+        [Range(0, 360)] public int Spread;
+        [Range(0f, 5f)] public float DopplerLevel = 1f;
 
         [Header("Ignores")]
-        public bool bypassEffects;
-        public bool bypassListenerEffects;
-        public bool bypassReverbZones;
-        public bool ignoreListenerVolume;
-        public bool ignoreListenerPause;
+        public bool BypassEffects;
+        public bool BypassListenerEffects;
+        public bool BypassReverbZones;
+        public bool IgnoreListenerVolume;
+        public bool IgnoreListenerPause;
 
         public enum PriorityLevel
         {
@@ -55,24 +55,24 @@ namespace FakeMG.Framework.Audio
 
         private void ApplyTo(AudioSource audioSource)
         {
-            audioSource.outputAudioMixerGroup = outputAudioMixerGroup;
-            audioSource.mute = mute;
-            audioSource.bypassEffects = bypassEffects;
-            audioSource.bypassListenerEffects = bypassListenerEffects;
-            audioSource.bypassReverbZones = bypassReverbZones;
+            audioSource.outputAudioMixerGroup = OutputAudioMixerGroup;
+            audioSource.mute = Mute;
+            audioSource.bypassEffects = BypassEffects;
+            audioSource.bypassListenerEffects = BypassListenerEffects;
+            audioSource.bypassReverbZones = BypassReverbZones;
             audioSource.priority = Priority;
-            audioSource.volume = volume;
-            audioSource.pitch = pitch;
-            audioSource.panStereo = panStereo;
-            audioSource.spatialBlend = spatialBlend;
-            audioSource.reverbZoneMix = reverbZoneMix;
-            audioSource.dopplerLevel = dopplerLevel;
-            audioSource.spread = spread;
-            audioSource.rolloffMode = rollOffMode;
-            audioSource.minDistance = minDistance;
-            audioSource.maxDistance = maxDistance;
-            audioSource.ignoreListenerVolume = ignoreListenerVolume;
-            audioSource.ignoreListenerPause = ignoreListenerPause;
+            audioSource.volume = Volume;
+            audioSource.pitch = Pitch;
+            audioSource.panStereo = PanStereo;
+            audioSource.spatialBlend = SpatialBlend;
+            audioSource.reverbZoneMix = ReverbZoneMix;
+            audioSource.dopplerLevel = DopplerLevel;
+            audioSource.spread = Spread;
+            audioSource.rolloffMode = RollOffMode;
+            audioSource.minDistance = MinDistance;
+            audioSource.maxDistance = MaxDistance;
+            audioSource.ignoreListenerVolume = IgnoreListenerVolume;
+            audioSource.ignoreListenerPause = IgnoreListenerPause;
         }
 
         public void ApplyToWithVariations(AudioSource audioSource, AudioCueSO audioCue)
@@ -96,9 +96,9 @@ namespace FakeMG.Framework.Audio
 
         private void ValidateDistances()
         {
-            if (minDistance > maxDistance)
+            if (MinDistance > MaxDistance)
             {
-                maxDistance = minDistance;
+                MaxDistance = MinDistance;
             }
         }
     }

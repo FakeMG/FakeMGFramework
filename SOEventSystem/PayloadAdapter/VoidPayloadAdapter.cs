@@ -7,18 +7,18 @@ namespace FakeMG.Framework.SOEventSystem.PayloadAdapter
 {
     public class VoidPayloadAdapter : MonoBehaviour
     {
-        [SerializeField] private VoidEventChannelSO channel;
-        [SerializeField] private float delay;
-        [SerializeField] private UnityEvent response;
+        [SerializeField] private VoidEventChannelSO _channel;
+        [SerializeField] private float _delay;
+        [SerializeField] private UnityEvent _response;
 
         private void OnEnable()
         {
-            if (channel) channel.OnEventRaised += OnEventRaised;
+            if (_channel) _channel.OnEventRaised += OnEventRaised;
         }
 
         private void OnDisable()
         {
-            if (channel) channel.OnEventRaised -= OnEventRaised;
+            if (_channel) _channel.OnEventRaised -= OnEventRaised;
         }
 
         private void OnEventRaised()
@@ -28,8 +28,8 @@ namespace FakeMG.Framework.SOEventSystem.PayloadAdapter
 
         private IEnumerator RaiseEventDelayed()
         {
-            yield return new WaitForSeconds(delay);
-            response?.Invoke();
+            yield return new WaitForSeconds(_delay);
+            _response?.Invoke();
         }
     }
 }

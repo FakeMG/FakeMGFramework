@@ -6,9 +6,9 @@ namespace FakeMG.Framework.Timer
 {
     public class CountDownTimer : MonoBehaviour
     {
-        [SerializeField] private float warningPeriod = 5f;
-        [SerializeField] private bool playOnStart = true;
-        [SerializeField] private float timeToWait;
+        [SerializeField] private float _warningPeriod = 5f;
+        [SerializeField] private bool _playOnStart = true;
+        [SerializeField] private float _timeToWait;
 
         public float CurrentTimeLeftInSeconds { get; private set; }
         private float _timeSinceLastSecond;
@@ -26,11 +26,11 @@ namespace FakeMG.Framework.Timer
 
         private void Start()
         {
-            CurrentTimeLeftInSeconds = timeToWait;
+            CurrentTimeLeftInSeconds = _timeToWait;
 
-            if (playOnStart)
+            if (_playOnStart)
             {
-                SetTime(timeToWait);
+                SetTime(_timeToWait);
                 StartTimer();
             }
         }
@@ -53,7 +53,7 @@ namespace FakeMG.Framework.Timer
                 int currentSecond = Mathf.RoundToInt(CurrentTimeLeftInSeconds);
                 OnSecondReducedEvent?.Invoke(currentSecond);
 
-                if (currentSecond <= warningPeriod)
+                if (currentSecond <= _warningPeriod)
                 {
                     OnWarningSecondReducedEvent?.Invoke(currentSecond);
                 }
@@ -104,7 +104,7 @@ namespace FakeMG.Framework.Timer
 
         public void SetTime(float time)
         {
-            timeToWait = time;
+            _timeToWait = time;
             CurrentTimeLeftInSeconds = time;
             OnSecondReducedEvent?.Invoke(Mathf.RoundToInt(time));
         }

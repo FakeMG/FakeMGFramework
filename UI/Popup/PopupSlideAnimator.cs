@@ -6,15 +6,15 @@ namespace FakeMG.Framework.UI.Popup
     public class PopupSlideAnimator : PopupAnimator
     {
         [Header("Target UI")]
-        [SerializeField] protected RectTransform canvasRect;
-        [SerializeField] private RectTransform rectTransform;
+        [SerializeField] protected RectTransform _canvasRect;
+        [SerializeField] private RectTransform _rectTransform;
 
         [Header("Animation Settings")]
-        [SerializeField] private float animationDuration = 0.3f;
-        [SerializeField] private Vector3 targetPosition = Vector3.zero;
-        [SerializeField] private Ease showEase = Ease.OutBack;
-        [SerializeField] private Ease hideEase = Ease.InBack;
-        [SerializeField] private Direction slideDirection = Direction.Bottom;
+        [SerializeField] private float _animationDuration = 0.3f;
+        [SerializeField] private Vector3 _targetPosition = Vector3.zero;
+        [SerializeField] private Ease _showEase = Ease.OutBack;
+        [SerializeField] private Ease _hideEase = Ease.InBack;
+        [SerializeField] private Direction _slideDirection = Direction.Bottom;
 
         public enum Direction
         {
@@ -33,23 +33,23 @@ namespace FakeMG.Framework.UI.Popup
 
         private Vector3 CalculateHiddenPosition()
         {
-            Vector3 hidden = targetPosition;
+            Vector3 hidden = _targetPosition;
 
-            Vector2 canvasSize = canvasRect.rect.size;
+            Vector2 canvasSize = _canvasRect.rect.size;
 
-            switch (slideDirection)
+            switch (_slideDirection)
             {
                 case Direction.Top:
-                    hidden.y = targetPosition.y + canvasSize.y + rectTransform.rect.height;
+                    hidden.y = _targetPosition.y + canvasSize.y + _rectTransform.rect.height;
                     break;
                 case Direction.Right:
-                    hidden.x = targetPosition.x + canvasSize.x + rectTransform.rect.width;
+                    hidden.x = _targetPosition.x + canvasSize.x + _rectTransform.rect.width;
                     break;
                 case Direction.Bottom:
-                    hidden.y = targetPosition.y - canvasSize.y - rectTransform.rect.height;
+                    hidden.y = _targetPosition.y - canvasSize.y - _rectTransform.rect.height;
                     break;
                 case Direction.Left:
-                    hidden.x = targetPosition.x - canvasSize.x - rectTransform.rect.width;
+                    hidden.x = _targetPosition.x - canvasSize.x - _rectTransform.rect.width;
                     break;
             }
 
@@ -59,10 +59,10 @@ namespace FakeMG.Framework.UI.Popup
         protected override Sequence CreateShowSequence()
         {
             var sequence = DOTween.Sequence();
-            sequence.Append(canvasGroup.transform.DOLocalMove(targetPosition, animationDuration)
-                .SetEase(showEase)
-                .SetLink(rectTransform.gameObject));
-            sequence.Join(canvasGroup.DOFade(1f, animationDuration).SetLink(canvasGroup.gameObject));
+            sequence.Append(_canvasGroup.transform.DOLocalMove(_targetPosition, _animationDuration)
+                .SetEase(_showEase)
+                .SetLink(_rectTransform.gameObject));
+            sequence.Join(_canvasGroup.DOFade(1f, _animationDuration).SetLink(_canvasGroup.gameObject));
 
             return sequence;
         }
@@ -70,25 +70,25 @@ namespace FakeMG.Framework.UI.Popup
         protected override Sequence CreateHideSequence()
         {
             var sequence = DOTween.Sequence();
-            sequence.Append(canvasGroup.transform.DOLocalMove(_hiddenPosition, animationDuration)
-                .SetEase(hideEase)
-                .SetLink(rectTransform.gameObject));
-            sequence.Join(canvasGroup.DOFade(0f, animationDuration)
-                .SetLink(canvasGroup.gameObject)
-                .SetDelay(animationDuration * 0.5f));
+            sequence.Append(_canvasGroup.transform.DOLocalMove(_hiddenPosition, _animationDuration)
+                .SetEase(_hideEase)
+                .SetLink(_rectTransform.gameObject));
+            sequence.Join(_canvasGroup.DOFade(0f, _animationDuration)
+                .SetLink(_canvasGroup.gameObject)
+                .SetDelay(_animationDuration * 0.5f));
             return sequence;
         }
 
         protected override void ShowImmediate()
         {
-            canvasGroup.transform.localPosition = targetPosition;
-            canvasGroup.alpha = 1f;
+            _canvasGroup.transform.localPosition = _targetPosition;
+            _canvasGroup.alpha = 1f;
         }
 
         protected override void HideImmediate()
         {
-            canvasGroup.transform.localPosition = _hiddenPosition;
-            canvasGroup.alpha = 0f;
+            _canvasGroup.transform.localPosition = _hiddenPosition;
+            _canvasGroup.alpha = 0f;
         }
     }
 }

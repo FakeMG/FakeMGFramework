@@ -7,9 +7,9 @@ namespace FakeMG.Framework.UI.Tab
 {
     public class TabSystem : MonoBehaviour
     {
-        [SerializeField] protected List<TabData> tabs = new();
-        [SerializeField] protected int defaultActiveTabIndex;
-        [SerializeField] protected TabTransitionBase transition;
+        [SerializeField] protected List<TabData> _tabs = new();
+        [SerializeField] protected int _defaultActiveTabIndex;
+        [SerializeField] protected TabTransitionBase _transition;
 
         public event Action<int> OnTabChanged;
 
@@ -21,27 +21,27 @@ namespace FakeMG.Framework.UI.Tab
         {
             InitializeTabs();
 
-            if (IsValidTabIndex(defaultActiveTabIndex))
+            if (IsValidTabIndex(_defaultActiveTabIndex))
             {
                 ShowDefaultTabContent();
-                tabs[defaultActiveTabIndex].TabButton.InstantlySelect();
-                _currentActiveTabIndex = defaultActiveTabIndex;
-                _onTabSelectedEvents[defaultActiveTabIndex]?.Invoke();
-                OnTabChanged?.Invoke(defaultActiveTabIndex);
+                _tabs[_defaultActiveTabIndex].TabButton.InstantlySelect();
+                _currentActiveTabIndex = _defaultActiveTabIndex;
+                _onTabSelectedEvents[_defaultActiveTabIndex]?.Invoke();
+                OnTabChanged?.Invoke(_defaultActiveTabIndex);
             }
         }
 
         private void ShowDefaultTabContent()
         {
-            for (int i = 0; i < tabs.Count; i++)
+            for (int i = 0; i < _tabs.Count; i++)
             {
-                if (i != defaultActiveTabIndex)
+                if (i != _defaultActiveTabIndex)
                 {
-                    transition.DeactivateTabContent(tabs[i]);
+                    _transition.DeactivateTabContent(_tabs[i]);
                 }
                 else
                 {
-                    transition.ActivateTabContent(tabs[i]);
+                    _transition.ActivateTabContent(_tabs[i]);
                 }
             }
         }
@@ -50,15 +50,15 @@ namespace FakeMG.Framework.UI.Tab
         {
             // Initialize the events list to match the number of tabs
             _onTabSelectedEvents.Clear();
-            for (int i = 0; i < tabs.Count; i++)
+            for (int i = 0; i < _tabs.Count; i++)
             {
                 _onTabSelectedEvents.Add(null);
             }
 
-            for (int i = 0; i < tabs.Count; i++)
+            for (int i = 0; i < _tabs.Count; i++)
             {
                 int tabIndex = i;
-                tabs[i].TabButton.button.onClick.AddListener(() => SwitchToTab(tabIndex));
+                _tabs[i].TabButton.Button.onClick.AddListener(() => SwitchToTab(tabIndex));
             }
         }
 
@@ -84,7 +84,7 @@ namespace FakeMG.Framework.UI.Tab
 
             AnimateButtonSelectionChange(previousTabIndex, tabIndex);
 
-            transition.PlayTabTransitionAnimation(tabs[previousTabIndex], tabs[tabIndex], previousTabIndex, tabIndex);
+            _transition.PlayTabTransitionAnimation(_tabs[previousTabIndex], _tabs[tabIndex], previousTabIndex, tabIndex);
 
             _currentActiveTabIndex = tabIndex;
             _onTabSelectedEvents[tabIndex]?.Invoke();
@@ -95,23 +95,23 @@ namespace FakeMG.Framework.UI.Tab
         {
             if (IsValidTabIndex(previousTabIndex))
             {
-                tabs[previousTabIndex].TabButton.AnimateDeselection();
+                _tabs[previousTabIndex].TabButton.AnimateDeselection();
             }
 
             if (IsValidTabIndex(newTabIndex))
             {
-                tabs[newTabIndex].TabButton.AnimateSelection();
+                _tabs[newTabIndex].TabButton.AnimateSelection();
             }
         }
 
         public bool IsValidTabIndex(int tabIndex)
         {
-            return tabIndex >= 0 && tabIndex < tabs.Count;
+            return tabIndex >= 0 && tabIndex < _tabs.Count;
         }
 
         public int GetTabCount()
         {
-            return tabs.Count;
+            return _tabs.Count;
         }
 
         public void NextTab()

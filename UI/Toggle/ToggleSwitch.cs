@@ -12,12 +12,12 @@ namespace FakeMG.Framework.UI.Toggle
         private const float MAX_VALUE = 1f;
 
         [Header("Visual Components")]
-        [SerializeField] private RectTransform fillRect;
-        [SerializeField] private RectTransform handleRect;
+        [SerializeField] private RectTransform _fillRect;
+        [SerializeField] private RectTransform _handleRect;
 
         [Header("Animation")]
-        [SerializeField, Range(0, 1f)] private float animationDuration = 0.1f;
-        [SerializeField] private AnimationCurve slideEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
+        [SerializeField, Range(0, 1f)] private float _animationDuration = 0.1f;
+        [SerializeField] private AnimationCurve _slideEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
         private Coroutine _animateSliderCoroutine;
 
@@ -51,29 +51,29 @@ namespace FakeMG.Framework.UI.Toggle
 
         private void UpdateCachedReferences()
         {
-            if (fillRect && fillRect != (RectTransform)transform)
+            if (_fillRect && _fillRect != (RectTransform)transform)
             {
-                _fillTransform = fillRect.transform;
-                _fillImage = fillRect.GetComponent<Image>();
+                _fillTransform = _fillRect.transform;
+                _fillImage = _fillRect.GetComponent<Image>();
                 if (_fillTransform.parent)
                     _fillContainerRect = _fillTransform.parent.GetComponent<RectTransform>();
             }
             else
             {
-                fillRect = null;
+                _fillRect = null;
                 _fillContainerRect = null;
                 _fillImage = null;
             }
 
-            if (handleRect && handleRect != (RectTransform)transform)
+            if (_handleRect && _handleRect != (RectTransform)transform)
             {
-                _handleTransform = handleRect.transform;
+                _handleTransform = _handleRect.transform;
                 if (_handleTransform.parent)
                     _handleContainerRect = _handleTransform.parent.GetComponent<RectTransform>();
             }
             else
             {
-                handleRect = null;
+                _handleRect = null;
                 _handleContainerRect = null;
             }
         }
@@ -85,7 +85,7 @@ namespace FakeMG.Framework.UI.Toggle
 
             if (_fillContainerRect)
             {
-                _visualTracker.Add(this, fillRect, DrivenTransformProperties.Anchors);
+                _visualTracker.Add(this, _fillRect, DrivenTransformProperties.Anchors);
                 Vector2 anchorMin = Vector2.zero;
                 Vector2 anchorMax = Vector2.one;
 
@@ -98,18 +98,18 @@ namespace FakeMG.Framework.UI.Toggle
                     anchorMax.x = _currentNormalizedValue; // Assuming left-to-right direction
                 }
 
-                fillRect.anchorMin = anchorMin;
-                fillRect.anchorMax = anchorMax;
+                _fillRect.anchorMin = anchorMin;
+                _fillRect.anchorMax = anchorMax;
             }
 
             if (_handleContainerRect)
             {
-                _visualTracker.Add(this, handleRect, DrivenTransformProperties.Anchors);
+                _visualTracker.Add(this, _handleRect, DrivenTransformProperties.Anchors);
                 Vector2 anchorMin = Vector2.zero;
                 Vector2 anchorMax = Vector2.one;
                 anchorMin.x = anchorMax.x = _currentNormalizedValue; // Assuming left-to-right direction
-                handleRect.anchorMin = anchorMin;
-                handleRect.anchorMax = anchorMax;
+                _handleRect.anchorMin = anchorMin;
+                _handleRect.anchorMax = anchorMax;
             }
         }
 
@@ -167,13 +167,13 @@ namespace FakeMG.Framework.UI.Toggle
             float endValue = IsOn ? MAX_VALUE : MIN_VALUE;
 
             float time = 0f;
-            if (animationDuration > 0f)
+            if (_animationDuration > 0f)
             {
-                while (time < animationDuration)
+                while (time < _animationDuration)
                 {
                     time += Time.deltaTime;
 
-                    float lerpFactor = slideEase.Evaluate(time / animationDuration);
+                    float lerpFactor = _slideEase.Evaluate(time / _animationDuration);
                     float currentValue = Mathf.Lerp(startValue, endValue, lerpFactor);
 
                     SetVisualState(currentValue);
