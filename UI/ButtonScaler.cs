@@ -6,22 +6,33 @@ using UnityEngine.UI;
 namespace FakeMG.Framework.UI
 {
     [RequireComponent(typeof(Button))]
-    public class ScaleButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IPointerUpHandler
+    public class ButtonScaler : MonoBehaviour, IPointerEnterHandler, IPointerDownHandler, IPointerUpHandler, ISelectHandler, IDeselectHandler
     {
         [SerializeField] private Transform _targetTransform;
-        [SerializeField] private float _hoverScaleMultiplier = 0.95f;
-        [SerializeField] private float _pressScaleMultiplier = 0.85f;
+        [SerializeField] private Button _button;
+        [SerializeField] private float _selectScaleMultiplier = 1.2f;
+        [SerializeField] private float _pressedShrinkAmount = 0.15f;
         [SerializeField] private float _animationDuration = 0.1f;
 
-        private Button _button;
         private Vector3 _normalScale;
-        private bool _isPointerInside;
-        private bool _isPressed;
+
+        public Transform TargetTransform
+        {
+            get => _targetTransform;
+            set => _targetTransform = value;
+        }
+
+        private void Reset()
+        {
+            _targetTransform = transform;
+            _button = GetComponent<Button>();
+            _selectScaleMultiplier = 1.2f;
+            _pressedShrinkAmount = 0.15f;
+            _animationDuration = 0.1f;
+        }
 
         private void Awake()
         {
-            _button = GetComponent<Button>();
-
             if (_targetTransform == null)
             {
                 _targetTransform = transform;
@@ -37,50 +48,40 @@ namespace FakeMG.Framework.UI
         private void OnDisable()
         {
             _targetTransform.localScale = _normalScale;
-            _isPointerInside = false;
-            _isPressed = false;
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (!_button.interactable) return;
-
-            _isPointerInside = true;
-            if (!_isPressed)
-            {
-                AnimateScale(_normalScale * _hoverScaleMultiplier);
-            }
-        }
-
-        public void OnPointerExit(PointerEventData eventData)
-        {
-            _isPointerInside = false;
-            if (!_isPressed)
-            {
-                AnimateScale(_normalScale);
-            }
+            _button.Select();
         }
 
         public void OnPointerDown(PointerEventData eventData)
         {
             if (!_button.interactable) return;
 
-            _isPressed = true;
-            AnimateScale(_normalScale * _pressScaleMultiplier);
+            AnimateScale(_targetTransform.localScale - Vector3.one * _pressedShrinkAmount);
         }
 
         public void OnPointerUp(PointerEventData eventData)
         {
-            _isPressed = false;
-
-            if (_isPointerInside && _button.interactable)
+            if (EventSystem.current.currentSelectedGameObject == gameObject && _button.interactable)
             {
-                AnimateScale(_normalScale * _hoverScaleMultiplier);
+                AnimateScale(_normalScale * _selectScaleMultiplier);
             }
             else
             {
                 AnimateScale(_normalScale);
             }
+        }
+
+        public void OnSelect(BaseEventData eventData)
+        {
+            AnimateScale(_normalScale * _selectScaleMultiplier);
+        }
+
+        public void OnDeselect(BaseEventData eventData)
+        {
+            AnimateScale(_normalScale);
         }
 
         private void AnimateScale(Vector3 targetScale)
