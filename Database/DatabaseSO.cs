@@ -5,20 +5,20 @@ using UnityEngine.AddressableAssets;
 
 namespace FakeMG.Framework.Database
 {
-    public abstract class AssetDatabaseSO<T> : SerializedScriptableObject where T : ItemSO
+    public abstract class DatabaseSO<T> : SerializedScriptableObject where T : ScriptableObject, IIdentifiable
     {
         [SerializeField] protected AssetLabelReference _label;
 
         [DictionaryDrawerSettings(KeyLabel = "ID", ValueLabel = "Asset Reference")]
         [SerializeField] protected Dictionary<string, T> _items = new();
 
-        public T GetReference(string id)
+        public T GetAssetByID(string id)
         {
-            _items.TryGetValue(id, out var reference);
+            _items.TryGetValue(id, out T reference);
             return reference;
         }
 
-        public List<T> GetAllItems()
+        public IReadOnlyList<T> GetAllAssets()
         {
             return new List<T>(_items.Values);
         }

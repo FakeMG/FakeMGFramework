@@ -95,8 +95,8 @@ namespace FakeMG.Framework.Database.Editor
         }
 
         public static void BuildDatabase<TAsset, TDatabase>(AssetLabelReference labelReference, TDatabase database, Dictionary<string, TAsset> items)
-            where TAsset : ItemSO
-            where TDatabase : AssetDatabaseSO<TAsset>
+            where TAsset : ScriptableObject, IIdentifiable
+            where TDatabase : DatabaseSO<TAsset>
         {
             items.Clear();
 
@@ -132,7 +132,7 @@ namespace FakeMG.Framework.Database.Editor
         {
             while (type != null)
             {
-                if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(AssetDatabaseSO<>))
+                if (type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(DatabaseSO<>)))
                 {
                     return true;
                 }

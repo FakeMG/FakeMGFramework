@@ -1,4 +1,5 @@
-﻿using Sirenix.OdinInspector;
+﻿using FakeMG.Framework.Database;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -8,7 +9,7 @@ namespace FakeMG.Framework
     /// Base class for all items in the game
     /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/ItemSO")]
-    public class ItemSO : ScriptableObject
+    public class ItemSO : ScriptableObject, IIdentifiable
     {
         [Header("Item Info")]
         [Required]
