@@ -7,7 +7,17 @@ namespace FakeMG.Framework
     {
         public T Value { get; private set; }
 
-        public void Set(T newValue) => Value = newValue;
+        public void Set(T newValue)
+        {
+            if (Value != null)
+            {
+                Debug.LogWarning($"Cannot set SOReference<{typeof(T).Name}> because it is already assigned.");
+                return;
+            }
+
+            Value = newValue;
+        }
+
         public bool IsAssigned => Value;
     }
 }

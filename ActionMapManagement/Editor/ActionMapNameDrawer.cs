@@ -13,13 +13,22 @@ namespace FakeMG.Framework.ActionMapManagement.Editor
         {
             EditorGUI.BeginProperty(position, label, property);
 
-            // Find the inputAsset from the parent object
-            SerializedProperty inputAssetProp = property.serializedObject.FindProperty("_inputAsset");
-            InputActionAsset inputAsset = inputAssetProp?.objectReferenceValue as InputActionAsset;
+            Rect labelRect = new(position.x, position.y, EditorGUIUtility.labelWidth, position.height);
+            Rect valueRect = new(position.x + EditorGUIUtility.labelWidth, position.y,
+                position.width - EditorGUIUtility.labelWidth, position.height);
+
+            GUIStyle errorStyle = new(EditorStyles.label);
+            errorStyle.normal.textColor = Color.red;
+            errorStyle.fontStyle = FontStyle.Bold;
+
+            // Find the inputAsset from project-wide settings
+            InputActionAsset inputAsset = InputSystem.actions;
 
             if (!inputAsset)
             {
-                EditorGUI.LabelField(position, label.text, "Assign InputActionAsset in config");
+                EditorGUI.LabelField(labelRect, label.text);
+                EditorGUI.LabelField(valueRect, "⚠ Assign project-wide InputActionAsset", errorStyle);
+
                 EditorGUI.EndProperty();
                 return;
             }
@@ -28,7 +37,9 @@ namespace FakeMG.Framework.ActionMapManagement.Editor
             string[] mapNames = inputAsset.actionMaps.Select(map => map.name).ToArray();
             if (mapNames.Length == 0)
             {
-                EditorGUI.LabelField(position, label.text, "No action maps found");
+                EditorGUI.LabelField(labelRect, label.text);
+                EditorGUI.LabelField(valueRect, "⚠ No action maps found", errorStyle);
+
                 EditorGUI.EndProperty();
                 return;
             }
