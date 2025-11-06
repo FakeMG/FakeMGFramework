@@ -9,8 +9,7 @@ namespace FakeMG.Framework.ActionMapManagement
     {
         [SerializeField] private InputActionAsset _inputActions;
         [SerializeField] private ActionMapConflictsPairsSO _conflictPairsSO;
-        [ActionMapName]
-        [SerializeField] private string _initialActionMapName;
+        [SerializeField] private ActionMapSO _initialActionMap;
 
         [Header("Debug")]
         [SerializeField] private bool _enableLogging;
@@ -21,9 +20,9 @@ namespace FakeMG.Framework.ActionMapManagement
 
         private void Start()
         {
-            if (!string.IsNullOrEmpty(_initialActionMapName))
+            if (_initialActionMap)
             {
-                EnableActionMap(_initialActionMapName);
+                EnableActionMap(_initialActionMap.ActionMapName);
             }
         }
 
@@ -97,10 +96,10 @@ namespace FakeMG.Framework.ActionMapManagement
 
         public bool IsActionMapActive(string mapName) => _activeMaps.Contains(mapName);
 
-        // Optional: Switch to a new map, disabling all non-global first
+        // Optional: Switch to a new map, disabling all others
         public void SwitchToActionMap(string newMapName)
         {
-            // Disable all non-always-enabled active maps
+            // Disable all active maps
             foreach (string activeMap in _activeMaps.ToArray())
             {
                 DisableActionMap(activeMap);

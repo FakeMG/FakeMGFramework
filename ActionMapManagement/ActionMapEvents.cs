@@ -4,11 +4,11 @@ namespace FakeMG.Framework.ActionMapManagement
 {
     public struct EnableActionMapEvent : IEvent
     {
-        public string ActionMapName;
+        public ActionMapSO ActionMap;
     }
 
     public struct DisableActionMapEvent : IEvent
     {
-        public string ActionMapName;
+        public ActionMapSO ActionMap;
     }
 }

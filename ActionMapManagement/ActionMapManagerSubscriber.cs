@@ -21,12 +21,18 @@ namespace FakeMG.Framework.ActionMapManagement
 
         private void OnEnableActionMap(EnableActionMapEvent evt)
         {
-            _actionMapManager.EnableActionMap(evt.ActionMapName);
+            if (evt.ActionMap)
+            {
+                _actionMapManager.EnableActionMap(evt.ActionMap.ActionMapName);
+            }
         }
 
         private void OnDisableActionMap(DisableActionMapEvent evt)
         {
-            _actionMapManager.DisableActionMap(evt.ActionMapName);
+            if (evt.ActionMap)
+            {
+                _actionMapManager.DisableActionMap(evt.ActionMap.ActionMapName);
+            }
         }
     }
 }
