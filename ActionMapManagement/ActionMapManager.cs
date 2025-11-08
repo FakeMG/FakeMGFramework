@@ -43,27 +43,7 @@ namespace FakeMG.Framework.ActionMapManagement
                 return;
             }
 
-            // Disable conflicts
-            HashSet<string> conflicts = _conflictPairsSO.GetConflictsFor(mapName);
-            foreach (string conflictName in conflicts)
-            {
-                InputActionMap conflictMap = _inputActions.FindActionMap(conflictName);
-                if (conflictMap != null && conflictMap.enabled)
-                {
-                    conflictMap.Disable();
-                    _activeMaps.Remove(conflictName);
-
-                    if (!_suppressedBy.TryGetValue(conflictName, out var suppressors))
-                    {
-                        suppressors = new HashSet<string>();
-                        _suppressedBy[conflictName] = suppressors;
-                    }
-
-                    suppressors.Add(mapName);
-
-                    Echo.Log($"Disabled conflicting action map: {conflictName} due to enabling {mapName}", _enableLogging);
-                }
-            }
+            DisableConflictingActionMaps(mapName);
         }
 
         public void DisableActionMap(string mapName)
@@ -79,8 +59,49 @@ namespace FakeMG.Framework.ActionMapManagement
             else
             {
                 Echo.Warning($"Attempted to disable action map: {mapName}, but it was not found or already disabled.", _enableLogging);
-                return;
+                // Don't return here to ensure suppressed tracking is cleaned up
             }
+
+            RemoveFromSuppressionTracking(mapName);
+        }
+
+        private void DisableConflictingActionMaps(string mapName)
+        {
+            HashSet<string> conflicts = _conflictPairsSO.GetConflictsFor(mapName);
+            foreach (string conflictName in conflicts)
+            {
+                InputActionMap conflictMap = _inputActions.FindActionMap(conflictName);
+                if (conflictMap != null)
+                {
+                    // If conflict is active, disable it and track suppression
+                    if (conflictMap.enabled)
+                    {
+                        conflictMap.Disable();
+                        _activeMaps.Remove(conflictName);
+
+                        if (!_suppressedBy.TryGetValue(conflictName, out var suppressors))
+                        {
+                            suppressors = new HashSet<string>();
+                            _suppressedBy[conflictName] = suppressors;
+                        }
+
+                        Echo.Log($"Disabled conflicting action map: {conflictName} due to enabling {mapName}", _enableLogging);
+                    }
+
+                    // If is disabled due to prior suppression, add another suppressor
+                    if (_suppressedBy.TryGetValue(conflictName, out HashSet<string> suppressors2))
+                    {
+                        suppressors2.Add(mapName);
+                        Echo.Log($"Action map: {conflictName} is now suppressed by {mapName}", _enableLogging);
+                    }
+                }
+            }
+        }
+
+        private void RemoveFromSuppressionTracking(string mapName)
+        {
+            // Remove from suppressed tracking
+            _suppressedBy.Remove(mapName);
 
             // Remove this map as a suppressor from any suppressed maps
             // ToList to avoid modification during iteration
