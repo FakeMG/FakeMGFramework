@@ -9,37 +9,39 @@ namespace FakeMG.Framework.GridBuilding
     /// </summary>
     public class GridManager : MonoBehaviour
     {
-        [SerializeField] private Grid grid;
-        [SerializeField] private float cellSize = 1f;
-        [SerializeField] private Vector3Int gridHalfSize = new(10, 10, 10);
+        [SerializeField] private Grid _grid;
+        [SerializeField] private Material _gridMaterial;
+        [SerializeField] private float _cellSize = 1f;
+        [SerializeField] private Vector3Int _gridHalfSize = new(10, 10, 10);
         private Dictionary<Vector3Int, PlacementData> _gridData = new();
 
-        public float CellSize => cellSize;
+        public float CellSize => _cellSize;
         public IReadOnlyDictionary<Vector3Int, PlacementData> GridData => _gridData;
+        private readonly int _cellPerUnit = Shader.PropertyToID("_CellPerUnit");
 
         private void OnValidate()
         {
-            if (grid && cellSize > 0)
+            if (_grid && _cellSize > 0)
             {
-                grid.cellSize = new Vector3(cellSize, cellSize, cellSize);
+                _grid.cellSize = new Vector3(_cellSize, _cellSize, _cellSize);
+            }
+
+            if (_gridMaterial && _cellSize > 0)
+            {
+                _gridMaterial.SetVector(_cellPerUnit, new Vector2(1 / _cellSize, 1 / _cellSize));
             }
         }
 
-        public void SetGridData(Dictionary<Vector3Int, PlacementData> data)
+        public void RegisterStructure(Vector3 worldPosition, GameObject blockInstance, string instanceID)
         {
-            _gridData = data;
-        }
-
-        public void RegisterBlock(Vector3 worldPosition, GameObject blockInstance, string instanceID)
-        {
-            Vector3Int pivotCell = grid.WorldToCell(worldPosition);
+            Vector3Int pivotCell = _grid.WorldToCell(worldPosition);
             List<Vector3Int> occupiedCells = GetOccupiedCells(blockInstance);
 
-            var placementData = new PlacementData(pivotCell, occupiedCells, instanceID);
+            PlacementData placementData = new(pivotCell, occupiedCells, instanceID);
             _gridData[pivotCell] = placementData;
 
             // Remove unnecessary data to optimize memory
-            var optimizedPlacementData = new PlacementData(pivotCell, new List<Vector3Int>(), instanceID);
+            PlacementData optimizedPlacementData = new(pivotCell, new List<Vector3Int>(), instanceID);
             // Add to grid data dictionary
             foreach (Vector3Int cell in occupiedCells)
             {
@@ -50,13 +52,13 @@ namespace FakeMG.Framework.GridBuilding
             }
         }
 
-        public bool TryRemoveBlock(Vector3 worldPosition, out string instanceID)
+        public bool TryRemoveStructure(Vector3 worldPosition, out string instanceID)
         {
-            Vector3Int cellPosition = grid.WorldToCell(worldPosition);
-            if (_gridData.TryGetValue(cellPosition, out var placementData))
+            Vector3Int cellPosition = _grid.WorldToCell(worldPosition);
+            if (_gridData.TryGetValue(cellPosition, out PlacementData placementData))
             {
-                var occupiedCells = _gridData[placementData.pivotCell].occupiedCells;
-                instanceID = placementData.instanceID;
+                var occupiedCells = _gridData[placementData.PivotCell].OccupiedCells;
+                instanceID = placementData.InstanceID;
 
                 // Remove from grid data dictionary
                 foreach (Vector3Int cell in occupiedCells)
@@ -73,13 +75,20 @@ namespace FakeMG.Framework.GridBuilding
 
         public Vector3 WorldToGridWorld(Vector3 worldPosition)
         {
-            Vector3Int cellPosition = grid.WorldToCell(worldPosition);
-            return grid.CellToWorld(cellPosition) + grid.cellSize * 0.5f;
+            Vector3Int cellPosition = WorldToCell(worldPosition);
+            return CellToWorld(cellPosition);
         }
 
         public Vector3 CellToWorld(Vector3Int cellPosition)
         {
-            return grid.CellToWorld(cellPosition) + grid.cellSize * 0.5f;
+            // The world position is at the bottom center of the cell
+            Vector3 offset = new Vector3(_cellSize, 0, _cellSize) * 0.5f;
+            return _grid.CellToWorld(cellPosition) + offset;
+        }
+
+        public Vector3Int WorldToCell(Vector3 worldPosition)
+        {
+            return _grid.WorldToCell(worldPosition);
         }
 
         public bool IsEmptyGridSpace(GameObject blockInstance)
@@ -87,8 +96,8 @@ namespace FakeMG.Framework.GridBuilding
             Bounds bounds = blockInstance.GetComponentInChildren<Collider>().bounds;
 
             // Offset 0.01 to avoid edge cases where bounds.min/max is exactly on the cell edge
-            Vector3Int minCell = grid.WorldToCell(bounds.min + 0.01f * Vector3.one);
-            Vector3Int maxCell = grid.WorldToCell(bounds.max - 0.01f * Vector3.one);
+            Vector3Int minCell = _grid.WorldToCell(bounds.min + 0.01f * Vector3.one);
+            Vector3Int maxCell = _grid.WorldToCell(bounds.max - 0.01f * Vector3.one);
 
             for (int x = minCell.x; x <= maxCell.x; x++)
             {
@@ -103,9 +112,9 @@ namespace FakeMG.Framework.GridBuilding
                             return false;
                         }
 
-                        bool isInsideGrid = x >= -gridHalfSize.x && x <= gridHalfSize.x &&
-                                            y >= -gridHalfSize.y && y <= gridHalfSize.y &&
-                                            z >= -gridHalfSize.z && z <= gridHalfSize.z;
+                        bool isInsideGrid = x >= -_gridHalfSize.x && x <= _gridHalfSize.x &&
+                                            y >= -_gridHalfSize.y && y <= _gridHalfSize.y &&
+                                            z >= -_gridHalfSize.z && z <= _gridHalfSize.z;
                         if (!isInsideGrid)
                         {
                             Debug.Log("Grid space is not inside grid");
@@ -120,13 +129,13 @@ namespace FakeMG.Framework.GridBuilding
 
         private List<Vector3Int> GetOccupiedCells(GameObject blockInstance)
         {
-            List<Vector3Int> occupiedCells = new List<Vector3Int>();
+            List<Vector3Int> occupiedCells = new();
 
             Bounds bounds = blockInstance.GetComponentInChildren<Collider>().bounds;
 
             // Offset 0.01 to avoid edge cases where bounds.min/max is exactly on the cell edge
-            Vector3Int minCell = grid.WorldToCell(bounds.min + 0.01f * Vector3.one);
-            Vector3Int maxCell = grid.WorldToCell(bounds.max - 0.01f * Vector3.one);
+            Vector3Int minCell = _grid.WorldToCell(bounds.min + 0.01f * Vector3.one);
+            Vector3Int maxCell = _grid.WorldToCell(bounds.max - 0.01f * Vector3.one);
 
             for (int x = minCell.x; x <= maxCell.x; x++)
             {
@@ -134,7 +143,7 @@ namespace FakeMG.Framework.GridBuilding
                 {
                     for (int z = minCell.z; z <= maxCell.z; z++)
                     {
-                        Vector3Int cell = new Vector3Int(x, y, z);
+                        Vector3Int cell = new(x, y, z);
                         occupiedCells.Add(cell);
                     }
                 }
