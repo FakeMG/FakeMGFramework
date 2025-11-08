@@ -28,7 +28,22 @@ namespace FakeMG.Framework.ActionMapManagement
 
         public void EnableActionMap(string mapName)
         {
-            // Disable conflicts first
+            // Enable the map if not already active
+            InputActionMap map = _inputActions.FindActionMap(mapName);
+            if (map != null && !map.enabled)
+            {
+                map.Enable();
+                _activeMaps.Add(mapName);
+                _suppressedBy.Remove(mapName);
+                Echo.Log($"Enabled action map: {mapName}", _enableLogging);
+            }
+            else
+            {
+                Echo.Warning($"Attempted to enable action map: {mapName}, but it was not found or already enabled.", _enableLogging);
+                return;
+            }
+
+            // Disable conflicts
             HashSet<string> conflicts = _conflictPairsSO.GetConflictsFor(mapName);
             foreach (string conflictName in conflicts)
             {
@@ -49,16 +64,6 @@ namespace FakeMG.Framework.ActionMapManagement
                     Echo.Log($"Disabled conflicting action map: {conflictName} due to enabling {mapName}", _enableLogging);
                 }
             }
-
-            // Enable the map if not already active
-            InputActionMap map = _inputActions.FindActionMap(mapName);
-            if (map != null && !map.enabled)
-            {
-                map.Enable();
-                _activeMaps.Add(mapName);
-                _suppressedBy.Remove(mapName);
-                Echo.Log($"Enabled action map: {mapName}", _enableLogging);
-            }
         }
 
         public void DisableActionMap(string mapName)
@@ -70,6 +75,11 @@ namespace FakeMG.Framework.ActionMapManagement
                 map.Disable();
                 _activeMaps.Remove(mapName);
                 Echo.Log($"Disabled action map: {mapName}", _enableLogging);
+            }
+            else
+            {
+                Echo.Warning($"Attempted to disable action map: {mapName}, but it was not found or already disabled.", _enableLogging);
+                return;
             }
 
             // Remove this map as a suppressor from any suppressed maps
