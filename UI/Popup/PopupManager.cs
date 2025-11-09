@@ -15,12 +15,12 @@ namespace FakeMG.Framework.UI.Popup
     /// </summary>
     public class PopupManager : MonoBehaviour
     {
-        private const float BACKGROUND_FADE_DURATION = 0.3f;
-        private float _backgroundFadeAlpha = 0.95f;
-
         [SerializeField] private PopupManagerRefSO _popupManagerRefSO;
         [Required]
         [SerializeField] private Image _blackBackground;
+
+        [Header("Debug")]
+        [SerializeField] private bool _enableLogging;
 
         public event Action OnShowStart;
         public event Action OnShowFinished;
@@ -32,6 +32,9 @@ namespace FakeMG.Framework.UI.Popup
         [ShowInInspector, ReadOnly]
         private readonly Dictionary<AssetReferenceT<GameObject>, PopupAnimator> _loadedPopups = new();
         private readonly Dictionary<AssetReferenceT<GameObject>, AsyncOperationHandle<GameObject>> _assetHandles = new();
+
+        private const float BACKGROUND_FADE_DURATION = 0.3f;
+        private float _backgroundFadeAlpha = 0.95f;
 
         private void Start()
         {
@@ -59,7 +62,7 @@ namespace FakeMG.Framework.UI.Popup
             _loadedPopups.Clear();
         }
 
-        private void BeforeStart(AssetReferenceT<GameObject> popupPrefabAsset)
+        private void BeforeShow(AssetReferenceT<GameObject> popupPrefabAsset)
         {
             _openPopups[popupPrefabAsset] = _loadedPopups[popupPrefabAsset];
             UpdateSiblingOrderBeforeShow(popupPrefabAsset);
@@ -99,17 +102,17 @@ namespace FakeMG.Framework.UI.Popup
 
             if (handle.Status != AsyncOperationStatus.Succeeded)
             {
-                Debug.LogError($"Failed to load popup prefab: {popupPrefabAsset}");
+                Echo.Error($"Failed to load popup prefab: {popupPrefabAsset}", _enableLogging);
                 return null;
             }
 
             // Instantiate the popup
-            var popupGameObject = Instantiate(handle.Result, transform);
+            GameObject popupGameObject = Instantiate(handle.Result, transform);
 
-            if (!popupGameObject.TryGetComponent<PopupAnimator>(out var popupAnimator))
+            if (!popupGameObject.TryGetComponent(out PopupAnimator popupAnimator))
             {
-                Debug.LogError(
-                    $"Loaded popup prefab does not have a PopupAnimator component! Popup: {popupGameObject.name}");
+                Echo.Error(
+                    $"Loaded popup prefab does not have a PopupAnimator component! Popup: {popupGameObject.name}", _enableLogging);
                 Destroy(popupGameObject);
                 Addressables.Release(handle);
                 return null;
@@ -122,7 +125,7 @@ namespace FakeMG.Framework.UI.Popup
             // Initially hide the popup without animation
             await popupAnimator.Hide(false);
 
-            popupAnimator.OnShowStart += () => BeforeStart(popupPrefabAsset);
+            popupAnimator.OnShowStart += () => BeforeShow(popupPrefabAsset);
             popupAnimator.OnShowFinished += () => AfterShow(popupPrefabAsset);
             popupAnimator.OnHideStart += () => BeforeHide(popupPrefabAsset);
             popupAnimator.OnHideFinished += () => AfterHide(popupPrefabAsset);
@@ -134,7 +137,7 @@ namespace FakeMG.Framework.UI.Popup
         {
             if (!_loadedPopups.TryGetValue(popupPrefabAsset, out var popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupPrefabAsset} is not loaded!");
+                Echo.Warning($"Popup {popupPrefabAsset} is not loaded!", _enableLogging);
                 return;
             }
 
@@ -147,9 +150,9 @@ namespace FakeMG.Framework.UI.Popup
 
         public async UniTask ShowPopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
         {
-            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out var popupAnimator))
+            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out PopupAnimator popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupPrefabAsset} is not loaded!");
+                Echo.Warning($"Popup {popupPrefabAsset} is not loaded!", _enableLogging);
                 return;
             }
 
@@ -158,9 +161,9 @@ namespace FakeMG.Framework.UI.Popup
 
         public async UniTask HidePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
         {
-            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out var popupAnimator))
+            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out PopupAnimator popupAnimator))
             {
-                Debug.LogWarning($"Popup {popupPrefabAsset} is not loaded!");
+                Echo.Warning($"Popup {popupPrefabAsset} is not loaded!", _enableLogging);
                 return;
             }
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Sirenix.OdinInspector;
@@ -11,6 +12,8 @@ namespace FakeMG.Framework.UI.Popup
     {
         [Required]
         [SerializeField] protected CanvasGroup _canvasGroup;
+        [Header("Debug")]
+        [SerializeField] private bool _enableDebugging = false;
 
         public event Action OnShowStart;
         public event Action OnShowFinished;
@@ -22,6 +25,8 @@ namespace FakeMG.Framework.UI.Popup
         private Sequence _hideSequence;
         private Sequence _currentSequence;
 
+        private CancellationTokenSource _animationCts;
+
         private void Reset()
         {
             _canvasGroup = GetComponent<CanvasGroup>();
@@ -29,18 +34,19 @@ namespace FakeMG.Framework.UI.Popup
 
         private void OnDestroy()
         {
+            _animationCts?.Cancel();
+            _animationCts?.Dispose();
             _showSequence?.Kill();
             _hideSequence?.Kill();
             _currentSequence?.Kill();
         }
 
-        private async UniTask CompleteCurrentAnimation()
+        private void KillCurrentAnimation()
         {
             if (_currentSequence != null)
             {
-                _currentSequence.Complete();
-                await _currentSequence.AsyncWaitForCompletion();
-                _currentSequence.onComplete = null;
+                _currentSequence.Kill();
+                _currentSequence.onKill = null;
                 _currentSequence = null;
             }
         }
@@ -48,9 +54,15 @@ namespace FakeMG.Framework.UI.Popup
         [Button]
         public async UniTask Show(bool animate = true)
         {
+            Echo.Log("Show called", _enableDebugging);
             if (IsShowing) return;
 
-            await CompleteCurrentAnimation();
+            _animationCts?.Cancel();
+            _animationCts?.Dispose();
+            _animationCts = new CancellationTokenSource();
+
+            KillCurrentAnimation();
+            Echo.Log("Finished completing current animation", _enableDebugging);
 
             IsShowing = true;
 
@@ -62,12 +74,23 @@ namespace FakeMG.Framework.UI.Popup
             {
                 _currentSequence = GetShowSequence();
                 _currentSequence.Restart();
-                await _currentSequence.AsyncWaitForCompletion();
+                Echo.Log("Started show animation", _enableDebugging);
+
+                bool wasCancelled = await _currentSequence.AsyncWaitForCompletion().AsUniTask()
+                    .AttachExternalCancellation(_animationCts.Token)
+                    .SuppressCancellationThrow();
+
+                if (wasCancelled)
+                {
+                    Echo.Log("Show animation was cancelled", _enableDebugging);
+                }
             }
             else
             {
                 ShowImmediate();
             }
+
+            Echo.Log("Show finished", _enableDebugging);
 
             OnShowFinished?.Invoke();
         }
@@ -88,9 +111,15 @@ namespace FakeMG.Framework.UI.Popup
         [Button]
         public async UniTask Hide(bool animate = true)
         {
+            Echo.Log("Hide called", _enableDebugging);
             if (!IsShowing) return;
 
-            await CompleteCurrentAnimation();
+            _animationCts?.Cancel();
+            _animationCts?.Dispose();
+            _animationCts = new CancellationTokenSource();
+
+            KillCurrentAnimation();
+            Echo.Log("Finished completing current animation", _enableDebugging);
 
             IsShowing = false;
 
@@ -100,7 +129,16 @@ namespace FakeMG.Framework.UI.Popup
             {
                 _currentSequence = GetHideSequence();
                 _currentSequence.Restart();
-                await _currentSequence.AsyncWaitForCompletion();
+                Echo.Log("Started hide animation", _enableDebugging);
+
+                bool wasCancelled = await _currentSequence.AsyncWaitForCompletion().AsUniTask()
+                    .AttachExternalCancellation(_animationCts.Token)
+                    .SuppressCancellationThrow();
+
+                if (wasCancelled)
+                {
+                    Echo.Log("Hide animation was cancelled", _enableDebugging);
+                }
             }
             else
             {
@@ -108,6 +146,8 @@ namespace FakeMG.Framework.UI.Popup
             }
 
             _canvasGroup.gameObject.SetActive(false);
+
+            Echo.Log("Hide finished", _enableDebugging);
 
             OnHideFinished?.Invoke();
         }
