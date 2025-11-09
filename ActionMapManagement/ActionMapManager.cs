@@ -17,6 +17,7 @@ namespace FakeMG.Framework.ActionMapManagement
         private readonly HashSet<string> _activeMaps = new();
         // Track suppressors for suppressed maps
         private readonly Dictionary<string, HashSet<string>> _suppressedBy = new();
+        private bool _isPaused;
 
         private void Start()
         {
@@ -30,7 +31,7 @@ namespace FakeMG.Framework.ActionMapManagement
         {
             // Enable the map if not already active
             InputActionMap map = _inputActions.FindActionMap(mapName);
-            if (map != null && !map.enabled)
+            if (map != null && !_activeMaps.Contains(mapName))
             {
                 map.Enable();
                 _activeMaps.Add(mapName);
@@ -50,7 +51,7 @@ namespace FakeMG.Framework.ActionMapManagement
         {
             // Disable the map if active
             InputActionMap map = _inputActions.FindActionMap(mapName);
-            if (map != null && map.enabled)
+            if (map != null && _activeMaps.Contains(mapName))
             {
                 map.Disable();
                 _activeMaps.Remove(mapName);
@@ -126,6 +127,38 @@ namespace FakeMG.Framework.ActionMapManagement
         }
 
         public bool IsActionMapActive(string mapName) => _activeMaps.Contains(mapName);
+
+        public void PauseAllActionMaps()
+        {
+            if (_isPaused)
+            {
+                Echo.Warning("Inputs are already paused.", _enableLogging);
+                return;
+            }
+
+            _inputActions.Disable();
+            _isPaused = true;
+            Echo.Log("Paused all inputs.", _enableLogging);
+        }
+
+        public void ResumeAllActionMaps()
+        {
+            if (!_isPaused)
+            {
+                Echo.Warning("Inputs are not paused.", _enableLogging);
+                return;
+            }
+
+            // Re-enable only the action maps that were active before pausing
+            foreach (string mapName in _activeMaps)
+            {
+                InputActionMap map = _inputActions.FindActionMap(mapName);
+                map?.Enable();
+            }
+
+            _isPaused = false;
+            Echo.Log("Unpaused all inputs.", _enableLogging);
+        }
 
         // Optional: Switch to a new map, disabling all others
         public void SwitchToActionMap(string newMapName)

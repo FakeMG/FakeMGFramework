@@ -11,12 +11,16 @@ namespace FakeMG.Framework.ActionMapManagement
         {
             EventBus<EnableActionMapEvent>.OnEvent += OnEnableActionMap;
             EventBus<DisableActionMapEvent>.OnEvent += OnDisableActionMap;
+            EventBus<PauseAllActionMapsEvent>.OnEvent += OnPauseAllActionMaps;
+            EventBus<ResumeAllActionMapsEvent>.OnEvent += OnResumeAllActionMaps;
         }
 
         private void OnDisable()
         {
             EventBus<EnableActionMapEvent>.OnEvent -= OnEnableActionMap;
             EventBus<DisableActionMapEvent>.OnEvent -= OnDisableActionMap;
+            EventBus<PauseAllActionMapsEvent>.OnEvent -= OnPauseAllActionMaps;
+            EventBus<ResumeAllActionMapsEvent>.OnEvent -= OnResumeAllActionMaps;
         }
 
         private void OnEnableActionMap(EnableActionMapEvent evt)
@@ -33,6 +37,16 @@ namespace FakeMG.Framework.ActionMapManagement
             {
                 _actionMapManager.DisableActionMap(evt.ActionMap.ActionMapName);
             }
+        }
+
+        private void OnPauseAllActionMaps(PauseAllActionMapsEvent evt)
+        {
+            _actionMapManager.PauseAllActionMaps();
+        }
+
+        private void OnResumeAllActionMaps(ResumeAllActionMapsEvent evt)
+        {
+            _actionMapManager.ResumeAllActionMaps();
         }
     }
 }

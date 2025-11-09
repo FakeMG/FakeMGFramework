@@ -286,7 +286,7 @@ MonoBehaviour:
   _inputActions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _conflictPairsSO: {fileID: 11400000, guid: d1d61bb95835a894e8a815d18d374fee, type: 2}
   _initialActionMap: {fileID: 11400000, guid: d4858062a352e8148a58c17d56186253, type: 2}
-  _enableLogging: 1
+  _enableLogging: 0
 --- !u!114 &972916671
 MonoBehaviour:
   m_ObjectHideFlags: 0

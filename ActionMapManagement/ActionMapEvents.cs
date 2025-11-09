@@ -11,4 +11,8 @@ namespace FakeMG.Framework.ActionMapManagement
     {
         public ActionMapSO ActionMap;
     }
+
+    public struct PauseAllActionMapsEvent : IEvent { }
+
+    public struct ResumeAllActionMapsEvent : IEvent { }
 }
