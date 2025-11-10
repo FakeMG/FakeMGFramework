@@ -9,7 +9,7 @@ namespace FakeMG.Framework.ActionMapManagement
     {
         [SerializeField] private InputActionAsset _inputActions;
         [SerializeField] private ActionMapConflictsPairsSO _conflictPairsSO;
-        [SerializeField] private ActionMapSO _initialActionMap;
+        [SerializeField] private List<ActionMapSO> _initialActionMaps;
 
         [Header("Debug")]
         [SerializeField] private bool _enableLogging;
@@ -17,13 +17,15 @@ namespace FakeMG.Framework.ActionMapManagement
         private readonly HashSet<string> _activeMaps = new();
         // Track suppressors for suppressed maps
         private readonly Dictionary<string, HashSet<string>> _suppressedBy = new();
-        private bool _isPaused;
 
         private void Start()
         {
-            if (_initialActionMap)
+            foreach (ActionMapSO actionMapSO in _initialActionMaps)
             {
-                EnableActionMap(_initialActionMap.ActionMapName);
+                if (actionMapSO)
+                {
+                    EnableActionMap(actionMapSO.ActionMapName);
+                }
             }
         }
 
@@ -130,25 +132,17 @@ namespace FakeMG.Framework.ActionMapManagement
 
         public void PauseAllActionMaps()
         {
-            if (_isPaused)
+            foreach (string mapName in _activeMaps)
             {
-                Echo.Warning("Inputs are already paused.", _enableLogging);
-                return;
+                InputActionMap map = _inputActions.FindActionMap(mapName);
+                map?.Disable();
             }
 
-            _inputActions.Disable();
-            _isPaused = true;
             Echo.Log("Paused all inputs.", _enableLogging);
         }
 
         public void ResumeAllActionMaps()
         {
-            if (!_isPaused)
-            {
-                Echo.Warning("Inputs are not paused.", _enableLogging);
-                return;
-            }
-
             // Re-enable only the action maps that were active before pausing
             foreach (string mapName in _activeMaps)
             {
@@ -156,7 +150,6 @@ namespace FakeMG.Framework.ActionMapManagement
                 map?.Enable();
             }
 
-            _isPaused = false;
             Echo.Log("Unpaused all inputs.", _enableLogging);
         }
 

@@ -1,18 +1,36 @@
 using Sirenix.OdinInspector;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace FakeMG.Framework.ActionMapManagement
 {
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ACTION_MAP_MANAGEMENT + "/ActionMapSO")]
     public class ActionMapSO : ScriptableObject
     {
+        [SerializeField] private InputActionAsset _inputActions;
         [SerializeField]
         [ValidateInput(nameof(ValidateNamingPattern))]
+        [ValidateInput(nameof(ValidateActionMapExists))]
         private string _actionMapName;
 
         public string ActionMapName => _actionMapName;
 
         private const string SUFFIX = " Action Map";
+
+        private bool ValidateActionMapExists(string value, ref string errorMessage)
+        {
+            if (string.IsNullOrEmpty(value) || !_inputActions)
+                return true;
+
+            InputActionMap actionMap = _inputActions.FindActionMap(value);
+            if (actionMap == null)
+            {
+                errorMessage = $"Action map '{value}' does not exist in the Input Actions asset.";
+                return false;
+            }
+
+            return true;
+        }
 
         private bool ValidateNamingPattern(string value, ref string errorMessage)
         {
@@ -27,6 +45,7 @@ namespace FakeMG.Framework.ActionMapManagement
             return false;
         }
 
+#if UNITY_EDITOR
         [Button]
         private void SetMapNameFromAssetName()
         {
@@ -44,7 +63,6 @@ namespace FakeMG.Framework.ActionMapManagement
             }
         }
 
-#if UNITY_EDITOR
         [Button]
         private void SetAssetNameFromMapName()
         {
