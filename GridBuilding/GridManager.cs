@@ -6,6 +6,9 @@ namespace FakeMG.Framework.GridBuilding
     /// <summary>
     /// The Grid system only cares about which cells are occupied
     /// and keep a reference to the occupying block via PlacementData.
+    /// <br/>
+    /// IMPORTANT!: The pivot of a structure is at the bottom center of a cell.
+    /// <br/>
     /// </summary>
     public class GridManager : MonoBehaviour
     {
@@ -89,6 +92,12 @@ namespace FakeMG.Framework.GridBuilding
         public Vector3Int WorldToCell(Vector3 worldPosition)
         {
             return _grid.WorldToCell(worldPosition);
+        }
+
+        public bool IsEmptyGridSpace(Vector3 worldPosition)
+        {
+            Vector3Int cellPosition = _grid.WorldToCell(worldPosition);
+            return !_gridData.ContainsKey(cellPosition);
         }
 
         public bool IsEmptyGridSpace(GameObject blockInstance)

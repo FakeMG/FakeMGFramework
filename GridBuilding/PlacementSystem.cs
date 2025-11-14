@@ -18,6 +18,11 @@ namespace FakeMG.Framework.GridBuilding
         private readonly Dictionary<string, AsyncOperationHandle<GameObject>> _placedStructureHandles = new();
         private readonly Dictionary<string, GameObject> _placedStructureInstances = new();
 
+        public IReadOnlyDictionary<string, GameObject> GetPlacedStructureInstances()
+        {
+            return _placedStructureInstances;
+        }
+
         private void Start()
         {
             _mainCamera = Camera.main;
