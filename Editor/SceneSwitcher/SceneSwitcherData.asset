@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _scene1: {fileID: 102900000, guid: df16d0fc08cf03441877bae77f041025, type: 3}
   _scene2: {fileID: 102900000, guid: ea02c6146a5ff064a9ade5565d177873, type: 3}
-  _scene3: {fileID: 0}
+  _scene3: {fileID: 102900000, guid: 99c9720ab356a0642a771bea13969a05, type: 3}
   _scene4: {fileID: 0}
   _scene5: {fileID: 0}
   _scene6: {fileID: 0}
