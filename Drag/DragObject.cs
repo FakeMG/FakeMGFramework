@@ -1,65 +1,34 @@
 ﻿using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-namespace FakeMG.Framework
+namespace FakeMG.Framework.Drag
 {
     public class DragObject : MonoBehaviour
     {
-        private static DragObject s_instance;
-
-        public static DragObject Instance
-        {
-            get
-            {
-                if (s_instance) return s_instance;
-
-                var instances = FindObjectsByType<DragObject>(FindObjectsSortMode.None);
-                if (instances.Length > 0)
-                {
-                    return instances[0];
-                }
-
-                return null;
-            }
-            private set => s_instance = value;
-        }
-
         [SerializeField] private LayerMask _dragLayerMask;
         [SerializeField] private float _dragHeight = 1f;
-        public UnityEvent<GameObject> OnSelectEvent;
-        public UnityEvent<GameObject> OnReleaseEvent;
+        [SerializeField] private InputActionReference _selectActionReference;
+        [SerializeField] private InputActionReference _pointerMovementActionReference;
 
-        public bool IsDragging { get; private set; }
         private Rigidbody _selectedRigidbody;
         private Transform _selectedTransform;
+        private Draggable _selectedDraggable;
         private Vector3 _lastObjectPosition;
 
         private Camera _mainCamera;
-        private InputAction _selectAction;
-        private InputAction _pointerMovementAction;
-
         private Plane _dragPlane;
 
-        private void Awake()
-        {
-            if (Instance && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+        public event System.Action<GameObject> OnSelectEvent;
+        public event System.Action<GameObject> OnReleaseEvent;
 
-            Instance = this;
-        }
+        public bool IsDragging { get; private set; }
 
         private void Start()
         {
             _mainCamera = Camera.main;
-            _selectAction = InputSystem.actions["Select"];
-            _pointerMovementAction = InputSystem.actions["Pointer Movement"];
 
-            _selectAction.performed += OnSelect;
-            _selectAction.canceled += OnRelease;
+            _selectActionReference.action.performed += OnSelect;
+            _selectActionReference.action.canceled += OnRelease;
         }
 
         private void Update()
@@ -72,30 +41,32 @@ namespace FakeMG.Framework
 
         private void OnDestroy()
         {
-            if (Instance == this)
-            {
-                Instance = null;
-            }
-
-            _selectAction.performed -= OnSelect;
-            _selectAction.canceled -= OnRelease;
+            _selectActionReference.action.performed -= OnSelect;
+            _selectActionReference.action.canceled -= OnRelease;
         }
 
         private void OnSelect(InputAction.CallbackContext context)
         {
-            Ray ray = _mainCamera.ScreenPointToRay(_pointerMovementAction.ReadValue<Vector2>());
+            Ray ray = _mainCamera.ScreenPointToRay(_pointerMovementActionReference.action.ReadValue<Vector2>());
             if (Physics.Raycast(ray, out RaycastHit hit, 100, _dragLayerMask))
             {
                 IsDragging = true;
                 _selectedTransform = hit.transform;
                 _dragPlane = new Plane(Vector3.up, new Vector3(0, 0, 0));
 
-                if (hit.collider.TryGetComponent(out _selectedRigidbody))
+                hit.collider.TryGetComponent(out _selectedRigidbody);
+                if (_selectedRigidbody)
                 {
                     _selectedRigidbody.isKinematic = true;
                 }
 
-                OnSelectEvent.Invoke(hit.collider.gameObject);
+                hit.collider.TryGetComponent(out _selectedDraggable);
+                if (_selectedDraggable)
+                {
+                    _selectedDraggable.StartDrag();
+                }
+
+                OnSelectEvent?.Invoke(hit.collider.gameObject);
             }
         }
 
@@ -112,10 +83,16 @@ namespace FakeMG.Framework
                 _selectedRigidbody = null;
             }
 
-            var releasedObject = _selectedTransform ? _selectedTransform.gameObject : null;
+            if (_selectedDraggable)
+            {
+                _selectedDraggable.EndDrag();
+                _selectedDraggable = null;
+            }
+
+            GameObject releasedObject = _selectedTransform ? _selectedTransform.gameObject : null;
             _selectedTransform = null;
 
-            OnReleaseEvent.Invoke(releasedObject);
+            OnReleaseEvent?.Invoke(releasedObject);
         }
 
         private void Throw()
@@ -134,13 +111,13 @@ namespace FakeMG.Framework
 
             _lastObjectPosition = _selectedTransform.position;
 
-            Ray ray = _mainCamera.ScreenPointToRay(_pointerMovementAction.ReadValue<Vector2>());
+            Ray ray = _mainCamera.ScreenPointToRay(_pointerMovementActionReference.action.ReadValue<Vector2>());
 
             if (_dragPlane.Raycast(ray, out float enter))
             {
                 Vector3 hitPoint = ray.GetPoint(enter);
                 hitPoint.y = _dragHeight;
-                _selectedTransform.position = Vector3.Lerp(_selectedTransform.position, hitPoint, 0.1f);
+                _selectedTransform.position = Vector3.Lerp(_selectedTransform.position, hitPoint, 0.5f);
             }
         }
 
