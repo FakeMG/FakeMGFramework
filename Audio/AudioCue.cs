@@ -299,6 +299,7 @@ namespace FakeMG.Framework.Audio
             PlayAudioCue();
         }
 
+        [Button]
         public void PlayAudioCue()
         {
             if (_audioCue.CanPlaySound())
