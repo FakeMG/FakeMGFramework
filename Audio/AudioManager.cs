@@ -178,35 +178,39 @@ namespace FakeMG.Framework.Audio
 
             foreach (var audioClip in clipsToPlay)
             {
-                var soundEmitter = GetSoundEmitter();
-                soundEmitter.AudioCueKey = key;
-
-                lock (_vaultLock)
-                {
-                    soundEmitterList.Add(soundEmitter);
-                }
-
-                if (parent)
-                {
-                    soundEmitter.transform.SetParent(parent);
-                }
-
-                if (soundEmitter)
-                {
-                    if (audioCueSO.FadeIn)
-                    {
-                        soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO);
-                    }
-                    else
-                    {
-                        soundEmitter.Play(audioClip, settings, audioCueSO, position);
-                    }
-
-                    soundEmitter.OnSoundFinishedPlaying += CleanEmitter;
-                }
+                InitializeSoundEmitter(audioCueSO, settings, key, soundEmitterList, audioClip, parent, position);
             }
 
             return key;
+        }
+
+        private void InitializeSoundEmitter(AudioCueSO audioCueSO, AudioConfigurationSO settings, AudioCueKey key,
+            List<SoundEmitter> soundEmitterList, AudioClip audioClip, Transform parent, Vector3 position)
+        {
+            var soundEmitter = GetSoundEmitter();
+            soundEmitter.AudioCueKey = key;
+
+            lock (_vaultLock)
+            {
+                soundEmitterList.Add(soundEmitter);
+            }
+
+            if (parent)
+            {
+                soundEmitter.transform.SetParent(parent);
+            }
+
+            if (audioCueSO.FadeIn)
+            {
+                soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO);
+            }
+            else
+            {
+                soundEmitter.Play(audioClip, settings, audioCueSO, position);
+            }
+
+            soundEmitter.OnSoundFinishedPlaying += CleanEmitter;
+            soundEmitter.OnSoundDestroyed += RemoveEmitter;
         }
 
         private bool StopAudioCue(AudioCueKey audioCueKey, AudioCueSO audioCue)
@@ -259,42 +263,55 @@ namespace FakeMG.Framework.Audio
 
         private void CleanEmitter(SoundEmitter soundEmitter)
         {
-            soundEmitter.OnSoundFinishedPlaying -= CleanEmitter;
-
-            ReleaseSoundEmitter(soundEmitter);
-
-            // Clean emitter from vault with thread safety
             lock (_vaultLock)
             {
-                bool isFound =
-                    _soundEmitterVault.Get(soundEmitter.AudioCueKey, out List<SoundEmitter> soundEmitterList);
-                if (isFound)
+                TryRemoveEmitterFromVault(soundEmitter);
+            }
+
+            soundEmitter.OnSoundFinishedPlaying -= CleanEmitter;
+            soundEmitter.OnSoundDestroyed -= RemoveEmitter;
+            soundEmitter.transform.SetParent(transform);
+
+            ReleaseSoundEmitter(soundEmitter);
+        }
+
+        private void RemoveEmitter(SoundEmitter soundEmitter)
+        {
+            lock (_vaultLock)
+            {
+                TryRemoveEmitterFromVault(soundEmitter);
+            }
+            RemoveEmitterFromPool(soundEmitter);
+        }
+
+        private void TryRemoveEmitterFromVault(SoundEmitter soundEmitter)
+        {
+            if (!_soundEmitterVault.Get(soundEmitter.AudioCueKey, out List<SoundEmitter> soundEmitterList))
+                return;
+
+            // First, remove the current emitter from the list
+            soundEmitterList.Remove(soundEmitter);
+
+            // Then check if the list is empty or all remaining emitters have stopped
+            bool shouldRemoveKey = soundEmitterList.Count == 0;
+            if (!shouldRemoveKey)
+            {
+                bool allEmittersStopped = true;
+                foreach (var soundEmitterInList in soundEmitterList)
                 {
-                    // First, remove the current emitter from the list
-                    soundEmitterList.Remove(soundEmitter);
-
-                    // Then check if the list is empty or all remaining emitters have stopped
-                    bool shouldRemoveKey = soundEmitterList.Count == 0;
-                    if (!shouldRemoveKey)
+                    if (soundEmitterInList.IsPlaying())
                     {
-                        bool allEmittersStopped = true;
-                        foreach (var soundEmitterInList in soundEmitterList)
-                        {
-                            if (soundEmitterInList.IsPlaying())
-                            {
-                                allEmittersStopped = false;
-                                break;
-                            }
-                        }
-
-                        shouldRemoveKey = allEmittersStopped;
-                    }
-
-                    if (shouldRemoveKey)
-                    {
-                        _soundEmitterVault.Remove(soundEmitter.AudioCueKey);
+                        allEmittersStopped = false;
+                        break;
                     }
                 }
+
+                shouldRemoveKey = allEmittersStopped;
+            }
+
+            if (shouldRemoveKey)
+            {
+                _soundEmitterVault.Remove(soundEmitter.AudioCueKey);
             }
         }
 
@@ -315,6 +332,19 @@ namespace FakeMG.Framework.Audio
         {
             soundEmitter.gameObject.SetActive(false);
             _soundEmitterQueue.Enqueue(soundEmitter);
+        }
+
+        private void RemoveEmitterFromPool(SoundEmitter soundEmitter)
+        {
+            int count = _soundEmitterQueue.Count;
+            for (int i = 0; i < count; i++)
+            {
+                var emitter = _soundEmitterQueue.Dequeue();
+                if (emitter != soundEmitter)
+                {
+                    _soundEmitterQueue.Enqueue(emitter);
+                }
+            }
         }
 
         public void CleanPool()

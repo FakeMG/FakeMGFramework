@@ -10,6 +10,7 @@ namespace FakeMG.Framework.Audio
     {
         private AudioSource _audioSource;
         public event UnityAction<SoundEmitter> OnSoundFinishedPlaying;
+        public event UnityAction<SoundEmitter> OnSoundDestroyed;
         public AudioCueKey AudioCueKey;
 
         private void Awake()
@@ -19,35 +20,24 @@ namespace FakeMG.Framework.Audio
             _audioSource.ignoreListenerPause = false;
         }
 
-        public void Play(AudioClip clip, AudioConfigurationSO settings, AudioCueSO audioCue, Vector3 position = default)
+        private void OnDestroy()
+        {
+            OnSoundDestroyed?.Invoke(this);
+        }
+
+        public void Play(AudioClip clip, AudioConfigurationSO audioConfigSO, AudioCueSO audioCueSO, Vector3 position = default)
         {
             _audioSource.clip = clip;
-            settings.ApplyToWithVariations(_audioSource, audioCue);
+            audioConfigSO.ApplyToWithVariations(_audioSource, audioCueSO);
             _audioSource.transform.position = position;
-            _audioSource.loop = audioCue.Looping;
-            _audioSource.time = audioCue.RandomStartTime ? Random.Range(0f, clip.length) : 0f;
+            _audioSource.loop = audioCueSO.Looping;
+            _audioSource.time = audioCueSO.RandomStartTime ? Random.Range(0f, clip.length) : 0f;
             _audioSource.Play();
 
-            if (!audioCue.Looping)
+            if (!audioCueSO.Looping)
             {
-                StartCoroutine(FinishedPlaying(clip.length));
-            }
-        }
-
-        public void Stop()
-        {
-            _audioSource.Stop();
-            StopAllCoroutines();
-            NotifyBeingDone();
-        }
-
-        public void Finish()
-        {
-            if (_audioSource.loop)
-            {
-                _audioSource.loop = false;
-                float timeRemaining = _audioSource.clip.length - _audioSource.time;
-                StartCoroutine(FinishedPlaying(timeRemaining));
+                var remainingTime = clip.length - _audioSource.time;
+                StartCoroutine(FinishedPlaying(remainingTime));
             }
         }
 
@@ -71,6 +61,23 @@ namespace FakeMG.Framework.Audio
             }
         }
 
+        public void Stop()
+        {
+            _audioSource.Stop();
+            StopAllCoroutines();
+            NotifyBeingDone();
+        }
+
+        public void Finish()
+        {
+            if (_audioSource.loop)
+            {
+                _audioSource.loop = false;
+                float timeRemaining = _audioSource.clip.length - _audioSource.time;
+                StartCoroutine(FinishedPlaying(timeRemaining));
+            }
+        }
+
         public void FadeInAudioClip(AudioClip musicClip, AudioConfigurationSO settings, AudioCueSO audioCue)
         {
             Play(musicClip, settings, audioCue);
@@ -82,7 +89,7 @@ namespace FakeMG.Framework.Audio
 
         public void FadeOutAudioClip(float duration)
         {
-            _audioSource.DOFade(0f, duration).onComplete += NotifyBeingDone;
+            _audioSource.DOFade(0f, duration).SetLink(gameObject).OnComplete(NotifyBeingDone);
         }
 
         public AudioClip GetClip()

@@ -2,7 +2,6 @@
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Audio;
-using static FakeMG.Framework.Audio.AudioConfigurationSO;
 
 namespace FakeMG.Framework.Audio
 {
@@ -13,6 +12,7 @@ namespace FakeMG.Framework.Audio
         [SerializeField] private bool _playOnStart;
         [SerializeField] private float _startDelay;
         [SerializeField] private bool _stopOnDisable;
+        [SerializeField] private bool _followParent;
 
         [Header("Event Channel")]
         [SerializeField] private AudioCueEventChannelSO _audioCueEventChannel;
@@ -53,7 +53,7 @@ namespace FakeMG.Framework.Audio
         [Indent]
         [EnableIf(nameof(_overridePriority))]
         [EnumToggleButtons]
-        private PriorityLevel _priorityLevel = PriorityLevel.Standard;
+        private AudioConfigurationSO.PriorityLevel _priorityLevel = AudioConfigurationSO.PriorityLevel.Standard;
 
         // Sound Properties
         [SerializeField]
@@ -261,8 +261,6 @@ namespace FakeMG.Framework.Audio
         [EnableIf(nameof(_overrideIgnoreListenerPause))]
         private bool _ignoreListenerPause;
         #endregion
-
-        [SerializeField] private bool _followParent;
 
         private AudioCueKey _controlKey = AudioCueKey.Invalid;
 
