@@ -10,6 +10,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         [SerializeField] private bool _enableAutoSave = true;
         [SerializeField] private int _maxAutoSaves = 5;
         [SerializeField] private float _autoSaveInterval = 300f;
+        [SerializeField] private bool _enableDebug = true;
 
         private readonly Dictionary<string, Saveable> _saveables = new();
 
@@ -57,19 +58,19 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
                 if (string.IsNullOrEmpty(uniqueId))
                 {
-                    Debug.LogError($"Saveable component on {saveable.name} has invalid ID.");
+                    Echo.Error($"Saveable component on {saveable.name} has invalid ID.", _enableDebug, this);
                     continue;
                 }
 
                 if (_saveables.ContainsKey(uniqueId))
                 {
-                    Debug.LogWarning($"Duplicate Saveable ID {uniqueId} found on {saveable.name}. Overwriting.");
+                    Echo.Warning($"Duplicate Saveable ID {uniqueId} found on {saveable.name}. Overwriting.", _enableDebug, this);
                 }
 
                 _saveables[uniqueId] = saveable;
             }
 
-            Debug.Log($"Registered {_saveables.Count} Saveable components.");
+            Echo.Log($"Registered {_saveables.Count} Saveable components.", _enableDebug, this);
         }
         #endregion
 
@@ -96,11 +97,11 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                     ES3.Save(saveableID, data, manualSaveKey);
                 }
 
-                Debug.Log($"Game saved to {manualSaveKey}");
+                Echo.Log($"Game saved to {manualSaveKey}", _enableDebug, this);
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to manual save game: {e.Message}");
+                Echo.Error($"Failed to manual save game: {e.Message}", _enableDebug, this);
             }
         }
 
@@ -121,7 +122,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 // Save metadata
                 ES3.Save(METADATA_KEY, metadata, autoSaveKey);
                 ManageAutoSaveFiles();
-                Debug.Log($"Auto-save created: {autoSaveKey}");
+                Echo.Log($"Auto-save created: {autoSaveKey}", _enableDebug, this);
 
                 foreach (var saveable in _saveables)
                 {
@@ -133,7 +134,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to auto-save game: {e.Message}");
+                Echo.Error($"Failed to auto-save game: {e.Message}", _enableDebug, this);
             }
         }
 
@@ -173,14 +174,14 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             }
 
             OnLoadingComplete?.Invoke();
-            Debug.Log("Initialized default data for all Saveables - no existing save found.");
+            Echo.Log("Initialized default data for all Saveables - no existing save found.", _enableDebug, this);
         }
 
         public void LoadGame(string saveKey)
         {
             if (!ES3.FileExists(saveKey))
             {
-                Debug.LogWarning($"No save file found for {saveKey}.");
+                Echo.Warning($"No save file found for {saveKey}.", _enableDebug, this);
                 LoadDefaultData();
                 return;
             }
@@ -204,16 +205,16 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                     }
                     else
                     {
-                        Debug.LogWarning($"No data found for {saveable.Key} in {saveKey}.");
+                        Echo.Warning($"No data found for {saveable.Key} in {saveKey}.", _enableDebug, this);
                     }
                 }
 
-                Debug.Log($"Game loaded from {saveKey}, saved at {metadata.Timestamp}");
+                Echo.Log($"Game loaded from {saveKey}, saved at {metadata.Timestamp}", _enableDebug, this);
                 OnLoadingComplete?.Invoke();
             }
             catch (Exception e)
             {
-                Debug.LogError($"Failed to load game from {saveKey}: {e.Message}");
+                Echo.Error($"Failed to load game from {saveKey}: {e.Message}", _enableDebug, this);
             }
         }
 
@@ -240,7 +241,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             if (ES3.FileExists(saveKey))
             {
                 ES3.DeleteFile(saveKey);
-                Debug.Log($"{saveKey} deleted.");
+                Echo.Log($"{saveKey} deleted.", _enableDebug, this);
             }
         }
 
@@ -256,7 +257,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 for (int i = 0; i < autoSaveFiles.Length - _maxAutoSaves; i++)
                 {
                     ES3.DeleteFile(autoSaveFiles[i]);
-                    Debug.Log($"Deleted old auto-save: {autoSaveFiles[i]}");
+                    Echo.Log($"Deleted old auto-save: {autoSaveFiles[i]}", _enableDebug, this);
                 }
             }
         }

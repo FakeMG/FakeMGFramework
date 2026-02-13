@@ -17,7 +17,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         [SerializeField] private float _applicationTimeoutSeconds = 10f;
 
         [Header("Debug")]
-        [SerializeField] private bool _enableDebugLogs = true;
+        [SerializeField] private bool _enableDebug = true;
 
         private readonly Dictionary<string, List<DataRequester>> _sceneRequesters = new();
         private readonly Dictionary<string, HashSet<DataRequester>> _pendingRequesters = new();
@@ -47,7 +47,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         {
             if (requester == null)
             {
-                Debug.LogError("Cannot register null data requester");
+                Echo.Error("Cannot register null data requester", _enableDebug, this);
                 return;
             }
 
@@ -60,11 +60,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
             _sceneRequesters[sceneName].Add(requester);
 
-            if (_enableDebugLogs)
-            {
-                Debug.Log(
-                    $"[DataApplicationManager] Registered {GetSystemIdentifier(requester)} for scene {sceneName}");
-            }
+            Echo.Log(
+                $"[DataApplicationManager] Registered {GetSystemIdentifier(requester)} for scene {sceneName}", _enableDebug, this);
         }
 
         public void UnregisterDataRequester(DataRequester requester)
@@ -89,11 +86,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 pendingRequester.Remove(requester);
             }
 
-            if (_enableDebugLogs)
-            {
-                Debug.Log(
-                    $"[DataApplicationManager] Unregistered {GetSystemIdentifier(requester)} from scene {sceneName}");
-            }
+            Echo.Log(
+                $"[DataApplicationManager] Unregistered {GetSystemIdentifier(requester)} from scene {sceneName}", _enableDebug, this);
         }
         #endregion
 
@@ -105,19 +99,13 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         {
             if (!_sceneRequesters.ContainsKey(sceneName) || _sceneRequesters[sceneName].Count == 0)
             {
-                if (_enableDebugLogs)
-                {
-                    Debug.Log($"[DataApplicationManager] No systems registered for scene {sceneName}");
-                }
+                Echo.Log($"[DataApplicationManager] No systems registered for scene {sceneName}", _enableDebug, this);
 
                 return true;
             }
 
-            if (_enableDebugLogs)
-            {
-                Debug.Log(
-                    $"[DataApplicationManager] Starting data application for scene {sceneName} with {_sceneRequesters[sceneName].Count} systems");
-            }
+            Echo.Log(
+                $"[DataApplicationManager] Starting data application for scene {sceneName} with {_sceneRequesters[sceneName].Count} systems", _enableDebug, this);
 
             // Set up completion tracking
             var completionSource = new UniTaskCompletionSource<bool>();
@@ -138,8 +126,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
             if (!hasResultLeft) // Timeout occurred
             {
-                Debug.LogError(
-                    $"[DataApplicationManager] Timeout applying data for scene {sceneName}. Remaining systems: {string.Join(", ", _pendingRequesters[sceneName].Select(GetSystemIdentifier))}");
+                Echo.Error(
+                    $"[DataApplicationManager] Timeout applying data for scene {sceneName}. Remaining systems: {string.Join(", ", _pendingRequesters[sceneName].Select(GetSystemIdentifier))}", _enableDebug, this);
 
                 // Complete with failure, but continue
                 completionSource.TrySetResult(false);
@@ -151,11 +139,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             _pendingRequesters.Remove(sceneName);
             _sceneCompletionSources.Remove(sceneName);
 
-            if (_enableDebugLogs)
-            {
-                Debug.Log(
-                    $"[DataApplicationManager] Data application for scene {sceneName} completed. Success: {success}");
-            }
+            Echo.Log(
+                $"[DataApplicationManager] Data application for scene {sceneName} completed. Success: {success}", _enableDebug, this);
 
             OnSceneDataApplicationComplete?.Invoke(sceneName);
             return success;
@@ -168,11 +153,8 @@ namespace FakeMG.Framework.SaveLoad.Advanced
                 // Apply data
                 await requester.ApplyDataAsync();
 
-                if (_enableDebugLogs)
-                {
-                    Debug.Log(
-                        $"[DataApplicationManager] Successfully applied data for {GetSystemIdentifier(requester)}");
-                }
+                Echo.Log(
+                    $"[DataApplicationManager] Successfully applied data for {GetSystemIdentifier(requester)}", _enableDebug, this);
 
                 // Mark as complete
                 OnSystemDataApplicationComplete?.Invoke(sceneName, requester);
@@ -181,7 +163,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
             catch (Exception e)
             {
                 string errorMsg = $"Error applying data for {GetSystemIdentifier(requester)}: {e.Message}";
-                Debug.LogError($"[DataApplicationManager] {errorMsg}");
+                Echo.Error($"[DataApplicationManager] {errorMsg}", _enableDebug, this);
 
                 OnSystemDataApplicationFailed?.Invoke(sceneName, requester, errorMsg);
                 MarkRequesterComplete(sceneName, requester); // Still mark as complete to not block others
@@ -222,7 +204,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
             if (!hasResultLeft) // Timeout
             {
-                Debug.LogError($"[DataApplicationManager] Timeout waiting for scene {sceneName} data application");
+                Echo.Error($"[DataApplicationManager] Timeout waiting for scene {sceneName} data application", _enableDebug, this);
                 return false;
             }
 
@@ -249,13 +231,13 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         [Button("Log Registered Systems")]
         private void LogRegisteredSystems()
         {
-            Debug.Log("=== DataApplicationManager Registered Systems ===");
+            Echo.Log("=== DataApplicationManager Registered Systems ===", _enableDebug, this);
             foreach (var kvp in _sceneRequesters)
             {
-                Debug.Log($"Scene: {kvp.Key} ({kvp.Value.Count} systems)");
+                Echo.Log($"Scene: {kvp.Key} ({kvp.Value.Count} systems)", _enableDebug, this);
                 foreach (var requester in kvp.Value)
                 {
-                    Debug.Log($"  - {GetSystemIdentifier(requester)}");
+                    Echo.Log($"  - {GetSystemIdentifier(requester)}", _enableDebug, this);
                 }
             }
         }
