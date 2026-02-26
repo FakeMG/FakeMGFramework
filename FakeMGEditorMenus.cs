@@ -16,5 +16,8 @@ namespace FakeMG.Framework
         public const string CHECK_MISSING_UNITY_EVENTS = ROOT + "/Check Missing Unity Events In Scene";
         public const string AUDIO = ROOT + "/Audio";
         public const string ACTION_MAP_MANAGEMENT = ROOT + "/Action Map Management";
+        public const string LOCALIZATION = ROOT + "/Localization";
+        public const string LOCALIZATION_VALIDATE_ALL_KEYS = LOCALIZATION + "/Validate All Keys";
+        public const string LOCALIZATION_FORCE_SYNC_CSV = LOCALIZATION + "/Force Sync CSV";
     }
 }
