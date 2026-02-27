@@ -92,14 +92,14 @@ namespace FakeMG.SaveLoad.Advanced
             if (requesters.Contains(requester))
             {
                 Echo.Log(
-                    $"[DataApplicationManager] Ignored duplicate registration for {GetSystemIdentifier(requester)} in scene {sceneName}", _enableDebug, this);
+                    $"Ignored duplicate registration for {GetSystemIdentifier(requester)} in scene {sceneName}", _enableDebug, this);
                 return;
             }
 
             requesters.Add(requester);
 
             Echo.Log(
-                $"[DataApplicationManager] Registered {GetSystemIdentifier(requester)} for scene {sceneName}", _enableDebug, this);
+                $"Registered {GetSystemIdentifier(requester)} for scene {sceneName}", _enableDebug, this);
         }
 
         public void UnregisterDataRequester(DataRequester requester)
@@ -128,7 +128,7 @@ namespace FakeMG.SaveLoad.Advanced
             }
 
             Echo.Log(
-                $"[DataApplicationManager] Unregistered {GetSystemIdentifier(requester)} from scene {sceneName}", _enableDebug, this);
+                $"Unregistered {GetSystemIdentifier(requester)} from scene {sceneName}", _enableDebug, this);
         }
         #endregion
 
@@ -140,13 +140,13 @@ namespace FakeMG.SaveLoad.Advanced
         {
             if (!_sceneRequesters.ContainsKey(sceneName) || _sceneRequesters[sceneName].Count == 0)
             {
-                Echo.Log($"[DataApplicationManager] No systems registered for scene {sceneName}", _enableDebug, this);
+                Echo.Log($"No systems registered for scene {sceneName}", _enableDebug, this);
 
                 return true;
             }
 
             Echo.Log(
-                $"[DataApplicationManager] Starting data application for scene {sceneName} with {_sceneRequesters[sceneName].Count} systems", _enableDebug, this);
+                $"Starting data application for scene {sceneName} with {_sceneRequesters[sceneName].Count} systems", _enableDebug, this);
 
             // Set up completion tracking
             var completionSource = new UniTaskCompletionSource<bool>();
@@ -168,7 +168,7 @@ namespace FakeMG.SaveLoad.Advanced
             if (!hasResultLeft) // Timeout occurred
             {
                 Echo.Error(
-                    $"[DataApplicationManager] Timeout applying data for scene {sceneName}. Remaining systems: {string.Join(", ", _pendingRequesters[sceneName].Select(GetSystemIdentifier))}", _enableDebug, this);
+                    $"Timeout applying data for scene {sceneName}. Remaining systems: {string.Join(", ", _pendingRequesters[sceneName].Select(GetSystemIdentifier))}", _enableDebug, this);
 
                 // Complete with failure, but continue
                 completionSource.TrySetResult(false);
@@ -181,7 +181,7 @@ namespace FakeMG.SaveLoad.Advanced
             _sceneCompletionSources.Remove(sceneName);
 
             Echo.Log(
-                $"[DataApplicationManager] Data application for scene {sceneName} completed. Success: {success}", _enableDebug, this);
+                $"Data application for scene {sceneName} completed. Success: {success}", _enableDebug, this);
 
             OnSceneDataApplicationComplete?.Invoke(sceneName);
             return success;
@@ -195,7 +195,7 @@ namespace FakeMG.SaveLoad.Advanced
                 await requester.ApplyDataAsync();
 
                 Echo.Log(
-                    $"[DataApplicationManager] Successfully applied data for {GetSystemIdentifier(requester)}", _enableDebug, this);
+                    $"Successfully applied data for {GetSystemIdentifier(requester)}", _enableDebug, this);
 
                 // Mark as complete
                 OnSystemDataApplicationComplete?.Invoke(sceneName, requester);
@@ -204,7 +204,7 @@ namespace FakeMG.SaveLoad.Advanced
             catch (Exception e)
             {
                 string errorMsg = $"Error applying data for {GetSystemIdentifier(requester)}: {e.Message}";
-                Echo.Error($"[DataApplicationManager] {errorMsg}", _enableDebug, this);
+                Echo.Error($"{errorMsg}", _enableDebug, this);
 
                 OnSystemDataApplicationFailed?.Invoke(sceneName, requester, errorMsg);
                 MarkRequesterComplete(sceneName, requester); // Still mark as complete to not block others
@@ -245,7 +245,7 @@ namespace FakeMG.SaveLoad.Advanced
 
             if (!hasResultLeft) // Timeout
             {
-                Echo.Error($"[DataApplicationManager] Timeout waiting for scene {sceneName} data application", _enableDebug, this);
+                Echo.Error($"Timeout waiting for scene {sceneName} data application", _enableDebug, this);
                 return false;
             }
 
