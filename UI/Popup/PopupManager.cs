@@ -15,7 +15,6 @@ namespace FakeMG.Framework.UI.Popup
     /// </summary>
     public class PopupManager : MonoBehaviour
     {
-        [SerializeField] private PopupManagerRefSO _popupManagerRefSO;
         [Required]
         [SerializeField] private Image _blackBackground;
 
@@ -43,8 +42,6 @@ namespace FakeMG.Framework.UI.Popup
             Color backgroundColor = _blackBackground.color;
             backgroundColor.a = 0f;
             _blackBackground.color = backgroundColor;
-
-            _popupManagerRefSO.Set(this);
         }
 
         private void OnDestroy()
