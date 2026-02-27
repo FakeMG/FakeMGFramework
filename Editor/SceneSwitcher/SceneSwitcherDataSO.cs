@@ -6,6 +6,7 @@ namespace FakeMG.Framework.Editor.SceneSwitcher
     public class SceneSwitcherDataSO : ScriptableObject
     {
         private const string ASSET_NAME = "SceneSwitcherData.asset";
+        private const string DEFAULT_ASSET_PATH = "Assets/" + ASSET_NAME;
 
         [SerializeField] private SceneAsset _scene1;
         [SerializeField] private SceneAsset _scene2;
@@ -46,23 +47,80 @@ namespace FakeMG.Framework.Editor.SceneSwitcher
 
         public static SceneSwitcherDataSO GetOrCreate()
         {
-            string scriptPath = AssetDatabase.GetAssetPath(MonoScript.FromScriptableObject(CreateInstance<SceneSwitcherDataSO>()));
-            string scriptDirectory = System.IO.Path.GetDirectoryName(scriptPath);
-            string assetPath = System.IO.Path.Combine(scriptDirectory, ASSET_NAME).Replace("\\", "/");
+            var data = LoadFromDefaultPath();
 
-            var data = AssetDatabase.LoadAssetAtPath<SceneSwitcherDataSO>(assetPath);
-
-            if (!data)
+            if (data)
             {
-                data = CreateInstance<SceneSwitcherDataSO>();
-                AssetDatabase.CreateAsset(data, assetPath);
-                AssetDatabase.SaveAssets();
-                AssetDatabase.Refresh();
-
-                Debug.Log($"Created SceneSwitcherData asset at {assetPath}");
+                return data;
             }
 
+            data = TryLoadFromAnyLocation();
+
+            if (data)
+            {
+                return data;
+            }
+
+            return CreateAtDefaultPath();
+        }
+
+        private static SceneSwitcherDataSO LoadFromDefaultPath()
+        {
+            var data = AssetDatabase.LoadAssetAtPath<SceneSwitcherDataSO>(DEFAULT_ASSET_PATH);
             return data;
+        }
+
+        private static SceneSwitcherDataSO TryLoadFromAnyLocation()
+        {
+            string[] assetGuids = AssetDatabase.FindAssets($"t:{nameof(SceneSwitcherDataSO)}");
+            string selectedPath = null;
+
+            foreach (string guid in assetGuids)
+            {
+                string currentPath = AssetDatabase.GUIDToAssetPath(guid);
+
+                if (string.IsNullOrEmpty(selectedPath) || string.CompareOrdinal(currentPath, selectedPath) < 0)
+                {
+                    selectedPath = currentPath;
+                }
+            }
+
+            if (string.IsNullOrEmpty(selectedPath))
+            {
+                return null;
+            }
+
+            if (assetGuids.Length > 1)
+            {
+                Debug.LogWarning($"[SceneSwitcher] Multiple {nameof(SceneSwitcherDataSO)} assets found. Using {selectedPath}.");
+            }
+
+            return AssetDatabase.LoadAssetAtPath<SceneSwitcherDataSO>(selectedPath);
+        }
+
+        private static SceneSwitcherDataSO CreateAtDefaultPath()
+        {
+            string assetPath = GetAvailableDestinationPath();
+            var data = CreateInstance<SceneSwitcherDataSO>();
+
+            AssetDatabase.CreateAsset(data, assetPath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[SceneSwitcher] Created SceneSwitcherData asset at {assetPath}");
+            return data;
+        }
+
+        private static string GetAvailableDestinationPath()
+        {
+            bool hasAssetAtDefaultPath = AssetDatabase.LoadMainAssetAtPath(DEFAULT_ASSET_PATH);
+
+            if (hasAssetAtDefaultPath)
+            {
+                return AssetDatabase.GenerateUniqueAssetPath(DEFAULT_ASSET_PATH);
+            }
+
+            return DEFAULT_ASSET_PATH;
         }
     }
 }
