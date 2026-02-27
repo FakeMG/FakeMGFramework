@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace FakeMG.Framework.Audio
+namespace FakeMG.Audio
 {
     public class SoundEmitterVault
     {

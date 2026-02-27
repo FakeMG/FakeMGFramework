@@ -1,8 +1,9 @@
+using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace FakeMG.Framework.ActionMapManagement
+namespace FakeMG.ActionMapManagement
 {
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ACTION_MAP_MANAGEMENT + "/ActionMapSO")]
     public class ActionMapSO : ScriptableObject

@@ -1,16 +1,10 @@
 {
-    "name": "FakeMG.Framework",
-    "rootNamespace": "FakeMG.Framework",
+    "name": "FakeMG.SaveLoad",
+    "rootNamespace": "FakeMG.SaveLoad",
     "references": [
-        "Unity.TextMeshPro",
-        "Unity.InputSystem",
-        "Unity.Addressables",
-        "Unity.Addressables.Editor",
-        "Unity.ResourceManager",
         "UniTask",
-        "UniTask.Addressables",
-        "UniTask.DOTween",
-        "DOTween.Modules"
+        "FakeMG.Framework",
+        "EasySave3"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

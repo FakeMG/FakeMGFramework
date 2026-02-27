@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
+using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.Framework.ActionMapManagement
+namespace FakeMG.ActionMapManagement
 {
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ACTION_MAP_MANAGEMENT + "/ActionMapConflictsPairsSO")]
     public class ActionMapConflictsPairsSO : ScriptableObject

@@ -1,8 +1,9 @@
-﻿using Sirenix.OdinInspector;
+﻿using FakeMG.Framework;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace FakeMG.Framework.Audio
+namespace FakeMG.Audio
 {
     [CreateAssetMenu(menuName = FakeMGEditorMenus.AUDIO + "/AudioConfigurationSO")]
     public class AudioConfigurationSO : ScriptableObject

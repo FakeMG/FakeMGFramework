@@ -1,15 +1,11 @@
 {
-    "name": "FakeMG.Framework",
-    "rootNamespace": "FakeMG.Framework",
+    "name": "FakeMG.FortuneWheel",
+    "rootNamespace": "FakeMG.FortuneWheel",
     "references": [
         "Unity.TextMeshPro",
-        "Unity.InputSystem",
-        "Unity.Addressables",
-        "Unity.Addressables.Editor",
-        "Unity.ResourceManager",
         "UniTask",
-        "UniTask.Addressables",
-        "UniTask.DOTween",
+        "FakeMG.Audio",
+        "FakeMG.Framework",
         "DOTween.Modules"
     ],
     "includePlatforms": [],

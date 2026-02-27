@@ -3,7 +3,7 @@ using System.Globalization;
 using FakeMG.Framework.Gacha;
 using UnityEngine;
 
-namespace FakeMG.Framework.FortuneWheel
+namespace FakeMG.FortuneWheel
 {
     public class FortuneWheelGameLogic : MonoBehaviour
     {

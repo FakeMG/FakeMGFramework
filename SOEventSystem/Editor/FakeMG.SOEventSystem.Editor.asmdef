@@ -1,11 +1,9 @@
 {
-    "name": "FakeMG.Framework.SOEventSystem.Editor",
-    "rootNamespace": "FakeMG.Framework.SOEventSystem.Editor",
+    "name": "FakeMG.SOEventSystem.Editor",
+    "rootNamespace": "FakeMG.SOEventSystem.Editor",
     "references": [
-        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a",
-        "GUID:31e5daf55f9380d48bd669429f0294f2",
-        "GUID:5d15a193d62147e4fb8ee9a9be7fb3b6",
-        "GUID:ad968d605628d06499b62cdc30f11cf8"
+        "GUID:02854cdbbf254ec40a3c13d193afa7a9",
+        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a"
     ],
     "includePlatforms": [
         "Editor"

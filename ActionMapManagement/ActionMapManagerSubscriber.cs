@@ -1,7 +1,7 @@
 using FakeMG.Framework.EventBus;
 using UnityEngine;
 
-namespace FakeMG.Framework.ActionMapManagement
+namespace FakeMG.ActionMapManagement
 {
     public class ActionMapManagerSubscriber : MonoBehaviour
     {

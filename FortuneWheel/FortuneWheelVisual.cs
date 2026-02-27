@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using FakeMG.Framework.Audio;
+using FakeMG.Audio;
+using FakeMG.Framework;
 using FakeMG.Framework.Gacha;
 using FakeMG.Framework.UI;
 using Sirenix.OdinInspector;
@@ -10,7 +11,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.Framework.FortuneWheel
+namespace FakeMG.FortuneWheel
 {
     public class FortuneWheelVisual : MonoBehaviour
     {

@@ -1,8 +1,9 @@
+using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 
-namespace FakeMG.Framework.SOEventSystem.EventChannel
+namespace FakeMG.SOEventSystem.EventChannel
 {
     /// <summary>
     /// General Event Channel that carries no extra data.

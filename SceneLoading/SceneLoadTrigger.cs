@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace FakeMG.Framework.SceneLoading
+namespace FakeMG.SceneLoading
 {
     public class SceneLoadTrigger : MonoBehaviour
     {

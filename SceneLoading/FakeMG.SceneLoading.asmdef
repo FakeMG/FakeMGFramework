@@ -1,15 +1,12 @@
 {
-    "name": "FakeMG.Framework",
-    "rootNamespace": "FakeMG.Framework",
+    "name": "FakeMG.SceneLoading",
+    "rootNamespace": "FakeMG.SceneLoading",
     "references": [
-        "Unity.TextMeshPro",
-        "Unity.InputSystem",
         "Unity.Addressables",
-        "Unity.Addressables.Editor",
         "Unity.ResourceManager",
         "UniTask",
-        "UniTask.Addressables",
         "UniTask.DOTween",
+        "FakeMG.SaveLoad",
         "DOTween.Modules"
     ],
     "includePlatforms": [],

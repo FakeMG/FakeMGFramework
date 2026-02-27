@@ -1,4 +1,4 @@
-﻿namespace FakeMG.Framework.SaveLoad.Simple.Storages
+namespace FakeMG.SaveLoad.Simple.Storages
 {
     public interface ISaveStorage
     {

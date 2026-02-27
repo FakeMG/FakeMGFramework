@@ -1,12 +1,12 @@
-#if UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using FakeMG.Framework;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace FakeMG.Framework.ActionMapManagement.Editor
+namespace FakeMG.ActionMapManagement.Editor
 {
     public class ActionMapManagerWindow : EditorWindow
     {
@@ -222,4 +222,3 @@ namespace FakeMG.Framework.ActionMapManagement.Editor
         }
     }
 }
-#endif

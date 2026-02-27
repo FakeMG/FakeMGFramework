@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace FakeMG.Framework.SceneLoading
+namespace FakeMG.SceneLoading
 {
     public enum EaseType
     {

@@ -1,6 +1,7 @@
+using FakeMG.Framework;
 using UnityEngine;
 
-namespace FakeMG.Framework.SOEventSystem.EventChannel
+namespace FakeMG.SOEventSystem.EventChannel
 {
     /// <summary>
     /// General event channel that broadcasts and carries string payload.

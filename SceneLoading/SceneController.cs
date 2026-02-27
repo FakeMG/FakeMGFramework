@@ -6,7 +6,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using UnityEngine.SceneManagement;
 
-namespace FakeMG.Framework.SceneLoading
+namespace FakeMG.SceneLoading
 {
     public class SceneController
     {

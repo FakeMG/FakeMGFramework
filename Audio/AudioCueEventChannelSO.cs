@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using FakeMG.Framework;
+using UnityEngine;
 
-namespace FakeMG.Framework.Audio
+namespace FakeMG.Audio
 {
     [CreateAssetMenu(menuName = FakeMGEditorMenus.AUDIO + "/AudioCueEventChannel")]
     public class AudioCueEventChannelSO : ScriptableObject

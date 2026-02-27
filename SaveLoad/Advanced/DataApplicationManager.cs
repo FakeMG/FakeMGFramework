@@ -2,16 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Cysharp.Threading.Tasks;
+using FakeMG.Framework;
+using FakeMG.Framework.EventBus;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
-namespace FakeMG.Framework.SaveLoad.Advanced
+namespace FakeMG.SaveLoad.Advanced
 {
     /// <summary>
     /// Manages data application for systems in loaded scenes.
     /// Handles registration, timeout management, and completion tracking.
     /// </summary>
-    public class DataApplicationManager : Singleton<DataApplicationManager>
+    [DefaultExecutionOrder(-1000)]
+    public class DataApplicationManager : MonoBehaviour
     {
         [Header("Timeout Settings")]
         [SerializeField] private float _applicationTimeoutSeconds = 10f;
@@ -27,12 +30,39 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         public event Action<string, DataRequester> OnSystemDataApplicationComplete;
         public event Action<string, DataRequester, string> OnSystemDataApplicationFailed;
 
+        private void OnEnable()
+        {
+            EventBus<RegisterDataRequesterEvent>.OnEvent += RegisterDataRequesterWhenRequested;
+            EventBus<UnregisterDataRequesterEvent>.OnEvent += UnregisterDataRequesterWhenRequested;
+        }
+
+        private void OnDisable()
+        {
+            EventBus<RegisterDataRequesterEvent>.OnEvent -= RegisterDataRequesterWhenRequested;
+            EventBus<UnregisterDataRequesterEvent>.OnEvent -= UnregisterDataRequesterWhenRequested;
+        }
+
+        private void RegisterDataRequesterWhenRequested(RegisterDataRequesterEvent evt)
+        {
+            RegisterDataRequester(evt.Requester);
+        }
+
+        private void UnregisterDataRequesterWhenRequested(UnregisterDataRequesterEvent evt)
+        {
+            UnregisterDataRequester(evt.Requester);
+        }
+
         #region Helper Methods
         /// <summary>
         /// Get a readable identifier for a system for logging purposes
         /// </summary>
         private string GetSystemIdentifier(DataRequester requester)
         {
+            if (!requester)
+            {
+                return "MissingRequester";
+            }
+
             if (requester is MonoBehaviour monoBehaviour)
             {
                 return $"{monoBehaviour.GetType().Name}({monoBehaviour.name})";
@@ -45,7 +75,7 @@ namespace FakeMG.Framework.SaveLoad.Advanced
         #region System Registration
         public void RegisterDataRequester(DataRequester requester)
         {
-            if (requester == null)
+            if (!requester)
             {
                 Echo.Error("Cannot register null data requester", _enableDebug, this);
                 return;
@@ -53,12 +83,20 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
             string sceneName = requester.SceneName;
 
-            if (!_sceneRequesters.ContainsKey(sceneName))
+            if (!_sceneRequesters.TryGetValue(sceneName, out var requesters))
             {
-                _sceneRequesters[sceneName] = new List<DataRequester>();
+                requesters = new List<DataRequester>();
+                _sceneRequesters[sceneName] = requesters;
             }
 
-            _sceneRequesters[sceneName].Add(requester);
+            if (requesters.Contains(requester))
+            {
+                Echo.Log(
+                    $"[DataApplicationManager] Ignored duplicate registration for {GetSystemIdentifier(requester)} in scene {sceneName}", _enableDebug, this);
+                return;
+            }
+
+            requesters.Add(requester);
 
             Echo.Log(
                 $"[DataApplicationManager] Registered {GetSystemIdentifier(requester)} for scene {sceneName}", _enableDebug, this);
@@ -66,7 +104,10 @@ namespace FakeMG.Framework.SaveLoad.Advanced
 
         public void UnregisterDataRequester(DataRequester requester)
         {
-            if (requester == null) return;
+            if (!requester)
+            {
+                return;
+            }
 
             string sceneName = requester.SceneName;
 

@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR && UNITY_ANDROID
+﻿#if UNITY_ANDROID
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;

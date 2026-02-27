@@ -3,7 +3,7 @@ using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace FakeMG.Framework.Audio
+namespace FakeMG.Audio
 {
     public class AudioCue : MonoBehaviour
     {

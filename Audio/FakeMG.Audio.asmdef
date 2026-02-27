@@ -1,15 +1,9 @@
 {
-    "name": "FakeMG.Framework",
-    "rootNamespace": "FakeMG.Framework",
+    "name": "FakeMG.Audio",
+    "rootNamespace": "FakeMG.Audio",
     "references": [
-        "Unity.TextMeshPro",
-        "Unity.InputSystem",
-        "Unity.Addressables",
-        "Unity.Addressables.Editor",
-        "Unity.ResourceManager",
-        "UniTask",
-        "UniTask.Addressables",
-        "UniTask.DOTween",
+        "FakeMG.Framework",
+        "FakeMG.SOEventSystem",
         "DOTween.Modules"
     ],
     "includePlatforms": [],

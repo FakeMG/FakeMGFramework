@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using FakeMG.Framework.SaveLoad.Advanced;
+using FakeMG.SaveLoad.Advanced;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace FakeMG.Framework.SceneLoading
+namespace FakeMG.SceneLoading
 {
     public class SceneLoader : MonoBehaviour
     {

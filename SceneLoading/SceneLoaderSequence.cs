@@ -5,7 +5,7 @@
 // using UnityEngine.Events;
 // using UnityEngine.SceneManagement;
 //
-// namespace FakeMG.Framework.SceneLoading
+// namespace FakeMG.SceneLoading
 // {
 //     public class SceneLoaderSequence : MonoBehaviour
 //     {

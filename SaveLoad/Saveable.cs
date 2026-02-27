@@ -1,6 +1,6 @@
-﻿using UnityEngine;
+using UnityEngine;
 
-namespace FakeMG.Framework.SaveLoad
+namespace FakeMG.SaveLoad
 {
     public abstract class Saveable : MonoBehaviour
     {

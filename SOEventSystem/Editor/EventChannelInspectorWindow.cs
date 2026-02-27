@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Reflection;
-using FakeMG.Framework.SOEventSystem.EventChannel;
-using FakeMG.Framework.SOEventSystem.PayloadAdapter;
+using FakeMG.Framework;
+using FakeMG.SOEventSystem.EventChannel;
+using FakeMG.SOEventSystem.PayloadAdapter;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace FakeMG.Framework.SOEventSystem.Editor
+namespace FakeMG.SOEventSystem.Editor
 {
     public class EventChannelInspectorWindow : EditorWindow
     {
@@ -17,7 +18,7 @@ namespace FakeMG.Framework.SOEventSystem.Editor
             GetWindow<EventChannelInspectorWindow>("Event Channel Inspector");
         }
 
-        private TreeViewState _treeViewState;
+        private TreeViewState<int> _treeViewState;
         private EventChannelTreeView _treeView;
         private ScriptableObject _selectedChannel;
         private Vector2 _scrollPosition;
@@ -39,7 +40,7 @@ namespace FakeMG.Framework.SOEventSystem.Editor
 
         private void OnEnable()
         {
-            _treeViewState ??= new TreeViewState();
+            _treeViewState ??= new TreeViewState<int>();
             _treeView = new EventChannelTreeView(_treeViewState);
             _treeView.OnChannelSelected += OnChannelSelected;
             ClearCaches();
@@ -459,21 +460,21 @@ namespace FakeMG.Framework.SOEventSystem.Editor
         }
     }
 
-    public class EventChannelTreeView : TreeView
+    public class EventChannelTreeView : TreeView<int>
     {
         public delegate void ChannelSelectedDelegate(ScriptableObject channel);
 
         public event ChannelSelectedDelegate OnChannelSelected;
 
-        public EventChannelTreeView(TreeViewState state) : base(state)
+        public EventChannelTreeView(TreeViewState<int> state) : base(state)
         {
             Reload();
         }
 
-        protected override TreeViewItem BuildRoot()
+        protected override TreeViewItem<int> BuildRoot()
         {
-            var root = new TreeViewItem { id = 0, depth = -1, displayName = "Root" };
-            var allItems = new List<TreeViewItem>();
+            var root = new TreeViewItem<int> { id = 0, depth = -1, displayName = "Root" };
+            var allItems = new List<TreeViewItem<int>>();
 
             string[] guids = AssetDatabase.FindAssets("t:ScriptableObject");
             int id = 1;
@@ -536,7 +537,7 @@ namespace FakeMG.Framework.SOEventSystem.Editor
         }
     }
 
-    public class EventChannelTreeViewItem : TreeViewItem
+    public class EventChannelTreeViewItem : TreeViewItem<int>
     {
         public ScriptableObject Channel;
     }

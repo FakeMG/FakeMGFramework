@@ -1,7 +1,7 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using UnityEngine;
 
-namespace FakeMG.Framework.SaveLoad.Simple.Storages
+namespace FakeMG.SaveLoad.Simple.Storages
 {
     public class PlayerPrefsStorage : ISaveStorage
     {

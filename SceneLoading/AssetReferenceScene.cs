@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.AddressableAssets;
 
-namespace FakeMG.Framework.SceneLoading
+namespace FakeMG.SceneLoading
 {
     [Serializable]
     public class AssetReferenceScene : AssetReference

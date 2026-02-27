@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using FakeMG.Framework;
 using FakeMG.Framework.UI;
 using FakeMG.Framework.UI.Popup;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace FakeMG.Framework.FortuneWheel
+namespace FakeMG.FortuneWheel
 {
     public class ItemClaimPopupAnimator : PopupAnimator
     {

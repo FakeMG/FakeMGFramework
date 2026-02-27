@@ -1,4 +1,4 @@
-namespace FakeMG.Framework.SOEventSystem.PayloadAdapter
+namespace FakeMG.SOEventSystem.PayloadAdapter
 {
     public class FloatPayloadAdapter : GenericPayloadAdapter<float>
     {

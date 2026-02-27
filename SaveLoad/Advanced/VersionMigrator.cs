@@ -1,7 +1,7 @@
-﻿using System;
+using System;
 using UnityEngine;
 
-namespace FakeMG.Framework.SaveLoad.Advanced
+namespace FakeMG.SaveLoad.Advanced
 {
     public static class VersionMigrator
     {

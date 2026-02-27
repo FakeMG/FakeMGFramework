@@ -2,7 +2,7 @@
 using System.Globalization;
 using UnityEngine;
 
-namespace FakeMG.Framework.FortuneWheel
+namespace FakeMG.FortuneWheel
 {
     public class FortuneWheelNotifier : MonoBehaviour
     {

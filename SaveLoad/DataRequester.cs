@@ -1,8 +1,9 @@
 using Cysharp.Threading.Tasks;
-using FakeMG.Framework.SaveLoad.Advanced;
+using FakeMG.Framework.EventBus;
+using FakeMG.SaveLoad.Advanced;
 using UnityEngine;
 
-namespace FakeMG.Framework.SaveLoad
+namespace FakeMG.SaveLoad
 {
     /// <summary>
     /// Base class for systems that need to request and apply save data.
@@ -18,12 +19,32 @@ namespace FakeMG.Framework.SaveLoad
 
         protected virtual void Awake()
         {
-            DataApplicationManager.Instance.RegisterDataRequester(this);
+            RequestRegistration();
         }
 
         protected virtual void OnDestroy()
         {
-            DataApplicationManager.Instance.UnregisterDataRequester(this);
+            RequestUnregistration();
+        }
+
+        private void RequestRegistration()
+        {
+            var registerEvent = new RegisterDataRequesterEvent
+            {
+                Requester = this
+            };
+
+            EventBus<RegisterDataRequesterEvent>.Raise(registerEvent);
+        }
+
+        private void RequestUnregistration()
+        {
+            var unregisterEvent = new UnregisterDataRequesterEvent
+            {
+                Requester = this
+            };
+
+            EventBus<UnregisterDataRequesterEvent>.Raise(unregisterEvent);
         }
 
         public abstract UniTask ApplyDataAsync();

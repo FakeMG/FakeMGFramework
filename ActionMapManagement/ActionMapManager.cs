@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using FakeMG.Framework;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace FakeMG.Framework.ActionMapManagement
+namespace FakeMG.ActionMapManagement
 {
     public class ActionMapManager : MonoBehaviour
     {

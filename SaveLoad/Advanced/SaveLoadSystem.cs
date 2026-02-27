@@ -1,11 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using FakeMG.Framework;
 using UnityEngine;
 
-namespace FakeMG.Framework.SaveLoad.Advanced
+namespace FakeMG.SaveLoad.Advanced
 {
-    public class SaveLoadSystem : Singleton<SaveLoadSystem>
+    public class SaveLoadSystem : MonoBehaviour
     {
         [SerializeField] private bool _enableAutoSave = true;
         [SerializeField] private int _maxAutoSaves = 5;

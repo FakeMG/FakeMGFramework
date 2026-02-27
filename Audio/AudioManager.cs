@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using FakeMG.Framework.SOEventSystem.EventChannel;
+using FakeMG.SOEventSystem.EventChannel;
 using UnityEngine;
 using UnityEngine.Audio;
 
-namespace FakeMG.Framework.Audio
+namespace FakeMG.Audio
 {
     public class AudioManager : MonoBehaviour
     {

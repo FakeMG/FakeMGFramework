@@ -1,6 +1,6 @@
 using FakeMG.Framework.EventBus;
 
-namespace FakeMG.Framework.ActionMapManagement
+namespace FakeMG.ActionMapManagement
 {
     public struct EnableActionMapEvent : IEvent
     {
