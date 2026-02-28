@@ -6,23 +6,28 @@ using System.Text.RegularExpressions;
 using FakeMG.Framework;
 using UnityEditor;
 using UnityEditor.Localization;
-using UnityEngine;
 using UnityEngine.Localization.Tables;
 
-namespace FakeMG.Localization
+namespace FakeMG.Localization.Editor
 {
     public class LocalizationSync : AssetPostprocessor
     {
-        private const string CSV_PATH = "Assets/Localization/Localization.csv"; // Path to your CSV
-        private const string GENERATED_CLASS_PATH = "Assets/Scripts/Generated/Loc.cs"; // Path to generate code
-        private const string TABLE_COLLECTION_NAME = "Test"; // Name of your Unity Localization Table
+        private static LocalizationSettingsSO s_cachedSettings;
 
-        // Trigger when CSV is modified
         static void OnPostprocessAllAssets(string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
-            foreach (string str in importedAssets)
+            if (!s_cachedSettings)
+                s_cachedSettings = LocalizationSettingsSO.GetOrCreate();
+
+            var csvPaths = new HashSet<string>();
+            foreach (var config in s_cachedSettings.TableConfigs)
             {
-                if (str.Equals(CSV_PATH))
+                csvPaths.Add(config.CsvPath);
+            }
+
+            foreach (string path in importedAssets)
+            {
+                if (csvPaths.Contains(path))
                 {
                     SyncLocalization();
                     return;
@@ -33,24 +38,58 @@ namespace FakeMG.Localization
         [MenuItem(FakeMGEditorMenus.LOCALIZATION_FORCE_SYNC_CSV)]
         public static void SyncLocalization()
         {
-            if (!File.Exists(CSV_PATH)) { Debug.LogError("CSV not found at " + CSV_PATH); return; }
+            s_cachedSettings = LocalizationSettingsSO.GetOrCreate();
 
-            string[] lines = File.ReadAllLines(CSV_PATH);
-            if (lines.Length < 2) return;
-
-            // 1. Parse CSV Headers (Languages)
-            List<string> headers = ParseCsvLine(lines[0]);
-            // Assuming: Index 0 = Key, Index 1 = English (Default), Index 2+ = Locales
-
-            // 2. Load Unity Localization Table
-            StringTableCollection collection = LocalizationEditorSettings.GetStringTableCollection(TABLE_COLLECTION_NAME);
-            if (collection == null)
+            if (s_cachedSettings.TableConfigs.Count == 0)
             {
-                Debug.LogError($"Localization Table '{TABLE_COLLECTION_NAME}' not found. Please create it first.");
+                Echo.Warning("No table configs found in LocalizationSettingsSO.");
                 return;
             }
 
-            // 3.1. Parse CSV and Sync with Unity Tables
+            var allTableEntries = new Dictionary<string, TableSyncResult>();
+            int totalKeys = 0;
+            int totalRemoved = 0;
+
+            foreach (var config in s_cachedSettings.TableConfigs)
+            {
+                var result = SyncTable(config);
+                if (result == null) continue;
+
+                string className = SanitizeClassName(config.TableCollectionName);
+                allTableEntries[className] = result;
+                totalKeys += result.Entries.Count;
+                totalRemoved += result.RemovedCount;
+            }
+
+            GenerateCode(allTableEntries, s_cachedSettings.GeneratedClassPath);
+
+            AssetDatabase.Refresh();
+            Echo.Log($"Synced {totalKeys} keys across {allTableEntries.Count} tables, removed {totalRemoved} stale keys.");
+        }
+
+        private static TableSyncResult SyncTable(LocalizationTableConfig config)
+        {
+            string csvPath = config.CsvPath;
+            string tableCollectionName = config.TableCollectionName;
+
+            if (!File.Exists(csvPath))
+            {
+                Echo.Error($"CSV not found at {csvPath}");
+                return null;
+            }
+
+            string[] lines = File.ReadAllLines(csvPath);
+            if (lines.Length < 2) return null;
+
+            List<string> headers = ParseCsvLine(lines[0]);
+
+            StringTableCollection collection = LocalizationEditorSettings.GetStringTableCollection(tableCollectionName);
+            if (collection == null)
+            {
+                Echo.Error($"Localization Table '{tableCollectionName}' not found. Please create it first.");
+                return null;
+            }
+
             List<LocEntry> keyData = new();
 
             for (int i = 1; i < lines.Length; i++)
@@ -61,27 +100,25 @@ namespace FakeMG.Localization
                 string key = columns[0].Trim();
                 string englishVal = columns[1];
 
-                // Extract Arguments {name} using Regex
                 List<string> args = ExtractArguments(englishVal);
                 keyData.Add(new LocEntry { Key = key, English = englishVal, Args = args });
 
-                // Update Unity Table
                 bool isSmart = args.Count > 0;
                 AddOrUpdateTable(collection, headers, key, columns, isSmart);
             }
 
-            // 3.2. Remove stale keys not present in CSV
             HashSet<string> csvKeys = new(keyData.Select(e => e.Key));
             int removedCount = RemoveStaleKeys(collection, csvKeys);
 
-            // 5. Generate C# Code
-            GenerateCode(keyData);
-
-            AssetDatabase.Refresh();
-            Debug.Log($"<b>[Localization]</b> Synced {keyData.Count} keys, removed {removedCount} stale keys from CSV.");
+            return new TableSyncResult
+            {
+                TableCollectionName = tableCollectionName,
+                Entries = keyData,
+                RemovedCount = removedCount
+            };
         }
 
-        private static void GenerateCode(List<LocEntry> entries)
+        private static void GenerateCode(Dictionary<string, TableSyncResult> tableResults, string generatedClassPath)
         {
             StringBuilder sb = new();
             sb.AppendLine("// ------------------------------------------------------------------------------");
@@ -90,7 +127,6 @@ namespace FakeMG.Localization
             sb.AppendLine("//     Changes to this file will be lost if the code is regenerated.");
             sb.AppendLine("// </auto-generated>");
             sb.AppendLine("// ------------------------------------------------------------------------------");
-            sb.AppendLine("using UnityEngine.Localization;");
             sb.AppendLine("using UnityEngine.Localization.Settings;");
             sb.AppendLine("using System.Collections.Generic;");
             sb.AppendLine("");
@@ -99,57 +135,114 @@ namespace FakeMG.Localization
             sb.AppendLine("\tpublic static class Loc");
             sb.AppendLine("\t{");
 
-            // section: Const Keys (For ScriptableObjects/Inspectors)
-            sb.AppendLine("\t\tpublic static class Keys");
-            sb.AppendLine("\t\t{");
-            foreach (var entry in entries)
+            // section: Loc.Get(key) — data-driven lookup across all tables
+            GenerateGetMethod(sb, tableResults);
+
+            // section: Per-table nested classes
+            foreach (var (className, result) in tableResults)
             {
-                sb.AppendLine($"\t\t\tpublic const string {entry.Key} = \"{entry.Key}\";");
-            }
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("");
-
-            // section: Strongly Typed Methods
-            sb.AppendLine("\t\t// Runtime Methods");
-            foreach (var entry in entries)
-            {
-                string methodParams = "";
-
-                if (entry.Args.Count > 0)
-                {
-                    // Create "object argName, object argName2"
-                    List<string> p = new();
-                    foreach (var arg in entry.Args)
-                    {
-                        p.Add($"object {arg}");
-                    }
-                    methodParams = string.Join(", ", p);
-                }
-
-                sb.AppendLine($"\t\t/// <summary> \"{entry.English}\" </summary>");
-                sb.AppendLine($"\t\tpublic static string {entry.Key}({methodParams})");
-                sb.AppendLine("\t\t{");
-                if (entry.Args.Count > 0)
-                {
-                    string dictEntries = string.Join(", ", entry.Args.Select(a => $"{{ \"{a}\", {a} }}"));
-                    sb.AppendLine($"\t\t\treturn LocalizationSettings.StringDatabase.GetLocalizedString(\"{TABLE_COLLECTION_NAME}\", \"{entry.Key}\", arguments: new Dictionary<string, object>() {{ {dictEntries} }});");
-                }
-                else
-                {
-                    sb.AppendLine($"\t\t\treturn LocalizationSettings.StringDatabase.GetLocalizedString(\"{TABLE_COLLECTION_NAME}\", \"{entry.Key}\");");
-                }
-                sb.AppendLine("\t\t}");
-                sb.AppendLine("");
+                GenerateTableClass(sb, className, result);
             }
 
             sb.AppendLine("\t}");
             sb.AppendLine("}");
 
-            // Create directory if missing
-            string dir = Path.GetDirectoryName(GENERATED_CLASS_PATH);
+            string dir = Path.GetDirectoryName(generatedClassPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            File.WriteAllText(GENERATED_CLASS_PATH, sb.ToString());
+            File.WriteAllText(generatedClassPath, sb.ToString());
+        }
+
+        private static void GenerateGetMethod(StringBuilder sb, Dictionary<string, TableSyncResult> tableResults)
+        {
+            sb.AppendLine("\t\tpublic static string Get(string key)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tstring table = ResolveTable(key);");
+            sb.AppendLine("\t\t\treturn LocalizationSettings.StringDatabase.GetLocalizedString(table, key);");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
+
+            sb.AppendLine("\t\tprivate static string ResolveTable(string key)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tswitch (key)");
+            sb.AppendLine("\t\t\t{");
+
+            foreach (var (_, result) in tableResults)
+            {
+                foreach (var entry in result.Entries)
+                {
+                    sb.AppendLine($"\t\t\t\tcase \"{entry.Key}\":");
+                }
+                sb.AppendLine($"\t\t\t\t\treturn \"{result.TableCollectionName}\";");
+            }
+
+            sb.AppendLine("\t\t\t\tdefault:");
+            sb.AppendLine("\t\t\t\t\tthrow new System.ArgumentException($\"Unknown localization key: {key}\");");
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
+        }
+
+        private static void GenerateTableClass(StringBuilder sb, string className, TableSyncResult result)
+        {
+            string tableName = result.TableCollectionName;
+            var entries = result.Entries;
+
+            sb.AppendLine($"\t\tpublic static class {className}");
+            sb.AppendLine("\t\t{");
+
+            // Keys sub-class
+            sb.AppendLine("\t\t\tpublic static class Keys");
+            sb.AppendLine("\t\t\t{");
+            foreach (var entry in entries)
+            {
+                sb.AppendLine($"\t\t\t\tpublic const string {entry.Key} = \"{entry.Key}\";");
+            }
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("");
+
+            // Strongly typed methods
+            foreach (var entry in entries)
+            {
+                string methodParams = BuildMethodParams(entry.Args);
+
+                sb.AppendLine($"\t\t\t/// <summary> \"{entry.English}\" </summary>");
+                sb.AppendLine($"\t\t\tpublic static string {entry.Key}({methodParams})");
+                sb.AppendLine("\t\t\t{");
+                if (entry.Args.Count > 0)
+                {
+                    string dictEntries = string.Join(", ", entry.Args.Select(a => $"{{ \"{a}\", {a} }}"));
+                    sb.AppendLine($"\t\t\t\treturn LocalizationSettings.StringDatabase.GetLocalizedString(\"{tableName}\", \"{entry.Key}\", arguments: new Dictionary<string, object>() {{ {dictEntries} }});");
+                }
+                else
+                {
+                    sb.AppendLine($"\t\t\t\treturn LocalizationSettings.StringDatabase.GetLocalizedString(\"{tableName}\", \"{entry.Key}\");");
+                }
+                sb.AppendLine("\t\t\t}");
+                sb.AppendLine("");
+            }
+
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("");
+        }
+
+        private static string BuildMethodParams(List<string> args)
+        {
+            if (args.Count == 0)
+                return "";
+
+            return string.Join(", ", args.Select(a => $"object {a}"));
+        }
+
+        private static string SanitizeClassName(string tableCollectionName)
+        {
+            // Remove characters invalid for C# identifiers, keep letters/digits/underscores
+            string sanitized = Regex.Replace(tableCollectionName, @"[^a-zA-Z0-9_]", "");
+
+            if (sanitized.Length == 0 || char.IsDigit(sanitized[0]))
+                sanitized = "_" + sanitized;
+
+            return sanitized;
         }
 
         // --- Helpers ---
@@ -240,6 +333,13 @@ namespace FakeMG.Localization
             public string Key;
             public string English;
             public List<string> Args;
+        }
+
+        private class TableSyncResult
+        {
+            public string TableCollectionName;
+            public List<LocEntry> Entries;
+            public int RemovedCount;
         }
     }
 }
