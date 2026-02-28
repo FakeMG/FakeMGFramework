@@ -1,0 +1,3 @@
+﻿Key,English,Vietnamese
+Testing,testing,kiểm thử
+Hi,Hi {gender:choose(Male|Female):Mr|Mrs|friend} {name},Chào {gender:choose(Male|Female):anh|chị|bạn} {name}
