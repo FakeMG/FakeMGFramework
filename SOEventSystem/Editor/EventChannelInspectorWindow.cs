@@ -1,3 +1,4 @@
+#if UNITY_6000_3_OR_NEWER
 using System.Collections.Generic;
 using System.Reflection;
 using FakeMG.Framework;
@@ -542,3 +543,4 @@ namespace FakeMG.SOEventSystem.Editor
         public ScriptableObject Channel;
     }
 }
+#endif

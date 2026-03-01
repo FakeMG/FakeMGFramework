@@ -20,8 +20,8 @@ namespace FakeMG.SaveLoad.Advanced
 
         private const string SAVE_FOLDER = "Saves/";
 
-        private const string MANUAL_SAVE_KEY = "ManualSave_";
-        private const string AUTO_SAVE_KEY = "AutoSave_";
+        private const string MANUAL_SAVE_PATH_PREFIX = "ManualSave_";
+        private const string AUTO_SAVE_PATH_PREFIX = "AutoSave_";
         public const string METADATA_KEY = "Metadata";
 
         public event Action OnLoadingComplete;
@@ -84,7 +84,7 @@ namespace FakeMG.SaveLoad.Advanced
             try
             {
                 DateTime now = DateTime.Now;
-                string manualSaveKey = CreateManualSavePath(now);
+                string manualSavePath = CreateManualSavePath(now);
                 SaveMetadata metadata = new()
                 {
                     Timestamp = now,
@@ -92,16 +92,16 @@ namespace FakeMG.SaveLoad.Advanced
                     GameVersion = Application.version,
                 };
 
-                ES3.Save(METADATA_KEY, metadata, manualSaveKey);
+                ES3.Save(METADATA_KEY, metadata, manualSavePath);
 
                 foreach (var saveable in _saveables)
                 {
                     var data = saveable.Value.CaptureState();
                     var saveableID = saveable.Key;
-                    ES3.Save(saveableID, data, manualSaveKey);
+                    ES3.Save(saveableID, data, manualSavePath);
                 }
 
-                Echo.Log($"Game saved to {manualSaveKey}", _enableDebug, this);
+                Echo.Log($"Game saved to {manualSavePath}", _enableDebug, this);
             }
             catch (Exception e)
             {
@@ -113,9 +113,9 @@ namespace FakeMG.SaveLoad.Advanced
         {
             try
             {
-                // Avoid out of sync between key and metadata
+                // Avoid out of sync between path and metadata
                 DateTime now = DateTime.Now;
-                string autoSaveKey = CreateAutoSavePath(now);
+                string autoSavePath = CreateAutoSavePath(now);
                 SaveMetadata metadata = new()
                 {
                     Timestamp = now,
@@ -124,16 +124,16 @@ namespace FakeMG.SaveLoad.Advanced
                 };
 
                 // Save metadata
-                ES3.Save(METADATA_KEY, metadata, autoSaveKey);
+                ES3.Save(METADATA_KEY, metadata, autoSavePath);
                 ManageAutoSaveFiles();
-                Echo.Log($"Auto-save created: {autoSaveKey}", _enableDebug, this);
+                Echo.Log($"Auto-save created: {autoSavePath}", _enableDebug, this);
 
                 foreach (var saveable in _saveables)
                 {
                     var saveableID = saveable.Key;
                     var data = saveable.Value.CaptureState();
                     if (data == null) continue;
-                    ES3.Save(saveableID, data, autoSaveKey);
+                    ES3.Save(saveableID, data, autoSavePath);
                 }
             }
             catch (Exception e)
@@ -146,7 +146,7 @@ namespace FakeMG.SaveLoad.Advanced
         {
             var allMetadata = GetAllSaveMetadata();
             SaveMetadata mostRecentMetaData = null;
-            string mostRecentSaveKey = null;
+            string mostRecentSavePath = null;
 
             foreach (var metadata in allMetadata)
             {
@@ -154,7 +154,7 @@ namespace FakeMG.SaveLoad.Advanced
                 {
                     mostRecentMetaData = metadata;
 
-                    mostRecentSaveKey = metadata.IsAutoSave
+                    mostRecentSavePath = metadata.IsAutoSave
                         ? CreateAutoSavePath(metadata.Timestamp)
                         : CreateManualSavePath(metadata.Timestamp);
                 }
@@ -162,7 +162,7 @@ namespace FakeMG.SaveLoad.Advanced
 
             if (mostRecentMetaData != null)
             {
-                LoadGame(mostRecentSaveKey);
+                LoadGame(mostRecentSavePath);
             }
             else
             {
@@ -181,46 +181,46 @@ namespace FakeMG.SaveLoad.Advanced
             Echo.Log("Initialized default data for all Saveables - no existing save found.", _enableDebug, this);
         }
 
-        public void LoadGame(string saveKey)
+        public void LoadGame(string savePath)
         {
-            string normalizedSaveKey = NormalizeSavePath(saveKey);
+            string normalizedSavePath = NormalizeSavePath(savePath);
 
-            if (!ES3.FileExists(normalizedSaveKey))
+            if (!ES3.FileExists(normalizedSavePath))
             {
-                Echo.Warning($"No save file found for {normalizedSaveKey}.", _enableDebug, this);
+                Echo.Warning($"No save file found for {normalizedSavePath}.", _enableDebug, this);
                 LoadDefaultData();
                 return;
             }
 
             try
             {
-                SaveMetadata metadata = ES3.Load(METADATA_KEY, normalizedSaveKey, new SaveMetadata());
+                SaveMetadata metadata = ES3.Load(METADATA_KEY, normalizedSavePath, new SaveMetadata());
 
                 // TODO: Implement migration logic
-                // if (metadata.gameVersion != Application.version)
+                // if (metadata.GameVersion != Application.version)
                 // {
-                //     VersionMigrator.MigrateSaveData(saveKey, metadata.gameVersion);
+                //     VersionMigrator.MigrateSaveData(normalizedSavePath, metadata.GameVersion);
                 // }
 
                 foreach (var saveable in _saveables)
                 {
-                    if (ES3.KeyExists(saveable.Key, normalizedSaveKey))
+                    if (ES3.KeyExists(saveable.Key, normalizedSavePath))
                     {
-                        object data = ES3.Load(saveable.Key, normalizedSaveKey);
+                        object data = ES3.Load(saveable.Key, normalizedSavePath);
                         saveable.Value.RestoreState(data);
                     }
                     else
                     {
-                        Echo.Warning($"No data found for {saveable.Key} in {normalizedSaveKey}.", _enableDebug, this);
+                        Echo.Warning($"No data found for {saveable.Key} in {normalizedSavePath}.", _enableDebug, this);
                     }
                 }
 
-                Echo.Log($"Game loaded from {normalizedSaveKey}, saved at {metadata.Timestamp}", _enableDebug, this);
+                Echo.Log($"Game loaded from {normalizedSavePath}, saved at {metadata.Timestamp}", _enableDebug, this);
                 OnLoadingComplete?.Invoke();
             }
             catch (Exception e)
             {
-                Echo.Error($"Failed to load game from {normalizedSaveKey}: {e.Message}", _enableDebug, this);
+                Echo.Error($"Failed to load game from {normalizedSavePath}: {e.Message}", _enableDebug, this);
             }
         }
 
@@ -243,14 +243,14 @@ namespace FakeMG.SaveLoad.Advanced
             return metadata;
         }
 
-        public void DeleteSave(string saveKey)
+        public void DeleteSave(string savePath)
         {
-            string normalizedSaveKey = NormalizeSavePath(saveKey);
+            string normalizedSavePath = NormalizeSavePath(savePath);
 
-            if (ES3.FileExists(normalizedSaveKey))
+            if (ES3.FileExists(normalizedSavePath))
             {
-                ES3.DeleteFile(normalizedSaveKey);
-                Echo.Log($"{normalizedSaveKey} deleted.", _enableDebug, this);
+                ES3.DeleteFile(normalizedSavePath);
+                Echo.Log($"{normalizedSavePath} deleted.", _enableDebug, this);
             }
         }
 
@@ -289,44 +289,44 @@ namespace FakeMG.SaveLoad.Advanced
 
         private static string CreateManualSavePath(DateTime timestamp)
         {
-            string manualSaveFileName = $"{MANUAL_SAVE_KEY}{timestamp.Ticks}";
+            string manualSaveFileName = $"{MANUAL_SAVE_PATH_PREFIX}{timestamp.Ticks}";
             return NormalizeSavePath(manualSaveFileName);
         }
 
         private static string CreateAutoSavePath(DateTime timestamp)
         {
-            string autoSaveFileName = $"{AUTO_SAVE_KEY}{timestamp.Ticks}";
+            string autoSaveFileName = $"{AUTO_SAVE_PATH_PREFIX}{timestamp.Ticks}";
             return NormalizeSavePath(autoSaveFileName);
         }
 
-        private static string NormalizeSavePath(string saveKey)
+        private static string NormalizeSavePath(string savePath)
         {
-            if (string.IsNullOrWhiteSpace(saveKey))
+            if (string.IsNullOrWhiteSpace(savePath))
             {
-                return saveKey;
+                return savePath;
             }
 
-            string normalizedKey = saveKey.Replace("\\", "/");
-            if (normalizedKey.StartsWith(SAVE_FOLDER, StringComparison.Ordinal))
+            string normalizedPath = savePath.Replace("\\", "/");
+            if (normalizedPath.StartsWith(SAVE_FOLDER, StringComparison.Ordinal))
             {
-                return normalizedKey;
+                return normalizedPath;
             }
 
-            return $"{SAVE_FOLDER}{normalizedKey}";
+            return $"{SAVE_FOLDER}{normalizedPath}";
         }
 
         private static bool IsManagedSaveFile(string filePath)
         {
             string fileName = GetSaveFileName(filePath);
 
-            return fileName.StartsWith(MANUAL_SAVE_KEY, StringComparison.Ordinal)
-                   || fileName.StartsWith(AUTO_SAVE_KEY, StringComparison.Ordinal);
+            return fileName.StartsWith(MANUAL_SAVE_PATH_PREFIX, StringComparison.Ordinal)
+                   || fileName.StartsWith(AUTO_SAVE_PATH_PREFIX, StringComparison.Ordinal);
         }
 
         private static bool IsAutoSaveFile(string filePath)
         {
             string fileName = GetSaveFileName(filePath);
-            return fileName.StartsWith(AUTO_SAVE_KEY, StringComparison.Ordinal);
+            return fileName.StartsWith(AUTO_SAVE_PATH_PREFIX, StringComparison.Ordinal);
         }
 
         private static string GetSaveFileName(string filePath)
