@@ -14,7 +14,12 @@ namespace FakeMG.SaveLoad.Advanced
         [SerializeField] private float _autoSaveInterval = 300f;
         [SerializeField] private bool _enableDebug = true;
 
+        [Header("Migration")]
+        [Tooltip("Assign a MigrationRegistrySO to enable automatic save file migration on load.")]
+        [SerializeField] private MigrationRegistrySO _migrationRegistry;
+
         private readonly Dictionary<string, Saveable> _saveables = new();
+        private VersionMigrator _migrationRunner;
 
         private float _autoSaveTimer;
 
@@ -31,6 +36,11 @@ namespace FakeMG.SaveLoad.Advanced
             if (_enableAutoSave)
             {
                 _autoSaveTimer = _autoSaveInterval;
+            }
+
+            if (_migrationRegistry)
+            {
+                _migrationRunner = new VersionMigrator(_migrationRegistry, _enableDebug);
             }
 
             RefreshSaveables();
@@ -196,11 +206,16 @@ namespace FakeMG.SaveLoad.Advanced
             {
                 SaveMetadata metadata = ES3.Load(METADATA_KEY, normalizedSavePath, new SaveMetadata());
 
-                // TODO: Implement migration logic
-                // if (metadata.GameVersion != Application.version)
-                // {
-                //     VersionMigrator.MigrateSaveData(normalizedSavePath, metadata.GameVersion);
-                // }
+                if (_migrationRunner != null && metadata.GameVersion != Application.version)
+                {
+                    bool migrationSucceeded = _migrationRunner.MigrateSaveFile(normalizedSavePath, metadata.GameVersion);
+                    if (!migrationSucceeded)
+                    {
+                        Echo.Error($"Migration failed for {normalizedSavePath}. Loading aborted.", _enableDebug, this);
+                        LoadDefaultData();
+                        return;
+                    }
+                }
 
                 foreach (var saveable in _saveables)
                 {
@@ -211,7 +226,8 @@ namespace FakeMG.SaveLoad.Advanced
                     }
                     else
                     {
-                        Echo.Warning($"No data found for {saveable.Key} in {normalizedSavePath}.", _enableDebug, this);
+                        saveable.Value.RestoreDefaultState();
+                        Echo.Warning($"No data found for {saveable.Key} in {normalizedSavePath}. Restored to default state.", _enableDebug, this);
                     }
                 }
 

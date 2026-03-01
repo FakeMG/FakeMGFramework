@@ -13,11 +13,20 @@
 - Auto Save: Automatically saves game state at defined intervals
 - Manual Save/Load: Provides functions to manually save and load game state
 - Multiple Save File Support: Ability to handle multiple save files
+- Versioning: Handle different versions of save data for backward compatibility
+  - Manually handle in each Migration step:
+    - Add fields (ES3 assigns C# default values for new fields, but we may want different default values for new fields)
+    - Change existing field data type (ES3 assigns C# default value for the new type, but this may cause issues if the old data cannot be converted to the new type)
+    - Rename keys
+  - Handle in the SaveLoadSystem or by Easy Save 3:
+    - Add new keys (Handled by the SaveLoadSystem, if a key is missing in the save file, it will restore the default state for that key)
+    - Remove fields (Don't need to do anything, ES3 ignores removed fields)
+    - Remove keys (Don't need to do anything, the unused data will be ignored when loading and removed when saving)
 - Use Easy Save 3: Leverages the Easy Save 3 asset for serialization, compression, and encryption
 
 ### ⏳ Planned (To-Do)
-- Versioning: Handle different versions of save data for backward compatibility
 - Separate save file into smaller files for different systems (e.g., player data, world state)
 - UI Integration: Provide user interface components for save/load operations
+- Editor tool to edit save data directly in the editor when the data is encrypted
 
 ### ❌ Out of Scope / Not Implemented
