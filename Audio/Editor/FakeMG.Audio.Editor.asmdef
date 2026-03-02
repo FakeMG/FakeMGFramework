@@ -1,0 +1,19 @@
+{
+    "name": "FakeMG.Audio.Editor",
+    "rootNamespace": "FakeMG.Audio.Editor",
+    "references": [
+        "GUID:fac05ee0c02cb8449a84c95bc47f6365",
+        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

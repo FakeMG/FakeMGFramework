@@ -24,10 +24,12 @@
 - Mixer Controls
   - Independent volume control for Master, Music, and SFX channels.
 
+- Editor Tools
+  - Auto-Generator: Editor tool to automatically create Audio Cue ScriptableObjects from folders/selections.
+
 ### ⏳ Planned (To-Do)
 - [ ] Audio Ducking: Automatically lower music/SFX volume during specific events (e.g., dialogue).
 - [ ] Follow Target: Allow audio sources to attach to and follow moving GameObjects.
-- [ ] Auto-Generator: Editor tool to automatically create Audio Cue ScriptableObjects from folders/selections.
 
 ### ❌ Out of Scope / Not Implemented
 - In-Editor Preview: Currently, audio can only be previewed during Play Mode.
