@@ -3,7 +3,6 @@
     "rootNamespace": "FakeMG.Audio",
     "references": [
         "FakeMG.Framework",
-        "FakeMG.SOEventSystem",
         "DOTween.Modules"
     ],
     "includePlatforms": [],

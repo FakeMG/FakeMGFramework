@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using FakeMG.SOEventSystem.EventChannel;
+using FakeMG.Framework.EventBus;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -26,13 +26,6 @@ namespace FakeMG.Audio
         [SerializeField] private AudioCueEventChannelSO _sfxEventChannel;
         [SerializeField] private AudioCueEventChannelSO _musicEventChannel;
 
-        [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to change SFXs volume")]
-        [SerializeField] private FloatEventChannelSO _sfxVolumeEventChannel;
-        [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to change Music volume")]
-        [SerializeField] private FloatEventChannelSO _musicVolumeEventChannel;
-        [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to change Master volume")]
-        [SerializeField] private FloatEventChannelSO _masterVolumeEventChannel;
-
         [Header("Audio control")]
         [SerializeField] private AudioMixer _audioMixer;
 
@@ -49,9 +42,9 @@ namespace FakeMG.Audio
             _musicEventChannel.OnAudioCuePlayRequested += PlayMusicTrack;
             _musicEventChannel.OnAudioCueStopRequested += StopMusicTrack;
 
-            _sfxVolumeEventChannel.OnEventRaised += ChangeSfxVolume;
-            _musicVolumeEventChannel.OnEventRaised += ChangeMusicVolume;
-            _masterVolumeEventChannel.OnEventRaised += ChangeMasterVolume;
+            EventBus<SfxVolumeChangedEvent>.OnEvent += ApplySfxVolumeWhenChanged;
+            EventBus<MusicVolumeChangedEvent>.OnEvent += ApplyMusicVolumeWhenChanged;
+            EventBus<MasterVolumeChangedEvent>.OnEvent += ApplyMasterVolumeWhenChanged;
         }
 
         private void Start()
@@ -61,9 +54,9 @@ namespace FakeMG.Audio
 
             var sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_PREF, 1);
             var musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_PREF, 1);
-            ChangeSfxVolume(sfxVolume);
-            ChangeMusicVolume(musicVolume);
-            ChangeMasterVolume(1);
+            ApplyVolumeChange(SFX_VOLUME_PARAM, SFX_VOLUME_PREF, sfxVolume);
+            ApplyVolumeChange(MUSIC_VOLUME_PARAM, MUSIC_VOLUME_PREF, musicVolume);
+            ApplyVolumeChange(MASTER_VOLUME_PARAM, MASTER_VOLUME_PREF, 1);
         }
 
         private void OnDestroy()
@@ -83,43 +76,51 @@ namespace FakeMG.Audio
             _musicEventChannel.OnAudioCuePlayRequested -= PlayMusicTrack;
             _musicEventChannel.OnAudioCueStopRequested -= StopMusicTrack;
 
-            _sfxVolumeEventChannel.OnEventRaised -= ChangeSfxVolume;
-            _musicVolumeEventChannel.OnEventRaised -= ChangeMusicVolume;
-            _masterVolumeEventChannel.OnEventRaised -= ChangeMasterVolume;
+            EventBus<SfxVolumeChangedEvent>.OnEvent -= ApplySfxVolumeWhenChanged;
+            EventBus<MusicVolumeChangedEvent>.OnEvent -= ApplyMusicVolumeWhenChanged;
+            EventBus<MasterVolumeChangedEvent>.OnEvent -= ApplyMasterVolumeWhenChanged;
         }
 
-        private void ChangeMasterVolume(float newVolume)
+        private void ApplySfxVolumeWhenChanged(SfxVolumeChangedEvent volumeChangedEvent)
         {
-            float clampedVolume = Mathf.Max(newVolume, 0.0001f);
-            SetGroupVolume(MASTER_VOLUME_PARAM, Mathf.Log10(clampedVolume) * 20);
-            PlayerPrefs.SetFloat(MASTER_VOLUME_PREF, newVolume);
-            PlayerPrefs.Save();
+            float newVolume = volumeChangedEvent.Volume;
+            ApplyVolumeChange(SFX_VOLUME_PARAM, SFX_VOLUME_PREF, newVolume);
         }
 
-        private void ChangeMusicVolume(float newVolume)
+        private void ApplyMusicVolumeWhenChanged(MusicVolumeChangedEvent volumeChangedEvent)
         {
-            float clampedVolume = Mathf.Max(newVolume, 0.0001f);
-            SetGroupVolume(MUSIC_VOLUME_PARAM, Mathf.Log10(clampedVolume) * 20);
-            PlayerPrefs.SetFloat(MUSIC_VOLUME_PREF, newVolume);
-            PlayerPrefs.Save();
+            float newVolume = volumeChangedEvent.Volume;
+            ApplyVolumeChange(MUSIC_VOLUME_PARAM, MUSIC_VOLUME_PREF, newVolume);
         }
 
-        private void ChangeSfxVolume(float newVolume)
+        private void ApplyMasterVolumeWhenChanged(MasterVolumeChangedEvent volumeChangedEvent)
         {
-            float clampedVolume = Mathf.Max(newVolume, 0.0001f);
-            SetGroupVolume(SFX_VOLUME_PARAM, Mathf.Log10(clampedVolume) * 20);
-            PlayerPrefs.SetFloat(SFX_VOLUME_PREF, newVolume);
+            float newVolume = volumeChangedEvent.Volume;
+            ApplyVolumeChange(MASTER_VOLUME_PARAM, MASTER_VOLUME_PREF, newVolume);
+        }
+
+        private void ApplyVolumeChange(string mixerParameterName, string playerPrefsKey, float newVolume)
+        {
+            const float MIN_LINEAR_VOLUME = 0.0001f;
+            const float DECIBEL_SCALE = 20f;
+
+            // Keeps conversion numerically stable for silent volume.
+            float clampedVolume = Mathf.Max(newVolume, MIN_LINEAR_VOLUME);
+            SetGroupVolume(mixerParameterName, Mathf.Log10(clampedVolume) * DECIBEL_SCALE);
+            PlayerPrefs.SetFloat(playerPrefsKey, newVolume);
             PlayerPrefs.Save();
         }
 
         public void ToggleMusicVolume(bool isEnabled)
         {
-            ChangeMusicVolume(isEnabled ? 1 : 0);
+            float volume = isEnabled ? 1 : 0;
+            ApplyVolumeChange(MUSIC_VOLUME_PARAM, MUSIC_VOLUME_PREF, volume);
         }
 
         public void ToggleSfxVolume(bool isEnabled)
         {
-            ChangeSfxVolume(isEnabled ? 1 : 0);
+            float volume = isEnabled ? 1 : 0;
+            ApplyVolumeChange(SFX_VOLUME_PARAM, SFX_VOLUME_PREF, volume);
         }
 
         private void SetGroupVolume(string parameterName, float volume)

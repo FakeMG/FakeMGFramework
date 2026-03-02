@@ -81,7 +81,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _applicationTimeoutSeconds: 10
-  _enableDebugLogs: 1
+  _enableDebug: 1
 --- !u!1 &4364114724844911322
 GameObject:
   m_ObjectHideFlags: 0
@@ -131,9 +131,6 @@ MonoBehaviour:
   _musicSoundEmitter: {fileID: 1788211686790592175}
   _sfxEventChannel: {fileID: 11400000, guid: d03f5823c57fc3e4a8ae9e7718ac779f, type: 2}
   _musicEventChannel: {fileID: 11400000, guid: 9b0b82c497847e946806fef82b08f463, type: 2}
-  _sfxVolumeEventChannel: {fileID: 11400000, guid: 7e128e6a9a1cc934a9ea9bbf976cf717, type: 2}
-  _musicVolumeEventChannel: {fileID: 11400000, guid: 9be23eb5bcf322f408b98a5e8d569bc1, type: 2}
-  _masterVolumeEventChannel: {fileID: 11400000, guid: 421ed474d4699284b90517f257cda869, type: 2}
   _audioMixer: {fileID: 24100000, guid: b8cba562885306045842b4d3ef271da0, type: 2}
 --- !u!1 &4624873479294473802
 GameObject:
@@ -182,6 +179,8 @@ MonoBehaviour:
   _enableAutoSave: 1
   _maxAutoSaves: 5
   _autoSaveInterval: 300
+  _enableDebug: 1
+  _migrationRegistry: {fileID: 0}
 --- !u!1 &5133335594514053503
 GameObject:
   m_ObjectHideFlags: 0

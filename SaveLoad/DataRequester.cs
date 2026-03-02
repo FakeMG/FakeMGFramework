@@ -8,7 +8,8 @@ namespace FakeMG.SaveLoad
     /// <summary>
     /// Base class for systems that need to request and apply save data.
     /// Systems implement this to register with DataApplicationManager and 
-    /// receive data when available.
+    /// so that they can be awaited during the data application process.
+    /// This is used for systems that need to wait for the data to be applied before they can function properly
     /// </summary>
     public abstract class DataRequester : MonoBehaviour
     {
