@@ -7,13 +7,15 @@ namespace FakeMG.Framework.UI.Tab.TabButton
     {
         [SerializeField] private RectTransform _tabButton;
         [SerializeField] protected float _animationDuration = 0.3f;
+        [SerializeField] private Ease _scaleEase = Ease.InSine;
+        [SerializeField] private Ease _deselectEase = Ease.OutQuad;
 
         public override void AnimateSelection()
         {
             _tabButton.DOKill();
 
             Vector3 targetScale = Vector3.one * 1.2f;
-            _tabButton.DOScale(targetScale, _animationDuration).SetEase(Ease.OutBounce).SetLink(_tabButton.gameObject);
+            _tabButton.DOScale(targetScale, _animationDuration).SetEase(_scaleEase).SetLink(_tabButton.gameObject);
         }
 
         public override void AnimateDeselection()
@@ -21,7 +23,7 @@ namespace FakeMG.Framework.UI.Tab.TabButton
             _tabButton.DOKill();
 
             Vector3 targetScale = Vector3.one;
-            _tabButton.DOScale(targetScale, _animationDuration).SetEase(Ease.OutQuad).SetLink(_tabButton.gameObject);
+            _tabButton.DOScale(targetScale, _animationDuration).SetEase(_deselectEase).SetLink(_tabButton.gameObject);
         }
 
         public override void InstantlySelect()
