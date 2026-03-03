@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using FakeMG.Framework.EventBus;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -7,151 +6,206 @@ namespace FakeMG.Audio
 {
     public class AudioManager : MonoBehaviour
     {
-        // Audio mixer parameter names
-        private const string MASTER_VOLUME_PARAM = "MasterVolume";
-        private const string MUSIC_VOLUME_PARAM = "MusicVolume";
-        private const string SFX_VOLUME_PARAM = "SFXVolume";
-
-        // PlayerPrefs keys
-        private const string MASTER_VOLUME_PREF = "MasterVolume";
-        private const string MUSIC_VOLUME_PREF = "MusicVolume";
-        private const string SFX_VOLUME_PREF = "SFXVolume";
+        private const float MUSIC_FADE_DURATION_SECONDS = 2f;
 
         [Header("Prefab")]
         [SerializeField] private SoundEmitter _soundEmitterPrefab;
         [SerializeField] private SoundEmitter _musicSoundEmitter;
 
         [Header("Listening on channels")]
-        [Tooltip("The SoundManager listens to this event, fired by objects in any scene, to play SFXs")]
-        [SerializeField] private AudioCueEventChannelSO _sfxEventChannel;
+        [Tooltip("Any channel in this list will be handled by the pooled playback pipeline.")]
+        [SerializeField] private List<AudioCueEventChannelSO> _pooledEventChannels = new();
+        [Tooltip("Music uses a dedicated emitter to preserve crossfade behavior.")]
         [SerializeField] private AudioCueEventChannelSO _musicEventChannel;
-
-        [Header("Audio control")]
-        [SerializeField] private AudioMixer _audioMixer;
 
         private Queue<SoundEmitter> _soundEmitterQueue;
         private SoundEmitterVault _soundEmitterVault;
         private readonly object _vaultLock = new();
+        private readonly HashSet<AudioCueEventChannelSO> _registeredPooledChannels = new();
+
+        private void Awake()
+        {
+            _soundEmitterQueue = new Queue<SoundEmitter>();
+            _soundEmitterVault = new SoundEmitterVault();
+        }
 
         private void OnEnable()
         {
-            _sfxEventChannel.OnAudioCuePlayRequested += PlayAudioCue;
-            _sfxEventChannel.OnAudioCueStopRequested += StopAudioCue;
-            _sfxEventChannel.OnAudioCueFinishRequested += FinishAudioCue;
-
-            _musicEventChannel.OnAudioCuePlayRequested += PlayMusicTrack;
-            _musicEventChannel.OnAudioCueStopRequested += StopMusicTrack;
-
-            EventBus<SfxVolumeChangedEvent>.OnEvent += ApplySfxVolumeWhenChanged;
-            EventBus<MusicVolumeChangedEvent>.OnEvent += ApplyMusicVolumeWhenChanged;
-            EventBus<MasterVolumeChangedEvent>.OnEvent += ApplyMasterVolumeWhenChanged;
+            RegisterPooledChannels();
+            RegisterMusicChannel();
         }
 
         private void Start()
         {
-            _soundEmitterQueue = new Queue<SoundEmitter>();
-            _soundEmitterVault = new SoundEmitterVault();
-
-            var sfxVolume = PlayerPrefs.GetFloat(SFX_VOLUME_PREF, 1);
-            var musicVolume = PlayerPrefs.GetFloat(MUSIC_VOLUME_PREF, 1);
-            ApplyVolumeChange(SFX_VOLUME_PARAM, SFX_VOLUME_PREF, sfxVolume);
-            ApplyVolumeChange(MUSIC_VOLUME_PARAM, MUSIC_VOLUME_PREF, musicVolume);
-            ApplyVolumeChange(MASTER_VOLUME_PARAM, MASTER_VOLUME_PREF, 1);
+            InitializeConfiguredVolumeChannels();
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
+            UnregisterPooledChannels();
+            UnregisterMusicChannel();
+
             CleanPool();
 
-            // Stop any playing music
-            if (_musicSoundEmitter != null && _musicSoundEmitter.IsPlaying())
+            if (_musicSoundEmitter && _musicSoundEmitter.IsPlaying())
             {
                 _musicSoundEmitter.Stop();
             }
-
-            _sfxEventChannel.OnAudioCuePlayRequested -= PlayAudioCue;
-            _sfxEventChannel.OnAudioCueStopRequested -= StopAudioCue;
-            _sfxEventChannel.OnAudioCueFinishRequested -= FinishAudioCue;
-
-            _musicEventChannel.OnAudioCuePlayRequested -= PlayMusicTrack;
-            _musicEventChannel.OnAudioCueStopRequested -= StopMusicTrack;
-
-            EventBus<SfxVolumeChangedEvent>.OnEvent -= ApplySfxVolumeWhenChanged;
-            EventBus<MusicVolumeChangedEvent>.OnEvent -= ApplyMusicVolumeWhenChanged;
-            EventBus<MasterVolumeChangedEvent>.OnEvent -= ApplyMasterVolumeWhenChanged;
         }
 
-        private void ApplySfxVolumeWhenChanged(SfxVolumeChangedEvent volumeChangedEvent)
+        private void OnValidate()
         {
-            float newVolume = volumeChangedEvent.Volume;
-            ApplyVolumeChange(SFX_VOLUME_PARAM, SFX_VOLUME_PREF, newVolume);
+            ValidatePooledChannelConfiguration();
         }
 
-        private void ApplyMusicVolumeWhenChanged(MusicVolumeChangedEvent volumeChangedEvent)
+        private void RegisterPooledChannels()
         {
-            float newVolume = volumeChangedEvent.Volume;
-            ApplyVolumeChange(MUSIC_VOLUME_PARAM, MUSIC_VOLUME_PREF, newVolume);
-        }
-
-        private void ApplyMasterVolumeWhenChanged(MasterVolumeChangedEvent volumeChangedEvent)
-        {
-            float newVolume = volumeChangedEvent.Volume;
-            ApplyVolumeChange(MASTER_VOLUME_PARAM, MASTER_VOLUME_PREF, newVolume);
-        }
-
-        private void ApplyVolumeChange(string mixerParameterName, string playerPrefsKey, float newVolume)
-        {
-            const float MIN_LINEAR_VOLUME = 0.0001f;
-            const float DECIBEL_SCALE = 20f;
-
-            // Keeps conversion numerically stable for silent volume.
-            float clampedVolume = Mathf.Max(newVolume, MIN_LINEAR_VOLUME);
-            SetGroupVolume(mixerParameterName, Mathf.Log10(clampedVolume) * DECIBEL_SCALE);
-            PlayerPrefs.SetFloat(playerPrefsKey, newVolume);
-            PlayerPrefs.Save();
-        }
-
-        public void ToggleMusicVolume(bool isEnabled)
-        {
-            float volume = isEnabled ? 1 : 0;
-            ApplyVolumeChange(MUSIC_VOLUME_PARAM, MUSIC_VOLUME_PREF, volume);
-        }
-
-        public void ToggleSfxVolume(bool isEnabled)
-        {
-            float volume = isEnabled ? 1 : 0;
-            ApplyVolumeChange(SFX_VOLUME_PARAM, SFX_VOLUME_PREF, volume);
-        }
-
-        private void SetGroupVolume(string parameterName, float volume)
-        {
-            bool volumeSet = _audioMixer.SetFloat(parameterName, volume);
-            if (!volumeSet)
+            _registeredPooledChannels.Clear();
+            if (_pooledEventChannels == null)
             {
-                Debug.LogError("The AudioMixer parameter was not found");
+                return;
+            }
+
+            foreach (var pooledChannel in _pooledEventChannels)
+            {
+                if (!CanRegisterPooledChannel(pooledChannel))
+                {
+                    continue;
+                }
+
+                pooledChannel.OnAudioCuePlayRequested += PlayAudioCue;
+                pooledChannel.OnAudioCueStopRequested += StopAudioCue;
+                pooledChannel.OnAudioCueFinishRequested += FinishAudioCue;
+                _registeredPooledChannels.Add(pooledChannel);
             }
         }
 
-        private AudioCueKey PlayMusicTrack(AudioCueSO audioCue, AudioConfigurationSO audioConfiguration,
-            Vector3 positionInSpace, Transform parent = null)
+        private bool CanRegisterPooledChannel(AudioCueEventChannelSO pooledChannel)
         {
-            float fadeDuration = 2f;
+            if (!pooledChannel)
+            {
+                Debug.LogError("A pooled audio event channel reference is missing.", this);
+                return false;
+            }
 
+            if (pooledChannel == _musicEventChannel)
+            {
+                Debug.LogError("The music channel cannot also be registered as a pooled channel.", this);
+                return false;
+            }
+
+            if (_registeredPooledChannels.Contains(pooledChannel))
+            {
+                Debug.LogError($"Pooled channel '{pooledChannel.name}' is duplicated.", this);
+                return false;
+            }
+
+            return true;
+        }
+
+        private void UnregisterPooledChannels()
+        {
+            foreach (var pooledChannel in _registeredPooledChannels)
+            {
+                pooledChannel.OnAudioCuePlayRequested -= PlayAudioCue;
+                pooledChannel.OnAudioCueStopRequested -= StopAudioCue;
+                pooledChannel.OnAudioCueFinishRequested -= FinishAudioCue;
+            }
+
+            _registeredPooledChannels.Clear();
+        }
+
+        private void RegisterMusicChannel()
+        {
+            _musicEventChannel.OnAudioCuePlayRequested += PlayMusicTrack;
+            _musicEventChannel.OnAudioCueStopRequested += StopMusicTrack;
+        }
+
+        private void UnregisterMusicChannel()
+        {
+            _musicEventChannel.OnAudioCuePlayRequested -= PlayMusicTrack;
+            _musicEventChannel.OnAudioCueStopRequested -= StopMusicTrack;
+        }
+
+        private void ValidatePooledChannelConfiguration()
+        {
+            if (_pooledEventChannels == null)
+            {
+                return;
+            }
+
+            var uniqueChannels = new HashSet<AudioCueEventChannelSO>();
+
+            foreach (var pooledChannel in _pooledEventChannels)
+            {
+                if (!pooledChannel)
+                {
+                    Debug.LogError("A pooled audio event channel reference is missing.", this);
+                    continue;
+                }
+
+                if (pooledChannel == _musicEventChannel)
+                {
+                    Debug.LogError("The music channel cannot also be in pooled channels.", this);
+                    continue;
+                }
+
+                if (!uniqueChannels.Add(pooledChannel))
+                {
+                    Debug.LogError($"Pooled channel '{pooledChannel.name}' is duplicated.", this);
+                }
+            }
+        }
+
+        private void InitializeConfiguredVolumeChannels()
+        {
+            var initializedChannels = new HashSet<AudioCueEventChannelSO>();
+            InitializeVolumeForChannel(_musicEventChannel, initializedChannels);
+
+            if (_pooledEventChannels == null)
+            {
+                return;
+            }
+
+            foreach (var pooledChannel in _pooledEventChannels)
+            {
+                InitializeVolumeForChannel(pooledChannel, initializedChannels);
+            }
+        }
+
+        private void InitializeVolumeForChannel(AudioCueEventChannelSO eventChannel, HashSet<AudioCueEventChannelSO> initializedChannels)
+        {
+            if (!eventChannel || !initializedChannels.Add(eventChannel))
+            {
+                return;
+            }
+
+            eventChannel.InitializePersistedVolume();
+        }
+
+        private AudioCueKey PlayMusicTrack(
+            AudioCueSO audioCue,
+            AudioConfigurationSO audioConfiguration,
+            AudioMixerGroup outputAudioMixerGroup,
+            Vector3 positionInSpace,
+            Transform parent = null)
+        {
             if (_musicSoundEmitter && _musicSoundEmitter.IsPlaying())
             {
                 AudioClip songToPlay = audioCue.GetClips()[0];
 
-                //If the same song is already playing, do nothing
-                if (_musicSoundEmitter.GetClip() == songToPlay) return AudioCueKey.Invalid;
+                if (_musicSoundEmitter.GetClip() == songToPlay)
+                {
+                    return AudioCueKey.Invalid;
+                }
 
-                //Music is already playing, need to fade it out
-                _musicSoundEmitter.FadeOutAudioClip(fadeDuration);
+                _musicSoundEmitter.FadeOutAudioClip(MUSIC_FADE_DURATION_SECONDS);
             }
 
-            _musicSoundEmitter.FadeInAudioClip(audioCue.GetClips()[0], audioConfiguration, audioCue);
+            _musicSoundEmitter.FadeInAudioClip(audioCue.GetClips()[0], audioConfiguration, audioCue, outputAudioMixerGroup);
             _musicSoundEmitter.IgnoreListenerPause();
 
-            return AudioCueKey.Invalid; //No need to return a valid key for music
+            return AudioCueKey.Invalid;
         }
 
         private bool StopMusicTrack(AudioCueKey key, AudioCueSO audioCue)
@@ -165,8 +219,12 @@ namespace FakeMG.Audio
             return false;
         }
 
-        private AudioCueKey PlayAudioCue(AudioCueSO audioCueSO, AudioConfigurationSO settings,
-            Vector3 position = default, Transform parent = null)
+        private AudioCueKey PlayAudioCue(
+            AudioCueSO audioCueSO,
+            AudioConfigurationSO settings,
+            AudioMixerGroup outputAudioMixerGroup,
+            Vector3 position = default,
+            Transform parent = null)
         {
             AudioClip[] clipsToPlay = audioCueSO.GetClips();
             List<SoundEmitter> soundEmitterList = new();
@@ -179,14 +237,29 @@ namespace FakeMG.Audio
 
             foreach (var audioClip in clipsToPlay)
             {
-                InitializeSoundEmitter(audioCueSO, settings, key, soundEmitterList, audioClip, parent, position);
+                InitializeSoundEmitter(
+                    audioCueSO,
+                    settings,
+                    outputAudioMixerGroup,
+                    key,
+                    soundEmitterList,
+                    audioClip,
+                    parent,
+                    position);
             }
 
             return key;
         }
 
-        private void InitializeSoundEmitter(AudioCueSO audioCueSO, AudioConfigurationSO settings, AudioCueKey key,
-            List<SoundEmitter> soundEmitterList, AudioClip audioClip, Transform parent, Vector3 position)
+        private void InitializeSoundEmitter(
+            AudioCueSO audioCueSO,
+            AudioConfigurationSO settings,
+            AudioMixerGroup outputAudioMixerGroup,
+            AudioCueKey key,
+            List<SoundEmitter> soundEmitterList,
+            AudioClip audioClip,
+            Transform parent,
+            Vector3 position)
         {
             var soundEmitter = GetSoundEmitter();
             soundEmitter.AudioCueKey = key;
@@ -203,11 +276,11 @@ namespace FakeMG.Audio
 
             if (audioCueSO.FadeIn)
             {
-                soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO);
+                soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO, outputAudioMixerGroup);
             }
             else
             {
-                soundEmitter.Play(audioClip, settings, audioCueSO, position);
+                soundEmitter.Play(audioClip, settings, audioCueSO, outputAudioMixerGroup, position);
             }
 
             soundEmitter.OnSoundFinishedPlaying += CleanEmitter;
@@ -221,10 +294,11 @@ namespace FakeMG.Audio
             {
                 bool isFound = _soundEmitterVault.Get(audioCueKey, out soundEmitters);
                 if (!isFound)
+                {
                     return false;
+                }
             }
 
-            // Iterate backwards to safely handle modifications during iteration
             for (int i = soundEmitters.Count - 1; i >= 0; i--)
             {
                 var emitter = soundEmitters[i];
@@ -282,18 +356,19 @@ namespace FakeMG.Audio
             {
                 TryRemoveEmitterFromVault(soundEmitter);
             }
+
             RemoveEmitterFromPool(soundEmitter);
         }
 
         private void TryRemoveEmitterFromVault(SoundEmitter soundEmitter)
         {
             if (!_soundEmitterVault.Get(soundEmitter.AudioCueKey, out List<SoundEmitter> soundEmitterList))
+            {
                 return;
+            }
 
-            // First, remove the current emitter from the list
             soundEmitterList.Remove(soundEmitter);
 
-            // Then check if the list is empty or all remaining emitters have stopped
             bool shouldRemoveKey = soundEmitterList.Count == 0;
             if (!shouldRemoveKey)
             {
@@ -350,6 +425,11 @@ namespace FakeMG.Audio
 
         public void CleanPool()
         {
+            if (_soundEmitterQueue == null)
+            {
+                return;
+            }
+
             foreach (var soundEmitter in _soundEmitterQueue)
             {
                 Destroy(soundEmitter.gameObject);

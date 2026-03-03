@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using DG.Tweening;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.Events;
 
 namespace FakeMG.Audio
@@ -25,9 +26,15 @@ namespace FakeMG.Audio
             OnSoundDestroyed?.Invoke(this);
         }
 
-        public void Play(AudioClip clip, AudioConfigurationSO audioConfigSO, AudioCueSO audioCueSO, Vector3 position = default)
+        public void Play(
+            AudioClip clip,
+            AudioConfigurationSO audioConfigSO,
+            AudioCueSO audioCueSO,
+            AudioMixerGroup outputAudioMixerGroup,
+            Vector3 position = default)
         {
             _audioSource.clip = clip;
+            _audioSource.outputAudioMixerGroup = outputAudioMixerGroup;
             audioConfigSO.ApplyToWithVariations(_audioSource, audioCueSO);
             _audioSource.transform.position = position;
             _audioSource.loop = audioCueSO.Looping;
@@ -78,9 +85,13 @@ namespace FakeMG.Audio
             }
         }
 
-        public void FadeInAudioClip(AudioClip musicClip, AudioConfigurationSO settings, AudioCueSO audioCue)
+        public void FadeInAudioClip(
+            AudioClip musicClip,
+            AudioConfigurationSO settings,
+            AudioCueSO audioCue,
+            AudioMixerGroup outputAudioMixerGroup)
         {
-            Play(musicClip, settings, audioCue);
+            Play(musicClip, settings, audioCue, outputAudioMixerGroup);
             float targetVolume = _audioSource.volume; // Get the volume after variations are applied
             _audioSource.volume = 0f;
 

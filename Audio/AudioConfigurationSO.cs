@@ -1,15 +1,12 @@
-﻿using FakeMG.Framework;
+using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Audio;
 
 namespace FakeMG.Audio
 {
     [CreateAssetMenu(menuName = FakeMGEditorMenus.AUDIO + "/AudioConfigurationSO")]
     public class AudioConfigurationSO : ScriptableObject
     {
-        public AudioMixerGroup OutputAudioMixerGroup;
-
         // Simplified management of priority levels (values are counterintuitive, see enum below)
         [SerializeField] private PriorityLevel _priorityLevel = PriorityLevel.Standard;
 
@@ -56,7 +53,6 @@ namespace FakeMG.Audio
 
         private void ApplyTo(AudioSource audioSource)
         {
-            audioSource.outputAudioMixerGroup = OutputAudioMixerGroup;
             audioSource.mute = Mute;
             audioSource.bypassEffects = BypassEffects;
             audioSource.bypassListenerEffects = BypassListenerEffects;

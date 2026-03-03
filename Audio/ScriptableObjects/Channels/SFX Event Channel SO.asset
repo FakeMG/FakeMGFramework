@@ -12,3 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e9e80b284d644e49c357c9f49c84e6b, type: 3}
   m_Name: SFX Event Channel SO
   m_EditorClassIdentifier: 
+  _outputAudioMixerGroup: {fileID: -2775078417333423215, guid: b8cba562885306045842b4d3ef271da0, type: 2}
+  _channelId: SFX
+  _audioMixer: {fileID: 24100000, guid: b8cba562885306045842b4d3ef271da0, type: 2}
+  _mixerVolumeParameter: SFXVolume
+  _playerPrefsKey: SFXVolume
+  _defaultVolume: 1

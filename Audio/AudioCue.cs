@@ -28,20 +28,7 @@ namespace FakeMG.Audio
         private AudioConfigurationSO _audioConfiguration;
 
         #region Override Settings
-        // Output & Priority
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [FoldoutGroup("Override Settings")]
-        [BoxGroup("Override Settings/Output & Priority")]
-        private bool _overrideOutputMixerGroup;
-
-        [SerializeField]
-        [ShowIf(nameof(ShowOverrideSettings))]
-        [BoxGroup("Override Settings/Output & Priority")]
-        [Indent]
-        [EnableIf(nameof(_overrideOutputMixerGroup))]
-        private AudioMixerGroup _outputAudioMixerGroup;
-
+        // Priority
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Output & Priority")]
@@ -331,7 +318,6 @@ namespace FakeMG.Audio
         private AudioConfigurationSO CreateFullyCustomConfiguration()
         {
             var customConfig = ScriptableObject.CreateInstance<AudioConfigurationSO>();
-            customConfig.OutputAudioMixerGroup = _outputAudioMixerGroup;
             customConfig.Priority = (int)_priorityLevel;
             customConfig.Mute = _mute;
             customConfig.Volume = _volume;
@@ -364,7 +350,6 @@ namespace FakeMG.Audio
             var overriddenConfig = ScriptableObject.CreateInstance<AudioConfigurationSO>();
 
             // Start with base configuration values
-            overriddenConfig.OutputAudioMixerGroup = _audioConfiguration.OutputAudioMixerGroup;
             overriddenConfig.Priority = _audioConfiguration.Priority;
             overriddenConfig.Mute = _audioConfiguration.Mute;
             overriddenConfig.Volume = _audioConfiguration.Volume;
@@ -384,7 +369,6 @@ namespace FakeMG.Audio
             overriddenConfig.IgnoreListenerPause = _audioConfiguration.IgnoreListenerPause;
 
             // Apply overrides where specified
-            if (_overrideOutputMixerGroup) overriddenConfig.OutputAudioMixerGroup = _outputAudioMixerGroup;
             if (_overridePriority) overriddenConfig.Priority = (int)_priorityLevel;
             if (_overrideMute) overriddenConfig.Mute = _mute;
             if (_overrideVolume) overriddenConfig.Volume = _volume;
