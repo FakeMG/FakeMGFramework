@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 838ef1b92699f9f4a981192af2aa89e3, type: 3}
+  m_Name: Master Volume Setting SO
+  m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.SliderSettingSO
+  _settingId: MasterVolume
+  _defaultValue: 100
+  _minValue: 0
+  _maxValue: 100
+  _useWholeNumbers: 1

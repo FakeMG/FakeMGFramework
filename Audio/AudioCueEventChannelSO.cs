@@ -135,6 +135,7 @@ namespace FakeMG.Audio
 
         private void ApplyVolumeChange(float newVolume)
         {
+            //TODO: convert the newVolume to 0-1 range, not clamping it. The slider can be in 0-any range
             float clampedVolume = Mathf.Clamp01(newVolume);
             float stableLinearVolume = Mathf.Max(clampedVolume, MIN_LINEAR_VOLUME);
             float decibelValue = Mathf.Log10(stableLinearVolume) * DECIBEL_SCALE;

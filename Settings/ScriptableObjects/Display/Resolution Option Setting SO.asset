@@ -1,0 +1,16 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f7a4a4a6f334f14a0ae73fb9dbbc9b1, type: 3}
+  m_Name: Resolution Option Setting SO
+  m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.Display.ResolutionOptionSettingSO
+  _settingId: display.resolution
+  _defaultValue: 0
