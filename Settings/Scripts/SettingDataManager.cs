@@ -9,7 +9,7 @@ namespace FakeMG.Settings
     public class SettingValue<T> : ISettingValue
     {
         public T value;
-        public Action<T> OnChanged;
+        public Action<SettingDataGeneric<T>, T> OnChanged;
     }
 
     public class SettingDataManager : Saveable
@@ -43,7 +43,7 @@ namespace FakeMG.Settings
             if (!EqualityComparer<T>.Default.Equals(storage.value, newValue))
             {
                 storage.value = newValue;
-                storage.OnChanged?.Invoke(newValue);
+                storage.OnChanged?.Invoke(setting, newValue);
             }
         }
 
@@ -52,9 +52,17 @@ namespace FakeMG.Settings
             return GetOrCreateStorage(setting).value;
         }
 
-        public void Subscribe<T>(SettingDataGeneric<T> setting, Action<T> callback)
+        public void Subscribe<T>(SettingDataGeneric<T> setting, Action<SettingDataGeneric<T>, T> callback)
         {
             GetOrCreateStorage(setting).OnChanged += callback;
+        }
+
+        public void Unsubscribe<T>(SettingDataGeneric<T> setting, Action<SettingDataGeneric<T>, T> callback)
+        {
+            if (_currentData.TryGetValue(setting.SettingId, out ISettingValue storage))
+            {
+                ((SettingValue<T>)storage).OnChanged -= callback;
+            }
         }
 
         private SettingValue<T> GetOrCreateStorage<T>(SettingDataGeneric<T> setting)

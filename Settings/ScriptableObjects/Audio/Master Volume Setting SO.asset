@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Master Volume Setting SO
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.SliderSettingSO
   _settingId: MasterVolume
-  _defaultValue: 100
-  _minValue: 0
-  _maxValue: 100
-  _useWholeNumbers: 1
+  _label: Master
+  _defaultValue: 1
+  _storageMinValue: 0
+  _storageMaxValue: 1

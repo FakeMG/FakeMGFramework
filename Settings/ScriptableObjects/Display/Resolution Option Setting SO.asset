@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Resolution Option Setting SO
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.Display.ResolutionOptionSettingSO
   _settingId: display.resolution
+  _label: Resolution
   _defaultValue: 0

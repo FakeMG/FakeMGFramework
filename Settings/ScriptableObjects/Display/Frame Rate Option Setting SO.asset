@@ -13,10 +13,6 @@ MonoBehaviour:
   m_Name: Frame Rate Option Setting SO
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.Display.FrameRateOptionSettingSO
   _settingId: display.frameRate
+  _label: FPS
   _defaultValue: 1
-  _frameRateValues:
-  - 30
-  - 60
-  - 120
-  - 144
-  - 240
+  _frameRateValues: 1e0000003c0000007800000090000000f0000000

@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Window Mode Option Setting SO
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.Display.WindowModeOptionSettingSO
   _settingId: display.windowMode
+  _label: Window Mode
   _defaultValue: 0

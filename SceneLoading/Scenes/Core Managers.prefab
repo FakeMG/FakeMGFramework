@@ -131,21 +131,8 @@ MonoBehaviour:
   _musicSoundEmitter: {fileID: 1788211686790592175}
   _pooledEventChannels:
   - {fileID: 11400000, guid: d03f5823c57fc3e4a8ae9e7718ac779f, type: 2}
+  - {fileID: 11400000, guid: edf2a1701d8d9a3408012c0e977faf22, type: 2}
   _musicEventChannel: {fileID: 11400000, guid: 9b0b82c497847e946806fef82b08f463, type: 2}
-  _audioMixer: {fileID: 24100000, guid: b8cba562885306045842b4d3ef271da0, type: 2}
-  _volumeChannels:
-  - _channelId: MASTER
-    _mixerParameterName: MasterVolume
-    _playerPrefsKey: MasterVolume
-    _defaultVolume: 1
-  - _channelId: MUSIC
-    _mixerParameterName: MusicVolume
-    _playerPrefsKey: MusicVolume
-    _defaultVolume: 1
-  - _channelId: SFX
-    _mixerParameterName: SFXVolume
-    _playerPrefsKey: SFXVolume
-    _defaultVolume: 1
 --- !u!1 &4624873479294473802
 GameObject:
   m_ObjectHideFlags: 0

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FakeMG.Settings;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -12,6 +13,8 @@ namespace FakeMG.Audio
         [SerializeField] private SoundEmitter _soundEmitterPrefab;
         [SerializeField] private SoundEmitter _musicSoundEmitter;
 
+        [SerializeField] private SettingDataManager _settingDataManager;
+
         [Header("Listening on channels")]
         [Tooltip("Any channel in this list will be handled by the pooled playback pipeline.")]
         [SerializeField] private List<AudioCueEventChannelSO> _pooledEventChannels = new();
@@ -20,30 +23,33 @@ namespace FakeMG.Audio
 
         private Queue<SoundEmitter> _soundEmitterQueue;
         private SoundEmitterVault _soundEmitterVault;
+        private AudioChannelRegistry _channelRegistry;
         private readonly object _vaultLock = new();
-        private readonly HashSet<AudioCueEventChannelSO> _registeredPooledChannels = new();
 
         private void Awake()
         {
             _soundEmitterQueue = new Queue<SoundEmitter>();
             _soundEmitterVault = new SoundEmitterVault();
+            _channelRegistry = new AudioChannelRegistry(_pooledEventChannels, _musicEventChannel);
         }
 
         private void OnEnable()
         {
-            RegisterPooledChannels();
-            RegisterMusicChannel();
+            _channelRegistry.RegisterPooledChannels(PlayAudioCue, StopAudioCue, FinishAudioCue);
+            _channelRegistry.RegisterMusicChannel(PlayMusicTrack, StopMusicTrack);
         }
 
         private void Start()
         {
-            InitializeConfiguredVolumeChannels();
+            _channelRegistry.SubscribeToVolumeChanges(_settingDataManager);
+            _channelRegistry.InitializeChannelVolumes(_settingDataManager);
         }
 
         private void OnDisable()
         {
-            UnregisterPooledChannels();
-            UnregisterMusicChannel();
+            _channelRegistry.UnsubscribeFromVolumeChanges(_settingDataManager);
+            _channelRegistry.UnregisterPooledChannels();
+            _channelRegistry.UnregisterMusicChannel();
 
             CleanPool();
 
@@ -55,132 +61,7 @@ namespace FakeMG.Audio
 
         private void OnValidate()
         {
-            ValidatePooledChannelConfiguration();
-        }
-
-        private void RegisterPooledChannels()
-        {
-            _registeredPooledChannels.Clear();
-            if (_pooledEventChannels == null)
-            {
-                return;
-            }
-
-            foreach (var pooledChannel in _pooledEventChannels)
-            {
-                if (!CanRegisterPooledChannel(pooledChannel))
-                {
-                    continue;
-                }
-
-                pooledChannel.OnAudioCuePlayRequested += PlayAudioCue;
-                pooledChannel.OnAudioCueStopRequested += StopAudioCue;
-                pooledChannel.OnAudioCueFinishRequested += FinishAudioCue;
-                _registeredPooledChannels.Add(pooledChannel);
-            }
-        }
-
-        private bool CanRegisterPooledChannel(AudioCueEventChannelSO pooledChannel)
-        {
-            if (!pooledChannel)
-            {
-                Debug.LogError("A pooled audio event channel reference is missing.", this);
-                return false;
-            }
-
-            if (pooledChannel == _musicEventChannel)
-            {
-                Debug.LogError("The music channel cannot also be registered as a pooled channel.", this);
-                return false;
-            }
-
-            if (_registeredPooledChannels.Contains(pooledChannel))
-            {
-                Debug.LogError($"Pooled channel '{pooledChannel.name}' is duplicated.", this);
-                return false;
-            }
-
-            return true;
-        }
-
-        private void UnregisterPooledChannels()
-        {
-            foreach (var pooledChannel in _registeredPooledChannels)
-            {
-                pooledChannel.OnAudioCuePlayRequested -= PlayAudioCue;
-                pooledChannel.OnAudioCueStopRequested -= StopAudioCue;
-                pooledChannel.OnAudioCueFinishRequested -= FinishAudioCue;
-            }
-
-            _registeredPooledChannels.Clear();
-        }
-
-        private void RegisterMusicChannel()
-        {
-            _musicEventChannel.OnAudioCuePlayRequested += PlayMusicTrack;
-            _musicEventChannel.OnAudioCueStopRequested += StopMusicTrack;
-        }
-
-        private void UnregisterMusicChannel()
-        {
-            _musicEventChannel.OnAudioCuePlayRequested -= PlayMusicTrack;
-            _musicEventChannel.OnAudioCueStopRequested -= StopMusicTrack;
-        }
-
-        private void ValidatePooledChannelConfiguration()
-        {
-            if (_pooledEventChannels == null)
-            {
-                return;
-            }
-
-            var uniqueChannels = new HashSet<AudioCueEventChannelSO>();
-
-            foreach (var pooledChannel in _pooledEventChannels)
-            {
-                if (!pooledChannel)
-                {
-                    Debug.LogError("A pooled audio event channel reference is missing.", this);
-                    continue;
-                }
-
-                if (pooledChannel == _musicEventChannel)
-                {
-                    Debug.LogError("The music channel cannot also be in pooled channels.", this);
-                    continue;
-                }
-
-                if (!uniqueChannels.Add(pooledChannel))
-                {
-                    Debug.LogError($"Pooled channel '{pooledChannel.name}' is duplicated.", this);
-                }
-            }
-        }
-
-        private void InitializeConfiguredVolumeChannels()
-        {
-            var initializedChannels = new HashSet<AudioCueEventChannelSO>();
-            InitializeVolumeForChannel(_musicEventChannel, initializedChannels);
-
-            if (_pooledEventChannels == null)
-            {
-                return;
-            }
-
-            foreach (var pooledChannel in _pooledEventChannels)
-            {
-                InitializeVolumeForChannel(pooledChannel, initializedChannels);
-            }
-        }
-
-        private void InitializeVolumeForChannel(AudioCueEventChannelSO eventChannel, HashSet<AudioCueEventChannelSO> initializedChannels)
-        {
-            if (!eventChannel || !initializedChannels.Add(eventChannel))
-            {
-                return;
-            }
-
-            eventChannel.InitializePersistedVolume();
+            AudioChannelRegistry.ValidatePooledChannelConfiguration(_pooledEventChannels, _musicEventChannel);
         }
 
         private AudioCueKey PlayMusicTrack(

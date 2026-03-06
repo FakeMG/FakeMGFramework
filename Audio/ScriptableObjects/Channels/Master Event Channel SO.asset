@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e9e80b284d644e49c357c9f49c84e6b, type: 3}
-  m_Name: SFX Event Channel SO
+  m_Name: Master Event Channel SO
   m_EditorClassIdentifier: 
-  _outputAudioMixerGroup: {fileID: -2775078417333423215, guid: b8cba562885306045842b4d3ef271da0, type: 2}
+  _outputAudioMixerGroup: {fileID: 24300002, guid: b8cba562885306045842b4d3ef271da0, type: 2}
   _audioMixer: {fileID: 24100000, guid: b8cba562885306045842b4d3ef271da0, type: 2}
-  _mixerVolumeParameter: SFXVolume
-  _volumeSliderSetting: {fileID: 11400000, guid: b46731019314b2c47b2613bb3295b615, type: 2}
+  _mixerVolumeParameter: MasterVolume
+  _volumeSliderSetting: {fileID: 11400000, guid: 5770703ae8232474c8763e3cde61d952, type: 2}

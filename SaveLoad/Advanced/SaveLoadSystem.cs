@@ -31,7 +31,7 @@ namespace FakeMG.SaveLoad.Advanced
 
         public event Action OnLoadingComplete;
 
-        private void Start()
+        private void Awake()
         {
             if (_enableAutoSave)
             {

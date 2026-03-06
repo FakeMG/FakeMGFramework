@@ -117,9 +117,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d8cb71e0337f4e0f98df4c71c44683c5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.DropdownSettingUIBinder
-  _settingDataManager: {fileID: 0}
   _optionSetting: {fileID: 0}
   _dropdown: {fileID: 7735271006961767885}
+  _labelText: {fileID: 2279324678464803863}
 --- !u!1 &876829496631683024
 GameObject:
   m_ObjectHideFlags: 0

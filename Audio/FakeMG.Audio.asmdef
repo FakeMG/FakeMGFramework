@@ -3,6 +3,9 @@
     "rootNamespace": "FakeMG.Audio",
     "references": [
         "FakeMG.Framework",
+        "FakeMG.Settings",
+        "FakeMG.SaveLoad",
+        "VContainer",
         "DOTween.Modules"
     ],
     "includePlatforms": [],

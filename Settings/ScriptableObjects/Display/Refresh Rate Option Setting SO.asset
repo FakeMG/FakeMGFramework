@@ -13,4 +13,5 @@ MonoBehaviour:
   m_Name: Refresh Rate Option Setting SO
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.Display.RefreshRateOptionSettingSO
   _settingId: display.refreshRate
+  _label: Refresh Rate
   _defaultValue: 0

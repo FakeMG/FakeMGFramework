@@ -9,9 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b77ea3975ec344129f13731d1ab5bc73, type: 3}
-  m_Name: VSync Option Setting SO
-  m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.OnOffOptionSettingSO
-  _settingId: display.vSync
-  _label: VSync
+  m_Script: {fileID: 11500000, guid: 838ef1b92699f9f4a981192af2aa89e3, type: 3}
+  m_Name: Music Volume Setting SO
+  m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.SliderSettingSO
+  _settingId: MusicVolume
+  _label: Music
   _defaultValue: 1
+  _storageMinValue: 0
+  _storageMaxValue: 1
