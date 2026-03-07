@@ -27,6 +27,10 @@ namespace FakeMG.SaveLoad.Editor
         private const string FILE_RAW_EDITOR_CONTROL_NAME = "SaveFileViewer.FileRawJson";
 
         private static readonly List<Type> CREATABLE_NEW_KEY_TYPES = BuildCreatableNewKeyTypes();
+        private static readonly HashSet<string> METADATA_FIELD_NAMES = typeof(SaveMetadata)
+            .GetFields(BindingFlags.Public | BindingFlags.Instance)
+            .Select(field => field.Name)
+            .ToHashSet(StringComparer.Ordinal);
 
         private static GUIStyle s_selectedEntryStyle;
         private static GUIStyle s_selectedButtonStyle;
@@ -376,12 +380,24 @@ namespace FakeMG.SaveLoad.Editor
 
         private void DrawKeyRawJsonEditor()
         {
-            string message = _isTypedViewAvailable
-                ? "Editing the selected key entry as raw JSON. Update the property name to rename the key. Changes are validated before saving."
-                : "Typed editing is not available for this key. Editing the selected key entry as raw JSON instead.";
-            MessageType messageType = _isTypedViewAvailable
-                ? MessageType.Info
-                : MessageType.Warning;
+            bool isMetadataKey = _selectedKey == SaveFileCatalog.METADATA_KEY;
+            string message;
+            MessageType messageType;
+
+            if (isMetadataKey)
+            {
+                message = "Editing the metadata entry as raw JSON. Metadata key and field names are locked; only metadata values can be changed.";
+                messageType = MessageType.Warning;
+            }
+            else
+            {
+                message = _isTypedViewAvailable
+                    ? "Editing the selected key entry as raw JSON. Update the property name to rename the key. Changes are validated before saving."
+                    : "Typed editing is not available for this key. Editing the selected key entry as raw JSON instead.";
+                messageType = _isTypedViewAvailable
+                    ? MessageType.Info
+                    : MessageType.Warning;
+            }
 
             DrawRawJsonEditor(
                 _cachedKeyRawJson,
@@ -393,7 +409,7 @@ namespace FakeMG.SaveLoad.Editor
 
         private void DrawFullFileRawJsonEditor()
         {
-            string message = "Editing the entire save file as raw JSON. Changes are validated before saving.";
+            string message = "Editing the entire save file as raw JSON. The metadata entry is required and its field names cannot be added, removed, or renamed.";
             DrawRawJsonEditor(
                 _cachedFullFileRawJson,
                 message,
@@ -693,6 +709,14 @@ namespace FakeMG.SaveLoad.Editor
                 return;
             }
 
+            if (_selectedKey == SaveFileCatalog.METADATA_KEY
+                && !TryValidateMetadataToken(rawToken, out errorMessage))
+            {
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
+                return;
+            }
+
             if (!string.Equals(updatedKeyName, _selectedKey, StringComparison.Ordinal)
                 && string.Equals(updatedKeyName, SaveFileCatalog.METADATA_KEY, StringComparison.Ordinal))
             {
@@ -729,6 +753,13 @@ namespace FakeMG.SaveLoad.Editor
                 return;
             }
 
+            if (!TryValidateMetadataInRoot(rootObject, out errorMessage))
+            {
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
+                return;
+            }
+
             PersistRawFile(rootObject);
         }
 
@@ -757,6 +788,15 @@ namespace FakeMG.SaveLoad.Editor
 
         private void DeleteKey(string key)
         {
+            if (key == SaveFileCatalog.METADATA_KEY)
+            {
+                EditorUtility.DisplayDialog(
+                    "Protected Key",
+                    $"'{SaveFileCatalog.METADATA_KEY}' is required metadata and cannot be deleted.",
+                    "OK");
+                return;
+            }
+
             bool confirmed = EditorUtility.DisplayDialog(
                 "Delete Key",
                 $"Are you sure you want to delete key '{key}' from this save file?\nThis cannot be undone.",
@@ -1184,6 +1224,69 @@ namespace FakeMG.SaveLoad.Editor
                 rawToken?.DeepClone() ?? JValue.CreateNull());
 
             existingProperty.Replace(replacementProperty);
+            errorMessage = null;
+            return true;
+        }
+
+        private static bool TryValidateMetadataInRoot(JObject rootObject, out string errorMessage)
+        {
+            List<JProperty> metadataProperties = rootObject
+                .Properties()
+                .Where(property => string.Equals(property.Name, SaveFileCatalog.METADATA_KEY, StringComparison.Ordinal))
+                .ToList();
+
+            if (metadataProperties.Count == 0)
+            {
+                errorMessage = $"'{SaveFileCatalog.METADATA_KEY}' is required and cannot be deleted.";
+                return false;
+            }
+
+            if (metadataProperties.Count > 1)
+            {
+                errorMessage = $"'{SaveFileCatalog.METADATA_KEY}' must appear exactly once in the save file.";
+                return false;
+            }
+
+            return TryValidateMetadataToken(metadataProperties[0].Value, out errorMessage);
+        }
+
+        private static bool TryValidateMetadataToken(JToken metadataToken, out string errorMessage)
+        {
+            if (metadataToken is not JObject metadataObject)
+            {
+                errorMessage = $"'{SaveFileCatalog.METADATA_KEY}' must remain a JSON object so its field names stay intact.";
+                return false;
+            }
+
+            HashSet<string> encounteredFieldNames = new(StringComparer.Ordinal);
+            List<JProperty> metadataProperties = metadataObject.Properties().ToList();
+
+            for (int i = 0; i < metadataProperties.Count; i++)
+            {
+                string fieldName = metadataProperties[i].Name;
+
+                if (!encounteredFieldNames.Add(fieldName))
+                {
+                    errorMessage = $"Metadata field '{fieldName}' is duplicated. Metadata field names cannot be renamed, duplicated, added, or removed.";
+                    return false;
+                }
+
+                if (!METADATA_FIELD_NAMES.Contains(fieldName))
+                {
+                    errorMessage = $"Metadata field '{fieldName}' is not supported. Allowed fields: {string.Join(", ", METADATA_FIELD_NAMES)}.";
+                    return false;
+                }
+            }
+
+            if (encounteredFieldNames.Count != METADATA_FIELD_NAMES.Count)
+            {
+                List<string> missingFields = METADATA_FIELD_NAMES
+                    .Where(fieldName => !encounteredFieldNames.Contains(fieldName))
+                    .ToList();
+                errorMessage = $"Metadata is missing required fields: {string.Join(", ", missingFields)}.";
+                return false;
+            }
+
             errorMessage = null;
             return true;
         }

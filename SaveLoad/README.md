@@ -28,12 +28,12 @@
   - Remove existing key
   - Add new key with a typed initial value for any supported creatable runtime type
   - Raw JSON editing mode
+  - Metadata validation prevents renaming metadata keys or fields and blocks metadata deletion
 
 ### ⏳ Planned (To-Do)
 - Separate save file into smaller files for different systems (e.g., player data, world state)
 - UI Integration: Provide user interface components for save/load operations
 - Editor tool
-  - Validation for metadata (do not allow editing key name or field name in the metadata)
   - Support Ctrl + Z undo
 
 ### ❌ Out of Scope / Not Implemented
