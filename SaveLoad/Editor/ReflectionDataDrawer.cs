@@ -1,19 +1,33 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
 namespace FakeMG.SaveLoad.Editor
 {
-    /// <summary>
-    /// Draws and edits arbitrary serialized objects via reflection in IMGUI.
-    /// Returns true from DrawObject if any field was modified.
-    /// </summary>
     public static class ReflectionDataDrawer
     {
         private static readonly HashSet<string> ExpandedPaths = new();
+        private static readonly Dictionary<Type, FieldInfo[]> EditableFieldsByType = new();
+
+        public static bool DrawRootValue(Type valueType, ref object value, string path = "root")
+        {
+            object nextValue = DrawField("Value", valueType, value, path, out bool changed);
+            if (changed)
+            {
+                value = nextValue;
+            }
+
+            return changed;
+        }
+
+        public static object CreateDefaultValue(Type type)
+        {
+            return CreateDefaultInstance(type);
+        }
 
         public static bool DrawObject(object obj, string path = "")
         {
@@ -24,15 +38,12 @@ namespace FakeMG.SaveLoad.Editor
             }
 
             Type type = obj.GetType();
-            FieldInfo[] fields = type.GetFields(BindingFlags.Public | BindingFlags.Instance);
+            FieldInfo[] fields = GetEditableFields(type);
 
             bool changed = false;
 
             foreach (FieldInfo field in fields)
             {
-                if (field.IsDefined(typeof(NonSerializedAttribute), true))
-                    continue;
-
                 string fieldPath = string.IsNullOrEmpty(path)
                     ? field.Name
                     : $"{path}.{field.Name}";
@@ -50,6 +61,23 @@ namespace FakeMG.SaveLoad.Editor
             return changed;
         }
 
+        private static FieldInfo[] GetEditableFields(Type type)
+        {
+            if (EditableFieldsByType.TryGetValue(type, out FieldInfo[] fields))
+            {
+                return fields;
+            }
+
+            fields = type
+                .GetFields(BindingFlags.Public | BindingFlags.Instance)
+                .Where(field => !field.IsDefined(typeof(NonSerializedAttribute), true))
+                .Where(field => !typeof(Delegate).IsAssignableFrom(field.FieldType))
+                .ToArray();
+
+            EditableFieldsByType[type] = fields;
+            return fields;
+        }
+
         private static object DrawField(
             string label,
             Type fieldType,
@@ -60,14 +88,14 @@ namespace FakeMG.SaveLoad.Editor
             changed = false;
 
             if (fieldType == typeof(int))
-                return DrawPrimitive(label, (int)value, EditorGUILayout.IntField, out changed);
+                return DrawPrimitive(label, value is int intValue ? intValue : default, EditorGUILayout.IntField, out changed);
 
             if (fieldType == typeof(float))
-                return DrawPrimitive(label, (float)value, EditorGUILayout.FloatField, out changed);
+                return DrawPrimitive(label, value is float floatValue ? floatValue : default, EditorGUILayout.FloatField, out changed);
 
             if (fieldType == typeof(double))
             {
-                double old = (double)value;
+                double old = value is double doubleValue ? doubleValue : default;
                 double next = EditorGUILayout.DoubleField(label, old);
                 changed = !old.Equals(next);
                 return next;
@@ -75,7 +103,7 @@ namespace FakeMG.SaveLoad.Editor
 
             if (fieldType == typeof(long))
             {
-                long old = (long)value;
+                long old = value is long longValue ? longValue : default;
                 long next = EditorGUILayout.LongField(label, old);
                 changed = old != next;
                 return next;
@@ -83,7 +111,7 @@ namespace FakeMG.SaveLoad.Editor
 
             if (fieldType == typeof(bool))
             {
-                bool old = (bool)value;
+                bool old = value is bool boolValue && boolValue;
                 bool next = EditorGUILayout.Toggle(label, old);
                 changed = old != next;
                 return next;
@@ -91,30 +119,33 @@ namespace FakeMG.SaveLoad.Editor
 
             if (fieldType == typeof(string))
             {
-                string old = (string)value ?? string.Empty;
+                string old = value as string ?? string.Empty;
                 string next = EditorGUILayout.TextField(label, old);
                 changed = old != next;
                 return next;
             }
 
+            if (typeof(IDictionary).IsAssignableFrom(fieldType))
+                return DrawDictionary(label, value as IDictionary, fieldType, path, out changed);
+
             if (fieldType == typeof(Vector2))
-                return DrawPrimitive(label, (Vector2)value, EditorGUILayout.Vector2Field, out changed);
+                return DrawPrimitive(label, value is Vector2 vector2 ? vector2 : default, EditorGUILayout.Vector2Field, out changed);
 
             if (fieldType == typeof(Vector3))
-                return DrawPrimitive(label, (Vector3)value, EditorGUILayout.Vector3Field, out changed);
+                return DrawPrimitive(label, value is Vector3 vector3 ? vector3 : default, EditorGUILayout.Vector3Field, out changed);
 
             if (fieldType == typeof(Vector4))
-                return DrawPrimitive(label, (Vector4)value, EditorGUILayout.Vector4Field, out changed);
+                return DrawPrimitive(label, value is Vector4 vector4 ? vector4 : default, EditorGUILayout.Vector4Field, out changed);
 
             if (fieldType == typeof(Vector2Int))
-                return DrawPrimitive(label, (Vector2Int)value, EditorGUILayout.Vector2IntField, out changed);
+                return DrawPrimitive(label, value is Vector2Int vector2Int ? vector2Int : default, EditorGUILayout.Vector2IntField, out changed);
 
             if (fieldType == typeof(Vector3Int))
-                return DrawPrimitive(label, (Vector3Int)value, EditorGUILayout.Vector3IntField, out changed);
+                return DrawPrimitive(label, value is Vector3Int vector3Int ? vector3Int : default, EditorGUILayout.Vector3IntField, out changed);
 
             if (fieldType == typeof(Quaternion))
             {
-                Quaternion old = (Quaternion)value;
+                Quaternion old = value is Quaternion quaternion ? quaternion : default;
                 Vector4 asVec = new(old.x, old.y, old.z, old.w);
                 Vector4 next = EditorGUILayout.Vector4Field(label, asVec);
                 Quaternion result = new(next.x, next.y, next.z, next.w);
@@ -124,7 +155,7 @@ namespace FakeMG.SaveLoad.Editor
 
             if (fieldType == typeof(Color))
             {
-                Color old = (Color)value;
+                Color old = value is Color color ? color : default;
                 Color next = EditorGUILayout.ColorField(label, old);
                 changed = old != next;
                 return next;
@@ -132,26 +163,27 @@ namespace FakeMG.SaveLoad.Editor
 
             if (fieldType == typeof(DateTime))
             {
-                DateTime old = (DateTime)value;
+                DateTime old = value is DateTime dateTime ? dateTime : default;
                 string text = EditorGUILayout.TextField(label, old.ToString("O"));
                 if (DateTime.TryParse(text, out DateTime parsed) && parsed != old)
                 {
                     changed = true;
                     return parsed;
                 }
+
                 return old;
             }
 
             if (fieldType.IsEnum)
             {
-                Enum old = (Enum)value;
+                Enum old = value as Enum ?? (Enum)Activator.CreateInstance(fieldType);
                 Enum next = EditorGUILayout.EnumPopup(label, old);
                 changed = !Equals(old, next);
                 return next;
             }
 
             if (typeof(IList).IsAssignableFrom(fieldType))
-                return DrawList(label, (IList)value, fieldType, path, out changed);
+                return DrawList(label, value as IList, fieldType, path, out changed);
 
             if (fieldType.IsClass || (fieldType.IsValueType && !fieldType.IsPrimitive))
                 return DrawNestedObject(label, value, path, out changed);
@@ -161,7 +193,10 @@ namespace FakeMG.SaveLoad.Editor
         }
 
         private static T DrawPrimitive<T>(
-            string label, T value, Func<string, T, GUILayoutOption[], T> drawer, out bool changed)
+            string label,
+            T value,
+            Func<string, T, GUILayoutOption[], T> drawer,
+            out bool changed)
         {
             T next = drawer(label, value, Array.Empty<GUILayoutOption>());
             changed = !Equals(value, next);
@@ -197,8 +232,88 @@ namespace FakeMG.SaveLoad.Editor
             return value;
         }
 
+        private static object DrawDictionary(
+            string label,
+            IDictionary dictionary,
+            Type fieldType,
+            string path,
+            out bool changed)
+        {
+            changed = false;
+
+            if (dictionary == null)
+            {
+                EditorGUILayout.LabelField(label, "(null dictionary)");
+                return dictionary;
+            }
+
+            bool expanded = ExpandedPaths.Contains(path);
+            bool newExpanded = EditorGUILayout.Foldout(expanded, $"{label} [{dictionary.Count}]", true);
+
+            if (newExpanded != expanded)
+            {
+                if (newExpanded) ExpandedPaths.Add(path);
+                else ExpandedPaths.Remove(path);
+            }
+
+            if (!newExpanded)
+                return dictionary;
+
+            EditorGUI.indentLevel++;
+            ResolveDictionaryTypes(fieldType, dictionary, out Type keyType, out Type declaredValueType);
+
+            object keyToRemove = null;
+            List<object> keys = new();
+            foreach (DictionaryEntry entry in dictionary)
+            {
+                keys.Add(entry.Key);
+            }
+
+            for (int i = 0; i < keys.Count; i++)
+            {
+                object entryKey = keys[i];
+                object entryValue = dictionary[entryKey];
+                Type entryValueType = entryValue?.GetType() ?? declaredValueType;
+
+                EditorGUILayout.BeginHorizontal();
+
+                object nextValue = DrawField(
+                    entryKey?.ToString() ?? "(null)",
+                    entryValueType,
+                    entryValue,
+                    $"{path}.{entryKey}",
+                    out bool entryChanged);
+
+                if (entryChanged)
+                {
+                    dictionary[entryKey] = nextValue;
+                    changed = true;
+                }
+
+                if (GUILayout.Button("-", GUILayout.Width(25)))
+                {
+                    keyToRemove = entryKey;
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (keyToRemove != null)
+            {
+                dictionary.Remove(keyToRemove);
+                changed = true;
+            }
+
+            EditorGUI.indentLevel--;
+            return dictionary;
+        }
+
         private static object DrawList(
-            string label, IList list, Type fieldType, string path, out bool changed)
+            string label,
+            IList list,
+            Type fieldType,
+            string path,
+            out bool changed)
         {
             changed = false;
 
@@ -217,7 +332,8 @@ namespace FakeMG.SaveLoad.Editor
                 else ExpandedPaths.Remove(path);
             }
 
-            if (!newExpanded) return list;
+            if (!newExpanded)
+                return list;
 
             EditorGUI.indentLevel++;
 
@@ -263,6 +379,49 @@ namespace FakeMG.SaveLoad.Editor
             return list;
         }
 
+        private static void ResolveDictionaryTypes(Type fieldType, IDictionary dictionary, out Type keyType, out Type valueType)
+        {
+            if (TryGetDictionaryTypes(fieldType, out keyType, out valueType))
+                return;
+
+            if (dictionary != null && TryGetDictionaryTypes(dictionary.GetType(), out keyType, out valueType))
+                return;
+
+            keyType = typeof(object);
+            valueType = typeof(object);
+        }
+
+        private static bool TryGetDictionaryTypes(Type type, out Type keyType, out Type valueType)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+            {
+                Type[] genericArguments = type.GetGenericArguments();
+                keyType = genericArguments[0];
+                valueType = genericArguments[1];
+                return true;
+            }
+
+            Type[] interfaces = type.GetInterfaces();
+            for (int i = 0; i < interfaces.Length; i++)
+            {
+                Type @interface = interfaces[i];
+                if (!@interface.IsGenericType)
+                    continue;
+
+                if (@interface.GetGenericTypeDefinition() != typeof(IDictionary<,>))
+                    continue;
+
+                Type[] genericArguments = @interface.GetGenericArguments();
+                keyType = genericArguments[0];
+                valueType = genericArguments[1];
+                return true;
+            }
+
+            keyType = typeof(object);
+            valueType = typeof(object);
+            return false;
+        }
+
         private static Type ResolveListElementType(Type listType)
         {
             if (listType.IsArray)
@@ -278,6 +437,9 @@ namespace FakeMG.SaveLoad.Editor
         {
             if (type == typeof(string))
                 return string.Empty;
+
+            if (type.IsArray)
+                return Array.CreateInstance(type.GetElementType(), 0);
 
             if (type.IsValueType)
                 return Activator.CreateInstance(type);

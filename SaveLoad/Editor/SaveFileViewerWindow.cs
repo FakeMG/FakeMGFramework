@@ -2,8 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using FakeMG.Framework;
 using FakeMG.SaveLoad.Advanced;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,6 +14,25 @@ namespace FakeMG.SaveLoad.Editor
 {
     public sealed class SaveFileViewerWindow : EditorWindow
     {
+        private enum DataViewMode
+        {
+            Typed,
+            KeyRaw,
+            FileRaw
+        }
+
+        private const int MAX_TYPE_MATCHES = 200;
+        private const string NEW_KEY_PREVIEW_PATH = "new-key-preview";
+        private const string KEY_RAW_EDITOR_CONTROL_NAME = "SaveFileViewer.KeyRawJson";
+        private const string FILE_RAW_EDITOR_CONTROL_NAME = "SaveFileViewer.FileRawJson";
+
+        private static readonly List<Type> CREATABLE_NEW_KEY_TYPES = BuildCreatableNewKeyTypes();
+
+        private static GUIStyle s_selectedEntryStyle;
+        private static GUIStyle s_selectedButtonStyle;
+        private static Texture2D s_selectedBackgroundTexture;
+        private static bool? s_isProSkin;
+
         private const float LEFT_PANEL_MIN_WIDTH = 220f;
         private const float LEFT_PANEL_MAX_WIDTH = 500f;
         private const float SPLITTER_WIDTH = 4f;
@@ -21,19 +43,30 @@ namespace FakeMG.SaveLoad.Editor
         private List<ManagedSaveFileInfo> _fileEntries = new();
         private string _selectedFilePath;
         private string[] _keys = Array.Empty<string>();
+        private readonly HashSet<string> _keyLookup = new(StringComparer.Ordinal);
         private string _selectedKey;
         private object _cachedKeyData;
         private bool _isDirty;
 
-        private bool _isRawJsonMode;
-        private string _cachedRawJson;
-        private string _fullFileRawJson;
+        private DataViewMode _currentDataViewMode = DataViewMode.Typed;
+        private bool _isTypedViewAvailable;
+        private string _cachedKeyRawJson;
+        private string _cachedFullFileRawJson;
+        private string _rawValidationErrorMessage;
 
         private Vector2 _fileListScroll;
         private Vector2 _keyListScroll;
         private Vector2 _dataEditorScroll;
 
         private string _newKeyName = string.Empty;
+        private string _newKeyTypeSearch = typeof(string).FullName;
+        private int _newKeyTypeMatchIndex;
+        private string[] _newKeyTypeMatchLabels = Array.Empty<string>();
+        private List<Type> _newKeyTypeMatches = new();
+        private Type _exactNewKeyTypeMatch;
+        private Type _selectedNewKeyType = typeof(string);
+        private object _newKeyInitialValue;
+        private bool _isNewKeyInitialValueExpanded;
 
         [MenuItem(FakeMGEditorMenus.SAVE_FILE_VIEWER)]
         private static void ShowWindow()
@@ -45,6 +78,8 @@ namespace FakeMG.SaveLoad.Editor
 
         private void OnEnable()
         {
+            RefreshNewKeyTypeMatches();
+            ResetNewKeyInitialValue();
             RefreshFileList();
         }
 
@@ -104,7 +139,7 @@ namespace FakeMG.SaveLoad.Editor
         {
             bool isSelected = _selectedFilePath == entry.FilePath;
             GUIStyle style = isSelected
-                ? CreateSelectedStyle()
+                ? GetSelectedEntryStyle()
                 : EditorStyles.helpBox;
 
             EditorGUILayout.BeginVertical(style);
@@ -225,7 +260,7 @@ namespace FakeMG.SaveLoad.Editor
             EditorGUILayout.BeginHorizontal();
 
             GUIStyle buttonStyle = isSelected
-                ? CreateSelectedButtonStyle()
+                ? GetSelectedButtonStyle()
                 : GUI.skin.button;
 
             if (GUILayout.Button(key, buttonStyle))
@@ -247,35 +282,80 @@ namespace FakeMG.SaveLoad.Editor
 
         private void DrawAddKeyRow()
         {
-            EditorGUILayout.BeginHorizontal();
-            _newKeyName = EditorGUILayout.TextField(_newKeyName);
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            EditorGUILayout.LabelField("Add Key", EditorStyles.boldLabel);
 
-            EditorGUI.BeginDisabledGroup(string.IsNullOrWhiteSpace(_newKeyName));
-            if (GUILayout.Button("Add Key", GUILayout.Width(70)))
+            _newKeyName = EditorGUILayout.TextField("Key", _newKeyName);
+            DrawNewKeyTypeSelector();
+
+            if (_selectedNewKeyType == null)
             {
-                AddNewKey(_newKeyName.Trim());
+                EditorGUILayout.HelpBox(
+                    "Enter an exact runtime type name or search for a creatable type to initialize the new key.",
+                    MessageType.Info);
+            }
+            else
+            {
+                _isNewKeyInitialValueExpanded = EditorGUILayout.Foldout(
+                    _isNewKeyInitialValueExpanded,
+                    "Initial Value",
+                    true);
+
+                if (_isNewKeyInitialValueExpanded)
+                {
+                    EditorGUI.indentLevel++;
+                    ReflectionDataDrawer.DrawRootValue(_selectedNewKeyType, ref _newKeyInitialValue, NEW_KEY_PREVIEW_PATH);
+                    EditorGUI.indentLevel--;
+                }
+            }
+
+            string trimmedKeyName = _newKeyName.Trim();
+            bool isReservedKey = trimmedKeyName == SaveFileCatalog.METADATA_KEY;
+            bool keyExists = !string.IsNullOrWhiteSpace(trimmedKeyName) && _keyLookup.Contains(trimmedKeyName);
+
+            if (isReservedKey)
+            {
+                EditorGUILayout.HelpBox($"'{SaveFileCatalog.METADATA_KEY}' is reserved for save metadata.", MessageType.Warning);
+            }
+            else if (keyExists)
+            {
+                EditorGUILayout.HelpBox($"The key '{trimmedKeyName}' already exists in this save file.", MessageType.Warning);
+            }
+
+            bool canAddKey = !string.IsNullOrWhiteSpace(trimmedKeyName)
+                && !isReservedKey
+                && !keyExists
+                && _selectedNewKeyType != null;
+            EditorGUI.BeginDisabledGroup(!canAddKey);
+            if (GUILayout.Button("Add Key"))
+            {
+                AddNewKey(trimmedKeyName, _newKeyInitialValue);
             }
             EditorGUI.EndDisabledGroup();
 
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.EndVertical();
         }
 
         private void DrawDataEditor()
         {
-            if (string.IsNullOrEmpty(_selectedKey))
+            EditorGUILayout.LabelField(GetDataEditorTitle(), EditorStyles.boldLabel);
+            DrawDataEditorToolbar();
+
+            if (!CanRenderCurrentDataView())
             {
                 EditorGUILayout.HelpBox("Select a key to view and edit its data.", MessageType.Info);
                 return;
             }
 
-            EditorGUILayout.LabelField($"Editing: {_selectedKey}", EditorStyles.boldLabel);
-            DrawDataEditorToolbar();
-
             _dataEditorScroll = EditorGUILayout.BeginScrollView(_dataEditorScroll);
 
-            if (_isRawJsonMode)
+            if (_currentDataViewMode == DataViewMode.KeyRaw)
             {
-                DrawRawJsonEditor();
+                DrawKeyRawJsonEditor();
+            }
+            else if (_currentDataViewMode == DataViewMode.FileRaw)
+            {
+                DrawFullFileRawJsonEditor();
             }
             else if (_cachedKeyData == null)
             {
@@ -283,7 +363,8 @@ namespace FakeMG.SaveLoad.Editor
             }
             else
             {
-                bool modified = ReflectionDataDrawer.DrawObject(_cachedKeyData);
+                Type valueType = _cachedKeyData.GetType();
+                bool modified = ReflectionDataDrawer.DrawRootValue(valueType, ref _cachedKeyData, $"root.{_selectedKey}");
                 if (modified)
                 {
                     _isDirty = true;
@@ -293,23 +374,62 @@ namespace FakeMG.SaveLoad.Editor
             EditorGUILayout.EndScrollView();
         }
 
-        private void DrawRawJsonEditor()
+        private void DrawKeyRawJsonEditor()
         {
-            EditorGUILayout.HelpBox(
-                "Typed editing is not available for this key (type could not be resolved). Showing raw JSON data.",
-                MessageType.Warning);
+            string message = _isTypedViewAvailable
+                ? "Editing the selected key entry as raw JSON. Update the property name to rename the key. Changes are validated before saving."
+                : "Typed editing is not available for this key. Editing the selected key entry as raw JSON instead.";
+            MessageType messageType = _isTypedViewAvailable
+                ? MessageType.Info
+                : MessageType.Warning;
 
-            if (string.IsNullOrEmpty(_cachedRawJson))
+            DrawRawJsonEditor(
+                _cachedKeyRawJson,
+                message,
+                messageType,
+                KEY_RAW_EDITOR_CONTROL_NAME,
+                UpdateCachedKeyRawJson);
+        }
+
+        private void DrawFullFileRawJsonEditor()
+        {
+            string message = "Editing the entire save file as raw JSON. Changes are validated before saving.";
+            DrawRawJsonEditor(
+                _cachedFullFileRawJson,
+                message,
+                MessageType.Warning,
+                FILE_RAW_EDITOR_CONTROL_NAME,
+                UpdateCachedFullFileRawJson);
+        }
+
+        private void DrawRawJsonEditor(
+            string rawJson,
+            string helpMessage,
+            MessageType helpMessageType,
+            string controlName,
+            Action<string> applyEditedJson)
+        {
+            EditorGUILayout.HelpBox(helpMessage, helpMessageType);
+
+            if (!string.IsNullOrEmpty(_rawValidationErrorMessage))
             {
-                EditorGUILayout.HelpBox("Could not extract raw JSON for this key.", MessageType.Error);
+                EditorGUILayout.HelpBox(_rawValidationErrorMessage, MessageType.Error);
+            }
+
+            if (rawJson == null)
+            {
+                EditorGUILayout.HelpBox("Could not load raw JSON for the current selection.", MessageType.Error);
                 return;
             }
 
+            GUI.SetNextControlName(controlName);
             EditorGUI.BeginChangeCheck();
-            _cachedRawJson = EditorGUILayout.TextArea(_cachedRawJson, GUILayout.ExpandHeight(true));
+            string editedJson = EditorGUILayout.TextArea(rawJson, GUILayout.ExpandHeight(true));
             if (EditorGUI.EndChangeCheck())
             {
+                applyEditedJson(editedJson);
                 _isDirty = true;
+                _rawValidationErrorMessage = null;
             }
         }
 
@@ -317,17 +437,24 @@ namespace FakeMG.SaveLoad.Editor
         {
             EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
 
-            EditorGUI.BeginDisabledGroup(!_isDirty);
+            EditorGUI.BeginDisabledGroup(!_isDirty || !CanSaveCurrentView());
             if (GUILayout.Button("Save Changes", EditorStyles.toolbarButton))
             {
                 SaveCurrentKeyData();
             }
             EditorGUI.EndDisabledGroup();
 
+            EditorGUI.BeginDisabledGroup(!CanReloadCurrentView());
             if (GUILayout.Button("Revert", EditorStyles.toolbarButton))
             {
-                ReloadCurrentKeyData();
+                ReloadCurrentDataView();
             }
+            EditorGUI.EndDisabledGroup();
+
+            GUILayout.Space(8f);
+            DrawDataViewButton("Typed", DataViewMode.Typed, !string.IsNullOrEmpty(_selectedKey) && _isTypedViewAvailable);
+            DrawDataViewButton("Key Raw", DataViewMode.KeyRaw, !string.IsNullOrEmpty(_selectedKey));
+            DrawDataViewButton("File Raw", DataViewMode.FileRaw, !string.IsNullOrEmpty(_selectedFilePath));
 
             GUILayout.FlexibleSpace();
 
@@ -350,7 +477,9 @@ namespace FakeMG.SaveLoad.Editor
             _selectedKey = null;
             _cachedKeyData = null;
             _keys = Array.Empty<string>();
+            _keyLookup.Clear();
             _isDirty = false;
+            _currentDataViewMode = DataViewMode.Typed;
             ClearRawJsonState();
             ReflectionDataDrawer.ClearExpandedState();
 
@@ -368,6 +497,7 @@ namespace FakeMG.SaveLoad.Editor
             if (_isDirty && !ConfirmDiscardChanges())
                 return;
 
+            ResetRawJsonEditorFocus();
             _selectedFilePath = filePath;
             _selectedKey = null;
             _cachedKeyData = null;
@@ -378,13 +508,16 @@ namespace FakeMG.SaveLoad.Editor
             try
             {
                 _keys = ES3.GetKeys(filePath);
+                RebuildKeyLookup();
             }
             catch (Exception e)
             {
                 Debug.LogError($"[SaveFileViewer] Failed to load keys from {filePath}: {e.Message}");
                 _keys = Array.Empty<string>();
+                _keyLookup.Clear();
             }
 
+            ReloadCurrentDataView();
             Repaint();
         }
 
@@ -393,99 +526,210 @@ namespace FakeMG.SaveLoad.Editor
             if (_isDirty && !ConfirmDiscardChanges())
                 return;
 
+            ResetRawJsonEditorFocus();
             _selectedKey = key;
             ReflectionDataDrawer.ClearExpandedState();
-            ReloadCurrentKeyData();
+            ReloadCurrentDataView();
             Repaint();
         }
 
-        private void ReloadCurrentKeyData()
+        private void ReloadCurrentDataView()
         {
             _isDirty = false;
             _cachedKeyData = null;
             ClearRawJsonState();
+            _isTypedViewAvailable = false;
 
-            if (string.IsNullOrEmpty(_selectedFilePath) || string.IsNullOrEmpty(_selectedKey))
+            if (string.IsNullOrEmpty(_selectedFilePath))
                 return;
 
-            try
+            if (!string.IsNullOrEmpty(_selectedKey))
             {
-                _cachedKeyData = ES3.Load(_selectedKey, _selectedFilePath);
+                _isTypedViewAvailable = TryLoadTypedKeyData(out object typedKeyData);
+                if (_currentDataViewMode == DataViewMode.Typed && _isTypedViewAvailable)
+                {
+                    _cachedKeyData = typedKeyData;
+                    return;
+                }
             }
-            catch (Exception)
+
+            if (_currentDataViewMode == DataViewMode.Typed)
             {
+                if (string.IsNullOrEmpty(_selectedKey))
+                    return;
+
+                _currentDataViewMode = DataViewMode.KeyRaw;
+            }
+
+            if (_currentDataViewMode == DataViewMode.KeyRaw)
+            {
+                if (string.IsNullOrEmpty(_selectedKey))
+                    return;
+
                 LoadKeyAsRawJson();
+                return;
             }
+
+            LoadFullFileAsRawJson();
         }
 
         private void LoadKeyAsRawJson()
         {
-            _isRawJsonMode = true;
-
-            try
+            if (!TryLoadFullFileJson(out JObject rootObject, out string errorMessage))
             {
-                _fullFileRawJson = ES3.LoadRawString(_selectedFilePath);
-                _cachedRawJson = ExtractKeyRawJson(_fullFileRawJson, _selectedKey);
-
-                if (_cachedRawJson == null)
-                {
-                    Debug.LogError($"[SaveFileViewer] Could not extract raw JSON for key '{_selectedKey}'");
-                }
+                _cachedKeyRawJson = null;
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
+                return;
             }
-            catch (Exception e)
+
+            _cachedFullFileRawJson = rootObject.ToString(Formatting.Indented);
+
+            JProperty property = rootObject
+                .Properties()
+                .FirstOrDefault(candidate => string.Equals(candidate.Name, _selectedKey, StringComparison.Ordinal));
+
+            if (property == null)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to load raw JSON from {_selectedFilePath}: {e.Message}");
-                _cachedRawJson = null;
+                _cachedKeyRawJson = null;
+                _rawValidationErrorMessage = $"Could not locate raw JSON for key '{_selectedKey}'.";
+                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
+                return;
+            }
+
+            _cachedKeyRawJson = CreateSingleKeyRawJson(property);
+        }
+
+        private void LoadFullFileAsRawJson()
+        {
+            if (!TryLoadFullFileJson(out JObject rootObject, out string errorMessage))
+            {
+                _cachedFullFileRawJson = null;
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
+                return;
+            }
+
+            _cachedFullFileRawJson = rootObject.ToString(Formatting.Indented);
+
+            if (!string.IsNullOrEmpty(_selectedKey))
+            {
+                JProperty property = rootObject
+                    .Properties()
+                    .FirstOrDefault(candidate => string.Equals(candidate.Name, _selectedKey, StringComparison.Ordinal));
+                _cachedKeyRawJson = property == null ? null : CreateSingleKeyRawJson(property);
             }
         }
 
         private void ClearRawJsonState()
         {
-            _isRawJsonMode = false;
-            _cachedRawJson = null;
-            _fullFileRawJson = null;
+            _cachedKeyRawJson = null;
+            _cachedFullFileRawJson = null;
+            _rawValidationErrorMessage = null;
         }
 
         private void SaveCurrentKeyData()
         {
-            if (string.IsNullOrEmpty(_selectedFilePath) || string.IsNullOrEmpty(_selectedKey))
+            if (string.IsNullOrEmpty(_selectedFilePath))
                 return;
 
             try
             {
-                if (_isRawJsonMode)
+                switch (_currentDataViewMode)
                 {
-                    SaveRawJsonKeyData();
-                }
-                else if (_cachedKeyData != null)
-                {
-                    ES3.Save(_selectedKey, _cachedKeyData, _selectedFilePath);
+                    case DataViewMode.Typed:
+                        if (_cachedKeyData == null || string.IsNullOrEmpty(_selectedKey))
+                            return;
+
+                        ES3.Save(_selectedKey, _cachedKeyData, _selectedFilePath);
+                        break;
+                    case DataViewMode.KeyRaw:
+                        if (string.IsNullOrEmpty(_selectedKey))
+                            return;
+
+                        SaveRawJsonKeyData();
+                        break;
+                    case DataViewMode.FileRaw:
+                        SaveFullFileRawJson();
+                        break;
                 }
 
                 _isDirty = false;
-                Debug.Log($"[SaveFileViewer] Saved key '{_selectedKey}' to {_selectedFilePath}");
+                Debug.Log($"[SaveFileViewer] Saved {_currentDataViewMode} changes to {_selectedFilePath}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to save key '{_selectedKey}': {e.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to save changes to {_selectedFilePath}: {e.Message}");
             }
         }
 
         private void SaveRawJsonKeyData()
         {
-            if (string.IsNullOrEmpty(_fullFileRawJson) || string.IsNullOrEmpty(_cachedRawJson))
-                return;
-
-            string updatedJson = ReplaceKeyRawJson(_fullFileRawJson, _selectedKey, _cachedRawJson);
-
-            if (updatedJson == null)
+            if (!TryParseSingleKeyRawJson(_cachedKeyRawJson, out string updatedKeyName, out JToken rawToken, out string errorMessage))
             {
-                Debug.LogError($"[SaveFileViewer] Failed to replace raw JSON for key '{_selectedKey}'");
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
                 return;
             }
 
-            ES3.SaveRaw(updatedJson, _selectedFilePath);
-            _fullFileRawJson = updatedJson;
+            if (!TryLoadFullFileJson(out JObject rootObject, out errorMessage))
+            {
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(updatedKeyName))
+            {
+                _rawValidationErrorMessage = "The edited key name cannot be empty.";
+                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
+                return;
+            }
+
+            if (_selectedKey == SaveFileCatalog.METADATA_KEY && !string.Equals(updatedKeyName, _selectedKey, StringComparison.Ordinal))
+            {
+                _rawValidationErrorMessage = $"'{SaveFileCatalog.METADATA_KEY}' is reserved and cannot be renamed.";
+                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
+                return;
+            }
+
+            if (!string.Equals(updatedKeyName, _selectedKey, StringComparison.Ordinal)
+                && string.Equals(updatedKeyName, SaveFileCatalog.METADATA_KEY, StringComparison.Ordinal))
+            {
+                _rawValidationErrorMessage = $"'{SaveFileCatalog.METADATA_KEY}' is reserved for save metadata.";
+                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
+                return;
+            }
+
+            if (!string.Equals(updatedKeyName, _selectedKey, StringComparison.Ordinal) && rootObject.Property(updatedKeyName) != null)
+            {
+                _rawValidationErrorMessage = $"The key '{updatedKeyName}' already exists in this save file.";
+                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
+                return;
+            }
+
+            if (!TryUpdateKeyPropertyPreservingOrder(rootObject, _selectedKey, updatedKeyName, rawToken, out errorMessage))
+            {
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
+                return;
+            }
+
+            _selectedKey = updatedKeyName;
+            PersistRawFile(rootObject);
+            _cachedKeyRawJson = CreateSingleKeyRawJson(_selectedKey, rawToken);
+        }
+
+        private void SaveFullFileRawJson()
+        {
+            if (!TryParseFullFileJson(_cachedFullFileRawJson, out JObject rootObject, out string errorMessage))
+            {
+                _rawValidationErrorMessage = errorMessage;
+                Debug.LogError($"[SaveFileViewer] {errorMessage}");
+                return;
+            }
+
+            PersistRawFile(rootObject);
         }
 
         private void DeleteFile(ManagedSaveFileInfo entry)
@@ -543,7 +787,16 @@ namespace FakeMG.SaveLoad.Editor
 
         private void AddNewKey(string keyName)
         {
-            if (ES3.KeyExists(keyName, _selectedFilePath))
+            if (keyName == SaveFileCatalog.METADATA_KEY)
+            {
+                EditorUtility.DisplayDialog(
+                    "Reserved Key",
+                    $"'{SaveFileCatalog.METADATA_KEY}' is reserved for save metadata.",
+                    "OK");
+                return;
+            }
+
+            if (_keyLookup.Contains(keyName) || ES3.KeyExists(keyName, _selectedFilePath))
             {
                 EditorUtility.DisplayDialog(
                     "Key Already Exists",
@@ -554,9 +807,9 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                // Save an empty string as a default placeholder value
-                ES3.Save(keyName, string.Empty, _selectedFilePath);
+                ES3.Save(keyName, _newKeyInitialValue, _selectedFilePath);
                 _newKeyName = string.Empty;
+                ResetNewKeyInitialValue();
                 Debug.Log($"[SaveFileViewer] Added key '{keyName}' to {_selectedFilePath}");
             }
             catch (Exception e)
@@ -565,6 +818,229 @@ namespace FakeMG.SaveLoad.Editor
             }
 
             SelectFile(_selectedFilePath);
+            SelectKey(keyName);
+        }
+
+        private void AddNewKey(string keyName, object value)
+        {
+            _newKeyInitialValue = value;
+            AddNewKey(keyName);
+        }
+
+        private void ResetNewKeyInitialValue()
+        {
+            if (_selectedNewKeyType == null)
+            {
+                _newKeyInitialValue = null;
+                return;
+            }
+
+            _newKeyInitialValue = ReflectionDataDrawer.CreateDefaultValue(_selectedNewKeyType);
+        }
+
+        private void DrawNewKeyTypeSelector()
+        {
+            EditorGUI.BeginChangeCheck();
+            _newKeyTypeSearch = EditorGUILayout.TextField("Type", _newKeyTypeSearch);
+            if (EditorGUI.EndChangeCheck())
+            {
+                RefreshNewKeyTypeMatches();
+            }
+
+            if (_exactNewKeyTypeMatch != null)
+            {
+                EditorGUILayout.LabelField("Resolved Type", GetTypeDisplayName(_exactNewKeyTypeMatch));
+                return;
+            }
+
+            if (_newKeyTypeMatches.Count == 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "No creatable runtime types match the current search. Use a full type name such as FakeMG.SaveLoad.TestData or narrow the search.",
+                    MessageType.Warning);
+                return;
+            }
+
+            _newKeyTypeMatchIndex = Mathf.Clamp(_newKeyTypeMatchIndex, 0, _newKeyTypeMatches.Count - 1);
+            int nextIndex = EditorGUILayout.Popup("Matches", _newKeyTypeMatchIndex, _newKeyTypeMatchLabels);
+            if (nextIndex != _newKeyTypeMatchIndex)
+            {
+                _newKeyTypeMatchIndex = nextIndex;
+                ApplySelectedNewKeyType(_newKeyTypeMatches[_newKeyTypeMatchIndex], false);
+            }
+
+            EditorGUILayout.LabelField("Selected Type", GetTypeDisplayName(_selectedNewKeyType));
+        }
+
+        private void RefreshNewKeyTypeMatches()
+        {
+            string search = _newKeyTypeSearch?.Trim() ?? string.Empty;
+            _exactNewKeyTypeMatch = ResolveSupportedType(search);
+            if (_exactNewKeyTypeMatch != null)
+            {
+                _newKeyTypeMatches = new List<Type> { _exactNewKeyTypeMatch };
+                _newKeyTypeMatchLabels = new[] { GetTypeDisplayName(_exactNewKeyTypeMatch) };
+                _newKeyTypeMatchIndex = 0;
+                ApplySelectedNewKeyType(_exactNewKeyTypeMatch, false);
+                return;
+            }
+
+            IEnumerable<Type> matches = CREATABLE_NEW_KEY_TYPES;
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                matches = matches.Where(type =>
+                    type.FullName.Contains(search, StringComparison.OrdinalIgnoreCase)
+                    || type.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
+            }
+
+            _newKeyTypeMatches = matches
+                .Take(MAX_TYPE_MATCHES)
+                .ToList();
+
+            _newKeyTypeMatchLabels = _newKeyTypeMatches
+                .Select(GetTypeDisplayName)
+                .ToArray();
+
+            if (_newKeyTypeMatches.Count == 0)
+            {
+                _newKeyTypeMatchIndex = 0;
+                ApplySelectedNewKeyType(null, false);
+                return;
+            }
+
+            int selectedIndex = _selectedNewKeyType == null
+                ? -1
+                : _newKeyTypeMatches.IndexOf(_selectedNewKeyType);
+            _newKeyTypeMatchIndex = selectedIndex >= 0 ? selectedIndex : 0;
+            ApplySelectedNewKeyType(_newKeyTypeMatches[_newKeyTypeMatchIndex], false);
+        }
+
+        private void ApplySelectedNewKeyType(Type nextType, bool updateSearchText)
+        {
+            if (_selectedNewKeyType == nextType)
+                return;
+
+            _selectedNewKeyType = nextType;
+            _isNewKeyInitialValueExpanded = false;
+            if (updateSearchText && nextType != null)
+            {
+                _newKeyTypeSearch = nextType.FullName;
+                RefreshNewKeyTypeMatches();
+            }
+
+            ResetNewKeyInitialValue();
+        }
+
+        private static Type ResolveSupportedType(string typeName)
+        {
+            if (string.IsNullOrWhiteSpace(typeName))
+                return null;
+
+            for (int i = 0; i < CREATABLE_NEW_KEY_TYPES.Count; i++)
+            {
+                Type candidate = CREATABLE_NEW_KEY_TYPES[i];
+                if (string.Equals(candidate.FullName, typeName, StringComparison.Ordinal)
+                    || string.Equals(candidate.AssemblyQualifiedName, typeName, StringComparison.Ordinal)
+                    || string.Equals(candidate.Name, typeName, StringComparison.Ordinal))
+                {
+                    return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        private static string GetTypeDisplayName(Type type)
+        {
+            return type == null ? string.Empty : $"{type.FullName} ({type.Assembly.GetName().Name})";
+        }
+
+        private static List<Type> BuildCreatableNewKeyTypes()
+        {
+            List<Type> types = new();
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            for (int i = 0; i < assemblies.Length; i++)
+            {
+                Assembly assembly = assemblies[i];
+                if (assembly.IsDynamic || IsEditorAssembly(assembly))
+                    continue;
+
+                Type[] assemblyTypes = GetLoadableTypes(assembly);
+                for (int typeIndex = 0; typeIndex < assemblyTypes.Length; typeIndex++)
+                {
+                    Type type = assemblyTypes[typeIndex];
+                    if (!IsSupportedNewKeyType(type))
+                        continue;
+
+                    types.Add(type);
+                }
+            }
+
+            return types
+                .Distinct()
+                .OrderBy(type => type.FullName)
+                .ToList();
+        }
+
+        private static Type[] GetLoadableTypes(Assembly assembly)
+        {
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException exception)
+            {
+                return exception.Types.Where(type => type != null).ToArray();
+            }
+        }
+
+        private static bool IsEditorAssembly(Assembly assembly)
+        {
+            string assemblyName = assembly.GetName().Name;
+            return assemblyName.Contains("Editor", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool IsSupportedNewKeyType(Type type)
+        {
+            if (type == null)
+                return false;
+
+            if (type.IsAbstract || type.IsInterface)
+                return false;
+
+            if (type.ContainsGenericParameters)
+                return false;
+
+            if (type.IsPointer || type.IsByRef)
+                return false;
+
+            if (typeof(Delegate).IsAssignableFrom(type))
+                return false;
+
+            if (typeof(UnityEngine.Object).IsAssignableFrom(type))
+                return false;
+
+            if (type.FullName == null)
+                return false;
+
+            if (type.FullName.StartsWith("<", StringComparison.Ordinal))
+                return false;
+
+            return CanCreateDefaultValue(type);
+        }
+
+        private static bool CanCreateDefaultValue(Type type)
+        {
+            if (type == typeof(string))
+                return true;
+
+            if (type.IsArray)
+                return type.GetElementType() != null;
+
+            if (type.IsValueType)
+                return true;
+
+            return type.GetConstructor(Type.EmptyTypes) != null;
         }
 
         private bool ConfirmDiscardChanges()
@@ -577,119 +1053,352 @@ namespace FakeMG.SaveLoad.Editor
         }
 
         #endregion
+
         #region Raw JSON Helpers
 
-        private static string ExtractKeyRawJson(string fullJson, string key)
+        private bool TryLoadTypedKeyData(out object typedKeyData)
         {
-            int valueStart = FindKeyValueStart(fullJson, key);
-            if (valueStart < 0)
-                return null;
+            typedKeyData = null;
 
-            int valueEnd = FindBalancedBraceEnd(fullJson, valueStart);
-            if (valueEnd < 0)
-                return null;
+            if (string.IsNullOrEmpty(_selectedFilePath) || string.IsNullOrEmpty(_selectedKey))
+                return false;
 
-            return fullJson.Substring(valueStart, valueEnd - valueStart + 1);
-        }
-
-        private static string ReplaceKeyRawJson(string fullJson, string key, string newValue)
-        {
-            int valueStart = FindKeyValueStart(fullJson, key);
-            if (valueStart < 0)
-                return null;
-
-            int valueEnd = FindBalancedBraceEnd(fullJson, valueStart);
-            if (valueEnd < 0)
-                return null;
-
-            return fullJson.Substring(0, valueStart) + newValue + fullJson.Substring(valueEnd + 1);
-        }
-
-        private static int FindKeyValueStart(string json, string key)
-        {
-            string escapedKey = key.Replace("\\", "\\\\").Replace("\"", "\\\"");
-            string searchToken = $"\"{escapedKey}\"";
-
-            int keyPos = json.IndexOf(searchToken, StringComparison.Ordinal);
-            if (keyPos < 0)
-                return -1;
-
-            int colonPos = json.IndexOf(':', keyPos + searchToken.Length);
-            if (colonPos < 0)
-                return -1;
-
-            int braceStart = json.IndexOf('{', colonPos + 1);
-            return braceStart;
-        }
-
-        private static int FindBalancedBraceEnd(string json, int openBraceIndex)
-        {
-            int depth = 0;
-            bool inString = false;
-            bool escaped = false;
-
-            for (int i = openBraceIndex; i < json.Length; i++)
+            try
             {
-                char c = json[i];
+                typedKeyData = ES3.Load(_selectedKey, _selectedFilePath);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
-                if (escaped)
-                {
-                    escaped = false;
-                    continue;
-                }
+        private bool TryLoadFullFileJson(out JObject rootObject, out string errorMessage)
+        {
+            rootObject = null;
 
-                if (c == '\\')
-                {
-                    escaped = true;
-                    continue;
-                }
+            try
+            {
+                string rawJson = ES3.LoadRawString(_selectedFilePath);
+                return TryParseFullFileJson(rawJson, out rootObject, out errorMessage);
+            }
+            catch (Exception exception)
+            {
+                errorMessage = $"Failed to load raw JSON from {_selectedFilePath}: {exception.Message}";
+                return false;
+            }
+        }
 
-                if (c == '"')
-                {
-                    inString = !inString;
-                    continue;
-                }
+        private static bool TryParseFullFileJson(string rawJson, out JObject rootObject, out string errorMessage)
+        {
+            rootObject = null;
 
-                if (inString)
-                    continue;
+            if (!TryParseJsonToken(rawJson, out JToken rootToken, out errorMessage))
+                return false;
 
-                if (c == '{')
-                    depth++;
-                else if (c == '}')
-                    depth--;
+            rootObject = rootToken as JObject;
+            if (rootObject != null)
+                return true;
 
-                if (depth == 0)
-                    return i;
+            errorMessage = "The save file must contain a JSON object at the root.";
+            return false;
+        }
+
+        private static bool TryParseJsonToken(string rawJson, out JToken parsedToken, out string errorMessage)
+        {
+            parsedToken = null;
+
+            if (string.IsNullOrWhiteSpace(rawJson))
+            {
+                errorMessage = "Raw JSON cannot be empty.";
+                return false;
             }
 
-            return -1;
+            try
+            {
+                parsedToken = JToken.Parse(rawJson);
+                errorMessage = null;
+                return true;
+            }
+            catch (JsonReaderException exception)
+            {
+                errorMessage = $"Invalid JSON: {exception.Message}";
+                return false;
+            }
+        }
+
+        private static bool TryParseSingleKeyRawJson(
+            string rawJson,
+            out string keyName,
+            out JToken valueToken,
+            out string errorMessage)
+        {
+            keyName = null;
+            valueToken = null;
+
+            if (!TryParseFullFileJson(rawJson, out JObject keyObject, out errorMessage))
+                return false;
+
+            List<JProperty> properties = keyObject.Properties().ToList();
+            if (properties.Count != 1)
+            {
+                errorMessage = "Key Raw must contain exactly one JSON property.";
+                return false;
+            }
+
+            JProperty property = properties[0];
+            keyName = property.Name;
+            valueToken = property.Value?.DeepClone() ?? JValue.CreateNull();
+            errorMessage = null;
+            return true;
+        }
+
+        private static string CreateSingleKeyRawJson(JProperty property)
+        {
+            return CreateSingleKeyRawJson(property.Name, property.Value);
+        }
+
+        private static string CreateSingleKeyRawJson(string keyName, JToken valueToken)
+        {
+            JObject keyObject = new(new JProperty(keyName, valueToken?.DeepClone() ?? JValue.CreateNull()));
+            return keyObject.ToString(Formatting.Indented);
+        }
+
+        private static bool TryUpdateKeyPropertyPreservingOrder(
+            JObject rootObject,
+            string currentKeyName,
+            string updatedKeyName,
+            JToken rawToken,
+            out string errorMessage)
+        {
+            JProperty existingProperty = rootObject.Property(currentKeyName);
+            if (existingProperty == null)
+            {
+                errorMessage = $"Could not locate key '{currentKeyName}' in the save file.";
+                return false;
+            }
+
+            JProperty replacementProperty = new(
+                updatedKeyName,
+                rawToken?.DeepClone() ?? JValue.CreateNull());
+
+            existingProperty.Replace(replacementProperty);
+            errorMessage = null;
+            return true;
+        }
+
+        private void PersistRawFile(JObject rootObject)
+        {
+            string serializedJson = rootObject.ToString(Formatting.None);
+            ES3.SaveRaw(serializedJson, _selectedFilePath);
+
+            _cachedFullFileRawJson = rootObject.ToString(Formatting.Indented);
+            _rawValidationErrorMessage = null;
+
+            ReloadKeysFromSelectedFile();
+            RefreshSelectedKeyStateFromRoot(rootObject);
+        }
+
+        private void ReloadKeysFromSelectedFile()
+        {
+            try
+            {
+                _keys = ES3.GetKeys(_selectedFilePath);
+                RebuildKeyLookup();
+            }
+            catch (Exception exception)
+            {
+                _keys = Array.Empty<string>();
+                _keyLookup.Clear();
+                Debug.LogError($"[SaveFileViewer] Failed to refresh keys for {_selectedFilePath}: {exception.Message}");
+            }
+        }
+
+        private void RefreshSelectedKeyStateFromRoot(JObject rootObject)
+        {
+            if (string.IsNullOrEmpty(_selectedKey))
+            {
+                _isTypedViewAvailable = false;
+                _cachedKeyData = null;
+                _cachedKeyRawJson = null;
+                return;
+            }
+
+            JProperty property = rootObject
+                .Properties()
+                .FirstOrDefault(candidate => string.Equals(candidate.Name, _selectedKey, StringComparison.Ordinal));
+
+            if (property == null)
+            {
+                _selectedKey = null;
+                _cachedKeyData = null;
+                _cachedKeyRawJson = null;
+                _isTypedViewAvailable = false;
+
+                if (_currentDataViewMode != DataViewMode.FileRaw)
+                {
+                    _currentDataViewMode = DataViewMode.FileRaw;
+                }
+
+                return;
+            }
+
+            _cachedKeyRawJson = CreateSingleKeyRawJson(property);
+            _isTypedViewAvailable = TryLoadTypedKeyData(out object typedKeyData);
+            _cachedKeyData = _currentDataViewMode == DataViewMode.Typed && _isTypedViewAvailable
+                ? typedKeyData
+                : null;
         }
 
         #endregion
 
         #region GUI Helpers
 
-        private static GUIStyle CreateSelectedStyle()
+        private string GetDataEditorTitle()
         {
-            GUIStyle style = new(EditorStyles.helpBox);
-            Color highlight = EditorGUIUtility.isProSkin
-                ? new Color(0.24f, 0.37f, 0.59f, 1f)
-                : new Color(0.58f, 0.75f, 1f, 1f);
-            Texture2D tex = MakeSolidTexture(highlight);
-            style.normal.background = tex;
-            return style;
+            if (_currentDataViewMode == DataViewMode.FileRaw)
+            {
+                return $"Editing File: {Path.GetFileName(_selectedFilePath)}";
+            }
+
+            if (string.IsNullOrEmpty(_selectedKey))
+            {
+                return "Edit Save Data";
+            }
+
+            if (_currentDataViewMode == DataViewMode.KeyRaw)
+            {
+                return $"Editing Raw Key: {_selectedKey}";
+            }
+
+            return $"Editing: {_selectedKey}";
         }
 
-        private static GUIStyle CreateSelectedButtonStyle()
+        private bool CanRenderCurrentDataView()
         {
-            GUIStyle style = new(GUI.skin.button);
-            Color highlight = EditorGUIUtility.isProSkin
+            return _currentDataViewMode == DataViewMode.FileRaw || !string.IsNullOrEmpty(_selectedKey);
+        }
+
+        private bool CanSaveCurrentView()
+        {
+            return _currentDataViewMode switch
+            {
+                DataViewMode.Typed => !string.IsNullOrEmpty(_selectedFilePath) && !string.IsNullOrEmpty(_selectedKey),
+                DataViewMode.KeyRaw => !string.IsNullOrEmpty(_selectedFilePath) && !string.IsNullOrEmpty(_selectedKey),
+                DataViewMode.FileRaw => !string.IsNullOrEmpty(_selectedFilePath),
+                _ => false
+            };
+        }
+
+        private bool CanReloadCurrentView()
+        {
+            return _currentDataViewMode switch
+            {
+                DataViewMode.Typed => !string.IsNullOrEmpty(_selectedFilePath) && !string.IsNullOrEmpty(_selectedKey),
+                DataViewMode.KeyRaw => !string.IsNullOrEmpty(_selectedFilePath) && !string.IsNullOrEmpty(_selectedKey),
+                DataViewMode.FileRaw => !string.IsNullOrEmpty(_selectedFilePath),
+                _ => false
+            };
+        }
+
+        private void DrawDataViewButton(string label, DataViewMode targetMode, bool isEnabled)
+        {
+            bool isActive = _currentDataViewMode == targetMode;
+
+            EditorGUI.BeginDisabledGroup(!isEnabled);
+            bool nextIsActive = GUILayout.Toggle(isActive, label, EditorStyles.toolbarButton);
+            EditorGUI.EndDisabledGroup();
+
+            if (nextIsActive && !isActive)
+            {
+                SwitchDataViewMode(targetMode);
+            }
+        }
+
+        private void SwitchDataViewMode(DataViewMode nextMode)
+        {
+            if (_currentDataViewMode == nextMode)
+                return;
+
+            if (_isDirty && !ConfirmDiscardChanges())
+                return;
+
+            ResetRawJsonEditorFocus();
+            _currentDataViewMode = nextMode;
+            ReflectionDataDrawer.ClearExpandedState();
+            ReloadCurrentDataView();
+            Repaint();
+        }
+
+        private void ResetRawJsonEditorFocus()
+        {
+            EditorGUIUtility.editingTextField = false;
+            GUIUtility.keyboardControl = 0;
+            GUI.FocusControl(string.Empty);
+        }
+
+        private void UpdateCachedKeyRawJson(string editedJson)
+        {
+            _cachedKeyRawJson = editedJson;
+        }
+
+        private void UpdateCachedFullFileRawJson(string editedJson)
+        {
+            _cachedFullFileRawJson = editedJson;
+        }
+
+        private void RebuildKeyLookup()
+        {
+            _keyLookup.Clear();
+
+            for (int i = 0; i < _keys.Length; i++)
+            {
+                _keyLookup.Add(_keys[i]);
+            }
+        }
+
+        private static GUIStyle GetSelectedEntryStyle()
+        {
+            EnsureSelectedStyles();
+            return s_selectedEntryStyle;
+        }
+
+        private static GUIStyle GetSelectedButtonStyle()
+        {
+            EnsureSelectedStyles();
+            return s_selectedButtonStyle;
+        }
+
+        private static void EnsureSelectedStyles()
+        {
+            bool isProSkin = EditorGUIUtility.isProSkin;
+            if (s_selectedEntryStyle != null
+                && s_selectedButtonStyle != null
+                && s_selectedBackgroundTexture != null
+                && s_isProSkin == isProSkin)
+            {
+                return;
+            }
+
+            if (s_selectedBackgroundTexture)
+            {
+                DestroyImmediate(s_selectedBackgroundTexture);
+            }
+
+            Color highlight = isProSkin
                 ? new Color(0.24f, 0.37f, 0.59f, 1f)
                 : new Color(0.58f, 0.75f, 1f, 1f);
-            Texture2D tex = MakeSolidTexture(highlight);
-            style.normal.background = tex;
-            style.fontStyle = FontStyle.Bold;
-            return style;
+
+            s_selectedBackgroundTexture = MakeSolidTexture(highlight);
+
+            s_selectedEntryStyle = new GUIStyle(EditorStyles.helpBox);
+            s_selectedEntryStyle.normal.background = s_selectedBackgroundTexture;
+
+            s_selectedButtonStyle = new GUIStyle(GUI.skin.button);
+            s_selectedButtonStyle.normal.background = s_selectedBackgroundTexture;
+            s_selectedButtonStyle.fontStyle = FontStyle.Bold;
+            s_isProSkin = isProSkin;
         }
 
         private static Texture2D MakeSolidTexture(Color color)
