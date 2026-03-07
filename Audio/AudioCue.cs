@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Audio;
 
 namespace FakeMG.Audio
 {

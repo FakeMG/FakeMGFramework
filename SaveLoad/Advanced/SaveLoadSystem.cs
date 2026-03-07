@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using FakeMG.Framework;
 using UnityEngine;
@@ -22,12 +21,6 @@ namespace FakeMG.SaveLoad.Advanced
         private VersionMigrator _migrationRunner;
 
         private float _autoSaveTimer;
-
-        private const string SAVE_FOLDER = "Saves/";
-
-        private const string MANUAL_SAVE_PATH_PREFIX = "ManualSave_";
-        private const string AUTO_SAVE_PATH_PREFIX = "AutoSave_";
-        public const string METADATA_KEY = "Metadata";
 
         public event Action OnLoadingComplete;
 
@@ -94,7 +87,7 @@ namespace FakeMG.SaveLoad.Advanced
             try
             {
                 DateTime now = DateTime.Now;
-                string manualSavePath = CreateManualSavePath(now);
+                string manualSavePath = SaveFileCatalog.CreateManualSavePath(now);
                 SaveMetadata metadata = new()
                 {
                     Timestamp = now,
@@ -102,7 +95,7 @@ namespace FakeMG.SaveLoad.Advanced
                     GameVersion = Application.version,
                 };
 
-                ES3.Save(METADATA_KEY, metadata, manualSavePath);
+                ES3.Save(SaveFileCatalog.METADATA_KEY, metadata, manualSavePath);
 
                 foreach (var saveable in _saveables)
                 {
@@ -125,7 +118,7 @@ namespace FakeMG.SaveLoad.Advanced
             {
                 // Avoid out of sync between path and metadata
                 DateTime now = DateTime.Now;
-                string autoSavePath = CreateAutoSavePath(now);
+                string autoSavePath = SaveFileCatalog.CreateAutoSavePath(now);
                 SaveMetadata metadata = new()
                 {
                     Timestamp = now,
@@ -134,7 +127,7 @@ namespace FakeMG.SaveLoad.Advanced
                 };
 
                 // Save metadata
-                ES3.Save(METADATA_KEY, metadata, autoSavePath);
+                ES3.Save(SaveFileCatalog.METADATA_KEY, metadata, autoSavePath);
                 ManageAutoSaveFiles();
                 Echo.Log($"Auto-save created: {autoSavePath}", _enableDebug, this);
 
@@ -154,25 +147,13 @@ namespace FakeMG.SaveLoad.Advanced
 
         private void LoadMostRecentSave()
         {
-            var allMetadata = GetAllSaveMetadata();
-            SaveMetadata mostRecentMetaData = null;
-            string mostRecentSavePath = null;
+            ManagedSaveFileInfo mostRecentSave = SaveFileCatalog.GetManagedSaveFiles()
+                .OrderByDescending(saveFile => saveFile.Metadata.Timestamp)
+                .FirstOrDefault();
 
-            foreach (var metadata in allMetadata)
+            if (mostRecentSave != null)
             {
-                if (mostRecentMetaData == null || metadata.Timestamp > mostRecentMetaData.Timestamp)
-                {
-                    mostRecentMetaData = metadata;
-
-                    mostRecentSavePath = metadata.IsAutoSave
-                        ? CreateAutoSavePath(metadata.Timestamp)
-                        : CreateManualSavePath(metadata.Timestamp);
-                }
-            }
-
-            if (mostRecentMetaData != null)
-            {
-                LoadGame(mostRecentSavePath);
+                LoadGame(mostRecentSave.FilePath);
             }
             else
             {
@@ -193,7 +174,7 @@ namespace FakeMG.SaveLoad.Advanced
 
         public void LoadGame(string savePath)
         {
-            string normalizedSavePath = NormalizeSavePath(savePath);
+            string normalizedSavePath = SaveFileCatalog.NormalizeSavePath(savePath);
 
             if (!ES3.FileExists(normalizedSavePath))
             {
@@ -204,7 +185,7 @@ namespace FakeMG.SaveLoad.Advanced
 
             try
             {
-                SaveMetadata metadata = ES3.Load(METADATA_KEY, normalizedSavePath, new SaveMetadata());
+                SaveMetadata metadata = ES3.Load(SaveFileCatalog.METADATA_KEY, normalizedSavePath, new SaveMetadata());
 
                 if (_migrationRunner != null && metadata.GameVersion != Application.version)
                 {
@@ -240,28 +221,9 @@ namespace FakeMG.SaveLoad.Advanced
             }
         }
 
-        public List<SaveMetadata> GetAllSaveMetadata()
-        {
-            List<SaveMetadata> metadata = new();
-
-            string[] saveFiles = GetFilesInSaveFolder()
-                .Where(IsManagedSaveFile)
-                .ToArray();
-
-            foreach (string file in saveFiles)
-            {
-                if (ES3.KeyExists(METADATA_KEY, file))
-                {
-                    metadata.Add(ES3.Load(METADATA_KEY, file, new SaveMetadata()));
-                }
-            }
-
-            return metadata;
-        }
-
         public void DeleteSave(string savePath)
         {
-            string normalizedSavePath = NormalizeSavePath(savePath);
+            string normalizedSavePath = SaveFileCatalog.NormalizeSavePath(savePath);
 
             if (ES3.FileExists(normalizedSavePath))
             {
@@ -272,83 +234,19 @@ namespace FakeMG.SaveLoad.Advanced
 
         private void ManageAutoSaveFiles()
         {
-            string[] autoSaveFiles = GetFilesInSaveFolder()
-                .Where(IsAutoSaveFile)
-                .OrderBy(f => ES3.Load<SaveMetadata>(METADATA_KEY, f).Timestamp)
+            ManagedSaveFileInfo[] autoSaveFiles = SaveFileCatalog.GetManagedSaveFiles()
+                .Where(saveFile => saveFile.Metadata.IsAutoSave)
+                .OrderBy(saveFile => saveFile.Metadata.Timestamp)
                 .ToArray();
 
             if (autoSaveFiles.Length > _maxAutoSaves)
             {
                 for (int i = 0; i < autoSaveFiles.Length - _maxAutoSaves; i++)
                 {
-                    ES3.DeleteFile(autoSaveFiles[i]);
-                    Echo.Log($"Deleted old auto-save: {autoSaveFiles[i]}", _enableDebug, this);
+                    ES3.DeleteFile(autoSaveFiles[i].FilePath);
+                    Echo.Log($"Deleted old auto-save: {autoSaveFiles[i].FilePath}", _enableDebug, this);
                 }
             }
-        }
-
-        private static string[] GetFilesInSaveFolder()
-        {
-            if (!ES3.DirectoryExists(SAVE_FOLDER))
-            {
-                return Array.Empty<string>();
-            }
-
-            string[] saveFiles = ES3.GetFiles(SAVE_FOLDER);
-            for (int i = 0; i < saveFiles.Length; i++)
-            {
-                saveFiles[i] = NormalizeSavePath(saveFiles[i]);
-            }
-
-            return saveFiles;
-        }
-
-        private static string CreateManualSavePath(DateTime timestamp)
-        {
-            string manualSaveFileName = $"{MANUAL_SAVE_PATH_PREFIX}{timestamp.Ticks}";
-            return NormalizeSavePath(manualSaveFileName);
-        }
-
-        private static string CreateAutoSavePath(DateTime timestamp)
-        {
-            string autoSaveFileName = $"{AUTO_SAVE_PATH_PREFIX}{timestamp.Ticks}";
-            return NormalizeSavePath(autoSaveFileName);
-        }
-
-        private static string NormalizeSavePath(string savePath)
-        {
-            if (string.IsNullOrWhiteSpace(savePath))
-            {
-                return savePath;
-            }
-
-            string normalizedPath = savePath.Replace("\\", "/");
-            if (normalizedPath.StartsWith(SAVE_FOLDER, StringComparison.Ordinal))
-            {
-                return normalizedPath;
-            }
-
-            return $"{SAVE_FOLDER}{normalizedPath}";
-        }
-
-        private static bool IsManagedSaveFile(string filePath)
-        {
-            string fileName = GetSaveFileName(filePath);
-
-            return fileName.StartsWith(MANUAL_SAVE_PATH_PREFIX, StringComparison.Ordinal)
-                   || fileName.StartsWith(AUTO_SAVE_PATH_PREFIX, StringComparison.Ordinal);
-        }
-
-        private static bool IsAutoSaveFile(string filePath)
-        {
-            string fileName = GetSaveFileName(filePath);
-            return fileName.StartsWith(AUTO_SAVE_PATH_PREFIX, StringComparison.Ordinal);
-        }
-
-        private static string GetSaveFileName(string filePath)
-        {
-            string normalizedPath = filePath.Replace("\\", "/");
-            return Path.GetFileNameWithoutExtension(normalizedPath);
         }
         #endregion
 

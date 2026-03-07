@@ -23,6 +23,9 @@
     - Remove fields (Don't need to do anything, ES3 ignores removed fields)
     - Remove keys (Don't need to do anything, the unused data will be ignored when loading and removed when saving)
 - Use Easy Save 3: Leverages the Easy Save 3 asset for serialization, compression, and encryption
+- Editor tool to edit save data directly in the editor when the data is encrypted
+  - Edit existing key
+  - Remove existing key
 
 ### ⏳ Planned (To-Do)
 - Separate save file into smaller files for different systems (e.g., player data, world state)

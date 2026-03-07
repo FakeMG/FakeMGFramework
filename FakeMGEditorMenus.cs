@@ -21,5 +21,6 @@ namespace FakeMG.Framework
         public const string LOCALIZATION = ROOT + "/Localization";
         public const string LOCALIZATION_VALIDATE_ALL_KEYS = LOCALIZATION + "/Validate All Keys";
         public const string LOCALIZATION_FORCE_SYNC_CSV = LOCALIZATION + "/Force Sync CSV";
+        public const string SAVE_FILE_VIEWER = ROOT + "/Save File Viewer";
     }
 }

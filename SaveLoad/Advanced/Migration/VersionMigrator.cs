@@ -56,9 +56,9 @@ namespace FakeMG.SaveLoad.Advanced
 
         private static void UpdateSaveVersion(string savePath, string newVersion)
         {
-            SaveMetadata metadata = ES3.Load(SaveLoadSystem.METADATA_KEY, savePath, new SaveMetadata());
+            SaveMetadata metadata = ES3.Load(SaveFileCatalog.METADATA_KEY, savePath, new SaveMetadata());
             metadata.GameVersion = newVersion;
-            ES3.Save(SaveLoadSystem.METADATA_KEY, metadata, savePath);
+            ES3.Save(SaveFileCatalog.METADATA_KEY, metadata, savePath);
         }
     }
 }

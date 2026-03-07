@@ -1,0 +1,20 @@
+{
+    "name": "FakeMG.SaveLoad.Editor",
+    "rootNamespace": "FakeMG.SaveLoad.Editor",
+    "references": [
+        "GUID:5362e51fb5f15ac4b91f68d512ea2e58",
+        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a",
+        "GUID:5d15a193d62147e4fb8ee9a9be7fb3b6"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
