@@ -85,20 +85,62 @@ namespace FakeMG.SaveLoad.Editor
             string path,
             out bool changed)
         {
-            changed = false;
+            if (TryDrawPrimitiveField(label, fieldType, value, out object primitiveValue, out changed))
+            {
+                return primitiveValue;
+            }
 
+            if (typeof(IDictionary).IsAssignableFrom(fieldType))
+            {
+                return DrawDictionary(label, value as IDictionary, fieldType, path, out changed);
+            }
+
+            if (fieldType.IsArray)
+            {
+                return DrawArray(label, value as Array, fieldType, path, out changed);
+            }
+
+            if (typeof(IList).IsAssignableFrom(fieldType))
+            {
+                return DrawList(label, value as IList, fieldType, path, out changed);
+            }
+
+            if (fieldType.IsClass || (fieldType.IsValueType && !fieldType.IsPrimitive))
+            {
+                return DrawNestedObject(label, value, path, out changed);
+            }
+
+            changed = false;
+            EditorGUILayout.LabelField(label, $"(unsupported type: {fieldType.Name})");
+            return value;
+        }
+
+        private static bool TryDrawPrimitiveField(
+            string label,
+            Type fieldType,
+            object value,
+            out object drawnValue,
+            out bool changed)
+        {
             if (fieldType == typeof(int))
-                return DrawPrimitive(label, value is int intValue ? intValue : default, EditorGUILayout.IntField, out changed);
+            {
+                drawnValue = DrawPrimitive(label, value is int intValue ? intValue : default, EditorGUILayout.IntField, out changed);
+                return true;
+            }
 
             if (fieldType == typeof(float))
-                return DrawPrimitive(label, value is float floatValue ? floatValue : default, EditorGUILayout.FloatField, out changed);
+            {
+                drawnValue = DrawPrimitive(label, value is float floatValue ? floatValue : default, EditorGUILayout.FloatField, out changed);
+                return true;
+            }
 
             if (fieldType == typeof(double))
             {
                 double old = value is double doubleValue ? doubleValue : default;
                 double next = EditorGUILayout.DoubleField(label, old);
                 changed = !old.Equals(next);
-                return next;
+                drawnValue = next;
+                return true;
             }
 
             if (fieldType == typeof(long))
@@ -106,7 +148,8 @@ namespace FakeMG.SaveLoad.Editor
                 long old = value is long longValue ? longValue : default;
                 long next = EditorGUILayout.LongField(label, old);
                 changed = old != next;
-                return next;
+                drawnValue = next;
+                return true;
             }
 
             if (fieldType == typeof(bool))
@@ -114,7 +157,8 @@ namespace FakeMG.SaveLoad.Editor
                 bool old = value is bool boolValue && boolValue;
                 bool next = EditorGUILayout.Toggle(label, old);
                 changed = old != next;
-                return next;
+                drawnValue = next;
+                return true;
             }
 
             if (fieldType == typeof(string))
@@ -122,35 +166,49 @@ namespace FakeMG.SaveLoad.Editor
                 string old = value as string ?? string.Empty;
                 string next = EditorGUILayout.TextField(label, old);
                 changed = old != next;
-                return next;
+                drawnValue = next;
+                return true;
             }
 
-            if (typeof(IDictionary).IsAssignableFrom(fieldType))
-                return DrawDictionary(label, value as IDictionary, fieldType, path, out changed);
-
             if (fieldType == typeof(Vector2))
-                return DrawPrimitive(label, value is Vector2 vector2 ? vector2 : default, EditorGUILayout.Vector2Field, out changed);
+            {
+                drawnValue = DrawPrimitive(label, value is Vector2 vector2 ? vector2 : default, EditorGUILayout.Vector2Field, out changed);
+                return true;
+            }
 
             if (fieldType == typeof(Vector3))
-                return DrawPrimitive(label, value is Vector3 vector3 ? vector3 : default, EditorGUILayout.Vector3Field, out changed);
+            {
+                drawnValue = DrawPrimitive(label, value is Vector3 vector3 ? vector3 : default, EditorGUILayout.Vector3Field, out changed);
+                return true;
+            }
 
             if (fieldType == typeof(Vector4))
-                return DrawPrimitive(label, value is Vector4 vector4 ? vector4 : default, EditorGUILayout.Vector4Field, out changed);
+            {
+                drawnValue = DrawPrimitive(label, value is Vector4 vector4 ? vector4 : default, EditorGUILayout.Vector4Field, out changed);
+                return true;
+            }
 
             if (fieldType == typeof(Vector2Int))
-                return DrawPrimitive(label, value is Vector2Int vector2Int ? vector2Int : default, EditorGUILayout.Vector2IntField, out changed);
+            {
+                drawnValue = DrawPrimitive(label, value is Vector2Int vector2Int ? vector2Int : default, EditorGUILayout.Vector2IntField, out changed);
+                return true;
+            }
 
             if (fieldType == typeof(Vector3Int))
-                return DrawPrimitive(label, value is Vector3Int vector3Int ? vector3Int : default, EditorGUILayout.Vector3IntField, out changed);
+            {
+                drawnValue = DrawPrimitive(label, value is Vector3Int vector3Int ? vector3Int : default, EditorGUILayout.Vector3IntField, out changed);
+                return true;
+            }
 
             if (fieldType == typeof(Quaternion))
             {
                 Quaternion old = value is Quaternion quaternion ? quaternion : default;
-                Vector4 asVec = new(old.x, old.y, old.z, old.w);
-                Vector4 next = EditorGUILayout.Vector4Field(label, asVec);
+                Vector4 asVector = new(old.x, old.y, old.z, old.w);
+                Vector4 next = EditorGUILayout.Vector4Field(label, asVector);
                 Quaternion result = new(next.x, next.y, next.z, next.w);
                 changed = old != result;
-                return result;
+                drawnValue = result;
+                return true;
             }
 
             if (fieldType == typeof(Color))
@@ -158,7 +216,8 @@ namespace FakeMG.SaveLoad.Editor
                 Color old = value is Color color ? color : default;
                 Color next = EditorGUILayout.ColorField(label, old);
                 changed = old != next;
-                return next;
+                drawnValue = next;
+                return true;
             }
 
             if (fieldType == typeof(DateTime))
@@ -168,10 +227,13 @@ namespace FakeMG.SaveLoad.Editor
                 if (DateTime.TryParse(text, out DateTime parsed) && parsed != old)
                 {
                     changed = true;
-                    return parsed;
+                    drawnValue = parsed;
+                    return true;
                 }
 
-                return old;
+                changed = false;
+                drawnValue = old;
+                return true;
             }
 
             if (fieldType.IsEnum)
@@ -179,17 +241,13 @@ namespace FakeMG.SaveLoad.Editor
                 Enum old = value as Enum ?? (Enum)Activator.CreateInstance(fieldType);
                 Enum next = EditorGUILayout.EnumPopup(label, old);
                 changed = !Equals(old, next);
-                return next;
+                drawnValue = next;
+                return true;
             }
 
-            if (typeof(IList).IsAssignableFrom(fieldType))
-                return DrawList(label, value as IList, fieldType, path, out changed);
-
-            if (fieldType.IsClass || (fieldType.IsValueType && !fieldType.IsPrimitive))
-                return DrawNestedObject(label, value, path, out changed);
-
-            EditorGUILayout.LabelField(label, $"(unsupported type: {fieldType.Name})");
-            return value;
+            changed = false;
+            drawnValue = null;
+            return false;
         }
 
         private static T DrawPrimitive<T>(
@@ -346,7 +404,8 @@ namespace FakeMG.SaveLoad.Editor
 
                 string elementPath = $"{path}[{i}]";
                 object element = list[i];
-                object newElement = DrawField($"[{i}]", elementType, element, elementPath, out bool elementChanged);
+                Type runtimeElementType = element?.GetType() ?? elementType;
+                object newElement = DrawField($"[{i}]", runtimeElementType, element, elementPath, out bool elementChanged);
 
                 if (elementChanged)
                 {
@@ -377,6 +436,79 @@ namespace FakeMG.SaveLoad.Editor
 
             EditorGUI.indentLevel--;
             return list;
+        }
+
+        private static object DrawArray(
+            string label,
+            Array array,
+            Type fieldType,
+            string path,
+            out bool changed)
+        {
+            changed = false;
+
+            if (array == null)
+            {
+                EditorGUILayout.LabelField(label, "(null array)");
+                return array;
+            }
+
+            bool expanded = ExpandedPaths.Contains(path);
+            bool newExpanded = EditorGUILayout.Foldout(expanded, $"{label} [{array.Length}]", true);
+
+            if (newExpanded != expanded)
+            {
+                if (newExpanded) ExpandedPaths.Add(path);
+                else ExpandedPaths.Remove(path);
+            }
+
+            if (!newExpanded)
+            {
+                return array;
+            }
+
+            EditorGUI.indentLevel++;
+
+            Type elementType = fieldType.GetElementType() ?? typeof(object);
+            int removeIndex = -1;
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                EditorGUILayout.BeginHorizontal();
+
+                string elementPath = $"{path}[{i}]";
+                object element = array.GetValue(i);
+                Type runtimeElementType = element?.GetType() ?? elementType;
+                object newElement = DrawField($"[{i}]", runtimeElementType, element, elementPath, out bool elementChanged);
+
+                if (elementChanged)
+                {
+                    array.SetValue(newElement, i);
+                    changed = true;
+                }
+
+                if (GUILayout.Button("-", GUILayout.Width(25)))
+                {
+                    removeIndex = i;
+                }
+
+                EditorGUILayout.EndHorizontal();
+            }
+
+            if (removeIndex >= 0)
+            {
+                array = RemoveArrayElement(array, elementType, removeIndex);
+                changed = true;
+            }
+
+            if (GUILayout.Button($"Add Element to {label}"))
+            {
+                array = AppendArrayElement(array, elementType);
+                changed = true;
+            }
+
+            EditorGUI.indentLevel--;
+            return array;
         }
 
         private static void ResolveDictionaryTypes(Type fieldType, IDictionary dictionary, out Type keyType, out Type valueType)
@@ -431,6 +563,38 @@ namespace FakeMG.SaveLoad.Editor
                 return listType.GetGenericArguments()[0];
 
             return typeof(object);
+        }
+
+        private static Array RemoveArrayElement(Array array, Type elementType, int removeIndex)
+        {
+            Array resizedArray = Array.CreateInstance(elementType, array.Length - 1);
+            int nextIndex = 0;
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (i == removeIndex)
+                {
+                    continue;
+                }
+
+                resizedArray.SetValue(array.GetValue(i), nextIndex);
+                nextIndex++;
+            }
+
+            return resizedArray;
+        }
+
+        private static Array AppendArrayElement(Array array, Type elementType)
+        {
+            Array resizedArray = Array.CreateInstance(elementType, array.Length + 1);
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                resizedArray.SetValue(array.GetValue(i), i);
+            }
+
+            resizedArray.SetValue(CreateDefaultInstance(elementType), array.Length);
+            return resizedArray;
         }
 
         private static object CreateDefaultInstance(Type type)

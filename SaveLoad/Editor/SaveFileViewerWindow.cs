@@ -2,36 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using FakeMG.Framework;
 using FakeMG.SaveLoad.Advanced;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
+using DataViewMode = FakeMG.SaveLoad.Editor.SaveFileViewerDataViewMode;
 
 namespace FakeMG.SaveLoad.Editor
 {
     public sealed class SaveFileViewerWindow : EditorWindow
     {
-        private enum DataViewMode
-        {
-            Typed,
-            KeyRaw,
-            FileRaw
-        }
-
-        private const int MAX_TYPE_MATCHES = 200;
-        private const string NEW_KEY_PREVIEW_PATH = "new-key-preview";
         private const string KEY_RAW_EDITOR_CONTROL_NAME = "SaveFileViewer.KeyRawJson";
         private const string FILE_RAW_EDITOR_CONTROL_NAME = "SaveFileViewer.FileRawJson";
 
-        private static readonly List<Type> CREATABLE_NEW_KEY_TYPES = BuildCreatableNewKeyTypes();
-        private static readonly HashSet<string> METADATA_FIELD_NAMES = typeof(SaveMetadata)
-            .GetFields(BindingFlags.Public | BindingFlags.Instance)
-            .Select(field => field.Name)
-            .ToHashSet(StringComparer.Ordinal);
-
+        private readonly SaveFileViewerAddKeyWorkflow _addKeyWorkflow = new();
+        private readonly SaveFileViewerDataSession _dataSession = new();
         private static GUIStyle s_selectedEntryStyle;
         private static GUIStyle s_selectedButtonStyle;
         private static Texture2D s_selectedBackgroundTexture;
@@ -62,16 +47,6 @@ namespace FakeMG.SaveLoad.Editor
         private Vector2 _keyListScroll;
         private Vector2 _dataEditorScroll;
 
-        private string _newKeyName = string.Empty;
-        private string _newKeyTypeSearch = typeof(string).FullName;
-        private int _newKeyTypeMatchIndex;
-        private string[] _newKeyTypeMatchLabels = Array.Empty<string>();
-        private List<Type> _newKeyTypeMatches = new();
-        private Type _exactNewKeyTypeMatch;
-        private Type _selectedNewKeyType = typeof(string);
-        private object _newKeyInitialValue;
-        private bool _isNewKeyInitialValueExpanded;
-
         [MenuItem(FakeMGEditorMenus.SAVE_FILE_VIEWER)]
         private static void ShowWindow()
         {
@@ -82,8 +57,7 @@ namespace FakeMG.SaveLoad.Editor
 
         private void OnEnable()
         {
-            RefreshNewKeyTypeMatches();
-            ResetNewKeyInitialValue();
+            _addKeyWorkflow.Initialize();
             RefreshFileList();
         }
 
@@ -286,58 +260,10 @@ namespace FakeMG.SaveLoad.Editor
 
         private void DrawAddKeyRow()
         {
-            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Add Key", EditorStyles.boldLabel);
-
-            _newKeyName = EditorGUILayout.TextField("Key", _newKeyName);
-            DrawNewKeyTypeSelector();
-
-            if (_selectedNewKeyType == null)
+            if (_addKeyWorkflow.Draw(_keyLookup, out SaveFileViewerAddKeyRequest addKeyRequest))
             {
-                EditorGUILayout.HelpBox(
-                    "Enter an exact runtime type name or search for a creatable type to initialize the new key.",
-                    MessageType.Info);
+                AddNewKey(addKeyRequest);
             }
-            else
-            {
-                _isNewKeyInitialValueExpanded = EditorGUILayout.Foldout(
-                    _isNewKeyInitialValueExpanded,
-                    "Initial Value",
-                    true);
-
-                if (_isNewKeyInitialValueExpanded)
-                {
-                    EditorGUI.indentLevel++;
-                    ReflectionDataDrawer.DrawRootValue(_selectedNewKeyType, ref _newKeyInitialValue, NEW_KEY_PREVIEW_PATH);
-                    EditorGUI.indentLevel--;
-                }
-            }
-
-            string trimmedKeyName = _newKeyName.Trim();
-            bool isReservedKey = trimmedKeyName == SaveFileCatalog.METADATA_KEY;
-            bool keyExists = !string.IsNullOrWhiteSpace(trimmedKeyName) && _keyLookup.Contains(trimmedKeyName);
-
-            if (isReservedKey)
-            {
-                EditorGUILayout.HelpBox($"'{SaveFileCatalog.METADATA_KEY}' is reserved for save metadata.", MessageType.Warning);
-            }
-            else if (keyExists)
-            {
-                EditorGUILayout.HelpBox($"The key '{trimmedKeyName}' already exists in this save file.", MessageType.Warning);
-            }
-
-            bool canAddKey = !string.IsNullOrWhiteSpace(trimmedKeyName)
-                && !isReservedKey
-                && !keyExists
-                && _selectedNewKeyType != null;
-            EditorGUI.BeginDisabledGroup(!canAddKey);
-            if (GUILayout.Button("Add Key"))
-            {
-                AddNewKey(trimmedKeyName, _newKeyInitialValue);
-            }
-            EditorGUI.EndDisabledGroup();
-
-            EditorGUILayout.EndVertical();
         }
 
         private void DrawDataEditor()
@@ -489,15 +415,7 @@ namespace FakeMG.SaveLoad.Editor
         private void RefreshFileList()
         {
             _fileEntries.Clear();
-            _selectedFilePath = null;
-            _selectedKey = null;
-            _cachedKeyData = null;
-            _keys = Array.Empty<string>();
-            _keyLookup.Clear();
-            _isDirty = false;
-            _currentDataViewMode = DataViewMode.Typed;
-            ClearRawJsonState();
-            ReflectionDataDrawer.ClearExpandedState();
+            ResetViewerSelectionState();
 
             _fileEntries = SaveFileCatalog.GetManagedSaveFiles();
 
@@ -510,16 +428,14 @@ namespace FakeMG.SaveLoad.Editor
 
         private void SelectFile(string filePath)
         {
-            if (_isDirty && !ConfirmDiscardChanges())
+            if (!TryBeginViewTransition())
+            {
                 return;
+            }
 
-            ResetRawJsonEditorFocus();
             _selectedFilePath = filePath;
             _selectedKey = null;
-            _cachedKeyData = null;
-            _isDirty = false;
-            ClearRawJsonState();
-            ReflectionDataDrawer.ClearExpandedState();
+            ResetLoadedDataState();
 
             try
             {
@@ -539,228 +455,64 @@ namespace FakeMG.SaveLoad.Editor
 
         private void SelectKey(string key)
         {
-            if (_isDirty && !ConfirmDiscardChanges())
+            if (!TryBeginViewTransition())
+            {
                 return;
+            }
 
-            ResetRawJsonEditorFocus();
             _selectedKey = key;
-            ReflectionDataDrawer.ClearExpandedState();
+            ResetLoadedDataState();
             ReloadCurrentDataView();
             Repaint();
         }
 
         private void ReloadCurrentDataView()
         {
-            _isDirty = false;
-            _cachedKeyData = null;
-            ClearRawJsonState();
-            _isTypedViewAvailable = false;
+            ResetLoadedDataState();
 
-            if (string.IsNullOrEmpty(_selectedFilePath))
-                return;
+            SaveFileViewerLoadResult loadResult = _dataSession.ReloadCurrentDataView(
+                _selectedFilePath,
+                _selectedKey,
+                _currentDataViewMode);
 
-            if (!string.IsNullOrEmpty(_selectedKey))
-            {
-                _isTypedViewAvailable = TryLoadTypedKeyData(out object typedKeyData);
-                if (_currentDataViewMode == DataViewMode.Typed && _isTypedViewAvailable)
-                {
-                    _cachedKeyData = typedKeyData;
-                    return;
-                }
-            }
-
-            if (_currentDataViewMode == DataViewMode.Typed)
-            {
-                if (string.IsNullOrEmpty(_selectedKey))
-                    return;
-
-                _currentDataViewMode = DataViewMode.KeyRaw;
-            }
-
-            if (_currentDataViewMode == DataViewMode.KeyRaw)
-            {
-                if (string.IsNullOrEmpty(_selectedKey))
-                    return;
-
-                LoadKeyAsRawJson();
-                return;
-            }
-
-            LoadFullFileAsRawJson();
-        }
-
-        private void LoadKeyAsRawJson()
-        {
-            if (!TryLoadFullFileJson(out JObject rootObject, out string errorMessage))
-            {
-                _cachedKeyRawJson = null;
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
-                return;
-            }
-
-            _cachedFullFileRawJson = rootObject.ToString(Formatting.Indented);
-
-            JProperty property = rootObject
-                .Properties()
-                .FirstOrDefault(candidate => string.Equals(candidate.Name, _selectedKey, StringComparison.Ordinal));
-
-            if (property == null)
-            {
-                _cachedKeyRawJson = null;
-                _rawValidationErrorMessage = $"Could not locate raw JSON for key '{_selectedKey}'.";
-                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
-                return;
-            }
-
-            _cachedKeyRawJson = CreateSingleKeyRawJson(property);
-        }
-
-        private void LoadFullFileAsRawJson()
-        {
-            if (!TryLoadFullFileJson(out JObject rootObject, out string errorMessage))
-            {
-                _cachedFullFileRawJson = null;
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
-                return;
-            }
-
-            _cachedFullFileRawJson = rootObject.ToString(Formatting.Indented);
-
-            if (!string.IsNullOrEmpty(_selectedKey))
-            {
-                JProperty property = rootObject
-                    .Properties()
-                    .FirstOrDefault(candidate => string.Equals(candidate.Name, _selectedKey, StringComparison.Ordinal));
-                _cachedKeyRawJson = property == null ? null : CreateSingleKeyRawJson(property);
-            }
-        }
-
-        private void ClearRawJsonState()
-        {
-            _cachedKeyRawJson = null;
-            _cachedFullFileRawJson = null;
-            _rawValidationErrorMessage = null;
+            _currentDataViewMode = loadResult.CurrentDataViewMode;
+            _isTypedViewAvailable = loadResult.IsTypedViewAvailable;
+            _cachedKeyData = loadResult.CachedKeyData;
+            _cachedKeyRawJson = loadResult.CachedKeyRawJson;
+            _cachedFullFileRawJson = loadResult.CachedFullFileRawJson;
+            _rawValidationErrorMessage = loadResult.RawValidationErrorMessage;
         }
 
         private void SaveCurrentKeyData()
         {
-            if (string.IsNullOrEmpty(_selectedFilePath))
-                return;
+            SaveFileViewerSaveResult saveResult = _dataSession.SaveCurrentData(
+                _selectedFilePath,
+                _selectedKey,
+                _currentDataViewMode,
+                _cachedKeyData,
+                _cachedKeyRawJson,
+                _cachedFullFileRawJson);
 
-            try
+            _selectedKey = saveResult.SelectedKey;
+            _currentDataViewMode = saveResult.CurrentDataViewMode;
+            _isTypedViewAvailable = saveResult.IsTypedViewAvailable;
+            _cachedKeyData = saveResult.CachedKeyData;
+            _cachedKeyRawJson = saveResult.CachedKeyRawJson;
+            _cachedFullFileRawJson = saveResult.CachedFullFileRawJson;
+            _rawValidationErrorMessage = saveResult.RawValidationErrorMessage;
+
+            if (saveResult.Keys != null)
             {
-                switch (_currentDataViewMode)
-                {
-                    case DataViewMode.Typed:
-                        if (_cachedKeyData == null || string.IsNullOrEmpty(_selectedKey))
-                            return;
-
-                        ES3.Save(_selectedKey, _cachedKeyData, _selectedFilePath);
-                        break;
-                    case DataViewMode.KeyRaw:
-                        if (string.IsNullOrEmpty(_selectedKey))
-                            return;
-
-                        SaveRawJsonKeyData();
-                        break;
-                    case DataViewMode.FileRaw:
-                        SaveFullFileRawJson();
-                        break;
-                }
-
-                _isDirty = false;
-                Debug.Log($"[SaveFileViewer] Saved {_currentDataViewMode} changes to {_selectedFilePath}");
+                _keys = saveResult.Keys;
+                RebuildKeyLookup();
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"[SaveFileViewer] Failed to save changes to {_selectedFilePath}: {e.Message}");
-            }
-        }
 
-        private void SaveRawJsonKeyData()
-        {
-            if (!TryParseSingleKeyRawJson(_cachedKeyRawJson, out string updatedKeyName, out JToken rawToken, out string errorMessage))
+            if (!saveResult.Succeeded)
             {
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
                 return;
             }
 
-            if (!TryLoadFullFileJson(out JObject rootObject, out errorMessage))
-            {
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
-                return;
-            }
-
-            if (string.IsNullOrWhiteSpace(updatedKeyName))
-            {
-                _rawValidationErrorMessage = "The edited key name cannot be empty.";
-                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
-                return;
-            }
-
-            if (_selectedKey == SaveFileCatalog.METADATA_KEY && !string.Equals(updatedKeyName, _selectedKey, StringComparison.Ordinal))
-            {
-                _rawValidationErrorMessage = $"'{SaveFileCatalog.METADATA_KEY}' is reserved and cannot be renamed.";
-                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
-                return;
-            }
-
-            if (_selectedKey == SaveFileCatalog.METADATA_KEY
-                && !TryValidateMetadataToken(rawToken, out errorMessage))
-            {
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
-                return;
-            }
-
-            if (!string.Equals(updatedKeyName, _selectedKey, StringComparison.Ordinal)
-                && string.Equals(updatedKeyName, SaveFileCatalog.METADATA_KEY, StringComparison.Ordinal))
-            {
-                _rawValidationErrorMessage = $"'{SaveFileCatalog.METADATA_KEY}' is reserved for save metadata.";
-                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
-                return;
-            }
-
-            if (!string.Equals(updatedKeyName, _selectedKey, StringComparison.Ordinal) && rootObject.Property(updatedKeyName) != null)
-            {
-                _rawValidationErrorMessage = $"The key '{updatedKeyName}' already exists in this save file.";
-                Debug.LogError($"[SaveFileViewer] {_rawValidationErrorMessage}");
-                return;
-            }
-
-            if (!TryUpdateKeyPropertyPreservingOrder(rootObject, _selectedKey, updatedKeyName, rawToken, out errorMessage))
-            {
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
-                return;
-            }
-
-            _selectedKey = updatedKeyName;
-            PersistRawFile(rootObject);
-            _cachedKeyRawJson = CreateSingleKeyRawJson(_selectedKey, rawToken);
-        }
-
-        private void SaveFullFileRawJson()
-        {
-            if (!TryParseFullFileJson(_cachedFullFileRawJson, out JObject rootObject, out string errorMessage))
-            {
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
-                return;
-            }
-
-            if (!TryValidateMetadataInRoot(rootObject, out errorMessage))
-            {
-                _rawValidationErrorMessage = errorMessage;
-                Debug.LogError($"[SaveFileViewer] {errorMessage}");
-                return;
-            }
-
-            PersistRawFile(rootObject);
+            _isDirty = false;
         }
 
         private void DeleteFile(ManagedSaveFileInfo entry)
@@ -771,7 +523,10 @@ namespace FakeMG.SaveLoad.Editor
                 "Delete",
                 "Cancel");
 
-            if (!confirmed) return;
+            if (!confirmed)
+            {
+                return;
+            }
 
             try
             {
@@ -825,8 +580,10 @@ namespace FakeMG.SaveLoad.Editor
             SelectFile(_selectedFilePath);
         }
 
-        private void AddNewKey(string keyName)
+        private void AddNewKey(SaveFileViewerAddKeyRequest addKeyRequest)
         {
+            string keyName = addKeyRequest.KeyName;
+
             if (keyName == SaveFileCatalog.METADATA_KEY)
             {
                 EditorUtility.DisplayDialog(
@@ -847,9 +604,8 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                ES3.Save(keyName, _newKeyInitialValue, _selectedFilePath);
-                _newKeyName = string.Empty;
-                ResetNewKeyInitialValue();
+                ES3.Save(keyName, addKeyRequest.InitialValue, _selectedFilePath);
+                _addKeyWorkflow.CompleteAdd();
                 Debug.Log($"[SaveFileViewer] Added key '{keyName}' to {_selectedFilePath}");
             }
             catch (Exception e)
@@ -861,228 +617,6 @@ namespace FakeMG.SaveLoad.Editor
             SelectKey(keyName);
         }
 
-        private void AddNewKey(string keyName, object value)
-        {
-            _newKeyInitialValue = value;
-            AddNewKey(keyName);
-        }
-
-        private void ResetNewKeyInitialValue()
-        {
-            if (_selectedNewKeyType == null)
-            {
-                _newKeyInitialValue = null;
-                return;
-            }
-
-            _newKeyInitialValue = ReflectionDataDrawer.CreateDefaultValue(_selectedNewKeyType);
-        }
-
-        private void DrawNewKeyTypeSelector()
-        {
-            EditorGUI.BeginChangeCheck();
-            _newKeyTypeSearch = EditorGUILayout.TextField("Type", _newKeyTypeSearch);
-            if (EditorGUI.EndChangeCheck())
-            {
-                RefreshNewKeyTypeMatches();
-            }
-
-            if (_exactNewKeyTypeMatch != null)
-            {
-                EditorGUILayout.LabelField("Resolved Type", GetTypeDisplayName(_exactNewKeyTypeMatch));
-                return;
-            }
-
-            if (_newKeyTypeMatches.Count == 0)
-            {
-                EditorGUILayout.HelpBox(
-                    "No creatable runtime types match the current search. Use a full type name such as FakeMG.SaveLoad.TestData or narrow the search.",
-                    MessageType.Warning);
-                return;
-            }
-
-            _newKeyTypeMatchIndex = Mathf.Clamp(_newKeyTypeMatchIndex, 0, _newKeyTypeMatches.Count - 1);
-            int nextIndex = EditorGUILayout.Popup("Matches", _newKeyTypeMatchIndex, _newKeyTypeMatchLabels);
-            if (nextIndex != _newKeyTypeMatchIndex)
-            {
-                _newKeyTypeMatchIndex = nextIndex;
-                ApplySelectedNewKeyType(_newKeyTypeMatches[_newKeyTypeMatchIndex], false);
-            }
-
-            EditorGUILayout.LabelField("Selected Type", GetTypeDisplayName(_selectedNewKeyType));
-        }
-
-        private void RefreshNewKeyTypeMatches()
-        {
-            string search = _newKeyTypeSearch?.Trim() ?? string.Empty;
-            _exactNewKeyTypeMatch = ResolveSupportedType(search);
-            if (_exactNewKeyTypeMatch != null)
-            {
-                _newKeyTypeMatches = new List<Type> { _exactNewKeyTypeMatch };
-                _newKeyTypeMatchLabels = new[] { GetTypeDisplayName(_exactNewKeyTypeMatch) };
-                _newKeyTypeMatchIndex = 0;
-                ApplySelectedNewKeyType(_exactNewKeyTypeMatch, false);
-                return;
-            }
-
-            IEnumerable<Type> matches = CREATABLE_NEW_KEY_TYPES;
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                matches = matches.Where(type =>
-                    type.FullName.Contains(search, StringComparison.OrdinalIgnoreCase)
-                    || type.Name.Contains(search, StringComparison.OrdinalIgnoreCase));
-            }
-
-            _newKeyTypeMatches = matches
-                .Take(MAX_TYPE_MATCHES)
-                .ToList();
-
-            _newKeyTypeMatchLabels = _newKeyTypeMatches
-                .Select(GetTypeDisplayName)
-                .ToArray();
-
-            if (_newKeyTypeMatches.Count == 0)
-            {
-                _newKeyTypeMatchIndex = 0;
-                ApplySelectedNewKeyType(null, false);
-                return;
-            }
-
-            int selectedIndex = _selectedNewKeyType == null
-                ? -1
-                : _newKeyTypeMatches.IndexOf(_selectedNewKeyType);
-            _newKeyTypeMatchIndex = selectedIndex >= 0 ? selectedIndex : 0;
-            ApplySelectedNewKeyType(_newKeyTypeMatches[_newKeyTypeMatchIndex], false);
-        }
-
-        private void ApplySelectedNewKeyType(Type nextType, bool updateSearchText)
-        {
-            if (_selectedNewKeyType == nextType)
-                return;
-
-            _selectedNewKeyType = nextType;
-            _isNewKeyInitialValueExpanded = false;
-            if (updateSearchText && nextType != null)
-            {
-                _newKeyTypeSearch = nextType.FullName;
-                RefreshNewKeyTypeMatches();
-            }
-
-            ResetNewKeyInitialValue();
-        }
-
-        private static Type ResolveSupportedType(string typeName)
-        {
-            if (string.IsNullOrWhiteSpace(typeName))
-                return null;
-
-            for (int i = 0; i < CREATABLE_NEW_KEY_TYPES.Count; i++)
-            {
-                Type candidate = CREATABLE_NEW_KEY_TYPES[i];
-                if (string.Equals(candidate.FullName, typeName, StringComparison.Ordinal)
-                    || string.Equals(candidate.AssemblyQualifiedName, typeName, StringComparison.Ordinal)
-                    || string.Equals(candidate.Name, typeName, StringComparison.Ordinal))
-                {
-                    return candidate;
-                }
-            }
-
-            return null;
-        }
-
-        private static string GetTypeDisplayName(Type type)
-        {
-            return type == null ? string.Empty : $"{type.FullName} ({type.Assembly.GetName().Name})";
-        }
-
-        private static List<Type> BuildCreatableNewKeyTypes()
-        {
-            List<Type> types = new();
-            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            for (int i = 0; i < assemblies.Length; i++)
-            {
-                Assembly assembly = assemblies[i];
-                if (assembly.IsDynamic || IsEditorAssembly(assembly))
-                    continue;
-
-                Type[] assemblyTypes = GetLoadableTypes(assembly);
-                for (int typeIndex = 0; typeIndex < assemblyTypes.Length; typeIndex++)
-                {
-                    Type type = assemblyTypes[typeIndex];
-                    if (!IsSupportedNewKeyType(type))
-                        continue;
-
-                    types.Add(type);
-                }
-            }
-
-            return types
-                .Distinct()
-                .OrderBy(type => type.FullName)
-                .ToList();
-        }
-
-        private static Type[] GetLoadableTypes(Assembly assembly)
-        {
-            try
-            {
-                return assembly.GetTypes();
-            }
-            catch (ReflectionTypeLoadException exception)
-            {
-                return exception.Types.Where(type => type != null).ToArray();
-            }
-        }
-
-        private static bool IsEditorAssembly(Assembly assembly)
-        {
-            string assemblyName = assembly.GetName().Name;
-            return assemblyName.Contains("Editor", StringComparison.OrdinalIgnoreCase);
-        }
-
-        private static bool IsSupportedNewKeyType(Type type)
-        {
-            if (type == null)
-                return false;
-
-            if (type.IsAbstract || type.IsInterface)
-                return false;
-
-            if (type.ContainsGenericParameters)
-                return false;
-
-            if (type.IsPointer || type.IsByRef)
-                return false;
-
-            if (typeof(Delegate).IsAssignableFrom(type))
-                return false;
-
-            if (typeof(UnityEngine.Object).IsAssignableFrom(type))
-                return false;
-
-            if (type.FullName == null)
-                return false;
-
-            if (type.FullName.StartsWith("<", StringComparison.Ordinal))
-                return false;
-
-            return CanCreateDefaultValue(type);
-        }
-
-        private static bool CanCreateDefaultValue(Type type)
-        {
-            if (type == typeof(string))
-                return true;
-
-            if (type.IsArray)
-                return type.GetElementType() != null;
-
-            if (type.IsValueType)
-                return true;
-
-            return type.GetConstructor(Type.EmptyTypes) != null;
-        }
-
         private bool ConfirmDiscardChanges()
         {
             return EditorUtility.DisplayDialog(
@@ -1090,268 +624,6 @@ namespace FakeMG.SaveLoad.Editor
                 "You have unsaved changes. Discard them?",
                 "Discard",
                 "Cancel");
-        }
-
-        #endregion
-
-        #region Raw JSON Helpers
-
-        private bool TryLoadTypedKeyData(out object typedKeyData)
-        {
-            typedKeyData = null;
-
-            if (string.IsNullOrEmpty(_selectedFilePath) || string.IsNullOrEmpty(_selectedKey))
-                return false;
-
-            try
-            {
-                typedKeyData = ES3.Load(_selectedKey, _selectedFilePath);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private bool TryLoadFullFileJson(out JObject rootObject, out string errorMessage)
-        {
-            rootObject = null;
-
-            try
-            {
-                string rawJson = ES3.LoadRawString(_selectedFilePath);
-                return TryParseFullFileJson(rawJson, out rootObject, out errorMessage);
-            }
-            catch (Exception exception)
-            {
-                errorMessage = $"Failed to load raw JSON from {_selectedFilePath}: {exception.Message}";
-                return false;
-            }
-        }
-
-        private static bool TryParseFullFileJson(string rawJson, out JObject rootObject, out string errorMessage)
-        {
-            rootObject = null;
-
-            if (!TryParseJsonToken(rawJson, out JToken rootToken, out errorMessage))
-                return false;
-
-            rootObject = rootToken as JObject;
-            if (rootObject != null)
-                return true;
-
-            errorMessage = "The save file must contain a JSON object at the root.";
-            return false;
-        }
-
-        private static bool TryParseJsonToken(string rawJson, out JToken parsedToken, out string errorMessage)
-        {
-            parsedToken = null;
-
-            if (string.IsNullOrWhiteSpace(rawJson))
-            {
-                errorMessage = "Raw JSON cannot be empty.";
-                return false;
-            }
-
-            try
-            {
-                parsedToken = JToken.Parse(rawJson);
-                errorMessage = null;
-                return true;
-            }
-            catch (JsonReaderException exception)
-            {
-                errorMessage = $"Invalid JSON: {exception.Message}";
-                return false;
-            }
-        }
-
-        private static bool TryParseSingleKeyRawJson(
-            string rawJson,
-            out string keyName,
-            out JToken valueToken,
-            out string errorMessage)
-        {
-            keyName = null;
-            valueToken = null;
-
-            if (!TryParseFullFileJson(rawJson, out JObject keyObject, out errorMessage))
-                return false;
-
-            List<JProperty> properties = keyObject.Properties().ToList();
-            if (properties.Count != 1)
-            {
-                errorMessage = "Key Raw must contain exactly one JSON property.";
-                return false;
-            }
-
-            JProperty property = properties[0];
-            keyName = property.Name;
-            valueToken = property.Value?.DeepClone() ?? JValue.CreateNull();
-            errorMessage = null;
-            return true;
-        }
-
-        private static string CreateSingleKeyRawJson(JProperty property)
-        {
-            return CreateSingleKeyRawJson(property.Name, property.Value);
-        }
-
-        private static string CreateSingleKeyRawJson(string keyName, JToken valueToken)
-        {
-            JObject keyObject = new(new JProperty(keyName, valueToken?.DeepClone() ?? JValue.CreateNull()));
-            return keyObject.ToString(Formatting.Indented);
-        }
-
-        private static bool TryUpdateKeyPropertyPreservingOrder(
-            JObject rootObject,
-            string currentKeyName,
-            string updatedKeyName,
-            JToken rawToken,
-            out string errorMessage)
-        {
-            JProperty existingProperty = rootObject.Property(currentKeyName);
-            if (existingProperty == null)
-            {
-                errorMessage = $"Could not locate key '{currentKeyName}' in the save file.";
-                return false;
-            }
-
-            JProperty replacementProperty = new(
-                updatedKeyName,
-                rawToken?.DeepClone() ?? JValue.CreateNull());
-
-            existingProperty.Replace(replacementProperty);
-            errorMessage = null;
-            return true;
-        }
-
-        private static bool TryValidateMetadataInRoot(JObject rootObject, out string errorMessage)
-        {
-            List<JProperty> metadataProperties = rootObject
-                .Properties()
-                .Where(property => string.Equals(property.Name, SaveFileCatalog.METADATA_KEY, StringComparison.Ordinal))
-                .ToList();
-
-            if (metadataProperties.Count == 0)
-            {
-                errorMessage = $"'{SaveFileCatalog.METADATA_KEY}' is required and cannot be deleted.";
-                return false;
-            }
-
-            if (metadataProperties.Count > 1)
-            {
-                errorMessage = $"'{SaveFileCatalog.METADATA_KEY}' must appear exactly once in the save file.";
-                return false;
-            }
-
-            return TryValidateMetadataToken(metadataProperties[0].Value, out errorMessage);
-        }
-
-        private static bool TryValidateMetadataToken(JToken metadataToken, out string errorMessage)
-        {
-            if (metadataToken is not JObject metadataObject)
-            {
-                errorMessage = $"'{SaveFileCatalog.METADATA_KEY}' must remain a JSON object so its field names stay intact.";
-                return false;
-            }
-
-            HashSet<string> encounteredFieldNames = new(StringComparer.Ordinal);
-            List<JProperty> metadataProperties = metadataObject.Properties().ToList();
-
-            for (int i = 0; i < metadataProperties.Count; i++)
-            {
-                string fieldName = metadataProperties[i].Name;
-
-                if (!encounteredFieldNames.Add(fieldName))
-                {
-                    errorMessage = $"Metadata field '{fieldName}' is duplicated. Metadata field names cannot be renamed, duplicated, added, or removed.";
-                    return false;
-                }
-
-                if (!METADATA_FIELD_NAMES.Contains(fieldName))
-                {
-                    errorMessage = $"Metadata field '{fieldName}' is not supported. Allowed fields: {string.Join(", ", METADATA_FIELD_NAMES)}.";
-                    return false;
-                }
-            }
-
-            if (encounteredFieldNames.Count != METADATA_FIELD_NAMES.Count)
-            {
-                List<string> missingFields = METADATA_FIELD_NAMES
-                    .Where(fieldName => !encounteredFieldNames.Contains(fieldName))
-                    .ToList();
-                errorMessage = $"Metadata is missing required fields: {string.Join(", ", missingFields)}.";
-                return false;
-            }
-
-            errorMessage = null;
-            return true;
-        }
-
-        private void PersistRawFile(JObject rootObject)
-        {
-            string serializedJson = rootObject.ToString(Formatting.None);
-            ES3.SaveRaw(serializedJson, _selectedFilePath);
-
-            _cachedFullFileRawJson = rootObject.ToString(Formatting.Indented);
-            _rawValidationErrorMessage = null;
-
-            ReloadKeysFromSelectedFile();
-            RefreshSelectedKeyStateFromRoot(rootObject);
-        }
-
-        private void ReloadKeysFromSelectedFile()
-        {
-            try
-            {
-                _keys = ES3.GetKeys(_selectedFilePath);
-                RebuildKeyLookup();
-            }
-            catch (Exception exception)
-            {
-                _keys = Array.Empty<string>();
-                _keyLookup.Clear();
-                Debug.LogError($"[SaveFileViewer] Failed to refresh keys for {_selectedFilePath}: {exception.Message}");
-            }
-        }
-
-        private void RefreshSelectedKeyStateFromRoot(JObject rootObject)
-        {
-            if (string.IsNullOrEmpty(_selectedKey))
-            {
-                _isTypedViewAvailable = false;
-                _cachedKeyData = null;
-                _cachedKeyRawJson = null;
-                return;
-            }
-
-            JProperty property = rootObject
-                .Properties()
-                .FirstOrDefault(candidate => string.Equals(candidate.Name, _selectedKey, StringComparison.Ordinal));
-
-            if (property == null)
-            {
-                _selectedKey = null;
-                _cachedKeyData = null;
-                _cachedKeyRawJson = null;
-                _isTypedViewAvailable = false;
-
-                if (_currentDataViewMode != DataViewMode.FileRaw)
-                {
-                    _currentDataViewMode = DataViewMode.FileRaw;
-                }
-
-                return;
-            }
-
-            _cachedKeyRawJson = CreateSingleKeyRawJson(property);
-            _isTypedViewAvailable = TryLoadTypedKeyData(out object typedKeyData);
-            _cachedKeyData = _currentDataViewMode == DataViewMode.Typed && _isTypedViewAvailable
-                ? typedKeyData
-                : null;
         }
 
         #endregion
@@ -1383,7 +655,7 @@ namespace FakeMG.SaveLoad.Editor
             return _currentDataViewMode == DataViewMode.FileRaw || !string.IsNullOrEmpty(_selectedKey);
         }
 
-        private bool CanSaveCurrentView()
+        private bool HasCurrentViewTarget()
         {
             return _currentDataViewMode switch
             {
@@ -1394,15 +666,47 @@ namespace FakeMG.SaveLoad.Editor
             };
         }
 
+        private bool CanSaveCurrentView()
+        {
+            return HasCurrentViewTarget();
+        }
+
         private bool CanReloadCurrentView()
         {
-            return _currentDataViewMode switch
+            return HasCurrentViewTarget();
+        }
+
+        private void ResetViewerSelectionState()
+        {
+            _selectedFilePath = null;
+            _selectedKey = null;
+            _keys = Array.Empty<string>();
+            _keyLookup.Clear();
+            _currentDataViewMode = DataViewMode.Typed;
+            ResetLoadedDataState();
+            ReflectionDataDrawer.ClearExpandedState();
+        }
+
+        private void ResetLoadedDataState()
+        {
+            _isDirty = false;
+            _cachedKeyData = null;
+            _isTypedViewAvailable = false;
+            _cachedKeyRawJson = null;
+            _cachedFullFileRawJson = null;
+            _rawValidationErrorMessage = null;
+        }
+
+        private bool TryBeginViewTransition()
+        {
+            if (_isDirty && !ConfirmDiscardChanges())
             {
-                DataViewMode.Typed => !string.IsNullOrEmpty(_selectedFilePath) && !string.IsNullOrEmpty(_selectedKey),
-                DataViewMode.KeyRaw => !string.IsNullOrEmpty(_selectedFilePath) && !string.IsNullOrEmpty(_selectedKey),
-                DataViewMode.FileRaw => !string.IsNullOrEmpty(_selectedFilePath),
-                _ => false
-            };
+                return false;
+            }
+
+            ResetRawJsonEditorFocus();
+            ReflectionDataDrawer.ClearExpandedState();
+            return true;
         }
 
         private void DrawDataViewButton(string label, DataViewMode targetMode, bool isEnabled)
@@ -1424,12 +728,12 @@ namespace FakeMG.SaveLoad.Editor
             if (_currentDataViewMode == nextMode)
                 return;
 
-            if (_isDirty && !ConfirmDiscardChanges())
+            if (!TryBeginViewTransition())
+            {
                 return;
+            }
 
-            ResetRawJsonEditorFocus();
             _currentDataViewMode = nextMode;
-            ReflectionDataDrawer.ClearExpandedState();
             ReloadCurrentDataView();
             Repaint();
         }

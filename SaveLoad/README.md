@@ -34,6 +34,7 @@
 - Separate save file into smaller files for different systems (e.g., player data, world state)
 - UI Integration: Provide user interface components for save/load operations
 - Editor tool
+  - Metadata validation: prevent unsupported types
   - Support Ctrl + Z undo
 
 ### ❌ Out of Scope / Not Implemented
