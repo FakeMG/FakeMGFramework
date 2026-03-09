@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace FakeMG.Settings
 {
-    public abstract class SettingDataSO : ScriptableObject
+    public abstract class SettingDefinitionSO : ScriptableObject
     {
         [SerializeField] private string _settingId;
         [SerializeField] private string _label;

@@ -2,10 +2,11 @@
     "name": "FakeMG.Settings",
     "rootNamespace": "FakeMG.Settings",
     "references": [
-        "GUID:6055be8ebefd69e48b49212b09b47b2f",
-        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a",
-        "GUID:5362e51fb5f15ac4b91f68d512ea2e58",
-        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc"
+        "Unity.TextMeshPro",
+        "FakeMG.Framework",
+        "FakeMG.SaveLoad",
+        "VContainer",
+        "EasySave3"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

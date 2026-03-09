@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace FakeMG.Settings
 {
-    public abstract class SettingDataGeneric<T> : SettingDataSO
+    public abstract class SettingDefinitionGenericSO<T> : SettingDefinitionSO
     {
         [SerializeField] private T _defaultValue;
 

@@ -1,79 +1,153 @@
 using System;
 using System.Collections.Generic;
+using FakeMG.Framework;
 using FakeMG.SaveLoad;
+using FakeMG.Settings.Converters;
 
 namespace FakeMG.Settings
 {
-    public interface ISettingValue { }
-
-    public class SettingValue<T> : ISettingValue
-    {
-        public T value;
-        public Action<SettingDataGeneric<T>, T> OnChanged;
-    }
-
     public class SettingDataManager : Saveable
     {
-        private Dictionary<string, ISettingValue> _currentData = new();
+        private Dictionary<string, ISettingValueRuntimeStorage> _settingRuntimeStorages = new();
+        private Dictionary<string, string> _serializedValues = new();
+        private Dictionary<string, string> _serializedValueTypes = new();
 
         public override object CaptureState()
         {
-            return _currentData;
+            return new SettingDataSnapshot
+            {
+                Values = new Dictionary<string, string>(_serializedValues),
+                ValueTypes = new Dictionary<string, string>(_serializedValueTypes)
+            };
         }
 
         public override void RestoreDefaultState()
         {
-            _currentData = new Dictionary<string, ISettingValue>();
+            _settingRuntimeStorages = new Dictionary<string, ISettingValueRuntimeStorage>();
+            _serializedValues = new Dictionary<string, string>();
+            _serializedValueTypes = new Dictionary<string, string>();
         }
 
         public override void RestoreState(object data)
         {
-            if (data is Dictionary<string, ISettingValue> settingData)
+            if (data is SettingDataSnapshot snapshot)
             {
-                _currentData = settingData;
+                _settingRuntimeStorages = new Dictionary<string, ISettingValueRuntimeStorage>();
+                _serializedValues = snapshot.Values != null
+                    ? new Dictionary<string, string>(snapshot.Values)
+                    : new Dictionary<string, string>();
+                _serializedValueTypes = snapshot.ValueTypes != null
+                    ? new Dictionary<string, string>(snapshot.ValueTypes)
+                    : new Dictionary<string, string>();
                 return;
             }
 
             RestoreDefaultState();
         }
 
-        public void SetValue<T>(SettingDataGeneric<T> setting, T newValue)
+        public void SetValue<T>(SettingDefinitionGenericSO<T> setting, T newValue)
         {
             var storage = GetOrCreateStorage(setting);
             if (!EqualityComparer<T>.Default.Equals(storage.value, newValue))
             {
                 storage.value = newValue;
+                PersistValue(setting.SettingId, storage);
                 storage.OnChanged?.Invoke(setting, newValue);
             }
         }
 
-        public T GetValue<T>(SettingDataGeneric<T> setting)
+        public T GetValue<T>(SettingDefinitionGenericSO<T> setting)
         {
             return GetOrCreateStorage(setting).value;
         }
 
-        public void Subscribe<T>(SettingDataGeneric<T> setting, Action<SettingDataGeneric<T>, T> callback)
+        public void Subscribe<T>(SettingDefinitionGenericSO<T> setting, Action<SettingDefinitionGenericSO<T>, T> callback)
         {
             GetOrCreateStorage(setting).OnChanged += callback;
         }
 
-        public void Unsubscribe<T>(SettingDataGeneric<T> setting, Action<SettingDataGeneric<T>, T> callback)
+        public void Unsubscribe<T>(SettingDefinitionGenericSO<T> setting, Action<SettingDefinitionGenericSO<T>, T> callback)
         {
-            if (_currentData.TryGetValue(setting.SettingId, out ISettingValue storage))
+            if (_settingRuntimeStorages.TryGetValue(setting.SettingId, out ISettingValueRuntimeStorage storage))
             {
-                ((SettingValue<T>)storage).OnChanged -= callback;
+                if (storage is SettingValueRuntimeStorage<T> typedStorage)
+                {
+                    typedStorage.OnChanged -= callback;
+                    return;
+                }
+
+                Echo.Warning($"Ignored unsubscribe for setting '{setting.SettingId}' because the stored value type did not match {typeof(T).Name}.", context: this);
             }
         }
 
-        private SettingValue<T> GetOrCreateStorage<T>(SettingDataGeneric<T> setting)
+        private SettingValueRuntimeStorage<T> GetOrCreateStorage<T>(SettingDefinitionGenericSO<T> setting)
         {
-            if (!_currentData.TryGetValue(setting.SettingId, out ISettingValue storage))
+            if (_settingRuntimeStorages.TryGetValue(setting.SettingId, out ISettingValueRuntimeStorage storage))
             {
-                T defaultValue = setting.GetDefaultValue();
-                storage = new SettingValue<T> { value = defaultValue };
-                _currentData.Add(setting.SettingId, storage);
+                if (storage is SettingValueRuntimeStorage<T> typedStorage)
+                {
+                    return typedStorage;
+                }
+
+                Echo.Warning($"Resetting setting '{setting.SettingId}' because the stored value type did not match {typeof(T).Name}.", context: this);
+                _settingRuntimeStorages.Remove(setting.SettingId);
+                _serializedValues.Remove(setting.SettingId);
+                _serializedValueTypes.Remove(setting.SettingId);
             }
-            return (SettingValue<T>)storage;
+
+            if (TryCreateStorageFromSerializedValue(setting, out SettingValueRuntimeStorage<T> restoredStorage))
+            {
+                return restoredStorage;
+            }
+
+            T defaultValue = setting.GetDefaultValue();
+            SettingValueRuntimeStorage<T> createdStorage = new() { value = defaultValue };
+            _settingRuntimeStorages.Add(setting.SettingId, createdStorage);
+            PersistValue(setting.SettingId, createdStorage);
+            return createdStorage;
+        }
+
+        /// <summary>
+        /// Attempts to restore a setting value from serialized data.
+        /// Removes corrupted data on deserialization failure to prevent repeated retry attempts.
+        /// </summary>
+        private bool TryCreateStorageFromSerializedValue<T>(SettingDefinitionGenericSO<T> setting, out SettingValueRuntimeStorage<T> storage)
+        {
+            if (_serializedValues.TryGetValue(setting.SettingId, out string serializedValue) &&
+                SettingValueConverterRegistry.TryDeserialize(serializedValue, out T restoredValue))
+            {
+                storage = new SettingValueRuntimeStorage<T> { value = restoredValue };
+                _settingRuntimeStorages[setting.SettingId] = storage;
+                PersistValue(setting.SettingId, storage);
+                return true;
+            }
+
+            if (_serializedValues.ContainsKey(setting.SettingId))
+            {
+                Echo.Warning($"Resetting setting '{setting.SettingId}' because the saved value could not be deserialized as {typeof(T).Name}.", context: this);
+                _serializedValues.Remove(setting.SettingId);
+                _serializedValueTypes.Remove(setting.SettingId);
+            }
+
+            storage = null;
+            return false;
+        }
+
+        private void PersistValue(string settingId, ISettingValueRuntimeStorage storage)
+        {
+            if (SettingValueConverterRegistry.TrySerialize(storage.ValueType, storage.GetValue(), out string serializedValue))
+            {
+                if (SettingValueConverterRegistry.TryGetTypeId(storage.ValueType, out string typeId))
+                {
+                    _serializedValues[settingId] = serializedValue;
+                    _serializedValueTypes[settingId] = typeId;
+                    return;
+                }
+            }
+
+            _serializedValues.Remove(settingId);
+            _serializedValueTypes.Remove(settingId);
+            Echo.Warning($"Skipped unsupported setting '{settingId}' while creating a save snapshot.", context: this);
         }
     }
 }

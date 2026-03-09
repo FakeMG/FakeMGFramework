@@ -73,8 +73,6 @@ namespace FakeMG.Settings
             float normalizedSliderValue = ConvertSliderValueToStoredValue(sliderValue);
 
             UpdateValueLabel(sliderValue);
-
-            // TODO: this crashes the game if there is data in the save file
             _settingDataManager.SetValue(_sliderSetting, normalizedSliderValue);
         }
 

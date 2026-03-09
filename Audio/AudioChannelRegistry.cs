@@ -123,7 +123,7 @@ namespace FakeMG.Audio
             _subscribedVolumeChannels.Clear();
         }
 
-        private void ApplyVolumeWhenSettingChanged(SettingDataGeneric<float> setting, float volume)
+        private void ApplyVolumeWhenSettingChanged(SettingDefinitionGenericSO<float> setting, float volume)
         {
             if (!_settingIdToChannel.TryGetValue(setting.SettingId, out AudioCueEventChannelSO channel))
             {
