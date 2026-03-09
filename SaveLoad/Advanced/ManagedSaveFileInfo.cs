@@ -2,23 +2,23 @@ namespace FakeMG.SaveLoad.Advanced
 {
     public sealed class ManagedSaveFileInfo
     {
-        public ManagedSaveFileInfo(string filePath, SaveMetadata metadata)
+        public ManagedSaveFileInfo(string saveFilePath, SaveMetadata metadata)
         {
-            FilePath = SaveFileCatalog.NormalizeSavePath(filePath);
-            FileName = SaveFileCatalog.GetSaveFileName(FilePath);
-            RelativeFolderPath = SaveFileCatalog.GetRelativeFolderPath(FilePath);
-            RelativeSavePath = SaveFileCatalog.GetRelativeSavePath(FilePath);
+            SaveFilePath = SaveFileCatalog.NormalizeSaveFilePath(saveFilePath);
+            SaveFileName = SaveFileCatalog.GetSaveFileName(SaveFilePath);
+            SaveDirectoryPath = SaveFileCatalog.GetSaveDirectoryPath(SaveFilePath);
             Metadata = metadata;
+            SaveKind = Metadata.SaveKind;
         }
 
-        public string FilePath { get; }
+        public string SaveFilePath { get; }
 
-        public string FileName { get; }
+        public string SaveFileName { get; }
 
-        public string RelativeFolderPath { get; }
-
-        public string RelativeSavePath { get; }
+        public string SaveDirectoryPath { get; }
 
         public SaveMetadata Metadata { get; }
+
+        public SaveFileKind SaveKind { get; }
     }
 }

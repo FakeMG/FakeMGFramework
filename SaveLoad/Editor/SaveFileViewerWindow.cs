@@ -186,7 +186,7 @@ namespace FakeMG.SaveLoad.Editor
                 return;
             }
 
-            EditorGUILayout.LabelField(SaveFileCatalog.GetRelativeSavePath(_selectedFilePath), EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(SaveFileCatalog.NormalizeSaveFilePath(_selectedFilePath), EditorStyles.boldLabel);
             EditorGUILayout.Space(4);
 
             DrawKeyList();
@@ -402,7 +402,7 @@ namespace FakeMG.SaveLoad.Editor
             _fileEntries = SaveFileCatalog.GetManagedSaveFiles();
 
             _fileEntries = _fileEntries
-                .OrderBy(entry => entry.RelativeFolderPath, StringComparer.Ordinal)
+                .OrderBy(entry => entry.SaveDirectoryPath, StringComparer.Ordinal)
                 .ThenByDescending(entry => entry.Metadata.Timestamp)
                 .ToList();
 
@@ -520,7 +520,7 @@ namespace FakeMG.SaveLoad.Editor
         {
             bool confirmed = EditorUtility.DisplayDialog(
                 "Delete Save File",
-                $"Are you sure you want to delete '{entry.FileName}'?\nThis cannot be undone.",
+                $"Are you sure you want to delete '{entry.SaveFileName}'?\nThis cannot be undone.",
                 "Delete",
                 "Cancel");
 
@@ -531,12 +531,12 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                ES3.DeleteFile(entry.FilePath);
-                Debug.Log($"[SaveFileViewer] Deleted {entry.FilePath}");
+                ES3.DeleteFile(entry.SaveFilePath);
+                Debug.Log($"[SaveFileViewer] Deleted {entry.SaveFilePath}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to delete {entry.FilePath}: {e.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to delete {entry.SaveFilePath}: {e.Message}");
             }
 
             RefreshFileList();
@@ -679,7 +679,7 @@ namespace FakeMG.SaveLoad.Editor
 
         private ManagedSaveFileInfo GetSelectedFileEntry()
         {
-            return _fileEntries.FirstOrDefault(entry => entry.FilePath == _selectedFilePath);
+            return _fileEntries.FirstOrDefault(entry => entry.SaveFilePath == _selectedFilePath);
         }
 
         private void ResetViewerSelectionState()

@@ -29,6 +29,7 @@
   - Add new key with a typed initial value for any supported creatable runtime type
   - Raw JSON editing mode
   - Metadata validation prevents renaming metadata keys or fields and blocks metadata deletion
+  - Multiple folders support
 
 ### ⏳ Planned (To-Do)
 - Separate save file into smaller files for different systems (e.g., player data, world state)

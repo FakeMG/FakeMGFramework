@@ -8,75 +8,98 @@ namespace FakeMG.SaveLoad.Advanced
     public static class SaveFileCatalog
     {
         public const string ROOT_FOLDER_DISPLAY_NAME = "Root";
+        public const string DEFAULT_FIXED_SAVE_FILE_NAME = "Settings";
         public const string MANUAL_SAVE_PATH_PREFIX = "ManualSave_";
         public const string AUTO_SAVE_PATH_PREFIX = "AutoSave_";
         public const string METADATA_KEY = "Metadata";
 
         public static List<ManagedSaveFileInfo> GetManagedSaveFiles()
         {
-            return GetManagedSaveFilesInFolder(string.Empty, true);
+            return GetManagedSaveFilesInDirectory(string.Empty, true);
         }
 
-        public static List<ManagedSaveFileInfo> GetManagedSaveFiles(string saveFolderPath)
+        public static List<ManagedSaveFileInfo> GetManagedSaveFiles(string saveDirectoryPath)
         {
-            string normalizedFolderPath = NormalizeSaveFolderPath(saveFolderPath);
-            return GetManagedSaveFilesInFolder(normalizedFolderPath, false);
+            string normalizedDirectoryPath = NormalizeSaveDirectoryPath(saveDirectoryPath);
+            return GetManagedSaveFilesInDirectory(normalizedDirectoryPath, false);
         }
 
-        public static string CreateManualSavePath(string saveFolderPath, DateTime timestamp)
+        public static string CreateManualSaveFilePath(string saveDirectoryPath, DateTime timestamp)
         {
             string manualSaveFileName = $"{MANUAL_SAVE_PATH_PREFIX}{timestamp.Ticks}";
-            return NormalizeSavePath(manualSaveFileName, saveFolderPath);
+            return NormalizeSaveFilePath(manualSaveFileName, saveDirectoryPath);
         }
 
-        public static string CreateAutoSavePath(string saveFolderPath, DateTime timestamp)
+        public static string CreateAutoSaveFilePath(string saveDirectoryPath, DateTime timestamp)
         {
             string autoSaveFileName = $"{AUTO_SAVE_PATH_PREFIX}{timestamp.Ticks}";
-            return NormalizeSavePath(autoSaveFileName, saveFolderPath);
+            return NormalizeSaveFilePath(autoSaveFileName, saveDirectoryPath);
         }
 
-        public static string NormalizeSaveFolderPath(string saveFolderPath)
+        public static string CreateFixedSaveFilePath(string saveDirectoryPath, string saveFileName)
         {
-            return NormalizeFolderPath(saveFolderPath);
+            return NormalizeSaveFilePath(saveFileName, saveDirectoryPath);
         }
 
-        public static string NormalizeSavePath(string savePath)
+        public static string NormalizeSaveFilePath(string saveFilePath)
         {
-            return NormalizeSavePath(savePath, string.Empty);
+            return NormalizeSaveFilePath(saveFilePath, string.Empty);
         }
 
-        public static string NormalizeSavePath(string savePath, string saveFolderPath)
+        public static string NormalizeSaveFilePath(string saveFilePath, string saveDirectoryPath)
         {
-            if (string.IsNullOrWhiteSpace(savePath))
+            if (string.IsNullOrWhiteSpace(saveFilePath))
             {
-                return savePath;
+                return saveFilePath;
             }
 
-            string normalizedPath = NormalizePathSeparators(savePath).Trim();
+            string normalizedPath = NormalizePathSeparators(saveFilePath).Trim();
             if (Path.IsPathRooted(normalizedPath))
             {
-                throw new ArgumentException("Save path must be relative.", nameof(savePath));
+                throw new ArgumentException("Save file path must be relative.", nameof(saveFilePath));
             }
 
             string trimmedPath = normalizedPath.Trim('/');
-            ValidatePathSegments(trimmedPath, nameof(savePath), allowEmpty: false);
+            ValidatePathSegments(trimmedPath, nameof(saveFilePath), allowEmpty: false);
 
-            string normalizedFolderPath = NormalizeFolderPath(saveFolderPath);
+            string normalizedDirectoryPath = NormalizeDirectoryPath(saveDirectoryPath);
 
             if (HasDirectorySegments(trimmedPath))
             {
-                ValidateFolderOwnership(trimmedPath, normalizedFolderPath, nameof(savePath));
+                ValidateDirectoryOwnership(trimmedPath, normalizedDirectoryPath, nameof(saveFilePath));
                 return trimmedPath;
             }
 
-            return string.IsNullOrEmpty(normalizedFolderPath)
+            return string.IsNullOrEmpty(normalizedDirectoryPath)
                 ? trimmedPath
-                : $"{normalizedFolderPath}/{trimmedPath}";
+                : $"{normalizedDirectoryPath}/{trimmedPath}";
         }
 
-        public static string GetRelativeFolderPath(string filePath)
+        public static string NormalizeSaveDirectoryPath(string saveDirectoryPath)
         {
-            string normalizedPath = NormalizeSavePath(filePath);
+            return NormalizeDirectoryPath(saveDirectoryPath);
+        }
+
+        private static string NormalizeDirectoryPath(string saveDirectoryPath)
+        {
+            if (string.IsNullOrWhiteSpace(saveDirectoryPath))
+            {
+                return string.Empty;
+            }
+
+            string normalizedPath = NormalizePathSeparators(saveDirectoryPath).Trim().Trim('/');
+            if (Path.IsPathRooted(normalizedPath))
+            {
+                throw new ArgumentException("Save directory path must be relative.", nameof(saveDirectoryPath));
+            }
+
+            ValidatePathSegments(normalizedPath, nameof(saveDirectoryPath), allowEmpty: true);
+            return normalizedPath;
+        }
+
+        public static string GetSaveDirectoryPath(string saveFilePath)
+        {
+            string normalizedPath = NormalizeSaveFilePath(saveFilePath);
             int lastSeparatorIndex = normalizedPath.LastIndexOf('/');
             if (lastSeparatorIndex < 0)
             {
@@ -86,84 +109,59 @@ namespace FakeMG.SaveLoad.Advanced
             return normalizedPath[..lastSeparatorIndex];
         }
 
-        public static string GetRelativeSavePath(string filePath)
+        public static string GetSaveKindBadge(SaveMetadata metadata)
         {
-            return NormalizeSavePath(filePath);
+            SaveFileKind saveKind = metadata.SaveKind;
+
+            return saveKind switch
+            {
+                SaveFileKind.Auto => "[Auto]",
+                SaveFileKind.Fixed => "[Fixed]",
+                _ => "[Manual]",
+            };
         }
 
-        public static string GetFolderDisplayName(string relativeFolderPath)
+        public static string GetSaveFileName(string saveFilePath)
         {
-            return string.IsNullOrEmpty(relativeFolderPath)
-                ? ROOT_FOLDER_DISPLAY_NAME
-                : relativeFolderPath;
-        }
-
-        public static bool IsManagedSaveFile(string filePath)
-        {
-            string fileName = GetSaveFileName(filePath);
-
-            return fileName.StartsWith(MANUAL_SAVE_PATH_PREFIX, StringComparison.Ordinal)
-                   || fileName.StartsWith(AUTO_SAVE_PATH_PREFIX, StringComparison.Ordinal);
-        }
-
-        public static bool IsAutoSaveFile(string filePath)
-        {
-            string fileName = GetSaveFileName(filePath);
-            return fileName.StartsWith(AUTO_SAVE_PATH_PREFIX, StringComparison.Ordinal);
-        }
-
-        public static string GetSaveFileName(string filePath)
-        {
-            string normalizedPath = NormalizePathSeparators(filePath);
+            string normalizedPath = NormalizePathSeparators(saveFilePath);
             return Path.GetFileNameWithoutExtension(normalizedPath);
         }
 
-        private static List<ManagedSaveFileInfo> GetManagedSaveFilesInFolder(string normalizedFolderPath, bool recursive)
+        private static List<ManagedSaveFileInfo> GetManagedSaveFilesInDirectory(string normalizedDirectoryPath, bool recursive)
         {
             List<ManagedSaveFileInfo> saveFiles = new();
-            string[] filePaths = GetFilesInFolder(normalizedFolderPath, recursive);
+            string[] saveFilePaths = GetSaveFilePathsInDirectory(normalizedDirectoryPath, recursive);
 
-            foreach (string filePath in filePaths)
+            foreach (string saveFilePath in saveFilePaths)
             {
-                if (!IsManagedSaveFile(filePath))
+                if (TryLoadManagedMetadata(saveFilePath, out SaveMetadata metadata))
                 {
-                    continue;
-                }
-
-                if (!ES3.KeyExists(METADATA_KEY, filePath))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    SaveMetadata metadata = ES3.Load(METADATA_KEY, filePath, new SaveMetadata());
-                    saveFiles.Add(new ManagedSaveFileInfo(filePath, metadata));
-                }
-                catch (Exception)
-                {
-                    // Invalid metadata should not block access to other save files.
+                    saveFiles.Add(new ManagedSaveFileInfo(saveFilePath, metadata));
                 }
             }
 
             return saveFiles;
         }
 
-        private static string NormalizeFolderPath(string saveFolderPath)
+        private static bool TryLoadManagedMetadata(string saveFilePath, out SaveMetadata metadata)
         {
-            if (string.IsNullOrWhiteSpace(saveFolderPath))
+            metadata = null;
+
+            if (!ES3.KeyExists(METADATA_KEY, saveFilePath))
             {
-                return string.Empty;
+                return false;
             }
 
-            string normalizedPath = NormalizePathSeparators(saveFolderPath).Trim().Trim('/');
-            if (Path.IsPathRooted(normalizedPath))
+            try
             {
-                throw new ArgumentException("Save folder path must be relative.", nameof(saveFolderPath));
+                metadata = ES3.Load(METADATA_KEY, saveFilePath, new SaveMetadata());
+                return metadata.SaveKind != SaveFileKind.Unknown;
             }
-
-            ValidatePathSegments(normalizedPath, nameof(saveFolderPath), allowEmpty: true);
-            return normalizedPath;
+            catch (Exception)
+            {
+                // Invalid metadata should not block access to other save files.
+                return false;
+            }
         }
 
         private static void ValidatePathSegments(string normalizedPath, string parameterName, bool allowEmpty)
@@ -188,24 +186,24 @@ namespace FakeMG.SaveLoad.Advanced
             }
         }
 
-        private static string[] GetFilesInFolder(string normalizedFolderPath, bool recursive)
+        private static string[] GetSaveFilePathsInDirectory(string normalizedDirectoryPath, bool recursive)
         {
-            if (!DirectoryExists(normalizedFolderPath))
+            if (!DirectoryExists(normalizedDirectoryPath))
             {
                 return Array.Empty<string>();
             }
 
-            List<string> filePaths = new();
-            CollectFilesInFolder(normalizedFolderPath, recursive, filePaths);
-            return filePaths.ToArray();
+            List<string> saveFilePaths = new();
+            CollectSaveFilePaths(normalizedDirectoryPath, recursive, saveFilePaths);
+            return saveFilePaths.ToArray();
         }
 
-        private static void CollectFilesInFolder(string normalizedFolderPath, bool recursive, ICollection<string> filePaths)
+        private static void CollectSaveFilePaths(string normalizedDirectoryPath, bool recursive, ICollection<string> saveFilePaths)
         {
-            string[] saveFiles = GetFiles(normalizedFolderPath);
+            string[] saveFiles = GetFiles(normalizedDirectoryPath);
             for (int i = 0; i < saveFiles.Length; i++)
             {
-                filePaths.Add(NormalizeSavePath(saveFiles[i], normalizedFolderPath));
+                saveFilePaths.Add(NormalizeSaveFilePath(saveFiles[i], normalizedDirectoryPath));
             }
 
             if (!recursive)
@@ -213,28 +211,28 @@ namespace FakeMG.SaveLoad.Advanced
                 return;
             }
 
-            string[] subdirectories = GetDirectories(normalizedFolderPath);
+            string[] subdirectories = GetDirectories(normalizedDirectoryPath);
             for (int i = 0; i < subdirectories.Length; i++)
             {
                 string subdirectoryName = NormalizePathSeparators(subdirectories[i]).Trim('/');
-                string subdirectoryPath = string.IsNullOrEmpty(normalizedFolderPath)
+                string subdirectoryPath = string.IsNullOrEmpty(normalizedDirectoryPath)
                     ? subdirectoryName
-                    : $"{normalizedFolderPath}/{subdirectoryName}";
-                CollectFilesInFolder(subdirectoryPath, true, filePaths);
+                    : $"{normalizedDirectoryPath}/{subdirectoryName}";
+                CollectSaveFilePaths(subdirectoryPath, true, saveFilePaths);
             }
         }
 
-        private static bool DirectoryExists(string normalizedFolderPath)
+        private static bool DirectoryExists(string normalizedDirectoryPath)
         {
-            return string.IsNullOrEmpty(normalizedFolderPath)
-                || ES3.DirectoryExists(normalizedFolderPath);
+            return string.IsNullOrEmpty(normalizedDirectoryPath)
+                || ES3.DirectoryExists(normalizedDirectoryPath);
         }
 
-        private static string[] GetFiles(string normalizedFolderPath)
+        private static string[] GetFiles(string normalizedDirectoryPath)
         {
-            if (!string.IsNullOrEmpty(normalizedFolderPath))
+            if (!string.IsNullOrEmpty(normalizedDirectoryPath))
             {
-                return ES3.GetFiles(normalizedFolderPath + "/");
+                return ES3.GetFiles(normalizedDirectoryPath + "/");
             }
 
             string rootPath = Application.persistentDataPath;
@@ -252,11 +250,11 @@ namespace FakeMG.SaveLoad.Advanced
             return filePaths;
         }
 
-        private static string[] GetDirectories(string normalizedFolderPath)
+        private static string[] GetDirectories(string normalizedDirectoryPath)
         {
-            if (!string.IsNullOrEmpty(normalizedFolderPath))
+            if (!string.IsNullOrEmpty(normalizedDirectoryPath))
             {
-                return ES3.GetDirectories(normalizedFolderPath);
+                return ES3.GetDirectories(normalizedDirectoryPath);
             }
 
             string rootPath = Application.persistentDataPath;
@@ -279,16 +277,16 @@ namespace FakeMG.SaveLoad.Advanced
             return normalizedPath.Contains('/');
         }
 
-        private static void ValidateFolderOwnership(string normalizedPath, string normalizedFolderPath, string parameterName)
+        private static void ValidateDirectoryOwnership(string normalizedPath, string normalizedDirectoryPath, string parameterName)
         {
-            if (string.IsNullOrEmpty(normalizedFolderPath))
+            if (string.IsNullOrEmpty(normalizedDirectoryPath))
             {
                 return;
             }
 
-            if (!normalizedPath.StartsWith(normalizedFolderPath + "/", StringComparison.Ordinal))
+            if (!normalizedPath.StartsWith(normalizedDirectoryPath + "/", StringComparison.Ordinal))
             {
-                throw new ArgumentException("Save path must stay within the configured save folder.", parameterName);
+                throw new ArgumentException("Save file path must stay within the configured save directory.", parameterName);
             }
         }
 

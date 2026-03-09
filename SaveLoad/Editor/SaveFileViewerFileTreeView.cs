@@ -24,17 +24,17 @@ namespace FakeMG.SaveLoad.Editor
         {
             _fileEntries.Clear();
             _fileEntries.AddRange(fileEntries
-                .OrderBy(entry => entry.RelativeFolderPath, StringComparer.Ordinal)
+                .OrderBy(entry => entry.SaveDirectoryPath, StringComparer.Ordinal)
                 .ThenByDescending(entry => entry.Metadata.Timestamp)
-                .ThenBy(entry => entry.FileName, StringComparer.Ordinal));
+                .ThenBy(entry => entry.SaveFileName, StringComparer.Ordinal));
 
             Reload();
             ExpandAll();
         }
 
-        public void SetSelectedFile(string filePath)
+        public void SetSelectedFile(string saveFilePath)
         {
-            if (string.IsNullOrEmpty(filePath) || !_fileIdsByPath.TryGetValue(filePath, out int fileId))
+            if (string.IsNullOrEmpty(saveFilePath) || !_fileIdsByPath.TryGetValue(saveFilePath, out int fileId))
             {
                 ClearFileSelection();
                 return;
@@ -66,7 +66,7 @@ namespace FakeMG.SaveLoad.Editor
 
             foreach (ManagedSaveFileInfo entry in _fileEntries)
             {
-                int fileDepth = EnsureFolderItems(entry.RelativeFolderPath, folderDepths, allItems, ref nextId);
+                int fileDepth = EnsureDirectoryItems(entry.SaveDirectoryPath, folderDepths, allItems, ref nextId);
                 SaveFileViewerFileTreeViewItem fileItem = new()
                 {
                     id = nextId++,
@@ -76,7 +76,7 @@ namespace FakeMG.SaveLoad.Editor
                 };
 
                 allItems.Add(fileItem);
-                _fileIdsByPath[entry.FilePath] = fileItem.id;
+                _fileIdsByPath[entry.SaveFilePath] = fileItem.id;
             }
 
             SetupParentsAndChildrenFromDepths(root, allItems);
@@ -92,17 +92,17 @@ namespace FakeMG.SaveLoad.Editor
 
             if (FindItem(selectedIds[0], rootItem) is SaveFileViewerFileTreeViewItem fileItem)
             {
-                FileSelected?.Invoke(fileItem.FileInfo.FilePath);
+                FileSelected?.Invoke(fileItem.FileInfo.SaveFilePath);
             }
         }
 
-        private static int EnsureFolderItems(
-            string relativeFolderPath,
+        private static int EnsureDirectoryItems(
+            string saveDirectoryPath,
             IDictionary<string, int> folderDepths,
             ICollection<TreeViewItem<int>> allItems,
             ref int nextId)
         {
-            if (string.IsNullOrEmpty(relativeFolderPath))
+            if (string.IsNullOrEmpty(saveDirectoryPath))
             {
                 if (!folderDepths.ContainsKey(ROOT_FOLDER_KEY))
                 {
@@ -119,7 +119,7 @@ namespace FakeMG.SaveLoad.Editor
                 return 1;
             }
 
-            string[] segments = relativeFolderPath.Split('/');
+            string[] segments = saveDirectoryPath.Split('/');
             string currentPath = string.Empty;
 
             for (int i = 0; i < segments.Length; i++)
@@ -148,8 +148,8 @@ namespace FakeMG.SaveLoad.Editor
 
         private static string BuildFileDisplayName(ManagedSaveFileInfo entry)
         {
-            string badge = entry.Metadata.IsAutoSave ? "[Auto]" : "[Manual]";
-            return $"{badge} {entry.FileName}    {entry.Metadata.Timestamp:yyyy-MM-dd HH:mm:ss}";
+            string badge = SaveFileCatalog.GetSaveKindBadge(entry.Metadata);
+            return $"{badge} {entry.SaveFileName}    {entry.Metadata.Timestamp:yyyy-MM-dd HH:mm:ss}";
         }
     }
 

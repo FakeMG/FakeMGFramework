@@ -112,7 +112,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1615880847372662002}
   m_Father: {fileID: 6290263486021593633}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &9033908637583536586
@@ -128,6 +129,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _saveFolderPath: 
+  _saveFileMode: 1
+  _fixedSaveFileName: Settings
+  _saveablesRoot: {fileID: 1993822612476852077}
   _enableAutoSave: 0
   _maxAutoSaves: 5
   _autoSaveInterval: 300
@@ -180,7 +184,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _soundEmitterPrefab: {fileID: 1387994148951244254, guid: fb5ea760283b7fe4795cda0d8eee18ef, type: 3}
   _musicSoundEmitter: {fileID: 1788211686790592175}
-  _settingDataManager: {fileID: 0}
+  _settingDataManager: {fileID: 1546493877287332598}
   _pooledEventChannels:
   - {fileID: 11400000, guid: d03f5823c57fc3e4a8ae9e7718ac779f, type: 2}
   - {fileID: 11400000, guid: edf2a1701d8d9a3408012c0e977faf22, type: 2}
@@ -230,6 +234,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _saveFolderPath: Saves
+  _saveFileMode: 0
+  _fixedSaveFileName: Settings
+  _saveablesRoot: {fileID: 842901096460867873}
   _enableAutoSave: 1
   _maxAutoSaves: 5
   _autoSaveInterval: 300
@@ -280,6 +287,50 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dataApplicationManager: {fileID: 7845126007450714959}
+--- !u!1 &5238762086573267100
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1615880847372662002}
+  - component: {fileID: 1546493877287332598}
+  m_Layer: 0
+  m_Name: Setting Data Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1615880847372662002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5238762086573267100}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1993822612476852077}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1546493877287332598
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5238762086573267100}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b7e1d05ec475bbd41a64d84aa06f9c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.SettingDataManager
 --- !u!1 &7951961117390034008
 GameObject:
   m_ObjectHideFlags: 0
