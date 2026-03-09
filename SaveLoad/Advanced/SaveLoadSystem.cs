@@ -8,6 +8,10 @@ namespace FakeMG.SaveLoad.Advanced
 {
     public class SaveLoadSystem : MonoBehaviour
     {
+        [Header("Storage")]
+        [Tooltip("Relative folder path for this save system. Leave empty to save in the root folder. Supports nested folders such as ProfileA/Slot1.")]
+        [SerializeField] private string _saveFolderPath = string.Empty;
+
         [SerializeField] private bool _enableAutoSave = true;
         [SerializeField] private int _maxAutoSaves = 5;
         [SerializeField] private float _autoSaveInterval = 300f;
@@ -19,6 +23,7 @@ namespace FakeMG.SaveLoad.Advanced
 
         private readonly Dictionary<string, Saveable> _saveables = new();
         private VersionMigrator _migrationRunner;
+        private string _normalizedSaveFolderPath;
 
         private float _autoSaveTimer;
 
@@ -26,6 +31,12 @@ namespace FakeMG.SaveLoad.Advanced
 
         private void Awake()
         {
+            if (!TryInitializeSaveFolderPath())
+            {
+                enabled = false;
+                return;
+            }
+
             if (_enableAutoSave)
             {
                 _autoSaveTimer = _autoSaveInterval;
@@ -87,7 +98,7 @@ namespace FakeMG.SaveLoad.Advanced
             try
             {
                 DateTime now = DateTime.Now;
-                string manualSavePath = SaveFileCatalog.CreateManualSavePath(now);
+                string manualSavePath = SaveFileCatalog.CreateManualSavePath(_normalizedSaveFolderPath, now);
                 SaveMetadata metadata = new()
                 {
                     Timestamp = now,
@@ -118,7 +129,7 @@ namespace FakeMG.SaveLoad.Advanced
             {
                 // Avoid out of sync between path and metadata
                 DateTime now = DateTime.Now;
-                string autoSavePath = SaveFileCatalog.CreateAutoSavePath(now);
+                string autoSavePath = SaveFileCatalog.CreateAutoSavePath(_normalizedSaveFolderPath, now);
                 SaveMetadata metadata = new()
                 {
                     Timestamp = now,
@@ -147,7 +158,7 @@ namespace FakeMG.SaveLoad.Advanced
 
         private void LoadMostRecentSave()
         {
-            ManagedSaveFileInfo mostRecentSave = SaveFileCatalog.GetManagedSaveFiles()
+            ManagedSaveFileInfo mostRecentSave = SaveFileCatalog.GetManagedSaveFiles(_normalizedSaveFolderPath)
                 .OrderByDescending(saveFile => saveFile.Metadata.Timestamp)
                 .FirstOrDefault();
 
@@ -174,7 +185,7 @@ namespace FakeMG.SaveLoad.Advanced
 
         public void LoadGame(string savePath)
         {
-            string normalizedSavePath = SaveFileCatalog.NormalizeSavePath(savePath);
+            string normalizedSavePath = SaveFileCatalog.NormalizeSavePath(savePath, _normalizedSaveFolderPath);
 
             if (!ES3.FileExists(normalizedSavePath))
             {
@@ -223,7 +234,7 @@ namespace FakeMG.SaveLoad.Advanced
 
         public void DeleteSave(string savePath)
         {
-            string normalizedSavePath = SaveFileCatalog.NormalizeSavePath(savePath);
+            string normalizedSavePath = SaveFileCatalog.NormalizeSavePath(savePath, _normalizedSaveFolderPath);
 
             if (ES3.FileExists(normalizedSavePath))
             {
@@ -234,7 +245,7 @@ namespace FakeMG.SaveLoad.Advanced
 
         private void ManageAutoSaveFiles()
         {
-            ManagedSaveFileInfo[] autoSaveFiles = SaveFileCatalog.GetManagedSaveFiles()
+            ManagedSaveFileInfo[] autoSaveFiles = SaveFileCatalog.GetManagedSaveFiles(_normalizedSaveFolderPath)
                 .Where(saveFile => saveFile.Metadata.IsAutoSave)
                 .OrderBy(saveFile => saveFile.Metadata.Timestamp)
                 .ToArray();
@@ -271,6 +282,20 @@ namespace FakeMG.SaveLoad.Advanced
             if (autoSaveEnabled)
             {
                 _autoSaveTimer = _autoSaveInterval;
+            }
+        }
+
+        private bool TryInitializeSaveFolderPath()
+        {
+            try
+            {
+                _normalizedSaveFolderPath = SaveFileCatalog.NormalizeSaveFolderPath(_saveFolderPath);
+                return true;
+            }
+            catch (ArgumentException exception)
+            {
+                Echo.Error($"Save folder path '{_saveFolderPath}' is invalid on {name}: {exception.Message}", _enableDebug, this);
+                return false;
             }
         }
         #endregion

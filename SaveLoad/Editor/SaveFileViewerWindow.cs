@@ -5,6 +5,7 @@ using System.Linq;
 using FakeMG.Framework;
 using FakeMG.SaveLoad.Advanced;
 using UnityEditor;
+using UnityEditor.IMGUI.Controls;
 using UnityEngine;
 using DataViewMode = FakeMG.SaveLoad.Editor.SaveFileViewerDataViewMode;
 
@@ -17,7 +18,6 @@ namespace FakeMG.SaveLoad.Editor
 
         private readonly SaveFileViewerAddKeyWorkflow _addKeyWorkflow = new();
         private readonly SaveFileViewerDataSession _dataSession = new();
-        private static GUIStyle s_selectedEntryStyle;
         private static GUIStyle s_selectedButtonStyle;
         private static Texture2D s_selectedBackgroundTexture;
         private static bool? s_isProSkin;
@@ -28,6 +28,8 @@ namespace FakeMG.SaveLoad.Editor
 
         private float _leftPanelWidth = 280f;
         private bool _isResizingSplitter;
+        private TreeViewState<int> _fileTreeState;
+        private SaveFileViewerFileTreeView _fileTree;
 
         private List<ManagedSaveFileInfo> _fileEntries = new();
         private string _selectedFilePath;
@@ -43,7 +45,6 @@ namespace FakeMG.SaveLoad.Editor
         private string _cachedFullFileRawJson;
         private string _rawValidationErrorMessage;
 
-        private Vector2 _fileListScroll;
         private Vector2 _keyListScroll;
         private Vector2 _dataEditorScroll;
 
@@ -58,7 +59,19 @@ namespace FakeMG.SaveLoad.Editor
         private void OnEnable()
         {
             _addKeyWorkflow.Initialize();
+            _fileTreeState ??= new TreeViewState<int>();
+            _fileTree ??= new SaveFileViewerFileTreeView(_fileTreeState);
+            _fileTree.FileSelected -= HandleFileSelected;
+            _fileTree.FileSelected += HandleFileSelected;
             RefreshFileList();
+        }
+
+        private void OnDisable()
+        {
+            if (_fileTree != null)
+            {
+                _fileTree.FileSelected -= HandleFileSelected;
+            }
         }
 
         private void OnGUI()
@@ -93,60 +106,29 @@ namespace FakeMG.SaveLoad.Editor
                 RefreshFileList();
             }
 
+            ManagedSaveFileInfo selectedEntry = GetSelectedFileEntry();
+            EditorGUI.BeginDisabledGroup(selectedEntry == null);
+
+            if (GUILayout.Button("Delete Selected", EditorStyles.toolbarButton))
+            {
+                DeleteFile(selectedEntry);
+            }
+
+            EditorGUI.EndDisabledGroup();
+
             EditorGUILayout.EndHorizontal();
         }
 
         private void DrawFileListEntries()
         {
-            _fileListScroll = EditorGUILayout.BeginScrollView(_fileListScroll);
-
             if (_fileEntries.Count == 0)
             {
                 EditorGUILayout.HelpBox("No save files found.", MessageType.Info);
+                return;
             }
 
-            for (int i = 0; i < _fileEntries.Count; i++)
-            {
-                DrawFileEntry(_fileEntries[i]);
-            }
-
-            EditorGUILayout.EndScrollView();
-        }
-
-        private void DrawFileEntry(ManagedSaveFileInfo entry)
-        {
-            bool isSelected = _selectedFilePath == entry.FilePath;
-            GUIStyle style = isSelected
-                ? GetSelectedEntryStyle()
-                : EditorStyles.helpBox;
-
-            EditorGUILayout.BeginVertical(style);
-
-            EditorGUILayout.BeginHorizontal();
-
-            string badge = entry.Metadata.IsAutoSave ? "[Auto]" : "[Manual]";
-            EditorGUILayout.LabelField($"{badge} {entry.FileName}", EditorStyles.boldLabel);
-
-            if (GUILayout.Button("X", GUILayout.Width(22), GUILayout.Height(18)))
-            {
-                DeleteFile(entry);
-            }
-
-            EditorGUILayout.EndHorizontal();
-
-            string gameVersion = string.IsNullOrWhiteSpace(entry.Metadata.GameVersion)
-                ? "Unknown"
-                : entry.Metadata.GameVersion;
-            EditorGUILayout.LabelField($"Version: {gameVersion}    {entry.Metadata.Timestamp:yyyy-MM-dd HH:mm:ss}", EditorStyles.miniLabel);
-
-            EditorGUILayout.EndVertical();
-
-            Rect entryRect = GUILayoutUtility.GetLastRect();
-            if (Event.current.type == EventType.MouseDown && entryRect.Contains(Event.current.mousePosition))
-            {
-                SelectFile(entry.FilePath);
-                Event.current.Use();
-            }
+            Rect treeRect = GUILayoutUtility.GetRect(0f, 100000f, 0f, 100000f, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+            _fileTree.OnGUI(treeRect);
         }
 
         #endregion
@@ -204,7 +186,7 @@ namespace FakeMG.SaveLoad.Editor
                 return;
             }
 
-            EditorGUILayout.LabelField(Path.GetFileName(_selectedFilePath), EditorStyles.boldLabel);
+            EditorGUILayout.LabelField(SaveFileCatalog.GetRelativeSavePath(_selectedFilePath), EditorStyles.boldLabel);
             EditorGUILayout.Space(4);
 
             DrawKeyList();
@@ -420,8 +402,11 @@ namespace FakeMG.SaveLoad.Editor
             _fileEntries = SaveFileCatalog.GetManagedSaveFiles();
 
             _fileEntries = _fileEntries
-                .OrderByDescending(entry => entry.Metadata.Timestamp)
+                .OrderBy(entry => entry.RelativeFolderPath, StringComparer.Ordinal)
+                .ThenByDescending(entry => entry.Metadata.Timestamp)
                 .ToList();
+
+            _fileTree?.SetEntries(_fileEntries);
 
             Repaint();
         }
@@ -450,7 +435,23 @@ namespace FakeMG.SaveLoad.Editor
             }
 
             ReloadCurrentDataView();
+            _fileTree?.SetSelectedFile(_selectedFilePath);
             Repaint();
+        }
+
+        private void HandleFileSelected(string filePath)
+        {
+            if (_selectedFilePath == filePath)
+            {
+                return;
+            }
+
+            SelectFile(filePath);
+
+            if (_selectedFilePath != filePath)
+            {
+                _fileTree?.SetSelectedFile(_selectedFilePath);
+            }
         }
 
         private void SelectKey(string key)
@@ -676,6 +677,11 @@ namespace FakeMG.SaveLoad.Editor
             return HasCurrentViewTarget();
         }
 
+        private ManagedSaveFileInfo GetSelectedFileEntry()
+        {
+            return _fileEntries.FirstOrDefault(entry => entry.FilePath == _selectedFilePath);
+        }
+
         private void ResetViewerSelectionState()
         {
             _selectedFilePath = null;
@@ -683,6 +689,7 @@ namespace FakeMG.SaveLoad.Editor
             _keys = Array.Empty<string>();
             _keyLookup.Clear();
             _currentDataViewMode = DataViewMode.Typed;
+            _fileTree?.ClearFileSelection();
             ResetLoadedDataState();
             ReflectionDataDrawer.ClearExpandedState();
         }
@@ -765,12 +772,6 @@ namespace FakeMG.SaveLoad.Editor
             }
         }
 
-        private static GUIStyle GetSelectedEntryStyle()
-        {
-            EnsureSelectedStyles();
-            return s_selectedEntryStyle;
-        }
-
         private static GUIStyle GetSelectedButtonStyle()
         {
             EnsureSelectedStyles();
@@ -780,8 +781,7 @@ namespace FakeMG.SaveLoad.Editor
         private static void EnsureSelectedStyles()
         {
             bool isProSkin = EditorGUIUtility.isProSkin;
-            if (s_selectedEntryStyle != null
-                && s_selectedButtonStyle != null
+            if (s_selectedButtonStyle != null
                 && s_selectedBackgroundTexture != null
                 && s_isProSkin == isProSkin)
             {
@@ -798,9 +798,6 @@ namespace FakeMG.SaveLoad.Editor
                 : new Color(0.58f, 0.75f, 1f, 1f);
 
             s_selectedBackgroundTexture = MakeSolidTexture(highlight);
-
-            s_selectedEntryStyle = new GUIStyle(EditorStyles.helpBox);
-            s_selectedEntryStyle.normal.background = s_selectedBackgroundTexture;
 
             s_selectedButtonStyle = new GUIStyle(GUI.skin.button);
             s_selectedButtonStyle.normal.background = s_selectedBackgroundTexture;

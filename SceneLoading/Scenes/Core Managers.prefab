@@ -30,6 +30,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 842901096460867873}
+  - {fileID: 1993822612476852077}
   - {fileID: 3502115834829314216}
   - {fileID: 199255318745523917}
   - {fileID: 7767351161063959537}
@@ -82,6 +83,56 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _applicationTimeoutSeconds: 10
   _enableDebug: 1
+--- !u!1 &2912867472724427489
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1993822612476852077}
+  - component: {fileID: 9033908637583536586}
+  m_Layer: 0
+  m_Name: Save Load System Setting
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1993822612476852077
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2912867472724427489}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6290263486021593633}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9033908637583536586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2912867472724427489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6df41bad26dc481a89b1939a8c95807b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _saveFolderPath: 
+  _enableAutoSave: 0
+  _maxAutoSaves: 5
+  _autoSaveInterval: 300
+  _enableDebug: 1
+  _migrationRegistry: {fileID: 0}
 --- !u!1 &4364114724844911322
 GameObject:
   m_ObjectHideFlags: 0
@@ -129,6 +180,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _soundEmitterPrefab: {fileID: 1387994148951244254, guid: fb5ea760283b7fe4795cda0d8eee18ef, type: 3}
   _musicSoundEmitter: {fileID: 1788211686790592175}
+  _settingDataManager: {fileID: 0}
   _pooledEventChannels:
   - {fileID: 11400000, guid: d03f5823c57fc3e4a8ae9e7718ac779f, type: 2}
   - {fileID: 11400000, guid: edf2a1701d8d9a3408012c0e977faf22, type: 2}
@@ -144,7 +196,7 @@ GameObject:
   - component: {fileID: 842901096460867873}
   - component: {fileID: 7314148259928032107}
   m_Layer: 0
-  m_Name: Save Load System
+  m_Name: Save Load System Gameplay
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -177,6 +229,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6df41bad26dc481a89b1939a8c95807b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _saveFolderPath: Saves
   _enableAutoSave: 1
   _maxAutoSaves: 5
   _autoSaveInterval: 300
