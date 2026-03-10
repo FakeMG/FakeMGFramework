@@ -4,7 +4,6 @@ using System.Linq;
 using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FakeMG.SaveLoad.Advanced
 {
@@ -12,7 +11,6 @@ namespace FakeMG.SaveLoad.Advanced
     {
         [Header("Storage")]
         [Tooltip("Relative directory path for this save system. Leave empty to save in the root directory. Supports nested directories such as ProfileA/Slot1.")]
-        [FormerlySerializedAs("_saveFolderPath")]
         [SerializeField] private string _saveDirectoryPath = string.Empty;
         [SerializeField] private SaveFileMode _saveFileMode = SaveFileMode.TimestampedFiles;
         [ShowIf(nameof(UsesFixedSaveFileMode))]

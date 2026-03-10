@@ -128,7 +128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6df41bad26dc481a89b1939a8c95807b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _saveFolderPath: 
+  _saveDirectoryPath: 
   _saveFileMode: 1
   _fixedSaveFileName: Settings
   _saveablesRoot: {fileID: 1993822612476852077}
@@ -233,7 +233,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6df41bad26dc481a89b1939a8c95807b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _saveFolderPath: Saves
+  _saveDirectoryPath: Saves
   _saveFileMode: 0
   _fixedSaveFileName: Settings
   _saveablesRoot: {fileID: 842901096460867873}
