@@ -18,8 +18,8 @@ namespace FakeMG.Settings
         [SerializeField] private float _uiMaxValue = 1f;
         [SerializeField] private bool _useWholeNumbers;
         [SerializeField] private string _valueFormat = DEFAULT_VALUE_FORMAT;
-        //TODO: Can't inject in multiple instances of this class
-        [Inject] private SettingDataManager _settingDataManager;
+
+        [Inject] private readonly SettingDataManager _settingDataManager;
 
         private void OnValidate()
         {

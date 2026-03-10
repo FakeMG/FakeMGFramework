@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using FakeMG.Settings;
 using UnityEngine;
 using UnityEngine.Audio;
+using VContainer;
 
 namespace FakeMG.Audio
 {
@@ -13,13 +14,13 @@ namespace FakeMG.Audio
         [SerializeField] private SoundEmitter _soundEmitterPrefab;
         [SerializeField] private SoundEmitter _musicSoundEmitter;
 
-        [SerializeField] private SettingDataManager _settingDataManager;
-
         [Header("Listening on channels")]
         [Tooltip("Any channel in this list will be handled by the pooled playback pipeline.")]
         [SerializeField] private List<AudioCueEventChannelSO> _pooledEventChannels = new();
         [Tooltip("Music uses a dedicated emitter to preserve crossfade behavior.")]
         [SerializeField] private AudioCueEventChannelSO _musicEventChannel;
+
+        [Inject] private readonly SettingDataManager _settingDataManager;
 
         private Queue<SoundEmitter> _soundEmitterQueue;
         private SoundEmitterVault _soundEmitterVault;

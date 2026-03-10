@@ -10,8 +10,9 @@ namespace FakeMG.Settings
         [SerializeField] private OptionSettingSO _optionSetting;
         [SerializeField] private TMP_Dropdown _dropdown;
         [SerializeField] private TMP_Text _labelText;
-        //TODO: Can't inject in multiple instances of this class
-        [Inject] private SettingDataManager _settingDataManager;
+
+        [Inject]
+        private readonly SettingDataManager _settingDataManager;
 
         private void Start()
         {
