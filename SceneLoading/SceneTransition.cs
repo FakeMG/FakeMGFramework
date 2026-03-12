@@ -26,8 +26,8 @@ namespace FakeMG.SceneLoading
         [SerializeField] private float _showScale = 1f;
         [SerializeField] private float _showRotation;
         [SerializeField] private EaseType _showEaseType = EaseType.Predefined;
-        [SerializeField, ShowIf("showEaseType", EaseType.Predefined)] private Ease _showEase = Ease.Linear;
-        [SerializeField, ShowIf("showEaseType", EaseType.CustomCurve)] private AnimationCurve _showEaseCurve;
+        [SerializeField, ShowIf(nameof(_showEaseType), EaseType.Predefined)] private Ease _showEase = Ease.Linear;
+        [SerializeField, ShowIf(nameof(_showEaseType), EaseType.CustomCurve)] private AnimationCurve _showEaseCurve;
 
         [Header("Hide Animation Settings")]
         [SerializeField] private float _hideDuration;
@@ -35,8 +35,8 @@ namespace FakeMG.SceneLoading
         [SerializeField] private float _hideScale;
         [SerializeField] private float _hideRotation;
         [SerializeField] private EaseType _hideEaseType = EaseType.Predefined;
-        [SerializeField, ShowIf("hideEaseType", EaseType.Predefined)] private Ease _hideEase = Ease.Linear;
-        [SerializeField, ShowIf("hideEaseType", EaseType.CustomCurve)] private AnimationCurve _hideEaseCurve;
+        [SerializeField, ShowIf(nameof(_hideEaseType), EaseType.Predefined)] private Ease _hideEase = Ease.Linear;
+        [SerializeField, ShowIf(nameof(_hideEaseType), EaseType.CustomCurve)] private AnimationCurve _hideEaseCurve;
 
         [Header("Fade Settings")]
         [SerializeField] private float _colorFadeDuration = 0.5f;
