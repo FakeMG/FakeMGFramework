@@ -6,6 +6,7 @@
         "Unity.ResourceManager",
         "UniTask",
         "UniTask.DOTween",
+        "UniTask.Addressables",
         "FakeMG.SaveLoad",
         "DOTween.Modules"
     ],
