@@ -11,12 +11,12 @@ namespace FakeMG.SceneLoading
     public class SceneController
     {
         private readonly AssetReferenceScene _sceneReference;
-        private AsyncOperationHandle<SceneInstance>? _loadedScene;
+        private AsyncOperationHandle<SceneInstance>? _loadedSceneHandle;
 
         public bool IsLoading { get; private set; }
         public bool IsUnloading { get; private set; }
         public bool IsBusy => IsLoading || IsUnloading;
-        public bool IsSceneLoaded => _loadedScene.HasValue && _loadedScene.Value.IsValid();
+        public bool IsSceneLoaded => TryGetLoadedSceneHandle(out _);
         public AssetReferenceScene SceneReference => _sceneReference;
 
         public event Action OnSceneLoaded;
@@ -31,16 +31,19 @@ namespace FakeMG.SceneLoading
 
         public string GetLoadedSceneName()
         {
-            return IsSceneLoaded && _loadedScene.HasValue
-                ? _loadedScene.Value.Result.Scene.name
-                : null;
+            if (!TryGetLoadedSceneHandle(out AsyncOperationHandle<SceneInstance> handle))
+            {
+                return null;
+            }
+
+            return handle.Result.Scene.name;
         }
 
         public void SetActiveScene()
         {
-            if (IsSceneLoaded && _loadedScene.HasValue)
+            if (TryGetLoadedSceneHandle(out AsyncOperationHandle<SceneInstance> handle))
             {
-                Scene scene = _loadedScene.Value.Result.Scene;
+                Scene scene = handle.Result.Scene;
                 SceneManager.SetActiveScene(scene);
                 Debug.Log($"Set active scene: {scene.name}");
             }
@@ -96,7 +99,7 @@ namespace FakeMG.SceneLoading
 
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
-                _loadedScene = handle;
+                _loadedSceneHandle = handle;
                 string sceneName = handle.Result.Scene.name;
 
                 Debug.Log($"Successfully loaded scene: {sceneName}");
@@ -104,6 +107,7 @@ namespace FakeMG.SceneLoading
                 return true;
             }
 
+            _loadedSceneHandle = null;
             string errorMsg = $"Failed to load scene: {_sceneReference}";
             Debug.LogError(errorMsg);
             OnSceneLoadFailed?.Invoke(errorMsg);
@@ -136,21 +140,23 @@ namespace FakeMG.SceneLoading
 
         private async UniTask<bool> UnloadSceneInternalAsync()
         {
-            if (!IsSceneLoaded || !_loadedScene.HasValue)
+            if (!TryGetLoadedSceneHandle(out AsyncOperationHandle<SceneInstance> handle))
             {
                 Debug.LogWarning($"Scene {_sceneReference} is not loaded or already unloaded.");
                 return true;
             }
 
-            AsyncOperationHandle<SceneInstance> handle = _loadedScene.Value;
             string sceneName = handle.Result.Scene.name;
 
-            AsyncOperationHandle unloadHandle = Addressables.UnloadSceneAsync(handle);
+            AsyncOperationHandle unloadHandle = Addressables.UnloadSceneAsync(handle, autoReleaseHandle: false);
             await unloadHandle;
 
-            if (unloadHandle.Status == AsyncOperationStatus.Succeeded)
+            bool unloadSucceeded = unloadHandle.Status == AsyncOperationStatus.Succeeded;
+            Addressables.Release(unloadHandle);
+
+            if (unloadSucceeded)
             {
-                _loadedScene = null;
+                _loadedSceneHandle = null;
                 Debug.Log($"Successfully unloaded scene: {sceneName}");
                 OnSceneUnloaded?.Invoke();
                 return true;
@@ -215,6 +221,33 @@ namespace FakeMG.SceneLoading
             }
 
             return loadSuccess;
+        }
+
+        private bool TryGetLoadedSceneHandle(out AsyncOperationHandle<SceneInstance> handle)
+        {
+            handle = default;
+
+            if (!_loadedSceneHandle.HasValue)
+            {
+                return false;
+            }
+
+            handle = _loadedSceneHandle.Value;
+
+            if (!handle.IsValid())
+            {
+                _loadedSceneHandle = null;
+                return false;
+            }
+
+            Scene loadedScene = handle.Result.Scene;
+            if (!loadedScene.IsValid() || !loadedScene.isLoaded)
+            {
+                _loadedSceneHandle = null;
+                return false;
+            }
+
+            return true;
         }
     }
 }
