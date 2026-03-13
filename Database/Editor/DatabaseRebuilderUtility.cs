@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEditor;
-using UnityEditor.AddressableAssets;
-using UnityEditor.AddressableAssets.Settings;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace FakeMG.Framework.Database.Editor
 {
@@ -14,6 +11,9 @@ namespace FakeMG.Framework.Database.Editor
     /// </summary>
     public static class DatabaseRebuilderUtility
     {
+        private const string ASSET_SEARCH_FILTER_FORMAT = "t:{0}";
+        private const string ASSETS_FOLDER = "Assets/_Project";
+
         [MenuItem(FakeMGEditorMenus.REBUILD_ALL_DATABASES)]
         public static void RebuildAllDatabases()
         {
@@ -62,17 +62,17 @@ namespace FakeMG.Framework.Database.Editor
                         rebuildMethod.Invoke(asset, null);
                         rebuiltCount++;
                         rebuiltDatabases.Add(asset.name);
-                        Debug.Log($"[DatabaseRebuilder] Rebuilt database: {asset.name}");
+                        Echo.Log($"Rebuilt database: {asset.name}");
                     }
                     else
                     {
-                        Debug.LogWarning($"[DatabaseRebuilder] Could not find RebuildDatabase method for: {asset.name}");
+                        Echo.Warning($"Could not find RebuildDatabase method for: {asset.name}");
                         errorCount++;
                     }
                 }
                 catch (System.Exception ex)
                 {
-                    Debug.LogError($"[DatabaseRebuilder] Error rebuilding {asset.name}: {ex.Message}");
+                    Echo.Error($"Error rebuilding {asset.name}: {ex.Message}");
                     errorCount++;
                 }
             }
@@ -91,31 +91,29 @@ namespace FakeMG.Framework.Database.Editor
             }
 
             EditorUtility.DisplayDialog("Rebuild Complete", summary, "OK");
-            Debug.Log($"[DatabaseRebuilder] {summary}");
+            Echo.Log($"{summary}");
         }
 
-        public static void BuildDatabase<TAsset, TDatabase>(AssetLabelReference labelReference, TDatabase database, Dictionary<string, TAsset> items)
+        public static void BuildDatabase<TAsset, TDatabase>(TDatabase database, Dictionary<string, TAsset> items)
             where TAsset : ScriptableObject, IIdentifiable
             where TDatabase : DatabaseSO<TAsset>
         {
             items.Clear();
 
-            var addressableAssetSettings = AddressableAssetSettingsDefaultObject.Settings;
+            var typeName = typeof(TAsset).Name;
+            var filter = string.Format(ASSET_SEARCH_FILTER_FORMAT, typeName);
+            var assetGuids = AssetDatabase.FindAssets(filter, new[] { ASSETS_FOLDER });
 
-            var labelEntries = new List<AddressableAssetEntry>();
-            addressableAssetSettings.GetAllAssets(labelEntries, true);
-
-            var filteredEntries = labelEntries.FindAll(entry => entry.labels.Contains(labelReference.labelString));
-
-            foreach (var entry in filteredEntries)
+            foreach (var guid in assetGuids)
             {
-                var asset = AssetDatabase.LoadAssetAtPath<TAsset>(entry.AssetPath);
-                if (asset == null) continue;
+                var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                var asset = AssetDatabase.LoadAssetAtPath<TAsset>(assetPath);
+                if (!asset) continue;
 
                 string id = asset.ID;
                 if (string.IsNullOrEmpty(id))
                 {
-                    Debug.LogWarning($"Skipping {entry.AssetPath}: Missing id.");
+                    Echo.Warning($"Skipping {assetPath}: Missing id.");
                     continue;
                 }
 
@@ -125,7 +123,7 @@ namespace FakeMG.Framework.Database.Editor
             EditorUtility.SetDirty(database);
             AssetDatabase.SaveAssets();
 
-            Debug.Log($"[DatabaseBuilder] {database.GetType().Name} built with {items.Count} items.");
+            Echo.Log($"{database.GetType().Name} built with {items.Count} items.");
         }
 
         private static bool IsAssetDatabase(System.Type type)

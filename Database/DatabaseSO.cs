@@ -1,14 +1,11 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace FakeMG.Framework.Database
 {
     public abstract class DatabaseSO<T> : SerializedScriptableObject where T : ScriptableObject, IIdentifiable
     {
-        [SerializeField] protected AssetLabelReference _label;
-
         [DictionaryDrawerSettings(KeyLabel = "ID", ValueLabel = "Asset Reference")]
         [SerializeField] protected Dictionary<string, T> _items = new();
 
@@ -27,7 +24,7 @@ namespace FakeMG.Framework.Database
         [Button]
         private void RebuildDatabase()
         {
-            Editor.DatabaseRebuilderUtility.BuildDatabase(_label, this, _items);
+            Editor.DatabaseRebuilderUtility.BuildDatabase(this, _items);
         }
 #endif
     }
