@@ -8,7 +8,7 @@ namespace FakeMG.Framework
         [Tooltip("The width of your level in Unity World Units that must always be visible.")]
         [SerializeField] private float _targetWidth = 10f;
 
-        private void Start()
+        private void Awake()
         {
             // Orthographic size is half the vertical size of the camera view in world units.
             Camera cam = Camera.main;
