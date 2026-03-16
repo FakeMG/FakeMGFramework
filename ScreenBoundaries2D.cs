@@ -18,13 +18,12 @@ namespace FakeMG.Framework
     public class ScreenBoundaries2D : MonoBehaviour
     {
         [SerializeField] private ScreenSide _activeSides = ScreenSide.All;
+        [SerializeField] private Camera _mainCamera;
 
-        private Camera _mainCamera;
         private readonly List<EdgeCollider2D> _edgeColliders = new();
 
-        private void Awake()
+        private void Start()
         {
-            _mainCamera = Camera.main;
             UpdateBoundaries();
         }
 
