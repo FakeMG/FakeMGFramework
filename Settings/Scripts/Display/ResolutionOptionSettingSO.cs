@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.Settings.Display
 {
-    [CreateAssetMenu(menuName = "Settings/Display/Resolution Option Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Resolution Option Setting")]
     public class ResolutionOptionSettingSO : OptionSettingSO
     {
         private const string RESOLUTION_FORMAT = "{0} x {1}";

@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.Settings.Display
 {
-    [CreateAssetMenu(menuName = "Settings/Display/Frame Rate Option Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Frame Rate Option Setting")]
     public class FrameRateOptionSettingSO : OptionSettingSO
     {
         private const int DEFAULT_FRAME_RATE = 60;

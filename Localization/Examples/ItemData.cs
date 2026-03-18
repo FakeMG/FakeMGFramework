@@ -4,7 +4,6 @@ namespace FakeMG.Localization.Examples
 {
     // Example of a ScriptableObject that references localization keys
     // This allows designers to assign localization keys directly in the inspector
-    [CreateAssetMenu]
     public class ItemData : ScriptableObject
     {
         public string ItemID;

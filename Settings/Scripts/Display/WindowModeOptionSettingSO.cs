@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.Settings.Display
 {
-    [CreateAssetMenu(menuName = "Settings/Display/Window Mode Option Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Window Mode Option Setting")]
     public class WindowModeOptionSettingSO : OptionSettingSO
     {
         private static readonly string[] WINDOW_MODE_OPTIONS =

@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.Settings
 {
-    [CreateAssetMenu(menuName = "Settings/Common/On Off Option Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_COMMON + "/On Off Option Setting")]
     public class OnOffOptionSettingSO : OptionSettingSO
     {
         private static readonly string[] ON_OFF_OPTIONS =
@@ -14,7 +15,7 @@ namespace FakeMG.Settings
 
         public override List<string> GetOptions()
         {
-            List<string> onOffOptions = new List<string>(ON_OFF_OPTIONS.Length);
+            List<string> onOffOptions = new(ON_OFF_OPTIONS.Length);
 
             for (int index = 0; index < ON_OFF_OPTIONS.Length; index++)
             {

@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.Settings.Display
 {
-    [CreateAssetMenu(menuName = "Settings/Display/Refresh Rate Option Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Refresh Rate Option Setting")]
     public class RefreshRateOptionSettingSO : OptionSettingSO
     {
         private const int DEFAULT_REFRESH_RATE_HZ = 60;

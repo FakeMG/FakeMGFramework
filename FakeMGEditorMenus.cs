@@ -14,13 +14,26 @@ namespace FakeMG.Framework
         public const string SCENE_SWITCHER = ROOT + "/Scene Switcher";
         public const string AUTO_PLAY_BOOTSTRAP = ROOT + "/Auto Play Bootstrap Scene";
         public const string CHECK_MISSING_UNITY_EVENTS = ROOT + "/Check Missing Unity Events In Scene";
+
+        // Audio
         public const string AUDIO = ROOT + "/Audio";
         public const string AUDIO_CREATE_AUDIO_CUE_FROM_SELECTED_CLIPS =
             "Assets/Create/" + AUDIO + "/AudioCueSO From Selected Clips";
+
+        // Action Map Management
         public const string ACTION_MAP_MANAGEMENT = ROOT + "/Action Map Management";
+
+        // Localization
         public const string LOCALIZATION = ROOT + "/Localization";
         public const string LOCALIZATION_VALIDATE_ALL_KEYS = LOCALIZATION + "/Validate All Keys";
         public const string LOCALIZATION_FORCE_SYNC_CSV = LOCALIZATION + "/Force Sync CSV";
+
+        // Save files
         public const string SAVE_FILE_VIEWER = ROOT + "/Save File Viewer";
+
+        // Settings
+        public const string SETTINGS = ROOT + "/Settings";
+        public const string SETTINGS_COMMON = SETTINGS + "/Common";
+        public const string SETTINGS_DISPLAY = SETTINGS + "/Display";
     }
 }
