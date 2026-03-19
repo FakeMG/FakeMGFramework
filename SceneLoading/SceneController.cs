@@ -1,5 +1,6 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
+using FakeMG.Framework;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -45,11 +46,11 @@ namespace FakeMG.SceneLoading
             {
                 Scene scene = handle.Result.Scene;
                 SceneManager.SetActiveScene(scene);
-                Debug.Log($"Set active scene: {scene.name}");
+                Echo.Log($"Set active scene: {scene.name}");
             }
             else
             {
-                Debug.LogWarning("Cannot set active scene. Scene is not loaded.");
+                Echo.Warning("Cannot set active scene. Scene is not loaded.");
             }
         }
 
@@ -57,7 +58,7 @@ namespace FakeMG.SceneLoading
         {
             if (IsBusy)
             {
-                Debug.LogWarning("SceneLoader is busy. Cannot load scene.");
+                Echo.Warning("SceneLoader is busy. Cannot load scene.");
                 return;
             }
 
@@ -68,7 +69,7 @@ namespace FakeMG.SceneLoading
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Unexpected error during scene loading: {ex.Message}");
+                Echo.Error($"Unexpected error during scene loading: {ex.Message}");
                 OnSceneLoadFailed?.Invoke($"Unexpected error: {ex.Message}");
             }
             finally
@@ -81,14 +82,14 @@ namespace FakeMG.SceneLoading
         {
             if (_sceneReference == null)
             {
-                Debug.LogError("Scene reference is null.");
+                Echo.Error("Scene reference is null.");
                 OnSceneLoadFailed?.Invoke("Scene reference is null");
                 return false;
             }
 
             if (IsSceneLoaded)
             {
-                Debug.LogWarning($"Scene {_sceneReference} is already loaded.");
+                Echo.Warning($"Scene {_sceneReference} is already loaded.");
                 return true;
             }
 
@@ -102,14 +103,14 @@ namespace FakeMG.SceneLoading
                 _loadedSceneHandle = handle;
                 string sceneName = handle.Result.Scene.name;
 
-                Debug.Log($"Successfully loaded scene: {sceneName}");
+                Echo.Log($"Successfully loaded scene: {sceneName}");
                 OnSceneLoaded?.Invoke();
                 return true;
             }
 
             _loadedSceneHandle = null;
             string errorMsg = $"Failed to load scene: {_sceneReference}";
-            Debug.LogError(errorMsg);
+            Echo.Error(errorMsg);
             OnSceneLoadFailed?.Invoke(errorMsg);
             return false;
         }
@@ -118,7 +119,7 @@ namespace FakeMG.SceneLoading
         {
             if (IsBusy)
             {
-                Debug.LogWarning("SceneLoader is busy. Cannot unload scene.");
+                Echo.Warning("SceneLoader is busy. Cannot unload scene.");
                 return;
             }
 
@@ -129,7 +130,7 @@ namespace FakeMG.SceneLoading
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Unexpected error during scene unloading: {ex.Message}");
+                Echo.Error($"Unexpected error during scene unloading: {ex.Message}");
                 OnSceneUnloadFailed?.Invoke($"Unexpected error: {ex.Message}");
             }
             finally
@@ -142,7 +143,7 @@ namespace FakeMG.SceneLoading
         {
             if (!TryGetLoadedSceneHandle(out AsyncOperationHandle<SceneInstance> handle))
             {
-                Debug.LogWarning($"Scene {_sceneReference} is not loaded or already unloaded.");
+                Echo.Warning($"Scene {_sceneReference} is not loaded or already unloaded.");
                 return true;
             }
 
@@ -157,13 +158,13 @@ namespace FakeMG.SceneLoading
             if (unloadSucceeded)
             {
                 _loadedSceneHandle = null;
-                Debug.Log($"Successfully unloaded scene: {sceneName}");
+                Echo.Log($"Successfully unloaded scene: {sceneName}");
                 OnSceneUnloaded?.Invoke();
                 return true;
             }
 
             string errorMsg = $"Failed to unload scene: {sceneName}";
-            Debug.LogError(errorMsg);
+            Echo.Error(errorMsg);
             OnSceneUnloadFailed?.Invoke(errorMsg);
             return false;
         }
@@ -172,7 +173,7 @@ namespace FakeMG.SceneLoading
         {
             if (IsBusy)
             {
-                Debug.LogWarning("SceneLoader is busy. Cannot reload scene.");
+                Echo.Warning("SceneLoader is busy. Cannot reload scene.");
                 return;
             }
 
@@ -185,7 +186,7 @@ namespace FakeMG.SceneLoading
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Unexpected error during scene reloading: {ex.Message}");
+                Echo.Error($"Unexpected error during scene reloading: {ex.Message}");
             }
             finally
             {
@@ -196,16 +197,17 @@ namespace FakeMG.SceneLoading
 
         private async UniTask<bool> ReloadSceneInternalAsync()
         {
-            if (_sceneReference == null)
+            if (!TryGetLoadedSceneHandle(out AsyncOperationHandle<SceneInstance> handle))
             {
-                Debug.LogError("Scene reference is null.");
-                OnSceneLoadFailed?.Invoke("Scene reference is null");
-                return false;
+                Echo.Warning($"Scene {_sceneReference} is not loaded or already unloaded.");
+                return true;
             }
+
+            string sceneName = handle.Result.Scene.name;
 
             if (!IsSceneLoaded)
             {
-                Debug.LogWarning($"Scene {_sceneReference} is not loaded. Loading instead.");
+                Echo.Warning($"Scene {sceneName} is not loaded. Loading instead.");
                 return await LoadSceneInternalAsync(LoadSceneMode.Additive);
             }
 
@@ -217,7 +219,7 @@ namespace FakeMG.SceneLoading
             bool loadSuccess = await LoadSceneInternalAsync(LoadSceneMode.Additive);
             if (loadSuccess)
             {
-                Debug.Log($"Successfully reloaded scene: {_sceneReference}");
+                Echo.Log($"Successfully reloaded scene: {sceneName}");
             }
 
             return loadSuccess;
