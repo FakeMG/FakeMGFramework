@@ -197,17 +197,16 @@ namespace FakeMG.SceneLoading
 
         private async UniTask<bool> ReloadSceneInternalAsync()
         {
-            if (!TryGetLoadedSceneHandle(out AsyncOperationHandle<SceneInstance> handle))
+            if (_sceneReference == null)
             {
-                Echo.Warning($"Scene {_sceneReference} is not loaded or already unloaded.");
-                return true;
+                Echo.Error("Scene reference is null.");
+                OnSceneLoadFailed?.Invoke("Scene reference is null");
+                return false;
             }
-
-            string sceneName = handle.Result.Scene.name;
 
             if (!IsSceneLoaded)
             {
-                Echo.Warning($"Scene {sceneName} is not loaded. Loading instead.");
+                Echo.Warning($"Scene {_sceneReference} is not loaded. Loading instead.");
                 return await LoadSceneInternalAsync(LoadSceneMode.Additive);
             }
 
@@ -219,6 +218,7 @@ namespace FakeMG.SceneLoading
             bool loadSuccess = await LoadSceneInternalAsync(LoadSceneMode.Additive);
             if (loadSuccess)
             {
+                var sceneName = GetLoadedSceneName();
                 Echo.Log($"Successfully reloaded scene: {sceneName}");
             }
 
