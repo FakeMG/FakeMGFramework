@@ -31,6 +31,7 @@ namespace FakeMG.Framework.UI.Popup
         [ShowInInspector, ReadOnly]
         private readonly Dictionary<AssetReferenceT<GameObject>, PopupAnimator> _loadedPopups = new();
         private readonly Dictionary<AssetReferenceT<GameObject>, AsyncOperationHandle<GameObject>> _assetHandles = new();
+        private readonly List<PopupAnimator> _hideAllBuffer = new();
 
         private const float BACKGROUND_FADE_DURATION = 0.3f;
         private float _backgroundFadeAlpha = 0.95f;
@@ -56,6 +57,7 @@ namespace FakeMG.Framework.UI.Popup
             }
 
             _assetHandles.Clear();
+            _openPopups.Clear();
             _loadedPopups.Clear();
         }
 
@@ -139,10 +141,19 @@ namespace FakeMG.Framework.UI.Popup
             }
 
             Destroy(popupAnimator.gameObject);
+            _openPopups.Remove(popupPrefabAsset);
             _loadedPopups.Remove(popupPrefabAsset);
+            TryHideBackground();
 
-            _assetHandles[popupPrefabAsset].Release();
-            _assetHandles.Remove(popupPrefabAsset);
+            if (_assetHandles.TryGetValue(popupPrefabAsset, out AsyncOperationHandle<GameObject> handle))
+            {
+                if (handle.IsValid())
+                {
+                    Addressables.Release(handle);
+                }
+
+                _assetHandles.Remove(popupPrefabAsset);
+            }
         }
 
         public async UniTask ShowPopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
@@ -165,6 +176,38 @@ namespace FakeMG.Framework.UI.Popup
             }
 
             await popupAnimator.Hide(animate);
+        }
+
+        public async UniTask HideAllPopupsAsync(bool animate = true)
+        {
+            if (_openPopups.Count == 0)
+            {
+                return;
+            }
+
+            // Work on a snapshot because hiding each popup mutates _openPopups via hide callbacks.
+            _hideAllBuffer.Clear();
+            foreach (PopupAnimator popupAnimator in _openPopups.Values)
+            {
+                if (popupAnimator)
+                {
+                    _hideAllBuffer.Add(popupAnimator);
+                }
+            }
+
+            _hideAllBuffer.Sort(CompareBySiblingIndexDesc);
+
+            foreach (PopupAnimator popupAnimator in _hideAllBuffer)
+            {
+                await popupAnimator.Hide(animate);
+            }
+
+            _hideAllBuffer.Clear();
+        }
+
+        private static int CompareBySiblingIndexDesc(PopupAnimator left, PopupAnimator right)
+        {
+            return right.transform.GetSiblingIndex().CompareTo(left.transform.GetSiblingIndex());
         }
 
         private void UpdateSiblingOrderBeforeShow(AssetReferenceT<GameObject> popupPrefabAsset)
