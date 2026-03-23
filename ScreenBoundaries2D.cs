@@ -19,6 +19,7 @@ namespace FakeMG.Framework
     {
         [SerializeField] private ScreenSide _activeSides = ScreenSide.All;
         [SerializeField] private Camera _mainCamera;
+        [SerializeField] private PhysicsMaterial2D _physicsMaterial;
 
         private readonly List<EdgeCollider2D> _edgeColliders = new();
 
@@ -82,9 +83,7 @@ namespace FakeMG.Framework
         private void ApplySegmentsToColliders(List<List<Vector2>> segments)
         {
             while (_edgeColliders.Count < segments.Count)
-            {
                 _edgeColliders.Add(gameObject.AddComponent<EdgeCollider2D>());
-            }
 
             for (int i = 0; i < _edgeColliders.Count; i++)
             {
@@ -92,6 +91,7 @@ namespace FakeMG.Framework
                 {
                     _edgeColliders[i].enabled = true;
                     _edgeColliders[i].points = segments[i].ToArray();
+                    _edgeColliders[i].sharedMaterial = _physicsMaterial;
                 }
                 else
                 {
