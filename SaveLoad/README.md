@@ -37,5 +37,6 @@
 - Editor tool
   - Metadata validation: prevent unsupported types
   - Support Ctrl + Z undo
+- Make sure each field in the loaded data is initialized
 
 ### ❌ Out of Scope / Not Implemented
