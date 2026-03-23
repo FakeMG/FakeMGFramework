@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using UnityEngine;
 
@@ -147,21 +148,28 @@ namespace FakeMG.SaveLoad.Advanced
         {
             metadata = null;
 
-            if (!ES3.KeyExists(METADATA_KEY, saveFilePath))
-            {
-                return false;
-            }
-
             try
             {
+                if (!ES3.KeyExists(METADATA_KEY, saveFilePath))
+                {
+                    return false;
+                }
+
                 metadata = ES3.Load(METADATA_KEY, saveFilePath, new SaveMetadata());
                 return metadata.SaveKind != SaveFileKind.Unknown;
             }
             catch (Exception)
             {
-                // Invalid metadata should not block access to other save files.
+                // Invalid or incompatible files should not block discovery of valid save files.
+                LogSkippedManagedFileIfEditor(saveFilePath, "Failed to read managed metadata with ES3.");
                 return false;
             }
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        private static void LogSkippedManagedFileIfEditor(string saveFilePath, string reason)
+        {
+            UnityEngine.Debug.LogWarning($"[SaveFileCatalog] Skipped '{saveFilePath}' while scanning managed save files. {reason}");
         }
 
         private static void ValidatePathSegments(string normalizedPath, string parameterName, bool allowEmpty)
