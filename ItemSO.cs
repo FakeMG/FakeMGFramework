@@ -11,7 +11,7 @@ namespace FakeMG.Framework
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/ItemSO")]
     public class ItemSO : ScriptableObject, IIdentifiable
     {
-        [Header("Item Info")]
+        [Title("Item Info")]
         [Required]
         [SerializeField] private string _id;
         [SerializeField] private string _itemName;
