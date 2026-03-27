@@ -58,6 +58,14 @@ namespace FakeMG.Audio
             const float DEFAULT_LAST_PLAY_TIME = -1f;
             const float NO_DELAY = 0f;
 
+#if UNITY_EDITOR
+            // Editor stores SO value across play sessions, so we need to reset _lastPlayTime
+            if (_lastPlayTime > Time.time)
+            {
+                _lastPlayTime = DEFAULT_LAST_PLAY_TIME;
+            }
+#endif
+
             return _replayDelay <= NO_DELAY || _lastPlayTime == DEFAULT_LAST_PLAY_TIME ||
                    Time.time >= _lastPlayTime + _replayDelay;
         }
