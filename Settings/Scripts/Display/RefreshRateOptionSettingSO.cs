@@ -12,7 +12,7 @@ namespace FakeMG.Settings.Display
         private const int HERTZ_TO_MILLIHERTZ = 1000;
         private const string REFRESH_RATE_FORMAT = "{0}Hz";
 
-        public override int GetDefaultValue()
+        public override string GetDefaultValue()
         {
             List<int> refreshRateMilliHertzValues = GetRefreshRateMilliHertzValues();
             if (refreshRateMilliHertzValues.Count == 0)
@@ -26,11 +26,11 @@ namespace FakeMG.Settings.Display
                 int refreshRateMilliHertz = refreshRateMilliHertzValues[index];
                 if (refreshRateMilliHertz == currentRefreshRateMilliHertz)
                 {
-                    return index;
+                    return FormatRefreshRateLabel(refreshRateMilliHertz);
                 }
             }
 
-            return base.GetDefaultValue();
+            return string.Format(REFRESH_RATE_FORMAT, DEFAULT_REFRESH_RATE_HZ);
         }
 
         public override List<string> GetOptions()
@@ -58,6 +58,12 @@ namespace FakeMG.Settings.Display
 
             int clampedIndex = Mathf.Clamp(optionIndex, 0, refreshRateMilliHertzValues.Count - 1);
             return refreshRateMilliHertzValues[clampedIndex] / HERTZ_TO_MILLIHERTZ;
+        }
+
+        private static string FormatRefreshRateLabel(int refreshRateMilliHertz)
+        {
+            int refreshRateHertz = refreshRateMilliHertz / HERTZ_TO_MILLIHERTZ;
+            return string.Format(REFRESH_RATE_FORMAT, refreshRateHertz);
         }
 
         private static List<int> GetRefreshRateMilliHertzValues()

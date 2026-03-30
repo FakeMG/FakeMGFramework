@@ -9,7 +9,7 @@ namespace FakeMG.Settings.Display
     {
         private const string RESOLUTION_FORMAT = "{0} x {1}";
 
-        public override int GetDefaultValue()
+        public override string GetDefaultValue()
         {
             Resolution[] availableResolutions = Screen.resolutions;
             Resolution currentResolution = Screen.currentResolution;
@@ -27,7 +27,7 @@ namespace FakeMG.Settings.Display
                     continue;
                 }
 
-                return index;
+                return FormatResolutionLabel(resolution);
             }
 
             return base.GetDefaultValue();
@@ -50,6 +50,11 @@ namespace FakeMG.Settings.Display
             }
 
             return resolutionOptions;
+        }
+
+        private static string FormatResolutionLabel(Resolution resolution)
+        {
+            return string.Format(RESOLUTION_FORMAT, resolution.width, resolution.height);
         }
     }
 }

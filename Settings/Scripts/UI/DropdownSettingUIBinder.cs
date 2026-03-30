@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -47,27 +48,31 @@ namespace FakeMG.Settings
 
         private void ApplyStoredSettingValueToDropdown()
         {
-            int storedOptionIndex = _settingDataManager.GetValue(_optionSetting);
-            int clampedOptionIndex = ClampOptionIndex(storedOptionIndex);
+            string storedOptionValue = _settingDataManager.GetValue(_optionSetting);
+            int matchedOptionIndex = GetOptionIndex(storedOptionValue);
+
+            int clampedOptionIndex = ClampOptionIndex(matchedOptionIndex);
+            string resolvedOptionValue = GetOptionValue(clampedOptionIndex);
 
             _dropdown.SetValueWithoutNotify(clampedOptionIndex);
-            StoreClampedOptionIndexIfNeeded(storedOptionIndex, clampedOptionIndex);
+            StoreResolvedOptionValueIfNeeded(storedOptionValue, resolvedOptionValue);
         }
 
         private void StoreSelectedOptionIndex(int selectedOptionIndex)
         {
             int clampedOptionIndex = ClampOptionIndex(selectedOptionIndex);
-            _settingDataManager.SetValue(_optionSetting, clampedOptionIndex);
+            string selectedOptionValue = GetOptionValue(clampedOptionIndex);
+            _settingDataManager.SetValue(_optionSetting, selectedOptionValue);
         }
 
-        private void StoreClampedOptionIndexIfNeeded(int storedOptionIndex, int clampedOptionIndex)
+        private void StoreResolvedOptionValueIfNeeded(string storedOptionValue, string resolvedOptionValue)
         {
-            if (storedOptionIndex == clampedOptionIndex)
+            if (string.Equals(storedOptionValue, resolvedOptionValue, StringComparison.Ordinal))
             {
                 return;
             }
 
-            _settingDataManager.SetValue(_optionSetting, clampedOptionIndex);
+            _settingDataManager.SetValue(_optionSetting, resolvedOptionValue);
         }
 
         private int ClampOptionIndex(int optionIndex)
@@ -79,6 +84,34 @@ namespace FakeMG.Settings
             }
 
             return Mathf.Clamp(optionIndex, 0, maxOptionIndex);
+        }
+
+        private int GetOptionIndex(string optionValue)
+        {
+            if (string.IsNullOrEmpty(optionValue))
+            {
+                return -1;
+            }
+
+            for (int index = 0; index < _dropdown.options.Count; index++)
+            {
+                if (string.Equals(_dropdown.options[index].text, optionValue, StringComparison.Ordinal))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        private string GetOptionValue(int optionIndex)
+        {
+            if (optionIndex < 0 || optionIndex >= _dropdown.options.Count)
+            {
+                return string.Empty;
+            }
+
+            return _dropdown.options[optionIndex].text ?? string.Empty;
         }
 
         private static List<string> GetSafeOptionLabels(List<string> optionLabels)

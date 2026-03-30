@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.Display.ResolutionOptionSettingSO
   _settingId: display.resolution
   _label: Resolution
-  _defaultValue: 0
+  _defaultValue: 1920 x 1080

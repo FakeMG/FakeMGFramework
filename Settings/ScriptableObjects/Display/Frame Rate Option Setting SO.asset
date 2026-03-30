@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.Display.FrameRateOptionSettingSO
   _settingId: display.frameRate
   _label: FPS
-  _defaultValue: 1
+  _defaultValue: 60 FPS
   _frameRateValues: 1e0000003c0000007800000090000000f0000000

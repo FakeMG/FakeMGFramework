@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.OnOffOptionSettingSO
   _settingId: display.vSync
   _label: VSync
-  _defaultValue: 1
+  _defaultValue: Off
