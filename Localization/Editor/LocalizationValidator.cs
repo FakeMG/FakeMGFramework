@@ -71,10 +71,6 @@ namespace FakeMG.Localization.Editor
             {
                 EditorUtility.DisplayDialog("Localization Errors",
                     $"{errorCount} missing keys found! Check the Console for details.", "OK");
-
-                // If this was triggered by a build, throw an exception to stop the build
-                if (BuildPipeline.isBuildingPlayer)
-                    throw new BuildPlayerWindow.BuildMethodException("Build failed due to missing localization keys.");
             }
             else if (!silentOnSuccess)
             {
