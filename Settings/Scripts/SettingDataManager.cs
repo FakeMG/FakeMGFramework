@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using FakeMG.Framework;
+using FakeMG.Framework.EventBus;
 using FakeMG.SaveLoad;
 using FakeMG.Settings.Converters;
 
@@ -53,6 +54,8 @@ namespace FakeMG.Settings
                 storage.value = newValue;
                 PersistValue(setting.SettingId, storage);
                 storage.OnChanged?.Invoke(setting, newValue);
+
+                EventBus<SettingsAutoSaveEvent>.Raise(new SettingsAutoSaveEvent());
             }
         }
 

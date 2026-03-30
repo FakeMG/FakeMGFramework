@@ -10,6 +10,7 @@ namespace FakeMG.Settings
         {
             autoInjectGameObjects.AddRange(GetComponentsInChildren<SliderSettingUIBinder>(true).Select(b => b.gameObject).ToList());
             autoInjectGameObjects.AddRange(GetComponentsInChildren<DropdownSettingUIBinder>(true).Select(b => b.gameObject).ToList());
+            autoInjectGameObjects.AddRange(GetComponentsInChildren<ToggleSwitchSettingUIBinder>(true).Select(b => b.gameObject).ToList());
         }
     }
 }

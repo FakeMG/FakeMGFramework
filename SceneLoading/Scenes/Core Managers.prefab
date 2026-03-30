@@ -93,6 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1993822612476852077}
   - component: {fileID: 9033908637583536586}
+  - component: {fileID: 530244868620601662}
   m_Layer: 0
   m_Name: Save Load System Setting
   m_TagString: Untagged
@@ -137,6 +138,19 @@ MonoBehaviour:
   _autoSaveInterval: 300
   _enableDebug: 1
   _migrationRegistry: {fileID: 0}
+--- !u!114 &530244868620601662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2912867472724427489}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 38d4f8e7f0d21d44caa635a348683988, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fruits::Fruits.Settings.SettingAutoSaveEventSubscriber
+  _saveLoadSystem: {fileID: 9033908637583536586}
 --- !u!1 &4364114724844911322
 GameObject:
   m_ObjectHideFlags: 0
@@ -184,7 +198,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _soundEmitterPrefab: {fileID: 1387994148951244254, guid: fb5ea760283b7fe4795cda0d8eee18ef, type: 3}
   _musicSoundEmitter: {fileID: 1788211686790592175}
-  _settingDataManager: {fileID: 1546493877287332598}
   _pooledEventChannels:
   - {fileID: 11400000, guid: d03f5823c57fc3e4a8ae9e7718ac779f, type: 2}
   - {fileID: 11400000, guid: edf2a1701d8d9a3408012c0e977faf22, type: 2}
