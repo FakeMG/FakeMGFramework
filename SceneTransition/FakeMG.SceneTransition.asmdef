@@ -1,0 +1,22 @@
+{
+    "name": "FakeMG.SceneTransition",
+    "rootNamespace": "FakeMG.SceneTransition",
+    "references": [
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask",
+        "UniTask.DOTween",
+        "UniTask.Addressables",
+        "DOTween.Modules",
+        "FakeMG.Audio"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

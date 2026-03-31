@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d8c702be72de4efb8956f7a4ef6ac45d, type: 3}
+  m_Name: Whoosh Slow 2 AudioCueSO
+  m_EditorClassIdentifier: FakeMG.Audio::FakeMG.Audio.AudioCueSO
+  _looping: 0
+  _fadeIn: 0
+  _fadeInDuration: 0
+  _fadeOut: 0
+  _fadeOutDuration: 0
+  _replayDelay: 0
+  _randomVolume: 0
+  _randomPitch: 0
+  _randomStartTime: 0
+  _audioClipGroups:
+  - _sequenceMode: 1
+    AudioClips:
+    - {fileID: 8300000, guid: c62959cbc1a0b0040adbd3c661ff98d8, type: 3}

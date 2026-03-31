@@ -1,12 +1,13 @@
 ﻿using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using FakeMG.Audio;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace FakeMG.SceneLoading
+namespace FakeMG.SceneTransition
 {
     public enum EaseType
     {
@@ -14,11 +15,15 @@ namespace FakeMG.SceneLoading
         CustomCurve
     }
 
-    public class SceneTransition : MonoBehaviour
+    public class SceneTransitionScale : MonoBehaviour
     {
         [SerializeField] private CanvasGroup _transitionScreen;
         [SerializeField] private Image _backgroundColor;
         [SerializeField] private RectTransform _logo;
+
+        [Header("Audio")]
+        [SerializeField] private AudioCue _whooshCue;
+        [SerializeField] private AudioCue _whoose2Cue;
 
         [Header("Show Animation Settings")]
         [SerializeField] private float _showDuration;
@@ -110,6 +115,8 @@ namespace FakeMG.SceneLoading
                 ApplyEase(_logo.DORotate(new Vector3(0, 0, _showRotation), _showDuration, RotateMode.FastBeyond360),
                     _showEaseType, _showEase, _showEaseCurve);
 
+            _whooshCue.PlayAudioCue();
+
             await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
             await _backgroundColor.DOFade(1f, _colorFadeDuration).ToUniTask();
 
@@ -129,6 +136,8 @@ namespace FakeMG.SceneLoading
             var rotateUniTask =
                 ApplyEase(_logo.DORotate(new Vector3(0, 0, _hideRotation), _hideDuration, RotateMode.FastBeyond360),
                     _hideEaseType, _hideEase, _hideEaseCurve);
+
+            _whoose2Cue.PlayAudioCue();
 
             await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
             await _transitionScreen.DOFade(0f, _transitionScreenFadeDuration).ToUniTask();
