@@ -30,6 +30,7 @@ namespace FakeMG.Audio
         // Priority
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
+        [BoxGroup("Override Settings")]
         [BoxGroup("Override Settings/Output & Priority")]
         private bool _overridePriority;
 
