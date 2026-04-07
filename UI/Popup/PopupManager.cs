@@ -82,8 +82,14 @@ namespace FakeMG.Framework.UI.Popup
 
         private void AfterHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            UpdateSiblingOrderAfterHide(popupPrefabAsset);
-            _openPopups.Remove(popupPrefabAsset);
+            // A popup can be destroyed as part of scene unload while a hide callback is in-flight.
+            // Guard dictionary access so scene transitions do not throw from popup teardown.
+            if (_openPopups.ContainsKey(popupPrefabAsset))
+            {
+                UpdateSiblingOrderAfterHide(popupPrefabAsset);
+                _openPopups.Remove(popupPrefabAsset);
+            }
+
             OnHideFinished?.Invoke();
         }
 
@@ -218,14 +224,19 @@ namespace FakeMG.Framework.UI.Popup
 
         private void UpdateSiblingOrderAfterHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            int index = _openPopups[popupPrefabAsset].transform.GetSiblingIndex();
+            if (!_openPopups.TryGetValue(popupPrefabAsset, out PopupAnimator popupAnimator) || !popupAnimator)
+            {
+                return;
+            }
+
+            int index = popupAnimator.transform.GetSiblingIndex();
             bool isLastPopup = index >= _openPopups.Count - 1;
             if (_openPopups.Count > 0 && isLastPopup)
             {
                 _blackBackground.transform.SetSiblingIndex(_openPopups.Count - 2);
             }
 
-            _openPopups[popupPrefabAsset].transform.SetAsLastSibling();
+            popupAnimator.transform.SetAsLastSibling();
         }
 
         private void TryShowBackground()
