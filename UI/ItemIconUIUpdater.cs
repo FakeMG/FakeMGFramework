@@ -52,7 +52,7 @@ namespace FakeMG.Framework.UI
                 }
             }
 
-            _countText.text = count > 0 ? count.ToShorthand() : string.Empty;
+            _countText.text = count.ToShorthand();
             _countText.gameObject.SetActive(_showCountWhenZero || count > 0);
         }
 
