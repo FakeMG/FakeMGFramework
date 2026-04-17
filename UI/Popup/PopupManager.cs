@@ -25,6 +25,7 @@ namespace FakeMG.Framework.UI.Popup
         public event Action OnShowFinished;
         public event Action OnHideStart;
         public event Action OnHideFinished;
+        public event Action OnLastPopupHideStart;
 
         [ShowInInspector, ReadOnly]
         private readonly Dictionary<AssetReferenceT<GameObject>, PopupAnimator> _openPopups = new();
@@ -76,6 +77,11 @@ namespace FakeMG.Framework.UI.Popup
 
         private void BeforeHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
+            if (_openPopups.Count == 1)
+            {
+                OnLastPopupHideStart?.Invoke();
+            }
+
             TryHideBackground();
             OnHideStart?.Invoke();
         }
