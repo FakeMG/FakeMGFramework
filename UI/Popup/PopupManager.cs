@@ -12,11 +12,15 @@ namespace FakeMG.Framework.UI.Popup
 {
     /// <summary>
     /// Handles background stacking, popup creation/destruction.
+    /// Two black backgrounds alternate as popups stack. Order is tracked explicitly via a
+    /// Layer list — sibling indices are only written, never read back for logic.
     /// </summary>
     public class PopupManager : MonoBehaviour
     {
         [Required]
-        [SerializeField] private Image _blackBackground;
+        [SerializeField] private Image _blackBackgroundA;
+        [Required]
+        [SerializeField] private Image _blackBackgroundB;
 
         [Header("Debug")]
         [SerializeField] private bool _enableLogging;
@@ -34,39 +38,61 @@ namespace FakeMG.Framework.UI.Popup
         private readonly Dictionary<AssetReferenceT<GameObject>, AsyncOperationHandle<GameObject>> _assetHandles = new();
         private readonly List<PopupAnimator> _hideAllBuffer = new();
 
+        // Each entry pairs a popup with the BG assigned to sit behind it.
+        // Index 0 = bottom-most layer. This is the single source of truth for order.
+        private readonly struct Layer
+        {
+            public readonly PopupAnimator Popup;
+            public readonly Image Background;
+
+            public Layer(PopupAnimator popup, Image background)
+            {
+                Popup = popup;
+                Background = background;
+            }
+        }
+
+        private readonly List<Layer> _layers = new();
+
         private const float BACKGROUND_FADE_DURATION = 0.3f;
-        private float _backgroundFadeAlpha = 0.95f;
+        private float _backgroundFadeAlpha;
+
+        // -----------------------------------------------------------------------------------------
+        // Unity lifecycle
+        // -----------------------------------------------------------------------------------------
 
         private void Start()
         {
-            _backgroundFadeAlpha = _blackBackground.color.a;
+            _backgroundFadeAlpha = _blackBackgroundA.color.a;
 
-            Color backgroundColor = _blackBackground.color;
-            backgroundColor.a = 0f;
-            _blackBackground.color = backgroundColor;
+            SetAlpha(_blackBackgroundA, 0f);
+            SetAlpha(_blackBackgroundB, 0f);
+            _blackBackgroundA.gameObject.SetActive(false);
+            _blackBackgroundB.gameObject.SetActive(false);
         }
 
         private void OnDestroy()
         {
-            // Release all cached asset handles
             foreach (var handle in _assetHandles.Values)
             {
                 if (handle.IsValid())
-                {
                     Addressables.Release(handle);
-                }
             }
 
             _assetHandles.Clear();
             _openPopups.Clear();
             _loadedPopups.Clear();
+            _layers.Clear();
         }
+
+        // -----------------------------------------------------------------------------------------
+        // Show / Hide callbacks
+        // -----------------------------------------------------------------------------------------
 
         private void BeforeShow(AssetReferenceT<GameObject> popupPrefabAsset)
         {
             _openPopups[popupPrefabAsset] = _loadedPopups[popupPrefabAsset];
-            UpdateSiblingOrderBeforeShow(popupPrefabAsset);
-            TryShowBackground();
+            PushBackground(_openPopups[popupPrefabAsset]);
             OnShowStart?.Invoke();
         }
 
@@ -78,36 +104,123 @@ namespace FakeMG.Framework.UI.Popup
         private void BeforeHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
             if (_openPopups.Count == 1)
-            {
                 OnLastPopupHideStart?.Invoke();
-            }
 
-            TryHideBackground();
+            PopBackground();
             OnHideStart?.Invoke();
         }
 
         private void AfterHide(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            // A popup can be destroyed as part of scene unload while a hide callback is in-flight.
-            // Guard dictionary access so scene transitions do not throw from popup teardown.
-            if (_openPopups.ContainsKey(popupPrefabAsset))
+            if (!_openPopups.ContainsKey(popupPrefabAsset))
             {
-                UpdateSiblingOrderAfterHide(popupPrefabAsset);
-                _openPopups.Remove(popupPrefabAsset);
+                OnHideFinished?.Invoke();
+                return;
             }
 
+            _openPopups.Remove(popupPrefabAsset);
             OnHideFinished?.Invoke();
         }
 
+        // -----------------------------------------------------------------------------------------
+        // Background stack
+        // -----------------------------------------------------------------------------------------
+
+        private void PushBackground(PopupAnimator popup)
+        {
+            Image incoming = NextBackground();
+
+            // Fade out the current top BG. Do NOT reposition it — moving it mid-fade
+            // cuts the fade animation visually.
+            if (_layers.Count > 0)
+                FadeOut(_layers[^1].Background, disable: true);
+
+            _layers.Add(new Layer(popup, incoming));
+
+            // BG last, then popup last — order of two SetAsLastSibling calls is unambiguous:
+            // result is always [..., BG, Popup] regardless of where they started.
+            incoming.transform.SetAsLastSibling();
+            popup.transform.SetAsLastSibling();
+
+            incoming.DOKill();
+            incoming.gameObject.SetActive(true);
+            incoming.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
+                .SetLink(incoming.gameObject);
+        }
+
+        private void PopBackground()
+        {
+            if (_layers.Count == 0)
+                return;
+
+            Image outgoing = _layers[^1].Background;
+            _layers.RemoveAt(_layers.Count - 1);
+
+            // Fade the outgoing BG out in place — do NOT reposition it.
+            FadeOut(outgoing, disable: true);
+
+            if (_layers.Count > 0)
+            {
+                Layer topLayer = _layers[^1];
+
+                int popupIndex = topLayer.Popup.transform.GetSiblingIndex();
+                int bgIndex = topLayer.Background.transform.GetSiblingIndex();
+
+                // FIX: Safely slot the BG directly in front of its popup accounting for Unity's sibling shift.
+                // If BG is currently lower than the popup, moving it to popupIndex shifts the popup down (-1),
+                // placing the BG in front. We subtract 1 to keep it strictly behind the popup.
+                int targetIndex = bgIndex < popupIndex ? popupIndex - 1 : popupIndex;
+                topLayer.Background.transform.SetSiblingIndex(targetIndex);
+
+                topLayer.Background.DOKill();
+                topLayer.Background.gameObject.SetActive(true);
+                topLayer.Background.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
+                    .SetLink(topLayer.Background.gameObject);
+            }
+        }
+
+        /// <summary>
+        /// Returns whichever of A/B is not assigned to the current top layer.
+        /// </summary>
+        private Image NextBackground()
+        {
+            if (_layers.Count == 0)
+                return _blackBackgroundA;
+
+            return _layers[^1].Background == _blackBackgroundA
+                ? _blackBackgroundB
+                : _blackBackgroundA;
+        }
+
+        private void FadeOut(Image bg, bool disable)
+        {
+            bg.DOKill();
+            var tween = bg.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(bg.gameObject);
+
+            if (disable)
+                tween.OnComplete(() =>
+                {
+                    if (bg != null)
+                        bg.gameObject.SetActive(false);
+                });
+        }
+
+        private static void SetAlpha(Image image, float alpha)
+        {
+            Color c = image.color;
+            c.a = alpha;
+            image.color = c;
+        }
+
+        // -----------------------------------------------------------------------------------------
+        // Public API
+        // -----------------------------------------------------------------------------------------
+
         public async UniTask<GameObject> LoadAndInstantiatePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            // Check if already loaded
             if (_loadedPopups.TryGetValue(popupPrefabAsset, out var existingPopup) && existingPopup != null)
-            {
                 return existingPopup.gameObject;
-            }
 
-            // Load the popup prefab
             var handle = Addressables.LoadAssetAsync<GameObject>(popupPrefabAsset);
             await handle;
 
@@ -117,23 +230,21 @@ namespace FakeMG.Framework.UI.Popup
                 return null;
             }
 
-            // Instantiate the popup
             GameObject popupGameObject = Instantiate(handle.Result, transform);
 
             if (!popupGameObject.TryGetComponent(out PopupAnimator popupAnimator))
             {
                 Echo.Error(
-                    $"Loaded popup prefab does not have a PopupAnimator component! Popup: {popupGameObject.name}", _enableLogging);
+                    $"Loaded popup prefab does not have a PopupAnimator component! Popup: {popupGameObject.name}",
+                    _enableLogging);
                 Destroy(popupGameObject);
                 Addressables.Release(handle);
                 return null;
             }
 
-            // Cache the popup and asset handle
             _loadedPopups[popupPrefabAsset] = popupAnimator;
             _assetHandles[popupPrefabAsset] = handle;
 
-            // Initially hide the popup without animation
             await popupAnimator.Hide(false);
 
             popupAnimator.OnShowStart += () => BeforeShow(popupPrefabAsset);
@@ -152,17 +263,19 @@ namespace FakeMG.Framework.UI.Popup
                 return;
             }
 
+            if (_openPopups.ContainsKey(popupPrefabAsset))
+            {
+                PopBackground();
+                _openPopups.Remove(popupPrefabAsset);
+            }
+
             Destroy(popupAnimator.gameObject);
-            _openPopups.Remove(popupPrefabAsset);
             _loadedPopups.Remove(popupPrefabAsset);
-            TryHideBackground();
 
             if (_assetHandles.TryGetValue(popupPrefabAsset, out AsyncOperationHandle<GameObject> handle))
             {
                 if (handle.IsValid())
-                {
                     Addressables.Release(handle);
-                }
 
                 _assetHandles.Remove(popupPrefabAsset);
             }
@@ -193,86 +306,27 @@ namespace FakeMG.Framework.UI.Popup
         public async UniTask HideAllPopupsAsync(bool animate = true)
         {
             if (_openPopups.Count == 0)
-            {
                 return;
-            }
 
-            // Work on a snapshot because hiding each popup mutates _openPopups via hide callbacks.
             _hideAllBuffer.Clear();
             foreach (PopupAnimator popupAnimator in _openPopups.Values)
             {
                 if (popupAnimator)
-                {
                     _hideAllBuffer.Add(popupAnimator);
-                }
             }
 
-            _hideAllBuffer.Sort(CompareBySiblingIndexDesc);
+            // Sort by layer index descending — top layer first.
+            _hideAllBuffer.Sort((a, b) =>
+            {
+                int ia = _layers.FindIndex(l => l.Popup == a);
+                int ib = _layers.FindIndex(l => l.Popup == b);
+                return ib.CompareTo(ia);
+            });
 
             foreach (PopupAnimator popupAnimator in _hideAllBuffer)
-            {
                 await popupAnimator.Hide(animate);
-            }
 
             _hideAllBuffer.Clear();
-        }
-
-        private static int CompareBySiblingIndexDesc(PopupAnimator left, PopupAnimator right)
-        {
-            return right.transform.GetSiblingIndex().CompareTo(left.transform.GetSiblingIndex());
-        }
-
-        private void UpdateSiblingOrderBeforeShow(AssetReferenceT<GameObject> popupPrefabAsset)
-        {
-            _blackBackground.transform.SetSiblingIndex(_openPopups.Count - 1);
-            _openPopups[popupPrefabAsset].transform.SetSiblingIndex(_openPopups.Count);
-        }
-
-        private void UpdateSiblingOrderAfterHide(AssetReferenceT<GameObject> popupPrefabAsset)
-        {
-            if (!_openPopups.TryGetValue(popupPrefabAsset, out PopupAnimator popupAnimator) || !popupAnimator)
-            {
-                return;
-            }
-
-            int index = popupAnimator.transform.GetSiblingIndex();
-            bool isLastPopup = index >= _openPopups.Count - 1;
-            if (_openPopups.Count > 0 && isLastPopup)
-            {
-                _blackBackground.transform.SetSiblingIndex(_openPopups.Count - 2);
-            }
-
-            popupAnimator.transform.SetAsLastSibling();
-        }
-
-        private void TryShowBackground()
-        {
-            // When showing a popup while the last popup is hiding,
-            // the background is fading out and still active
-            // we still want to show the background. So no check for activeInHierarchy
-            // if (blackBackground.gameObject.activeInHierarchy) return;
-            // Also, there are 2 popups is in the stack, we need to check _openPopups.Count > 2
-
-            if (_openPopups.Count > 2) return;
-
-            _blackBackground.DOKill();
-            _blackBackground.gameObject.SetActive(true);
-
-            _blackBackground.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
-                .SetLink(_blackBackground.gameObject);
-        }
-
-        private void TryHideBackground()
-        {
-            if (!_blackBackground.gameObject.activeInHierarchy) return;
-            if (_openPopups.Count > 1) return;
-
-            _blackBackground.DOKill();
-
-            _blackBackground.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(_blackBackground.gameObject).OnComplete(() =>
-            {
-                _blackBackground.gameObject.SetActive(false);
-            });
         }
     }
 }
