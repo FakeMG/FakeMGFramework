@@ -141,7 +141,7 @@ namespace FakeMG.Framework.UI.Tab
             {
                 return;
             }
-            
+
             Undo.RecordObject(this, "Gather Child Tab Buttons");
 
             _tabs = TabButtonGatherer.BuildTabsPreservingContent(tabButtons, _tabs);
@@ -194,7 +194,7 @@ namespace FakeMG.Framework.UI.Tab
         {
             if (!IsValidTabIndex(_defaultActiveTabIndex))
             {
-                Debug.LogWarning($"Cannot select default tab index {_defaultActiveTabIndex}; configured tab count is {GetTabCount()}.", this);
+                Echo.Warning($"Cannot select default tab index {_defaultActiveTabIndex}; configured tab count is {GetTabCount()}.", this);
                 return;
             }
 
