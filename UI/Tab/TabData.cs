@@ -14,6 +14,12 @@ namespace FakeMG.Framework.UI.Tab
         public TabButtonBase TabButton => _tabButtonComponent;
         public RectTransform TabContent => _tabContent;
 
+        public TabData(TabButtonBase tabButtonComponent, RectTransform tabContent)
+        {
+            _tabButtonComponent = tabButtonComponent;
+            _tabContent = tabContent;
+        }
+
         public bool Equals(TabData other)
         {
             return Equals(_tabButtonComponent, other._tabButtonComponent) &&
