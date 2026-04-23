@@ -6,7 +6,12 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
 {
     public class SlidingTabTransition : TabTransitionBase
     {
-        [SerializeField] private RectTransform _canvasRectTransform;
+        private RectTransform _canvasRectTransform;
+
+        private void Awake()
+        {
+            _canvasRectTransform = GetComponentInParent<Canvas>().GetComponent<RectTransform>();
+        }
 
         public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null)
         {
@@ -29,7 +34,7 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
                 // Set up the new panel
                 newTab.TabContent.gameObject.SetActive(true);
                 var tabPosition = newTab.TabContent.anchoredPosition;
-                Vector2 hiddenPosition = new Vector2(direction * canvasWidth, tabPosition.y);
+                Vector2 hiddenPosition = new(direction * canvasWidth, tabPosition.y);
                 newTab.TabContent.anchoredPosition = hiddenPosition;
 
                 // Animate new panel in
