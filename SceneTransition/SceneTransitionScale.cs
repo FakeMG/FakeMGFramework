@@ -15,7 +15,7 @@ namespace FakeMG.SceneTransition
         CustomCurve
     }
 
-    public class SceneTransitionScale : MonoBehaviour
+    public class SceneTransitionScale : MonoBehaviour, ISceneTransition
     {
         [SerializeField] private CanvasGroup _transitionScreen;
         [SerializeField] private Image _backgroundColor;
