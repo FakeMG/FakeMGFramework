@@ -16,6 +16,7 @@ namespace FakeMG.Framework.UI
         [SerializeField] private bool _showCountWhenZero;
 
         private AsyncOperationHandle<Sprite>? _loadedSpriteHandle;
+        private int _updateRequestVersion;
 
         #region Unity Lifecycle
 
@@ -30,20 +31,35 @@ namespace FakeMG.Framework.UI
 
         public void UpdateUI(Sprite newIcon, int count)
         {
+            InvalidatePendingRequests();
+            UnloadHandle();
             _icon.sprite = newIcon;
-            _countText.text = count > 0 ? count.ToShorthand() : string.Empty;
-            _countText.gameObject.SetActive(_showCountWhenZero || count > 0);
+            ApplyCountPresentation(
+                count > 0 ? count.ToShorthand() : string.Empty,
+                _showCountWhenZero || count > 0);
         }
 
         public void UpdateUI(Sprite newIcon, string count)
         {
+            InvalidatePendingRequests();
+            UnloadHandle();
             _icon.sprite = newIcon;
-            _countText.text = count;
-            _countText.gameObject.SetActive(_showCountWhenZero || !string.IsNullOrEmpty(count));
+            ApplyCountPresentation(
+                count,
+                _showCountWhenZero || !string.IsNullOrEmpty(count));
         }
 
         public async UniTask UpdateUIAsync(ItemSO item, int count)
         {
+            await UpdateUIAsync(
+                item,
+                count.ToShorthand(),
+                _showCountWhenZero || count > 0);
+        }
+
+        public async UniTask UpdateUIAsync(ItemSO item, string countText, bool isCountVisible)
+        {
+            int requestVersion = InvalidatePendingRequests();
             UnloadHandle();
 
             if (item.IconSpriteAsset != null && item.IconSpriteAsset.RuntimeKeyIsValid())
@@ -67,6 +83,12 @@ namespace FakeMG.Framework.UI
                         return;
                     }
 
+                    if (requestVersion != _updateRequestVersion)
+                    {
+                        Addressables.Release(spriteHandle);
+                        return;
+                    }
+
                     _icon.sprite = sprite;
                     _loadedSpriteHandle = spriteHandle;
                 }
@@ -85,13 +107,29 @@ namespace FakeMG.Framework.UI
                 Echo.Error($"Invalid icon sprite reference for item '{item.name}'.");
             }
 
-            _countText.text = count.ToShorthand();
-            _countText.gameObject.SetActive(_showCountWhenZero || count > 0);
+            if (requestVersion != _updateRequestVersion)
+            {
+                return;
+            }
+
+            ApplyCountPresentation(countText, isCountVisible);
         }
 
         #endregion
 
         #region Private Methods
+
+        private void ApplyCountPresentation(string countText, bool isCountVisible)
+        {
+            _countText.text = countText;
+            _countText.gameObject.SetActive(isCountVisible);
+        }
+
+        private int InvalidatePendingRequests()
+        {
+            _updateRequestVersion++;
+            return _updateRequestVersion;
+        }
 
         private void UnloadHandle()
         {
