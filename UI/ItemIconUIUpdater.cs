@@ -1,4 +1,5 @@
-﻿using Cysharp.Threading.Tasks;
+using System;
+using Cysharp.Threading.Tasks;
 using FakeMG.Framework.ExtensionMethods;
 using TMPro;
 using UnityEngine;
@@ -16,10 +17,16 @@ namespace FakeMG.Framework.UI
 
         private AsyncOperationHandle<Sprite>? _loadedSpriteHandle;
 
+        #region Unity Lifecycle
+
         private void OnDestroy()
         {
             UnloadHandle();
         }
+
+        #endregion
+
+        #region Public Methods
 
         public void UpdateUI(Sprite newIcon, int count)
         {
@@ -39,22 +46,52 @@ namespace FakeMG.Framework.UI
         {
             UnloadHandle();
 
-            // Load the sprite asynchronously
             if (item.IconSpriteAsset != null && item.IconSpriteAsset.RuntimeKeyIsValid())
             {
-                var spriteHandle = Addressables.LoadAssetAsync<Sprite>(item.IconSpriteAsset);
-                await spriteHandle;
+                AsyncOperationHandle<Sprite> spriteHandle = Addressables.LoadAssetAsync<Sprite>(item.IconSpriteAsset);
 
-                if (spriteHandle.Status == AsyncOperationStatus.Succeeded)
+                try
                 {
-                    _icon.sprite = spriteHandle.Result;
+                    Sprite sprite = await spriteHandle.ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
+
+                    if (spriteHandle.Status != AsyncOperationStatus.Succeeded)
+                    {
+                        Echo.Error($"Failed to load sprite for item '{item.name}'.");
+                        Addressables.Release(spriteHandle);
+                        return;
+                    }
+
+                    if (!_icon || !_countText)
+                    {
+                        Addressables.Release(spriteHandle);
+                        return;
+                    }
+
+                    _icon.sprite = sprite;
                     _loadedSpriteHandle = spriteHandle;
                 }
+                catch (OperationCanceledException)
+                {
+                    if (spriteHandle.IsValid())
+                    {
+                        Addressables.Release(spriteHandle);
+                    }
+
+                    return;
+                }
+            }
+            else
+            {
+                Echo.Error($"Invalid icon sprite reference for item '{item.name}'.");
             }
 
             _countText.text = count.ToShorthand();
             _countText.gameObject.SetActive(_showCountWhenZero || count > 0);
         }
+
+        #endregion
+
+        #region Private Methods
 
         private void UnloadHandle()
         {
@@ -64,5 +101,7 @@ namespace FakeMG.Framework.UI
                 _loadedSpriteHandle = null;
             }
         }
+
+        #endregion
     }
 }
