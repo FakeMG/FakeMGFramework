@@ -52,6 +52,8 @@ namespace FakeMG.Framework.UI
 
         public void OnPointerEnter(PointerEventData eventData)
         {
+            if (!_button.interactable) return;
+
             _button.Select();
         }
 
@@ -76,6 +78,8 @@ namespace FakeMG.Framework.UI
 
         public void OnSelect(BaseEventData eventData)
         {
+            if (!_button.interactable) return;
+
             AnimateScale(_normalScale * _selectScaleMultiplier);
         }
 
