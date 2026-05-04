@@ -53,7 +53,7 @@ namespace FakeMG.Framework.UI
         {
             await UpdateUIAsync(
                 item,
-                count.ToShorthand(),
+                count.SeparateNumberWithComma(),
                 _showCountWhenZero || count > 0);
         }
 
