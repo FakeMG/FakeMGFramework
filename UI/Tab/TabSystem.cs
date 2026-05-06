@@ -16,6 +16,7 @@ namespace FakeMG.Framework.UI.Tab
         [SerializeField] protected List<TabData> _tabs = new();
         [SerializeField] protected int _defaultActiveTabIndex;
         [SerializeField] protected TabTransitionBase _transition;
+        [InfoBox("The Tab Bar Animator is an optional component that can be used to animate a tab bar when the selected tab changes. If not assigned, only the tab content and tab buttons will update on selection change.", InfoMessageType.Info)]
         [SerializeField] protected TabBarAnimatorBase _tabBarAnimator;
 
         private readonly List<Action> _onTabSelectedEvents = new();
