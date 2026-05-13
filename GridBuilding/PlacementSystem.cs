@@ -19,7 +19,7 @@ namespace FakeMG.Framework.GridBuilding
 
         private readonly Dictionary<string, AsyncOperationHandle<GameObject>> _placedStructureHandles = new();
         private readonly Dictionary<string, GameObject> _placedStructureInstances = new();
-        private readonly Dictionary<string, ItemSO> _placedStructureItemSOs = new();
+        private readonly Dictionary<string, StructureSO> _placedStructureItemSOs = new();
 
         public event Action OnPlaced;
         public event Action OnRemoved;
@@ -52,11 +52,11 @@ namespace FakeMG.Framework.GridBuilding
 
         // TODO: Clamp to grid bounds
 
-        public UniTask<bool> PlaceStructureIfEmptyAsync(ItemSO itemSO, Vector3 worldPosition)
+        public UniTask<bool> PlaceStructureIfEmptyAsync(StructureSO itemSO, Vector3 worldPosition)
         {
             UniTaskCompletionSource<bool> placementCompletionSource = new();
 
-            _currentStructurePrefabHandle = Addressables.LoadAssetAsync<GameObject>(itemSO.PrefabAsset);
+            _currentStructurePrefabHandle = Addressables.LoadAssetAsync<GameObject>(itemSO.StructureAsset);
             _currentStructurePrefabHandle.Completed += handle =>
             {
                 if (handle.Status == AsyncOperationStatus.Succeeded)
@@ -95,7 +95,7 @@ namespace FakeMG.Framework.GridBuilding
             return placementCompletionSource.Task;
         }
 
-        public ItemSO RemoveStructure(Vector3 worldPosition)
+        public StructureSO RemoveStructure(Vector3 worldPosition)
         {
             if (_gridManager.TryRemoveStructure(worldPosition, out string instanceID))
             {
@@ -119,7 +119,7 @@ namespace FakeMG.Framework.GridBuilding
                     _placedStructureHandles.Remove(instanceID);
                 }
 
-                if (_placedStructureItemSOs.TryGetValue(instanceID, out ItemSO itemSO))
+                if (_placedStructureItemSOs.TryGetValue(instanceID, out StructureSO itemSO))
                 {
                     _placedStructureItemSOs.Remove(instanceID);
                 }
@@ -134,13 +134,13 @@ namespace FakeMG.Framework.GridBuilding
             return null;
         }
 
-        public ItemSO GetItemSOAtPosition(Vector3 worldPosition)
+        public StructureSO GetItemSOAtPosition(Vector3 worldPosition)
         {
             Vector3Int cellPosition = _gridManager.WorldToCell(worldPosition);
 
             if (_gridManager.GridData.TryGetValue(cellPosition, out PlacementData placementData))
             {
-                if (_placedStructureItemSOs.TryGetValue(placementData.InstanceID, out ItemSO itemSO))
+                if (_placedStructureItemSOs.TryGetValue(placementData.InstanceID, out StructureSO itemSO))
                 {
                     return itemSO;
                 }

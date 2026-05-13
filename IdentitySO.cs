@@ -1,5 +1,4 @@
-﻿using FakeMG.Framework.Database;
-using Sirenix.OdinInspector;
+﻿using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -9,22 +8,20 @@ namespace FakeMG.Framework
     /// Base class for all items in the game
     /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/ItemSO")]
-    public class ItemSO : ScriptableObject, IIdentifiable
+    public class IdentitySO : SerializedScriptableObject
     {
-        [Title("Item Info")]
+        [Title("Identity Info")]
         [Required]
         [SerializeField] private string _id;
         [SerializeField] private string _itemName;
         [SerializeField, TextArea(3, 5)] protected string _description;
         [PreviewField(75, ObjectFieldAlignment.Left)]
         [SerializeField] private AssetReferenceSprite _iconSpriteAsset;
-        [SerializeField] private AssetReferenceGameObject _prefabAsset;
 
-        public string ID => _id;
+        public string Id => _id;
         public string ItemName => _itemName;
         public string Description => _description;
         public AssetReferenceSprite IconSpriteAsset => _iconSpriteAsset;
-        public AssetReferenceGameObject PrefabAsset => _prefabAsset;
 
 #if UNITY_EDITOR
         [Button("Set ID From Name")]

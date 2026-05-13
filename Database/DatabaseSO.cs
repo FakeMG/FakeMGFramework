@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FakeMG.Framework.Database
 {
-    public abstract class DatabaseSO<T> : SerializedScriptableObject where T : ScriptableObject, IIdentifiable
+    public abstract class DatabaseSO<T> : SerializedScriptableObject where T : IdentitySO
     {
         [DictionaryDrawerSettings(KeyLabel = "ID", ValueLabel = "Asset Reference")]
         [SerializeField] protected Dictionary<string, T> _items = new();

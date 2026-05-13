@@ -159,7 +159,7 @@ namespace FakeMG.FortuneWheel
                 _exitButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);
             });
 
-            var rewardItems = new Dictionary<ItemSO, int>
+            var rewardItems = new Dictionary<IdentitySO, int>
             {
                 { _gachaSystem.Rewards[rewardIndex].RewardObject, _gachaSystem.Rewards[rewardIndex].Amount }
             };

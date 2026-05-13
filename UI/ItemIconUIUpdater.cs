@@ -49,7 +49,7 @@ namespace FakeMG.Framework.UI
                 _showCountWhenZero || !string.IsNullOrEmpty(count));
         }
 
-        public async UniTask UpdateUIAsync(ItemSO item, int count)
+        public async UniTask UpdateUIAsync(IdentitySO item, int count)
         {
             await UpdateUIAsync(
                 item,
@@ -57,7 +57,7 @@ namespace FakeMG.Framework.UI
                 _showCountWhenZero || count > 0);
         }
 
-        public async UniTask UpdateUIAsync(ItemSO item, string countText, bool isCountVisible)
+        public async UniTask UpdateUIAsync(IdentitySO item, string countText, bool isCountVisible)
         {
             int requestVersion = InvalidatePendingRequests();
             UnloadHandle();

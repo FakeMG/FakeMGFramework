@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEditor;
@@ -95,7 +94,7 @@ namespace FakeMG.Framework.Database.Editor
         }
 
         public static void BuildDatabase<TAsset, TDatabase>(TDatabase database, Dictionary<string, TAsset> items)
-            where TAsset : ScriptableObject, IIdentifiable
+            where TAsset : IdentitySO
             where TDatabase : DatabaseSO<TAsset>
         {
             items.Clear();
@@ -110,7 +109,7 @@ namespace FakeMG.Framework.Database.Editor
                 var asset = AssetDatabase.LoadAssetAtPath<TAsset>(assetPath);
                 if (!asset) continue;
 
-                string id = asset.ID;
+                string id = asset.Id;
                 if (string.IsNullOrEmpty(id))
                 {
                     Echo.Warning($"Skipping {assetPath}: Missing id.");
@@ -140,4 +139,3 @@ namespace FakeMG.Framework.Database.Editor
         }
     }
 }
-#endif

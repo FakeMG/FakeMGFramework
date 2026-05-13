@@ -20,7 +20,7 @@ namespace FakeMG.FortuneWheel
         [SerializeField] private Transform _x2Text;
 
         private Vector3 _initialTextScale; // used in the x2 text animation
-        private Dictionary<ItemSO, int> _rewardItems;
+        private Dictionary<IdentitySO, int> _rewardItems;
 
         public event Action<Action> OnClaimWithAdRequested;
 
@@ -47,7 +47,7 @@ namespace FakeMG.FortuneWheel
             _x2Text.gameObject.SetActive(false);
         }
 
-        public void SetRewards(Dictionary<ItemSO, int> rewardItems)
+        public void SetRewards(Dictionary<IdentitySO, int> rewardItems)
         {
             _rewardItems = rewardItems;
         }
