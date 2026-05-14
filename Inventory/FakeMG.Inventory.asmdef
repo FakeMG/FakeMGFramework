@@ -1,0 +1,19 @@
+{
+    "name": "FakeMG.Inventory",
+    "rootNamespace": "FakeMG.Inventory",
+    "references": [
+        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a",
+        "GUID:5362e51fb5f15ac4b91f68d512ea2e58",
+        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

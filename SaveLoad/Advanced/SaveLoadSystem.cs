@@ -205,8 +205,8 @@ namespace FakeMG.SaveLoad.Advanced
                     }
                     else
                     {
-                        saveable.Value.RestoreDefaultState();
                         Echo.Warning($"No data found for {saveable.Key} in {normalizedSaveFilePath}. Restored to default state.", _enableDebug, this);
+                        saveable.Value.RestoreDefaultState();
                     }
                 }
 
@@ -215,7 +215,8 @@ namespace FakeMG.SaveLoad.Advanced
             }
             catch (Exception e)
             {
-                Echo.Error($"Failed to load game from {normalizedSaveFilePath}: {e.Message}", _enableDebug, this);
+                Echo.Error($"Failed to load game from {normalizedSaveFilePath}: {e.Message}. Loading default data instead.", _enableDebug, this);
+                LoadDefaultData();
             }
         }
 

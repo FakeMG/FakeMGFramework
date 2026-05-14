@@ -1,0 +1,27 @@
+{
+    "name": "FakeMG.Shop",
+    "rootNamespace": "FakeMG.Shop",
+    "references": [
+        "GUID:60bfecf5cb232594891bc622f40d6bed",
+        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a",
+        "GUID:fc5b45b9ac9b85d43baef3520e65a89b",
+        "GUID:5362e51fb5f15ac4b91f68d512ea2e58",
+        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "5.0.0",
+            "define": "UNITY_PURCHASING"
+        }
+    ],
+    "noEngineReferences": false
+}
