@@ -1,0 +1,16 @@
+{
+    "name": "FakeMG.Database",
+    "rootNamespace": "FakeMG.Framework.Database",
+    "references": [
+        "FakeMG.Framework"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

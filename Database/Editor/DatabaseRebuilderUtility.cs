@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using UnityEditor;
@@ -139,3 +140,4 @@ namespace FakeMG.Framework.Database.Editor
         }
     }
 }
+#endif
