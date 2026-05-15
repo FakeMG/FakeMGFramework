@@ -3,11 +3,15 @@
     "rootNamespace": "FakeMG.Shop",
     "references": [
         "GUID:60bfecf5cb232594891bc622f40d6bed",
+        "GUID:9e24947de15b9834991c9d8411ea37cf",
+        "GUID:6055be8ebefd69e48b49212b09b47b2f",
+        "GUID:84651a3751eca9349aac36a66bba901b",
         "GUID:6ce9c02b47be2ca41ae7d84dcaec625a",
         "GUID:fc5b45b9ac9b85d43baef3520e65a89b",
         "GUID:5362e51fb5f15ac4b91f68d512ea2e58",
         "GUID:b0214a6008ed146ff8f122a6a9c2f6cc",
-        "GUID:f51ebe6a0ceec4240a699833d6309b23"
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:593a5b492d29ac6448b1ebf7f035ef33"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

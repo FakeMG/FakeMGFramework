@@ -8,7 +8,7 @@ using FakeMG.Shop.Config;
 using FakeMG.Shop.RuntimeData;
 using FakeMG.Shop.Services.Purchase;
 
-namespace FakeMG.Shop.Services.Catalog
+namespace FakeMG.Shop.Filters
 {
     public class ShopUnavailableIapProductsVisibilityFilter
     {

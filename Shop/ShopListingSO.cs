@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace FakeMG.Shop.Config
 {
-    [CreateAssetMenu(menuName = "Fruits/ShopListingSO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SHOP + "/ShopListingSO")]
     public class ShopListingSO : IdentitySO
     {
         [Title("Listing Info")]

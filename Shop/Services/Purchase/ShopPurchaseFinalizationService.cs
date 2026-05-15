@@ -2,10 +2,8 @@ using System.Collections.Generic;
 using FakeMG.Framework;
 using FakeMG.Framework.EventBus;
 using FakeMG.Inventory;
-// using Fruits.Settings;
 using FakeMG.Shop.Config;
 using FakeMG.Shop.RuntimeData;
-using FakeMG.Shop.Services.Catalog;
 
 namespace FakeMG.Shop.Services.Purchase
 {

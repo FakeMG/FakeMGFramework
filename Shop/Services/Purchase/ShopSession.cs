@@ -4,8 +4,8 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
 using FakeMG.Shop.Config;
+using FakeMG.Shop.Filters;
 using FakeMG.Shop.RuntimeData;
-using FakeMG.Shop.Services.Catalog;
 using VContainer.Unity;
 
 namespace FakeMG.Shop.Services.Purchase

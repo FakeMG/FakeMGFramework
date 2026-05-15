@@ -1,6 +1,6 @@
 using System;
 using FakeMG.Shop.Config;
-using FakeMG.Shop.Services.Catalog;
+using FakeMG.Shop.Filters;
 using FakeMG.Shop.Services.Purchase;
 using UnityEngine;
 using VContainer;

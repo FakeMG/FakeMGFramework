@@ -36,5 +36,8 @@ namespace FakeMG.Framework
         public const string SETTINGS = ROOT + "/Settings";
         public const string SETTINGS_COMMON = SETTINGS + "/Common";
         public const string SETTINGS_DISPLAY = SETTINGS + "/Display";
+
+        // Shop
+        public const string SHOP = ROOT + "/Shop";
     }
 }

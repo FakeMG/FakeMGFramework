@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using FakeMG.SaveLoad;
 using UnityEngine;
 
-namespace FakeMG.Shop.Services.Catalog
+namespace FakeMG.Shop
 {
     [Serializable]
     public class ShopOwnershipStateData

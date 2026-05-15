@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using FakeMG.Shop.Config;
 
-namespace FakeMG.Shop.Services.Catalog
+namespace FakeMG.Shop.Filters
 {
     public class ShopOwnedNonConsumableVisibilityFilter
     {
