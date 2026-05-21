@@ -5,7 +5,7 @@ namespace FakeMG.Inventory
 {
     public interface IInventoryBalanceRepository
     {
-        event Action<IdentitySO, int> BalanceChanged;
+        event Action<InventoryChange> OnBalanceChanged;
 
         int GetBalance(IdentitySO itemSo);
         bool TrySpend(IdentitySO itemSo, int amount);

@@ -16,7 +16,7 @@ namespace FakeMG.Inventory
     {
         [SerializeField] private List<InventoryBalanceEntry> _initialBalances = new();
 
-        public event Action<IdentitySO, int> BalanceChanged;
+        public event Action<InventoryChange> OnBalanceChanged;
         public event Action BalancesReloaded;
 
         private readonly Dictionary<string, int> _amountByItemId = new();
@@ -51,9 +51,10 @@ namespace FakeMG.Inventory
                 return false;
             }
 
-            int newAmount = currentAmount - amount;
+            int oldAmount = currentAmount;
+            int newAmount = oldAmount - amount;
             _amountByItemId[itemId] = newAmount;
-            NotifyBalanceChanged(itemSo, newAmount);
+            NotifyBalanceChanged(itemSo, oldAmount, newAmount);
             return true;
         }
 
@@ -70,10 +71,10 @@ namespace FakeMG.Inventory
                 return;
             }
 
-            int currentAmount = _amountByItemId.TryGetValue(itemId, out int existingAmount) ? existingAmount : 0;
-            int newAmount = currentAmount + amount;
+            int oldAmount = _amountByItemId.TryGetValue(itemId, out int existingAmount) ? existingAmount : 0;
+            int newAmount = oldAmount + amount;
             _amountByItemId[itemId] = newAmount;
-            NotifyBalanceChanged(itemSo, newAmount);
+            NotifyBalanceChanged(itemSo, oldAmount, newAmount);
         }
 
         public void SetBalance(IdentitySO itemSo, int amount)
@@ -83,9 +84,10 @@ namespace FakeMG.Inventory
                 return;
             }
 
-            int normalizedAmount = Mathf.Max(0, amount);
-            _amountByItemId[itemId] = normalizedAmount;
-            NotifyBalanceChanged(itemSo, normalizedAmount);
+            int oldAmount = _amountByItemId.TryGetValue(itemId, out int existingAmount) ? existingAmount : 0;
+            int newAmount = Mathf.Max(0, amount);
+            _amountByItemId[itemId] = newAmount;
+            NotifyBalanceChanged(itemSo, oldAmount, newAmount);
         }
 
         public override object CaptureState()
@@ -148,9 +150,9 @@ namespace FakeMG.Inventory
 
         #region Private Methods
 
-        private void NotifyBalanceChanged(IdentitySO itemSo, int amount)
+        private void NotifyBalanceChanged(IdentitySO itemSo, int oldAmount, int newAmount)
         {
-            BalanceChanged?.Invoke(itemSo, amount);
+            OnBalanceChanged?.Invoke(new InventoryChange(itemSo, oldAmount, newAmount));
         }
 
         private void NotifyBalancesReloaded()

@@ -31,22 +31,23 @@ namespace FakeMG.Framework.UI
 
         public void UpdateUI(Sprite newIcon, int count)
         {
-            InvalidatePendingRequests();
-            UnloadHandle();
-            _icon.sprite = newIcon;
-            ApplyCountPresentation(
-                count > 0 ? count.ToShorthand() : string.Empty,
-                _showCountWhenZero || count > 0);
+            SetIcon(newIcon);
+            UpdateCount(count);
         }
 
         public void UpdateUI(Sprite newIcon, string count)
         {
-            InvalidatePendingRequests();
-            UnloadHandle();
-            _icon.sprite = newIcon;
+            SetIcon(newIcon);
             ApplyCountPresentation(
                 count,
                 _showCountWhenZero || !string.IsNullOrEmpty(count));
+        }
+
+        public void UpdateCount(int count)
+        {
+            ApplyCountPresentation(
+                count > 0 ? count.ToShorthand() : "0",
+                _showCountWhenZero || count > 0);
         }
 
         public async UniTask UpdateUIAsync(IdentitySO item, int count)
@@ -118,6 +119,13 @@ namespace FakeMG.Framework.UI
         #endregion
 
         #region Private Methods
+
+        private void SetIcon(Sprite newIcon)
+        {
+            InvalidatePendingRequests();
+            UnloadHandle();
+            _icon.sprite = newIcon;
+        }
 
         private void ApplyCountPresentation(string countText, bool isCountVisible)
         {
