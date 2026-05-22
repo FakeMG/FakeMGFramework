@@ -1,167 +1,205 @@
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using DG.Tweening;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace FakeMG.Framework.UI.RewardFly
 {
+    // TODO: inject camera and canvas
     public sealed class ItemFlyRewardService : MonoBehaviour
     {
         [SerializeField] private RectTransform _screenSpaceCanvasRectTransform;
-        [SerializeField] private Transform _worldTokenParent;
         [SerializeField] private Camera _conversionCamera;
-        [SerializeField] private int _maxFlyTokenCount = 12;
-        [SerializeField] private float _tokenStaggerDelaySeconds = 0.05f;
-        [SerializeField] private float _screenScatterRadiusPixels = 80f;
-        [SerializeField] private float _worldScatterRadiusUnits = 1f;
-        [SerializeField] private float _spawnScatterDurationSeconds = 0.18f;
-        [SerializeField] private float _spawnScaleDurationSeconds = 0.16f;
-        [SerializeField] private float _travelDurationSeconds = 0.45f;
+
+        public RectTransform ScreenSpaceCanvasRectTransform => _screenSpaceCanvasRectTransform;
 
         #region Public Methods
 
-        public int GetFlyTokenCount(int rewardAmount)
-        {
-            return Mathf.Min(Mathf.Max(1, rewardAmount), _maxFlyTokenCount);
-        }
-
-        public async UniTask PlayRewardFlyAsync(RewardFlyRequest request, CancellationToken cancellationToken)
-        {
-            if (!IsValidRequest(request))
-            {
-                return;
-            }
-
-            AsyncOperationHandle<Sprite> spriteHandle = Addressables.LoadAssetAsync<Sprite>(request.IdentitySO.IconSpriteAsset);
-
-            try
-            {
-                Sprite rewardTokenSprite = await spriteHandle.ToUniTask(cancellationToken: cancellationToken);
-                if (spriteHandle.Status != AsyncOperationStatus.Succeeded)
-                {
-                    Debug.LogError($"{nameof(ItemFlyRewardService)} failed to load icon sprite for item '{request.IdentitySO.name}'.");
-                    return;
-                }
-
-                int tokenCount = GetFlyTokenCount(request.Amount);
-                var tokenTasks = new List<UniTask>(tokenCount);
-
-                for (int tokenIndex = 0; tokenIndex < tokenCount; tokenIndex++)
-                {
-                    float startDelaySeconds = _tokenStaggerDelaySeconds * tokenIndex;
-                    tokenTasks.Add(PlayRewardTokenAsync(
-                        request,
-                        rewardTokenSprite,
-                        startDelaySeconds,
-                        cancellationToken));
-                }
-
-                await UniTask.WhenAll(tokenTasks);
-            }
-            finally
-            {
-                if (spriteHandle.IsValid())
-                {
-                    Addressables.Release(spriteHandle);
-                }
-            }
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private async UniTask PlayRewardTokenAsync(
-            RewardFlyRequest request,
-            Sprite rewardTokenSprite,
-            float startDelaySeconds,
+        public UniTask PlayUiTransformToUiAsync(
+            RectTransform flyingRectTransform,
+            RectTransform targetUIElement,
+            float durationSeconds,
+            AnimationCurve speedCurve,
+            float arcHeightPixels,
+            Vector2 arcDirection,
             CancellationToken cancellationToken)
         {
-            if (startDelaySeconds > 0f)
+            if (!flyingRectTransform)
             {
-                TimeSpan startDelay = TimeSpan.FromSeconds(startDelaySeconds);
-                await UniTask.Delay(startDelay, cancellationToken: cancellationToken);
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly a null UI transform to UI.");
+                return UniTask.CompletedTask;
             }
 
-            RewardFlyTokenView rewardFlyTokenView = SpawnRewardFlyToken(request, rewardTokenSprite);
-
-            try
+            if (!targetUIElement)
             {
-                await PlaySpawnAndScatterAsync(request, rewardFlyTokenView);
-                await PlayFlyToTargetAsync(request, rewardFlyTokenView);
-
-                request.OnTokenArrived?.Invoke();
-            }
-            finally
-            {
-                rewardFlyTokenView.DisposeAfterLanding();
-            }
-        }
-
-        private RewardFlyTokenView SpawnRewardFlyToken(RewardFlyRequest request, Sprite rewardTokenSprite)
-        {
-            Transform parent = GetParentForSpace(request.FlySpace);
-            RewardFlyTokenView rewardFlyTokenView = Instantiate(request.TokenPrefab, parent);
-            rewardFlyTokenView.SetRewardSprite(rewardTokenSprite);
-
-            if (request.FlySpace == RewardFlySpace.ScreenSpaceCanvas)
-            {
-                Vector3 spawnLocalPositionPixels = ConvertTransformToCanvasLocalPosition(request.SourceTransform);
-                rewardFlyTokenView.SetCanvasLocalPosition(spawnLocalPositionPixels);
-                return rewardFlyTokenView;
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingRectTransform.name}' because the target UI element is missing.");
+                return UniTask.CompletedTask;
             }
 
-            rewardFlyTokenView.SetWorldPosition(request.SourceTransform.position);
-            return rewardFlyTokenView;
+            Vector3 startLocalPositionPixels = flyingRectTransform.localPosition;
+            Vector3 targetLocalPositionPixels = ConvertTransformToCanvasLocalPosition(targetUIElement);
+            Vector3 localArcDirection = NormalizeDirection(arcDirection);
+
+            return PlayTransformFlightAsync(
+                flyingRectTransform,
+                position => flyingRectTransform.localPosition = position,
+                startLocalPositionPixels,
+                targetLocalPositionPixels,
+                durationSeconds,
+                speedCurve,
+                arcHeightPixels,
+                localArcDirection,
+                cancellationToken);
         }
 
-        private async UniTask PlaySpawnAndScatterAsync(RewardFlyRequest request, RewardFlyTokenView rewardFlyTokenView)
+        public UniTask PlayWorldTransformToWorldAsync(
+            Transform flyingTransform,
+            Transform worldTarget,
+            float durationSeconds,
+            AnimationCurve speedCurve,
+            float arcHeightMeters,
+            Vector3 arcDirection,
+            CancellationToken cancellationToken)
         {
-            UniTask scatterTask = request.FlySpace == RewardFlySpace.ScreenSpaceCanvas
-                ? rewardFlyTokenView.PlayCanvasScatterAsync(ComputeCanvasScatterOffsetPixels(), _spawnScatterDurationSeconds)
-                : rewardFlyTokenView.PlayWorldScatterAsync(ComputeWorldScatterOffset(), _spawnScatterDurationSeconds);
-
-            await UniTask.WhenAll(
-                scatterTask,
-                rewardFlyTokenView.PlaySpawnScaleAsync(_spawnScaleDurationSeconds));
-        }
-
-        private UniTask PlayFlyToTargetAsync(RewardFlyRequest request, RewardFlyTokenView rewardFlyTokenView)
-        {
-            if (request.FlySpace == RewardFlySpace.ScreenSpaceCanvas)
+            if (!flyingTransform)
             {
-                Vector3 targetLocalPositionPixels = ConvertTransformToCanvasLocalPosition(request.TargetTransform);
-                return rewardFlyTokenView.PlayCanvasFlyToTargetAsync(targetLocalPositionPixels, _travelDurationSeconds);
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly a null world transform to a world object.");
+                return UniTask.CompletedTask;
             }
 
-            return rewardFlyTokenView.PlayWorldFlyToTargetAsync(request.TargetTransform.position, _travelDurationSeconds);
+            if (!worldTarget)
+            {
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingTransform.name}' because the world target is missing.");
+                return UniTask.CompletedTask;
+            }
+
+            return PlayTransformFlightAsync(
+                flyingTransform,
+                position => flyingTransform.position = position,
+                flyingTransform.position,
+                worldTarget.position,
+                durationSeconds,
+                speedCurve,
+                arcHeightMeters,
+                NormalizeDirection(arcDirection),
+                cancellationToken);
         }
 
-        private Transform GetParentForSpace(RewardFlySpace flySpace)
+        public UniTask PlayWorldTransformToUiAsync(
+            Transform flyingTransform,
+            RectTransform targetUIElement,
+            float durationSeconds,
+            float targetDepthFromCameraMeters,
+            AnimationCurve speedCurve,
+            float arcHeightMeters,
+            Vector3 arcDirection,
+            CancellationToken cancellationToken)
         {
-            return flySpace == RewardFlySpace.ScreenSpaceCanvas
-                ? _screenSpaceCanvasRectTransform
-                : _worldTokenParent;
+            if (!flyingTransform)
+            {
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly a null world transform to UI.");
+                return UniTask.CompletedTask;
+            }
+
+            if (!targetUIElement)
+            {
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingTransform.name}' because the target UI element is missing.");
+                return UniTask.CompletedTask;
+            }
+
+            Camera movementCamera = GetMovementCamera();
+            if (!movementCamera)
+            {
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingTransform.name}' to UI because no movement camera is available.");
+                return UniTask.CompletedTask;
+            }
+
+            Vector3 startWorldPosition = flyingTransform.position;
+            Vector3 worldArcDirection = movementCamera.transform.TransformDirection(NormalizeDirection(arcDirection));
+
+            return PlayFlightAsync(
+                flyingTransform,
+                progress01 =>
+                {
+                    Vector3 targetScreenPosition = targetUIElement.position;
+                    Vector3 targetWorldPosition = movementCamera.ScreenToWorldPoint(new Vector3(
+                        targetScreenPosition.x,
+                        targetScreenPosition.y,
+                        targetDepthFromCameraMeters));
+
+                    return EvaluateArcPosition(
+                        startWorldPosition,
+                        targetWorldPosition,
+                        progress01,
+                        speedCurve,
+                        arcHeightMeters,
+                        worldArcDirection);
+                },
+                position => flyingTransform.position = position,
+                durationSeconds,
+                cancellationToken);
         }
 
-        private Vector3 ComputeCanvasScatterOffsetPixels()
+        public UniTask PlayUiTransformToWorldAsync(
+            RectTransform flyingRectTransform,
+            Transform worldTarget,
+            float durationSeconds,
+            AnimationCurve speedCurve,
+            float arcHeightPixels,
+            Vector2 arcDirection,
+            CancellationToken cancellationToken)
         {
-            Vector2 scatterOffsetPixels = UnityEngine.Random.insideUnitCircle * _screenScatterRadiusPixels;
-            return new Vector3(scatterOffsetPixels.x, scatterOffsetPixels.y, 0f);
+            if (!flyingRectTransform)
+            {
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly a null UI transform to a world object.");
+                return UniTask.CompletedTask;
+            }
+
+            if (!worldTarget)
+            {
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingRectTransform.name}' because the world target is missing.");
+                return UniTask.CompletedTask;
+            }
+
+            Camera movementCamera = GetMovementCamera();
+            if (!movementCamera)
+            {
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingRectTransform.name}' to a world object because no movement camera is available.");
+                return UniTask.CompletedTask;
+            }
+
+            Vector3 startScreenPosition = flyingRectTransform.position;
+            Vector3 screenArcDirection = NormalizeDirection(arcDirection);
+
+            return PlayFlightAsync(
+                flyingRectTransform,
+                progress01 =>
+                {
+                    Vector3 targetScreenPosition = movementCamera.WorldToScreenPoint(worldTarget.position);
+                    targetScreenPosition.z = startScreenPosition.z;
+
+                    return EvaluateArcPosition(
+                        startScreenPosition,
+                        targetScreenPosition,
+                        progress01,
+                        speedCurve,
+                        arcHeightPixels,
+                        screenArcDirection);
+                },
+                position => flyingRectTransform.position = position,
+                durationSeconds,
+                cancellationToken);
         }
 
-        private Vector3 ComputeWorldScatterOffset()
-        {
-            Vector2 scatterOffset = UnityEngine.Random.insideUnitCircle * _worldScatterRadiusUnits;
-            return new Vector3(scatterOffset.x, scatterOffset.y, 0f);
-        }
-
-        private Vector3 ConvertTransformToCanvasLocalPosition(Transform sourceTransform)
+        public Vector3 ConvertTransformToCanvasLocalPosition(Transform sourceTransform)
         {
             Vector3 sourceWorldPosition = GetTransformCenterWorldPosition(sourceTransform);
+            return ConvertWorldPositionToCanvasLocalPosition(sourceWorldPosition);
+        }
+
+        public Vector3 ConvertWorldPositionToCanvasLocalPosition(Vector3 sourceWorldPosition)
+        {
             Camera conversionCamera = GetCanvasConversionCamera();
             Vector2 sourceScreenPoint = RectTransformUtility.WorldToScreenPoint(conversionCamera, sourceWorldPosition);
 
@@ -172,6 +210,82 @@ namespace FakeMG.Framework.UI.RewardFly
                 out Vector2 sourceLocalPoint);
 
             return new Vector3(sourceLocalPoint.x, sourceLocalPoint.y, 0f);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private UniTask PlayTransformFlightAsync(
+            Transform flyingTransform,
+            Action<Vector3> applyPosition,
+            Vector3 startPosition,
+            Vector3 targetPosition,
+            float durationSeconds,
+            AnimationCurve speedCurve,
+            float arcHeight,
+            Vector3 arcDirection,
+            CancellationToken cancellationToken)
+        {
+            return PlayFlightAsync(
+                flyingTransform,
+                progress01 => EvaluateArcPosition(
+                    startPosition,
+                    targetPosition,
+                    progress01,
+                    speedCurve,
+                    arcHeight,
+                    arcDirection),
+                applyPosition,
+                durationSeconds,
+                cancellationToken);
+        }
+
+        private static UniTask PlayFlightAsync(
+            Component flyingComponent,
+            Func<float, Vector3> evaluatePosition,
+            Action<Vector3> applyPosition,
+            float durationSeconds,
+            CancellationToken cancellationToken)
+        {
+            Tween flightTween = DOTween.To(
+                    () => 0f,
+                    progress01 => applyPosition(evaluatePosition(progress01)),
+                    1f,
+                    durationSeconds)
+                .SetEase(Ease.InQuad)
+                .SetLink(flyingComponent.gameObject);
+
+            return flightTween.ToUniTask(cancellationToken: cancellationToken);
+        }
+
+        private static Vector3 EvaluateArcPosition(
+            Vector3 startPosition,
+            Vector3 targetPosition,
+            float progress01,
+            AnimationCurve speedCurve,
+            float arcHeight,
+            Vector3 arcDirection)
+        {
+            AnimationCurve curve = speedCurve ?? AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+            float easedProgress01 = curve.Evaluate(progress01);
+            Vector3 basePosition = Vector3.Lerp(startPosition, targetPosition, easedProgress01);
+            float arcOffset = Mathf.Sin(progress01 * Mathf.PI) * arcHeight;
+            return basePosition + arcDirection * arcOffset;
+        }
+
+        private static Vector3 NormalizeDirection(Vector2 direction)
+        {
+            return direction.sqrMagnitude <= Mathf.Epsilon
+                ? Vector3.up
+                : ((Vector3)direction).normalized;
+        }
+
+        private static Vector3 NormalizeDirection(Vector3 direction)
+        {
+            return direction.sqrMagnitude <= Mathf.Epsilon
+                ? Vector3.up
+                : direction.normalized;
         }
 
         private static Vector3 GetTransformCenterWorldPosition(Transform sourceTransform)
@@ -195,61 +309,9 @@ namespace FakeMG.Framework.UI.RewardFly
             return canvas.worldCamera ? canvas.worldCamera : _conversionCamera;
         }
 
-        private bool IsValidRequest(RewardFlyRequest request)
+        private Camera GetMovementCamera()
         {
-            if (!request.IdentitySO)
-            {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly reward tokens for a null identity.");
-                return false;
-            }
-
-            if (!request.TokenPrefab)
-            {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly reward tokens for item '{request.IdentitySO.name}' because no token prefab was provided.");
-                return false;
-            }
-
-            if (request.Amount <= 0)
-            {
-                Debug.LogWarning($"{nameof(ItemFlyRewardService)} received a non-positive reward amount: {request.Amount}.");
-                return false;
-            }
-
-            if (!request.SourceTransform || !request.TargetTransform)
-            {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} requires both source and target transforms for item '{request.IdentitySO.name}'.");
-                return false;
-            }
-
-            if (request.FlySpace == RewardFlySpace.ScreenSpaceCanvas && !HasValidScreenSpaceCanvas(request))
-            {
-                return false;
-            }
-
-            if (request.IdentitySO.IconSpriteAsset == null || !request.IdentitySO.IconSpriteAsset.RuntimeKeyIsValid())
-            {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot load an invalid icon sprite for item '{request.IdentitySO.name}'.");
-                return false;
-            }
-
-            return true;
-        }
-
-        private bool HasValidScreenSpaceCanvas(RewardFlyRequest request)
-        {
-            if (!_screenSpaceCanvasRectTransform)
-            {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly item '{request.IdentitySO.name}' in {nameof(RewardFlySpace.ScreenSpaceCanvas)} because no canvas parent is assigned.");
-                return false;
-            }
-
-            if (!_screenSpaceCanvasRectTransform.GetComponentInParent<Canvas>())
-            {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly item '{request.IdentitySO.name}' in {nameof(RewardFlySpace.ScreenSpaceCanvas)} because the assigned parent is not under a Canvas.");
-                return false;
-            }
-
-            return true;
+            return _conversionCamera ? _conversionCamera : Camera.main;
         }
 
         #endregion
