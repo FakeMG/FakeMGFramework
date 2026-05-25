@@ -6,13 +6,21 @@ using UnityEngine;
 
 namespace FakeMG.Framework.UI.RewardFly
 {
-    // TODO: inject camera and canvas
-    public sealed class ItemFlyRewardService : MonoBehaviour
+    public sealed class ItemFlyRewardService
     {
-        [SerializeField] private RectTransform _screenSpaceCanvasRectTransform;
-        [SerializeField] private Camera _conversionCamera;
+        private readonly Canvas _screenSpaceCanvas;
+        private readonly Camera _conversionCamera;
 
-        public RectTransform ScreenSpaceCanvasRectTransform => _screenSpaceCanvasRectTransform;
+        public ItemFlyRewardService(
+            Camera conversionCamera,
+            Canvas screenSpaceCanvas)
+        {
+            _conversionCamera = conversionCamera;
+            _screenSpaceCanvas = screenSpaceCanvas;
+        }
+
+        public RectTransform ScreenSpaceCanvasRectTransform => (RectTransform)_screenSpaceCanvas.transform;
+        public Camera MovementCamera => _conversionCamera;
 
         #region Public Methods
 
@@ -108,22 +116,21 @@ namespace FakeMG.Framework.UI.RewardFly
                 return UniTask.CompletedTask;
             }
 
-            Camera movementCamera = GetMovementCamera();
-            if (!movementCamera)
+            if (!_conversionCamera)
             {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingTransform.name}' to UI because no movement camera is available.");
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingTransform.name}' to UI because no conversion camera is available.");
                 return UniTask.CompletedTask;
             }
 
             Vector3 startWorldPosition = flyingTransform.position;
-            Vector3 worldArcDirection = movementCamera.transform.TransformDirection(NormalizeDirection(arcDirection));
+            Vector3 worldArcDirection = _conversionCamera.transform.TransformDirection(NormalizeDirection(arcDirection));
 
             return PlayFlightAsync(
                 flyingTransform,
                 progress01 =>
                 {
                     Vector3 targetScreenPosition = targetUIElement.position;
-                    Vector3 targetWorldPosition = movementCamera.ScreenToWorldPoint(new Vector3(
+                    Vector3 targetWorldPosition = _conversionCamera.ScreenToWorldPoint(new Vector3(
                         targetScreenPosition.x,
                         targetScreenPosition.y,
                         targetDepthFromCameraMeters));
@@ -162,10 +169,9 @@ namespace FakeMG.Framework.UI.RewardFly
                 return UniTask.CompletedTask;
             }
 
-            Camera movementCamera = GetMovementCamera();
-            if (!movementCamera)
+            if (!_conversionCamera)
             {
-                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingRectTransform.name}' to a world object because no movement camera is available.");
+                Debug.LogError($"{nameof(ItemFlyRewardService)} cannot fly '{flyingRectTransform.name}' to a world object because no conversion camera is available.");
                 return UniTask.CompletedTask;
             }
 
@@ -176,7 +182,7 @@ namespace FakeMG.Framework.UI.RewardFly
                 flyingRectTransform,
                 progress01 =>
                 {
-                    Vector3 targetScreenPosition = movementCamera.WorldToScreenPoint(worldTarget.position);
+                    Vector3 targetScreenPosition = _conversionCamera.WorldToScreenPoint(worldTarget.position);
                     targetScreenPosition.z = startScreenPosition.z;
 
                     return EvaluateArcPosition(
@@ -204,7 +210,7 @@ namespace FakeMG.Framework.UI.RewardFly
             Vector2 sourceScreenPoint = RectTransformUtility.WorldToScreenPoint(conversionCamera, sourceWorldPosition);
 
             RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                _screenSpaceCanvasRectTransform,
+                ScreenSpaceCanvasRectTransform,
                 sourceScreenPoint,
                 conversionCamera,
                 out Vector2 sourceLocalPoint);
@@ -300,18 +306,12 @@ namespace FakeMG.Framework.UI.RewardFly
 
         private Camera GetCanvasConversionCamera()
         {
-            Canvas canvas = _screenSpaceCanvasRectTransform.GetComponentInParent<Canvas>();
-            if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+            if (_screenSpaceCanvas.renderMode == RenderMode.ScreenSpaceOverlay)
             {
                 return null;
             }
 
-            return canvas.worldCamera ? canvas.worldCamera : _conversionCamera;
-        }
-
-        private Camera GetMovementCamera()
-        {
-            return _conversionCamera ? _conversionCamera : Camera.main;
+            return _screenSpaceCanvas.worldCamera ? _screenSpaceCanvas.worldCamera : _conversionCamera;
         }
 
         #endregion
