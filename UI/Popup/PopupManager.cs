@@ -218,7 +218,7 @@ namespace FakeMG.Framework.UI.Popup
 
         public async UniTask<GameObject> LoadAndInstantiatePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            if (_loadedPopups.TryGetValue(popupPrefabAsset, out var existingPopup) && existingPopup != null)
+            if (TryGetLoadedPopup(popupPrefabAsset, out _, out PopupAnimator existingPopup) && existingPopup != null)
                 return existingPopup.gameObject;
 
             var handle = Addressables.LoadAssetAsync<GameObject>(popupPrefabAsset);
@@ -257,33 +257,33 @@ namespace FakeMG.Framework.UI.Popup
 
         public void UnloadPopup(AssetReferenceT<GameObject> popupPrefabAsset)
         {
-            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out var popupAnimator))
+            if (!TryGetLoadedPopup(popupPrefabAsset, out AssetReferenceT<GameObject> loadedPopupAsset, out PopupAnimator popupAnimator))
             {
                 Echo.Warning($"Popup {popupPrefabAsset} is not loaded!", _enableLogging);
                 return;
             }
 
-            if (_openPopups.ContainsKey(popupPrefabAsset))
+            if (_openPopups.ContainsKey(loadedPopupAsset))
             {
                 PopBackground();
-                _openPopups.Remove(popupPrefabAsset);
+                _openPopups.Remove(loadedPopupAsset);
             }
 
             Destroy(popupAnimator.gameObject);
-            _loadedPopups.Remove(popupPrefabAsset);
+            _loadedPopups.Remove(loadedPopupAsset);
 
-            if (_assetHandles.TryGetValue(popupPrefabAsset, out AsyncOperationHandle<GameObject> handle))
+            if (_assetHandles.TryGetValue(loadedPopupAsset, out AsyncOperationHandle<GameObject> handle))
             {
                 if (handle.IsValid())
                     Addressables.Release(handle);
 
-                _assetHandles.Remove(popupPrefabAsset);
+                _assetHandles.Remove(loadedPopupAsset);
             }
         }
 
         public async UniTask ShowPopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
         {
-            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out PopupAnimator popupAnimator))
+            if (!TryGetLoadedPopup(popupPrefabAsset, out _, out PopupAnimator popupAnimator))
             {
                 Echo.Warning($"Popup {popupPrefabAsset} is not loaded!", _enableLogging);
                 return;
@@ -294,7 +294,7 @@ namespace FakeMG.Framework.UI.Popup
 
         public async UniTask HidePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
         {
-            if (!_loadedPopups.TryGetValue(popupPrefabAsset, out PopupAnimator popupAnimator))
+            if (!TryGetLoadedPopup(popupPrefabAsset, out _, out PopupAnimator popupAnimator))
             {
                 Echo.Warning($"Popup {popupPrefabAsset} is not loaded!", _enableLogging);
                 return;
@@ -327,6 +327,33 @@ namespace FakeMG.Framework.UI.Popup
                 await popupAnimator.Hide(animate);
 
             _hideAllBuffer.Clear();
+        }
+
+        private bool TryGetLoadedPopup(
+            AssetReferenceT<GameObject> popupPrefabAsset,
+            out AssetReferenceT<GameObject> loadedPopupAsset,
+            out PopupAnimator popupAnimator)
+        {
+            if (_loadedPopups.TryGetValue(popupPrefabAsset, out popupAnimator))
+            {
+                loadedPopupAsset = popupPrefabAsset;
+                return true;
+            }
+
+            string requestedGuid = popupPrefabAsset.AssetGUID;
+            foreach ((AssetReferenceT<GameObject> candidateAsset, PopupAnimator candidateAnimator) in _loadedPopups)
+            {
+                if (!string.Equals(candidateAsset.AssetGUID, requestedGuid, StringComparison.Ordinal))
+                    continue;
+
+                loadedPopupAsset = candidateAsset;
+                popupAnimator = candidateAnimator;
+                return true;
+            }
+
+            loadedPopupAsset = null;
+            popupAnimator = null;
+            return false;
         }
     }
 }
