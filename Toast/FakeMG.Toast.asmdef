@@ -1,0 +1,22 @@
+{
+    "name": "FakeMG.Toast",
+    "rootNamespace": "FakeMG.Toast",
+    "references": [
+        "FakeMG.Framework",
+        "VContainer",
+        "UniTask",
+        "UniTask.DOTween",
+        "DOTween.Modules",
+        "Unity.TextMeshPro",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

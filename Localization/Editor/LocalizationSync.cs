@@ -35,7 +35,7 @@ namespace FakeMG.Localization.Editor
             }
         }
 
-        [MenuItem(FakeMGEditorMenus.LOCALIZATION_FORCE_SYNC_CSV)]
+        [MenuItem(FakeMGEditorMenus.LOCALIZATION + "/Force Sync CSV")]
         public static void SyncLocalization()
         {
             s_cachedSettings = LocalizationSettingsSO.GetOrCreate();

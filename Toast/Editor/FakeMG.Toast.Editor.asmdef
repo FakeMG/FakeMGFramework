@@ -1,0 +1,19 @@
+{
+    "name": "FakeMG.Toast.Editor",
+    "rootNamespace": "FakeMG.Toast.Editor",
+    "references": [
+        "FakeMG.Toast",
+        "FakeMG.Framework"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
