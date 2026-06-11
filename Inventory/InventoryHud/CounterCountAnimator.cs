@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
@@ -27,7 +28,9 @@ namespace FakeMG.Inventory.Hud
 
         #region Public Methods
 
-        public UniTask AnimateAsync(int fromCount, int targetCount, Action<int> applyCount)
+        // The rolling number tween runs over a double for smooth motion; the exact BigInteger
+        // target is applied on completion so arbitrary-magnitude counts stay precise.
+        public UniTask AnimateAsync(BigInteger fromCount, BigInteger targetCount, Action<BigInteger> applyCount)
         {
             KillActiveTween();
 
@@ -37,19 +40,23 @@ namespace FakeMG.Inventory.Hud
                 return UniTask.CompletedTask;
             }
 
-            int displayedCount = fromCount;
+            double displayedCount = (double)fromCount;
             _activeCountTween = DOTween.To(
                     () => displayedCount,
                     value =>
                     {
                         displayedCount = value;
-                        applyCount?.Invoke(value);
+                        applyCount?.Invoke(new BigInteger(value));
                     },
-                    targetCount,
+                    (double)targetCount,
                     _countTweenDurationSeconds)
                 .SetEase(Ease.OutQuad)
                 .SetLink(gameObject)
-                .OnComplete(ClearActiveTweenReference)
+                .OnComplete(() =>
+                {
+                    applyCount?.Invoke(targetCount);
+                    ClearActiveTweenReference();
+                })
                 .OnKill(ClearActiveTweenReference);
 
             return _activeCountTween.ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());

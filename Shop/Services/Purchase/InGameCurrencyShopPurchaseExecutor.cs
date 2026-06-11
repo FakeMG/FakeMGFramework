@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
@@ -57,7 +58,7 @@ namespace FakeMG.Shop.Services.Purchase
                     continue;
                 }
 
-                int balance = _inventoryDataManager.GetBalance(itemSo);
+                BigInteger balance = _inventoryDataManager.GetBalance(itemSo);
                 if (balance < amount)
                 {
                     return false;

@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using FakeMG.Framework;
 using UnityEngine;
 
@@ -8,15 +9,14 @@ namespace FakeMG.Inventory
     public class InventoryBalanceEntry
     {
         [SerializeField] private IdentitySO _item;
-        [SerializeField] private int _amount;
+        [SerializeField] private string _amountText = "0";
 
         public IdentitySO Item => _item;
-        public int Amount => _amount;
+        public BigInteger Amount => (BigInteger)BigNumber.ParseOrDefault(_amountText, BigNumber.Zero);
 
-        public void SetAmount(int amount)
+        public void SetAmount(BigInteger amount)
         {
-            // TODO: Set the amount for this item entry.
-            _amount = amount;
+            _amountText = amount.ToString();
         }
     }
 }

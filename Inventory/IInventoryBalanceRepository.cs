@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using FakeMG.Framework;
 
 namespace FakeMG.Inventory
@@ -7,8 +8,9 @@ namespace FakeMG.Inventory
     {
         event Action<InventoryChange> OnBalanceChanged;
 
-        int GetBalance(IdentitySO itemSo);
-        bool TrySpend(IdentitySO itemSo, int amount);
-        void SetBalance(IdentitySO itemSo, int amount);
+        BigInteger GetBalance(IdentitySO itemSo);
+        bool TrySpend(IdentitySO itemSo, BigInteger amount);
+        void Add(IdentitySO itemSo, BigInteger amount);
+        void SetBalance(IdentitySO itemSo, BigInteger amount);
     }
 }

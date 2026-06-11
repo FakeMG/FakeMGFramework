@@ -1,4 +1,5 @@
 using System;
+using System.Numerics;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework.ExtensionMethods;
 using TMPro;
@@ -48,6 +49,21 @@ namespace FakeMG.Framework.UI
             ApplyCountPresentation(
                 count > 0 ? count.ToShorthand() : "0",
                 _showCountWhenZero || count > 0);
+        }
+
+        public void UpdateCount(BigInteger count)
+        {
+            ApplyCountPresentation(
+                count > BigInteger.Zero ? count.ToShorthand() : "0",
+                _showCountWhenZero || count > BigInteger.Zero);
+        }
+
+        public async UniTask UpdateUIAsync(IdentitySO item, BigInteger count)
+        {
+            await UpdateUIAsync(
+                item,
+                count > BigInteger.Zero ? count.ToShorthand() : "0",
+                _showCountWhenZero || count > BigInteger.Zero);
         }
 
         public async UniTask UpdateUIAsync(IdentitySO item, int count)

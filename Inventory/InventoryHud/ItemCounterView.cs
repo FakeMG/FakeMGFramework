@@ -1,3 +1,4 @@
+using System.Numerics;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
 using FakeMG.Framework.UI;
@@ -15,18 +16,18 @@ namespace FakeMG.Inventory.Hud
         [SerializeField] private CounterCountAnimator _countAnimator;
         [SerializeField] private RewardFlyTokenView _rewardFlyTokenPrefab;
 
-        private int _displayedCount;
+        private BigInteger _displayedCount;
 
         public IdentitySO IdentitySO => _identitySO;
         public Transform FlyTargetTransform => _flyTargetTransform;
         public RewardFlyTokenView RewardFlyTokenPrefab => _rewardFlyTokenPrefab;
-        public int DisplayedCount => _displayedCount;
+        public BigInteger DisplayedCount => _displayedCount;
 
         #region Public Methods
 
         public async UniTask InitializeAsync(IInventoryBalanceRepository inventoryRepository)
         {
-            int currentCount = inventoryRepository.GetBalance(_identitySO);
+            BigInteger currentCount = inventoryRepository.GetBalance(_identitySO);
             _displayedCount = currentCount;
 
             await _itemIconUiUpdater.UpdateUIAsync(_identitySO, currentCount);
@@ -37,9 +38,9 @@ namespace FakeMG.Inventory.Hud
             _pulseAnimator.PlayAdditivePulse();
         }
 
-        public async UniTask AnimateDisplayedCountToAsync(int targetCount)
+        public async UniTask AnimateDisplayedCountToAsync(BigInteger targetCount)
         {
-            int fromCount = _displayedCount;
+            BigInteger fromCount = _displayedCount;
             _displayedCount = targetCount;
 
             await _countAnimator.AnimateAsync(
@@ -48,8 +49,9 @@ namespace FakeMG.Inventory.Hud
                 ApplyDisplayedCount);
         }
 
-        public void SetCountImmediately(int count)
+        public void SetCountImmediately(BigInteger count)
         {
+            Debug.Log($"SetCountImmediately: {count}");
             _displayedCount = count;
             _itemIconUiUpdater.UpdateCount(count);
         }
@@ -58,7 +60,7 @@ namespace FakeMG.Inventory.Hud
 
         #region Private Methods
 
-        private void ApplyDisplayedCount(int count)
+        private void ApplyDisplayedCount(BigInteger count)
         {
             _itemIconUiUpdater.UpdateCount(count);
         }

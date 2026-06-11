@@ -1,11 +1,21 @@
 ﻿using System;
 using System.Globalization;
+using System.Numerics;
 using UnityEngine;
 
 namespace FakeMG.Framework.ExtensionMethods
 {
     public static class NumberShortHandExtensions
     {
+        /// <summary>
+        /// Converts an arbitrary-magnitude integer to shorthand format (K, M, B, T, Qd, Qn).
+        /// </summary>
+        public static string ToShorthand(this BigInteger number)
+        {
+            return new BigNumber(number).ToShorthand();
+        }
+
+
         /// <summary>
         /// Converts an integer to shorthand format (K, M, B, T)
         /// </summary>
@@ -33,7 +43,17 @@ namespace FakeMG.Framework.ExtensionMethods
 
             string result;
 
-            if (number >= 1000000000000) // Trillion
+            if (number >= 1000000000000000000) // Quintillion
+            {
+                double value = number / 1000000000000000000.0;
+                result = FormatValue(value, decimalPlaces) + "Qn";
+            }
+            else if (number >= 1000000000000000) // Quadrillion
+            {
+                double value = number / 1000000000000000.0;
+                result = FormatValue(value, decimalPlaces) + "Qd";
+            }
+            else if (number >= 1000000000000) // Trillion
             {
                 double value = number / 1000000000000.0;
                 result = FormatValue(value, decimalPlaces) + "T";
@@ -88,7 +108,17 @@ namespace FakeMG.Framework.ExtensionMethods
 
             string result;
 
-            if (number >= 1000000000000) // Trillion
+            if (number >= 1000000000000000000) // Quintillion
+            {
+                double value = number / 1000000000000000000.0;
+                result = FormatValue(value, decimalPlaces) + "Qn";
+            }
+            else if (number >= 1000000000000000) // Quadrillion
+            {
+                double value = number / 1000000000000000.0;
+                result = FormatValue(value, decimalPlaces) + "Qd";
+            }
+            else if (number >= 1000000000000) // Trillion
             {
                 double value = number / 1000000000000.0;
                 result = FormatValue(value, decimalPlaces) + "T";

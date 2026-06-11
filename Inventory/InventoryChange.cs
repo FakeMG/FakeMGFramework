@@ -1,3 +1,4 @@
+using System.Numerics;
 using FakeMG.Framework;
 
 namespace FakeMG.Inventory
@@ -5,10 +6,10 @@ namespace FakeMG.Inventory
     public readonly struct InventoryChange
     {
         public readonly IdentitySO IdentitySO;
-        public readonly int OldCount;
-        public readonly int NewCount;
+        public readonly BigInteger OldCount;
+        public readonly BigInteger NewCount;
 
-        public InventoryChange(IdentitySO identitySO, int oldCount, int newCount)
+        public InventoryChange(IdentitySO identitySO, BigInteger oldCount, BigInteger newCount)
         {
             IdentitySO = identitySO;
             OldCount = oldCount;

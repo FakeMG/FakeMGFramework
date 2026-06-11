@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Numerics;
 using FakeMG.Framework;
 using FakeMG.SaveLoad;
 using UnityEngine;
@@ -9,7 +10,9 @@ namespace FakeMG.Inventory
     [Serializable]
     public class InventoryData
     {
-        public Dictionary<string, int> AmountByItemId = new();
+        // BigInteger is serialized as its decimal string so the save format stays robust
+        // across magnitudes beyond int/long.
+        public Dictionary<string, string> AmountByItemId = new();
     }
 
     public class InventoryDataManager : Saveable, IInventoryBalanceRepository
@@ -19,23 +22,23 @@ namespace FakeMG.Inventory
         public event Action<InventoryChange> OnBalanceChanged;
         public event Action BalancesReloaded;
 
-        private readonly Dictionary<string, int> _amountByItemId = new();
+        private readonly Dictionary<string, BigInteger> _amountByItemId = new();
 
         #region Public Methods
 
-        public int GetBalance(IdentitySO itemSo)
+        public BigInteger GetBalance(IdentitySO itemSo)
         {
             if (!TryGetItemId(itemSo, out string itemId))
             {
-                return 0;
+                return BigInteger.Zero;
             }
 
-            return _amountByItemId.TryGetValue(itemId, out int amount) ? amount : 0;
+            return _amountByItemId.TryGetValue(itemId, out BigInteger amount) ? amount : BigInteger.Zero;
         }
 
-        public bool TrySpend(IdentitySO itemSo, int amount)
+        public bool TrySpend(IdentitySO itemSo, BigInteger amount)
         {
-            if (amount <= 0)
+            if (amount <= BigInteger.Zero)
             {
                 Echo.Warning($"Spend amount must be greater than zero. Received: {amount}.");
                 return false;
@@ -46,21 +49,21 @@ namespace FakeMG.Inventory
                 return false;
             }
 
-            if (!_amountByItemId.TryGetValue(itemId, out int currentAmount) || currentAmount < amount)
+            if (!_amountByItemId.TryGetValue(itemId, out BigInteger currentAmount) || currentAmount < amount)
             {
                 return false;
             }
 
-            int oldAmount = currentAmount;
-            int newAmount = oldAmount - amount;
+            BigInteger oldAmount = currentAmount;
+            BigInteger newAmount = oldAmount - amount;
             _amountByItemId[itemId] = newAmount;
             NotifyBalanceChanged(itemSo, oldAmount, newAmount);
             return true;
         }
 
-        public void Add(IdentitySO itemSo, int amount)
+        public void Add(IdentitySO itemSo, BigInteger amount)
         {
-            if (amount <= 0)
+            if (amount <= BigInteger.Zero)
             {
                 Echo.Warning($"Added amount must be greater than zero. Received: {amount}.");
                 return;
@@ -71,30 +74,36 @@ namespace FakeMG.Inventory
                 return;
             }
 
-            int oldAmount = _amountByItemId.TryGetValue(itemId, out int existingAmount) ? existingAmount : 0;
-            int newAmount = oldAmount + amount;
+            BigInteger oldAmount = _amountByItemId.TryGetValue(itemId, out BigInteger existingAmount) ? existingAmount : BigInteger.Zero;
+            BigInteger newAmount = oldAmount + amount;
             _amountByItemId[itemId] = newAmount;
             NotifyBalanceChanged(itemSo, oldAmount, newAmount);
         }
 
-        public void SetBalance(IdentitySO itemSo, int amount)
+        public void SetBalance(IdentitySO itemSo, BigInteger amount)
         {
             if (!TryGetItemId(itemSo, out string itemId))
             {
                 return;
             }
 
-            int oldAmount = _amountByItemId.TryGetValue(itemId, out int existingAmount) ? existingAmount : 0;
-            int newAmount = Mathf.Max(0, amount);
+            BigInteger oldAmount = _amountByItemId.TryGetValue(itemId, out BigInteger existingAmount) ? existingAmount : BigInteger.Zero;
+            BigInteger newAmount = BigInteger.Max(BigInteger.Zero, amount);
             _amountByItemId[itemId] = newAmount;
             NotifyBalanceChanged(itemSo, oldAmount, newAmount);
         }
 
         public override object CaptureState()
         {
+            Dictionary<string, string> serialized = new(_amountByItemId.Count);
+            foreach ((string itemId, BigInteger amount) in _amountByItemId)
+            {
+                serialized[itemId] = amount.ToString();
+            }
+
             return new InventoryData
             {
-                AmountByItemId = new Dictionary<string, int>(_amountByItemId),
+                AmountByItemId = serialized,
             };
         }
 
@@ -102,13 +111,13 @@ namespace FakeMG.Inventory
         {
             if (!StateRestoreUtility.TryRestore(data, out InventoryData restoredData) || restoredData.AmountByItemId == null)
             {
-                Echo.Warning("Inventory state data is invalid. Restoring default inventory state.");
+                Echo.Warning("Inventory state data is invalid or in a legacy format. Restoring default inventory state.");
                 RestoreDefaultState();
                 return;
             }
 
             _amountByItemId.Clear();
-            foreach ((string itemId, int amount) in restoredData.AmountByItemId)
+            foreach ((string itemId, string amountText) in restoredData.AmountByItemId)
             {
                 if (string.IsNullOrWhiteSpace(itemId))
                 {
@@ -116,7 +125,13 @@ namespace FakeMG.Inventory
                     continue;
                 }
 
-                _amountByItemId[itemId] = Mathf.Max(0, amount);
+                if (!BigInteger.TryParse(amountText, out BigInteger amount))
+                {
+                    Echo.Warning($"Inventory entry '{itemId}' has an unparsable amount '{amountText}'. Entry is skipped.");
+                    continue;
+                }
+
+                _amountByItemId[itemId] = BigInteger.Max(BigInteger.Zero, amount);
             }
 
             NotifyBalancesReloaded();
@@ -140,7 +155,7 @@ namespace FakeMG.Inventory
                     continue;
                 }
 
-                _amountByItemId[itemId] = Mathf.Max(0, entry.Amount);
+                _amountByItemId[itemId] = BigInteger.Max(BigInteger.Zero, entry.Amount);
             }
 
             NotifyBalancesReloaded();
@@ -150,7 +165,7 @@ namespace FakeMG.Inventory
 
         #region Private Methods
 
-        private void NotifyBalanceChanged(IdentitySO itemSo, int oldAmount, int newAmount)
+        private void NotifyBalanceChanged(IdentitySO itemSo, BigInteger oldAmount, BigInteger newAmount)
         {
             OnBalanceChanged?.Invoke(new InventoryChange(itemSo, oldAmount, newAmount));
         }
