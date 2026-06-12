@@ -51,7 +51,6 @@ namespace FakeMG.Inventory.Hud
 
         public void SetCountImmediately(BigInteger count)
         {
-            Debug.Log($"SetCountImmediately: {count}");
             _displayedCount = count;
             _itemIconUiUpdater.UpdateCount(count);
         }
