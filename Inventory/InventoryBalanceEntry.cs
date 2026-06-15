@@ -12,7 +12,7 @@ namespace FakeMG.Inventory
         [SerializeField] private string _amountText = "0";
 
         public IdentitySO Item => _item;
-        public BigInteger Amount => (BigInteger)BigNumber.ParseOrDefault(_amountText, BigNumber.Zero);
+        public BigInteger Amount => BigNumberParser.ParseOrDefault(_amountText, BigInteger.Zero);
 
         public void SetAmount(BigInteger amount)
         {

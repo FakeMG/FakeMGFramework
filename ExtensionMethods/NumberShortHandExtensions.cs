@@ -5,34 +5,38 @@ using UnityEngine;
 
 namespace FakeMG.Framework.ExtensionMethods
 {
+    /// <summary>
+    /// Provides extension methods to convert various numeric types into localized, clean shorthand string formats (e.g., 1.5K, 2.3M).
+    /// </summary>
     public static class NumberShortHandExtensions
     {
         /// <summary>
-        /// Converts an arbitrary-magnitude integer to shorthand format (K, M, B, T, Qd, Qn).
+        /// Converts an arbitrary-magnitude integer to a shorthand format string via <see cref="BigNumberParser"/>.
         /// </summary>
-        public static string ToShorthand(this BigInteger number)
+        /// <param name="number">The large integer to format.</param>
+        /// <returns>A shorthand string representation (e.g., K, M, B, T, Qd, Qn).</returns>
+        public static string ToShorthand(this BigInteger number, int decimalPlaces = 1)
         {
-            return new BigNumber(number).ToShorthand();
+            return BigNumberParser.ToShorthand(number, decimalPlaces);
         }
 
-
         /// <summary>
-        /// Converts an integer to shorthand format (K, M, B, T)
+        /// Converts a 32-bit signed integer to shorthand format (K, M, B, T, Qd, Qn).
         /// </summary>
-        /// <param name="number">The number to convert</param>
-        /// <param name="decimalPlaces">Number of decimal places to show (default: 1)</param>
-        /// <returns>Formatted string with appropriate suffix</returns>
+        /// <param name="number">The integer to convert.</param>
+        /// <param name="decimalPlaces">The maximum number of decimal places to show (default: 1).</param>
+        /// <returns>A formatted string with the appropriate scale suffix.</returns>
         public static string ToShorthand(this int number, int decimalPlaces = 1)
         {
             return ((long)number).ToShorthand(decimalPlaces);
         }
 
         /// <summary>
-        /// Converts a long integer to shorthand format (K, M, B, T)
+        /// Converts a 64-bit signed integer to shorthand format (K, M, B, T, Qd, Qn).
         /// </summary>
-        /// <param name="number">The number to convert</param>
-        /// <param name="decimalPlaces">Number of decimal places to show (default: 1)</param>
-        /// <returns>Formatted string with appropriate suffix</returns>
+        /// <param name="number">The long integer to convert.</param>
+        /// <param name="decimalPlaces">The maximum number of decimal places to show (default: 1).</param>
+        /// <returns>A formatted string with the appropriate scale suffix.</returns>
         public static string ToShorthand(this long number, int decimalPlaces = 1)
         {
             if (number == 0)
@@ -82,22 +86,22 @@ namespace FakeMG.Framework.ExtensionMethods
         }
 
         /// <summary>
-        /// Converts a float to shorthand format (K, M, B, T)
+        /// Converts a single-precision floating-point number to shorthand format (K, M, B, T, Qd, Qn).
         /// </summary>
-        /// <param name="number">The number to convert</param>
-        /// <param name="decimalPlaces">Number of decimal places to show (default: 1)</param>
-        /// <returns>Formatted string with appropriate suffix</returns>
+        /// <param name="number">The float to convert.</param>
+        /// <param name="decimalPlaces">The maximum number of decimal places to show (default: 1).</param>
+        /// <returns>A formatted string with the appropriate scale suffix.</returns>
         public static string ToShorthand(this float number, int decimalPlaces = 1)
         {
             return ((double)number).ToShorthand(decimalPlaces);
         }
 
         /// <summary>
-        /// Converts a double to shorthand format (K, M, B, T)
+        /// Converts a double-precision floating-point number to shorthand format (K, M, B, T, Qd, Qn).
         /// </summary>
-        /// <param name="number">The number to convert</param>
-        /// <param name="decimalPlaces">Number of decimal places to show (default: 1)</param>
-        /// <returns>Formatted string with appropriate suffix</returns>
+        /// <param name="number">The double to convert.</param>
+        /// <param name="decimalPlaces">The maximum number of decimal places to show (default: 1).</param>
+        /// <returns>A formatted string with the appropriate scale suffix.</returns>
         public static string ToShorthand(this double number, int decimalPlaces = 1)
         {
             if (number == 0)
@@ -146,6 +150,12 @@ namespace FakeMG.Framework.ExtensionMethods
             return isNegative ? "-" + result : result;
         }
 
+        /// <summary>
+        /// Formats a double value to a string using InvariantCulture, trimming unneeded trailing zeros and decimal points.
+        /// </summary>
+        /// <param name="value">The parsed value to stringify.</param>
+        /// <param name="decimalPlaces">The maximum precision allowed.</param>
+        /// <returns>A cleaned string representation of the double.</returns>
         private static string FormatValue(double value, int decimalPlaces)
         {
             // Check if the value is a whole number
@@ -155,7 +165,9 @@ namespace FakeMG.Framework.ExtensionMethods
             }
 
             string format = "F" + Mathf.Clamp(decimalPlaces, 0, 15);
-            string result = value.ToString(format);
+
+            // Forced InvariantCulture to protect string formatting and the '.' check from regional machine settings
+            string result = value.ToString(format, CultureInfo.InvariantCulture);
 
             // Remove trailing zeros and decimal point if not needed
             if (result.Contains("."))

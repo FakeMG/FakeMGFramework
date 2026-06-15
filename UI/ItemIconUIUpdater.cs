@@ -47,14 +47,14 @@ namespace FakeMG.Framework.UI
         public void UpdateCount(int count)
         {
             ApplyCountPresentation(
-                count > 0 ? count.ToShorthand() : "0",
+                count > 0 ? count.ToShorthand(3) : "0",
                 _showCountWhenZero || count > 0);
         }
 
         public void UpdateCount(BigInteger count)
         {
             ApplyCountPresentation(
-                count > BigInteger.Zero ? count.ToShorthand() : "0",
+                count > BigInteger.Zero ? count.ToShorthand(3) : "0",
                 _showCountWhenZero || count > BigInteger.Zero);
         }
 
@@ -62,7 +62,7 @@ namespace FakeMG.Framework.UI
         {
             await UpdateUIAsync(
                 item,
-                count > BigInteger.Zero ? count.ToShorthand() : "0",
+                count > BigInteger.Zero ? count.ToShorthand(3) : "0",
                 _showCountWhenZero || count > BigInteger.Zero);
         }
 
