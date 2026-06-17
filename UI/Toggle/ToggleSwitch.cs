@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -17,36 +17,77 @@ namespace FakeMG.Framework.UI.Toggle
 
         [Header("Animation")]
         [SerializeField, Range(0, 1f)] private float _animationDuration = 0.1f;
-        [SerializeField] private AnimationCurve _slideEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
+        [SerializeField] private Ease _slideEase = Ease.InOutSine;
 
-        private Coroutine _animateSliderCoroutine;
+        [Header("Extensible Visuals")]
+        [SerializeField] private MonoBehaviour[] _visualBehaviours;
 
         public event Action<bool> OnValueChanged;
 
+        public bool IsOn { get; private set; }
+
         private ToggleSwitchGroupManager _toggleSwitchGroupManager;
 
-        // Visual update tracking from Unity's Slider
         private DrivenRectTransformTracker _visualTracker;
+
         private Image _fillImage;
         private Transform _fillTransform;
         private RectTransform _fillContainerRect;
+
         private Transform _handleTransform;
         private RectTransform _handleContainerRect;
 
-        public bool IsOn { get; private set; }
+        private IToggleSwitchVisual[] _visuals;
 
         private bool _previousValue;
         private float _currentNormalizedValue;
+        private Tween _slideTween;
 
         protected void OnEnable()
         {
+            CacheVisualBehaviours();
             UpdateCachedReferences();
-            SetVisualState(IsOn ? MAX_VALUE : MIN_VALUE);
+
+            SetVisualState(IsOn ? MAX_VALUE : MIN_VALUE, true);
+            ApplyExtendedVisuals(true);
         }
 
         protected void OnDisable()
         {
+            _slideTween?.Kill();
+            _slideTween = null;
+
             _visualTracker.Clear();
+        }
+
+        private void CacheVisualBehaviours()
+        {
+            if (_visualBehaviours == null || _visualBehaviours.Length == 0)
+            {
+                _visuals = Array.Empty<IToggleSwitchVisual>();
+                return;
+            }
+
+            int validCount = 0;
+
+            for (int i = 0; i < _visualBehaviours.Length; i++)
+            {
+                if (_visualBehaviours[i] is IToggleSwitchVisual)
+                    validCount++;
+            }
+
+            _visuals = new IToggleSwitchVisual[validCount];
+
+            int index = 0;
+
+            for (int i = 0; i < _visualBehaviours.Length; i++)
+            {
+                if (_visualBehaviours[i] is IToggleSwitchVisual visual)
+                {
+                    _visuals[index] = visual;
+                    index++;
+                }
+            }
         }
 
         private void UpdateCachedReferences()
@@ -55,6 +96,7 @@ namespace FakeMG.Framework.UI.Toggle
             {
                 _fillTransform = _fillRect.transform;
                 _fillImage = _fillRect.GetComponent<Image>();
+
                 if (_fillTransform.parent)
                     _fillContainerRect = _fillTransform.parent.GetComponent<RectTransform>();
             }
@@ -68,6 +110,7 @@ namespace FakeMG.Framework.UI.Toggle
             if (_handleRect && _handleRect != (RectTransform)transform)
             {
                 _handleTransform = _handleRect.transform;
+
                 if (_handleTransform.parent)
                     _handleContainerRect = _handleTransform.parent.GetComponent<RectTransform>();
             }
@@ -78,7 +121,6 @@ namespace FakeMG.Framework.UI.Toggle
             }
         }
 
-        // Extracted from Unity's Slider.UpdateVisuals()
         private void UpdateVisuals()
         {
             _visualTracker.Clear();
@@ -86,6 +128,7 @@ namespace FakeMG.Framework.UI.Toggle
             if (_fillContainerRect)
             {
                 _visualTracker.Add(this, _fillRect, DrivenTransformProperties.Anchors);
+
                 Vector2 anchorMin = Vector2.zero;
                 Vector2 anchorMax = Vector2.one;
 
@@ -95,7 +138,7 @@ namespace FakeMG.Framework.UI.Toggle
                 }
                 else
                 {
-                    anchorMax.x = _currentNormalizedValue; // Assuming left-to-right direction
+                    anchorMax.x = _currentNormalizedValue;
                 }
 
                 _fillRect.anchorMin = anchorMin;
@@ -105,9 +148,13 @@ namespace FakeMG.Framework.UI.Toggle
             if (_handleContainerRect)
             {
                 _visualTracker.Add(this, _handleRect, DrivenTransformProperties.Anchors);
+
                 Vector2 anchorMin = Vector2.zero;
                 Vector2 anchorMax = Vector2.one;
-                anchorMin.x = anchorMax.x = _currentNormalizedValue; // Assuming left-to-right direction
+
+                anchorMin.x = _currentNormalizedValue;
+                anchorMax.x = _currentNormalizedValue;
+
                 _handleRect.anchorMin = anchorMin;
                 _handleRect.anchorMax = anchorMax;
             }
@@ -123,72 +170,71 @@ namespace FakeMG.Framework.UI.Toggle
             if (_toggleSwitchGroupManager)
             {
                 _toggleSwitchGroupManager.ToggleGroup(this);
+                return;
             }
-            else
-            {
-                SetStateAndStartAnimation(!IsOn);
-            }
+
+            SetStateAndStartAnimation(!IsOn);
         }
 
         public void SetStateAndStartAnimation(bool state)
         {
-            _previousValue = IsOn;
-            IsOn = state;
-
-            if (_previousValue != IsOn)
-            {
-                OnValueChanged?.Invoke(IsOn);
-            }
-
-            if (_animateSliderCoroutine != null)
-            {
-                StopCoroutine(_animateSliderCoroutine);
-            }
-
-            _animateSliderCoroutine = StartCoroutine(AnimateSlider());
+            SetState(state, false);
         }
 
         public void SetStateWithoutAnimation(bool state)
         {
+            SetState(state, true);
+        }
+
+        private void SetState(bool state, bool instant)
+        {
             _previousValue = IsOn;
             IsOn = state;
 
             if (_previousValue != IsOn)
-            {
                 OnValueChanged?.Invoke(IsOn);
-            }
 
-            SetVisualState(IsOn ? MAX_VALUE : MIN_VALUE);
-        }
+            float targetValue = IsOn ? MAX_VALUE : MIN_VALUE;
 
-        private IEnumerator AnimateSlider()
-        {
-            float startValue = _currentNormalizedValue;
-            float endValue = IsOn ? MAX_VALUE : MIN_VALUE;
+            _slideTween?.Kill();
+            _slideTween = null;
 
-            float time = 0f;
-            if (_animationDuration > 0f)
+            ApplyExtendedVisuals(instant);
+
+            if (instant || _animationDuration <= 0f)
             {
-                while (time < _animationDuration)
-                {
-                    time += Time.deltaTime;
-
-                    float lerpFactor = _slideEase.Evaluate(time / _animationDuration);
-                    float currentValue = Mathf.Lerp(startValue, endValue, lerpFactor);
-
-                    SetVisualState(currentValue);
-
-                    yield return null;
-                }
+                SetVisualState(targetValue, true);
+                return;
             }
 
-            SetVisualState(endValue);
+            _slideTween = DOTween
+                .To(
+                    () => _currentNormalizedValue,
+                    value => SetVisualState(value, false),
+                    targetValue,
+                    _animationDuration
+                )
+                .SetEase(_slideEase)
+                .SetLink(gameObject);
         }
 
-        private void SetVisualState(float normalizedValue)
+        private void SetVisualState(float normalizedValue, bool instant)
         {
             _currentNormalizedValue = Mathf.Clamp01(normalizedValue);
+
             UpdateVisuals();
+            ApplyExtendedVisuals(instant);
+        }
+
+        private void ApplyExtendedVisuals(bool instant)
+        {
+            if (_visuals == null)
+                return;
+
+            for (int i = 0; i < _visuals.Length; i++)
+            {
+                _visuals[i]?.Apply(IsOn, _currentNormalizedValue, instant);
+            }
         }
 
         public void SetupForManager(ToggleSwitchGroupManager manager)
