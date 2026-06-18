@@ -15,6 +15,8 @@ namespace FakeMG.Inventory.Hud
         [SerializeField] private HudAdditivePulseAnimator _pulseAnimator;
         [SerializeField] private CounterCountAnimator _countAnimator;
         [SerializeField] private RewardFlyTokenView _rewardFlyTokenPrefab;
+        [SerializeField] private bool _autoSyncWhenDrops;
+        [SerializeField] private bool _autoSyncWhenGains;
 
         private BigInteger _displayedCount;
         private IInventoryBalanceRepository _inventoryRepository;
@@ -32,6 +34,7 @@ namespace FakeMG.Inventory.Hud
             if (_inventoryRepository != null)
             {
                 _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceDrops;
+                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceGains;
             }
         }
 
@@ -42,8 +45,17 @@ namespace FakeMG.Inventory.Hud
         public async UniTask InitializeAsync(IInventoryBalanceRepository inventoryRepository)
         {
             _inventoryRepository = inventoryRepository;
-            _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceDrops;
-            _inventoryRepository.OnBalanceChanged += SyncDisplayWhenBalanceDrops;
+            if (_autoSyncWhenDrops)
+            {
+                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceDrops;
+                _inventoryRepository.OnBalanceChanged += SyncDisplayWhenBalanceDrops;
+            }
+
+            if (_autoSyncWhenGains)
+            {
+                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceGains;
+                _inventoryRepository.OnBalanceChanged += SyncDisplayWhenBalanceGains;
+            }
 
             BigInteger currentCount = inventoryRepository.GetBalance(_identitySO);
             _displayedCount = currentCount;
@@ -96,7 +108,20 @@ namespace FakeMG.Inventory.Hud
 
             if (change.NewCount < _displayedCount)
             {
-                SetCountImmediately(change.NewCount);
+                AnimateDisplayedCountToAsync(change.NewCount).Forget();
+            }
+        }
+
+        private void SyncDisplayWhenBalanceGains(InventoryChange change)
+        {
+            if (change.IdentitySO != _identitySO || _isAnimatingManually)
+            {
+                return;
+            }
+
+            if (change.NewCount > _displayedCount)
+            {
+                AnimateDisplayedCountToAsync(change.NewCount).Forget();
             }
         }
 
