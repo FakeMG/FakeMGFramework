@@ -17,16 +17,34 @@ namespace FakeMG.Inventory.Hud
         [SerializeField] private RewardFlyTokenView _rewardFlyTokenPrefab;
 
         private BigInteger _displayedCount;
+        private IInventoryBalanceRepository _inventoryRepository;
+        private bool _isAnimatingManually;
 
         public IdentitySO IdentitySO => _identitySO;
         public Transform FlyTargetTransform => _flyTargetTransform;
         public RewardFlyTokenView RewardFlyTokenPrefab => _rewardFlyTokenPrefab;
         public BigInteger DisplayedCount => _displayedCount;
 
+        #region Unity Lifecycle
+
+        private void OnDestroy()
+        {
+            if (_inventoryRepository != null)
+            {
+                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceDrops;
+            }
+        }
+
+        #endregion
+
         #region Public Methods
 
         public async UniTask InitializeAsync(IInventoryBalanceRepository inventoryRepository)
         {
+            _inventoryRepository = inventoryRepository;
+            _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceDrops;
+            _inventoryRepository.OnBalanceChanged += SyncDisplayWhenBalanceDrops;
+
             BigInteger currentCount = inventoryRepository.GetBalance(_identitySO);
             _displayedCount = currentCount;
 
@@ -43,10 +61,18 @@ namespace FakeMG.Inventory.Hud
             BigInteger fromCount = _displayedCount;
             _displayedCount = targetCount;
 
-            await _countAnimator.AnimateAsync(
-                fromCount,
-                targetCount,
-                ApplyDisplayedCount);
+            _isAnimatingManually = true;
+            try
+            {
+                await _countAnimator.AnimateAsync(
+                    fromCount,
+                    targetCount,
+                    ApplyDisplayedCount);
+            }
+            finally
+            {
+                _isAnimatingManually = false;
+            }
         }
 
         public void SetCountImmediately(BigInteger count)
@@ -58,6 +84,21 @@ namespace FakeMG.Inventory.Hud
         #endregion
 
         #region Private Methods
+
+        // Reward gains stay driven by the manual reward path; this only reconciles drops that bypass it
+        // (spending, rebirth resets, etc.) so the counter never shows a stale, too-high value.
+        private void SyncDisplayWhenBalanceDrops(InventoryChange change)
+        {
+            if (change.IdentitySO != _identitySO || _isAnimatingManually)
+            {
+                return;
+            }
+
+            if (change.NewCount < _displayedCount)
+            {
+                SetCountImmediately(change.NewCount);
+            }
+        }
 
         private void ApplyDisplayedCount(BigInteger count)
         {
