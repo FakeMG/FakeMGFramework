@@ -1,0 +1,20 @@
+{
+    "name": "FakeMG.GodCamera",
+    "rootNamespace": "FakeMG.GodCamera",
+    "references": [
+        "FakeMG.Framework",
+        "FakeMG.ActionMapManagement",
+        "Unity.Cinemachine",
+        "Unity.InputSystem",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

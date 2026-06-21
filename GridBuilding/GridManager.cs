@@ -196,6 +196,22 @@ namespace FakeMG.Framework.GridBuilding
             return _grid.WorldToCell(worldPosition);
         }
 
+        public Bounds GetWorldBoundsMeters()
+        {
+            Vector3Int minCell = new(-_gridHalfSize.x, -_gridHalfSize.y, -_gridHalfSize.z);
+            Vector3Int maxCell = new(_gridHalfSize.x, _gridHalfSize.y, _gridHalfSize.z);
+
+            Vector3 minCenter = CellToWorld(minCell);
+            Vector3 maxCenter = CellToWorld(maxCell);
+            Vector3 center = (minCenter + maxCenter) * 0.5f;
+            Vector3 size = new(
+                (_gridHalfSize.x * 2 + 1) * _cellSize,
+                (_gridHalfSize.y * 2 + 1) * _cellSize,
+                (_gridHalfSize.z * 2 + 1) * _cellSize);
+
+            return new Bounds(center, size);
+        }
+
         public bool IsEmptyGridSpace(Vector3 worldPosition)
         {
             Vector3Int cellPosition = _grid.WorldToCell(worldPosition);
