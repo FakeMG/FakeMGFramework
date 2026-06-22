@@ -41,5 +41,8 @@ namespace FakeMG.Framework
 
         // Toast
         public const string TOAST = ROOT + "/Toast";
+
+        // Tutorial
+        public const string TUTORIAL = ROOT + "/Tutorial";
     }
 }
