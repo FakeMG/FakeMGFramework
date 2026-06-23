@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace FakeMG.Shop.Config
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.SHOP + "/ShopVerticalCardListSO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SHOP + "/VerticalCardList/ShopVerticalCardListSO")]
     public class ShopVerticalCardListSO : ScriptableObject
     {
         [SerializeField] private List<ShopSectionViewDefinition> _sections = new();

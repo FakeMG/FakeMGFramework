@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FakeMG.Shop.Config
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.SHOP + "/BundleListingSO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SHOP + "/VerticalCardList/BundleListingSO")]
     public class BundleListingSO : ShopListingSO
     {
         [SerializeField] private IdentitySO _currencyItemGranted;

@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FakeMG.Shop.Config
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.SHOP + "/BundleVisualSO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SHOP + "/VerticalCardList/BundleVisualSO")]
     public class BundleVisualSO : ScriptableObject
     {
         [SerializeField] private Sprite _bundleBackgroundSprite;
