@@ -17,6 +17,8 @@ namespace FakeMG.Shop
 
         private readonly HashSet<string> _ownedListingIds = new();
 
+        public event Action<string> OnOwnershipChanged;
+
         #region Public Methods
 
         public bool IsOwned(string listingId)
@@ -37,6 +39,7 @@ namespace FakeMG.Shop
             }
 
             _ownedListingIds.Add(listingId);
+            OnOwnershipChanged?.Invoke(listingId);
         }
 
         public override object CaptureState()
