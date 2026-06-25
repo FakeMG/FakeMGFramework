@@ -299,6 +299,19 @@ namespace FakeMG.Audio
             }
         }
 
+        // Plays an external SO through this AudioCue's configured channel and audio settings.
+        // Use when the SO is determined at runtime (e.g. per-item-type result audio).
+        public void PlayAudioCueSO(AudioCueSO audioCueSO)
+        {
+            if (audioCueSO == null || !audioCueSO.CanPlaySound())
+                return;
+
+            var transformToUse = _followParent ? transform : null;
+            var audioConfigToUse = GetAudioConfiguration();
+            _audioCueEventChannel.RaisePlayEvent(audioCueSO, audioConfigToUse, transform.position, transformToUse);
+            audioCueSO.UpdateLastPlayTime();
+        }
+
         private AudioConfigurationSO GetAudioConfiguration()
         {
             if (_configurationMode == ConfigurationMode.UsePredefined)
