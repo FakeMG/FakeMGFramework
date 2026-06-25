@@ -13,13 +13,22 @@ namespace FakeMG.Tutorial
     /// </summary>
     public sealed class TutorialPointerView : AnimatedTutorialVisualView
     {
-        [SerializeField] private RectTransform _pointerRect;
+        [SerializeField] private RectTransform _positionRoot;
+        [SerializeField] private RectTransform _flipRoot;
+        [SerializeField] private RectTransform _pulseRoot;
         [SerializeField] private Vector2 _targetOffsetPixels = new(0f, -90f);
         [SerializeField] private float _pulseScale = 1.15f;
         [SerializeField] private float _pulseDurationSeconds = 0.6f;
 
         private Tween _pulseTween;
-        private Vector3 _baseScale = Vector3.one;
+        private Vector3 _flipScale = Vector3.one;
+
+        private void Reset()
+        {
+            _positionRoot = transform as RectTransform;
+            _flipRoot = transform as RectTransform;
+            _pulseRoot = transform as RectTransform;
+        }
 
         private void OnDestroy()
         {
@@ -50,21 +59,24 @@ namespace FakeMG.Tutorial
                 return;
             }
 
-            if (!IsOutsideCanvas(_pointerRect, visualRoot))
+            Bounds bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(visualRoot, _positionRoot);
+            Rect rootRect = visualRoot.rect;
+
+            bool shouldFlipHorizontally = bounds.min.x < rootRect.xMin || bounds.max.x > rootRect.xMax;
+            bool shouldFlipVertically = bounds.min.y < rootRect.yMin || bounds.max.y > rootRect.yMax;
+
+            if (!shouldFlipHorizontally && !shouldFlipVertically)
             {
                 return;
             }
 
-            Bounds viewBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(visualRoot, _pointerRect);
-            Rect rootRect = visualRoot.rect;
-
-            if (viewBounds.min.x < rootRect.xMin || viewBounds.max.x > rootRect.xMax)
+            if (shouldFlipHorizontally)
             {
                 offset.x *= -1f;
                 flip.x *= -1f;
             }
 
-            if (viewBounds.min.y < rootRect.yMin || viewBounds.max.y > rootRect.yMax)
+            if (shouldFlipVertically)
             {
                 offset.y *= -1f;
                 flip.y *= -1f;
@@ -105,49 +117,30 @@ namespace FakeMG.Tutorial
                 return false;
             }
 
-            _pointerRect.anchoredPosition = localPosition;
-            _pointerRect.ForceUpdateRectTransforms();
+            _positionRoot.anchoredPosition = localPosition;
+            _positionRoot.ForceUpdateRectTransforms();
 
             return true;
         }
 
         private void ApplyFlip(Vector2 flip)
         {
-            _baseScale = new Vector3(
-                Mathf.Sign(flip.x),
-                Mathf.Sign(flip.y),
+            _flipScale = new Vector3(
+                flip.x < 0f ? -1f : 1f,
+                flip.y < 0f ? -1f : 1f,
                 1f);
 
-            if (_pulseTween == null || !_pulseTween.IsActive())
-            {
-                _pointerRect.localScale = _baseScale;
-            }
-        }
-
-        private static bool IsOutsideCanvas(RectTransform view, RectTransform canvasRoot)
-        {
-            Bounds viewBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRoot, view);
-            Rect canvasRect = canvasRoot.rect;
-
-            return viewBounds.min.x < canvasRect.xMin
-                   || viewBounds.max.x > canvasRect.xMax
-                   || viewBounds.min.y < canvasRect.yMin
-                   || viewBounds.max.y > canvasRect.yMax;
+            _flipRoot.localScale = _flipScale;
         }
 
         private void StartPulse()
         {
             StopPulse();
 
-            _pointerRect.localScale = _baseScale;
+            _pulseRoot.localScale = Vector3.one;
 
-            Vector3 targetScale = new(
-                _baseScale.x * _pulseScale,
-                _baseScale.y * _pulseScale,
-                _baseScale.z * _pulseScale);
-
-            _pulseTween = _pointerRect
-                .DOScale(targetScale, _pulseDurationSeconds)
+            _pulseTween = _pulseRoot
+                .DOScale(Vector3.one * _pulseScale, _pulseDurationSeconds)
                 .SetLoops(-1, LoopType.Yoyo)
                 .SetEase(Ease.InOutSine);
         }
@@ -160,7 +153,7 @@ namespace FakeMG.Tutorial
                 _pulseTween = null;
             }
 
-            _pointerRect.localScale = _baseScale;
+            _pulseRoot.localScale = Vector3.one;
         }
     }
 }
