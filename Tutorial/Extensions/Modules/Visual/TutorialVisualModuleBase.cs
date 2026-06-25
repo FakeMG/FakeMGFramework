@@ -87,6 +87,7 @@ namespace FakeMG.Tutorial
         {
             if (!context.TargetRegistry.TryGet(key, out ITutorialTarget target))
             {
+                // TODO: we should not throw.
                 throw new InvalidOperationException(
                     $"Tutorial target '{(key == null ? "<none>" : key.name)}' is not registered. Is its UI active?");
             }
@@ -96,6 +97,7 @@ namespace FakeMG.Tutorial
                 return rect;
             }
 
+            // TODO: we should not throw.
             throw new InvalidOperationException(
                 $"Tutorial target '{key.name}' has no RectTransform to position against.");
         }
