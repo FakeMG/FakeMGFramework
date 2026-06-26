@@ -47,6 +47,7 @@ namespace FakeMG.Framework.UI
 
         private void OnDisable()
         {
+            _targetTransform.DOKill();
             _targetTransform.localScale = _normalScale;
         }
 
@@ -78,6 +79,7 @@ namespace FakeMG.Framework.UI
 
         public void OnSelect(BaseEventData eventData)
         {
+            if (Application.isMobilePlatform) return;
             if (!_button.interactable) return;
 
             AnimateScale(_normalScale * _selectScaleMultiplier);
@@ -85,12 +87,16 @@ namespace FakeMG.Framework.UI
 
         public void OnDeselect(BaseEventData eventData)
         {
+            if (Application.isMobilePlatform) return;
+
             AnimateScale(_normalScale);
         }
 
         private void AnimateScale(Vector3 targetScale)
         {
             if (!gameObject.activeInHierarchy) return;
+
+            _targetTransform.DOKill();
 
             _targetTransform.DOScale(targetScale, _animationDuration)
                 .SetEase(Ease.InOutQuad)
