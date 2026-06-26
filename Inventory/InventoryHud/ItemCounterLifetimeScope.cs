@@ -14,6 +14,11 @@ namespace FakeMG.Inventory.Hud
 
         #region Unity Lifecycle
 
+        private void OnEnable()
+        {
+            RegisterCounterWhenReady();
+        }
+
         private void OnDisable()
         {
             UnregisterCounter();
