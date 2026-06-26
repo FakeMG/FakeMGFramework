@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using FakeMG.Framework;
-using FakeMG.Framework.EventBus;
 using FakeMG.Inventory;
 using FakeMG.Shop.Config;
 using FakeMG.Shop.RuntimeData;
@@ -30,8 +29,6 @@ namespace FakeMG.Shop.Services.Purchase
             {
                 _shopOwnershipStateRepository.MarkOwned(shopListingSO.Id);
             }
-
-            // EventBus<GameplayAutoSaveEvent>.Raise(new GameplayAutoSaveEvent());
         }
 
         #endregion
