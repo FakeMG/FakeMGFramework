@@ -1,12 +1,12 @@
 {
-    "name": "FakeMG.GodCamera",
-    "rootNamespace": "FakeMG.GodCamera",
+    "name": "FakeMG.GridBuilding",
+    "rootNamespace": "FakeMG.GridBuilding",
     "references": [
         "FakeMG.Framework",
-        "FakeMG.GridBuilding",
-        "FakeMG.ActionMapManagement",
-        "Unity.Cinemachine",
-        "Unity.InputSystem",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask",
+        "UniTask.Addressables",
         "VContainer"
     ],
     "includePlatforms": [],

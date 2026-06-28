@@ -1,10 +1,14 @@
 using System;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace FakeMG.Framework.UI.Tab.TabButton
 {
-    public abstract class TabButtonBase : MonoBehaviour
+    /// <summary>
+    /// Base visual tab button that requests tab changes from pointer clicks and non-pointer UI selection.
+    /// </summary>
+    public abstract class TabButtonBase : MonoBehaviour, ISelectHandler
     {
         [SerializeField] private Button _button;
 
@@ -34,6 +38,15 @@ namespace FakeMG.Framework.UI.Tab.TabButton
         public abstract void AnimateDeselection();
         public abstract void InstantlySelect();
         public abstract void InstantlyDeselect();
+
+        public void OnSelect(BaseEventData eventData)
+        {
+            if (Application.isMobilePlatform) return;
+
+            if (eventData is PointerEventData) return;
+
+            RequestSelection();
+        }
         #endregion
 
         #region Private Methods

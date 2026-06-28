@@ -1,7 +1,8 @@
+using FakeMG.Framework;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
-namespace FakeMG.Framework.GridBuilding
+namespace FakeMG.GridBuilding
 {
     [CreateAssetMenu(menuName = FakeMGEditorMenus.GRID_BUILDING + "/StructureSO")]
     public class StructureSO : IdentitySO

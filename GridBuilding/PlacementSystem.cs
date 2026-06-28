@@ -2,168 +2,151 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
+using VContainer;
 
-namespace FakeMG.Framework.GridBuilding
+namespace FakeMG.GridBuilding
 {
+    /// <summary>
+    /// Unity-facing facade for placement input projection and structure placement operations.
+    /// </summary>
     public class PlacementSystem : MonoBehaviour
     {
         [SerializeField] private GridManager _gridManager;
         [SerializeField] private LayerMask _placementLayerMask;
         [SerializeField] private bool _enableLogging = true;
 
-        private Camera _mainCamera;
-
-        private AsyncOperationHandle<GameObject> _currentStructurePrefabHandle;
-
-        private readonly Dictionary<string, AsyncOperationHandle<GameObject>> _placedStructureHandles = new();
-        private readonly Dictionary<string, GameObject> _placedStructureInstances = new();
-        private readonly Dictionary<string, StructureSO> _placedStructureItemSOs = new();
+        private StructurePlacementService _placementService;
+        private GridPointerProjector _gridPointerProjector;
 
         public event Action OnPlaced;
         public event Action OnRemoved;
 
-        public IReadOnlyDictionary<string, GameObject> GetPlacedStructureInstances()
-        {
-            return _placedStructureInstances;
-        }
+        #region Unity Lifecycle
 
         private void Start()
         {
-            _mainCamera = Camera.main;
+            _gridPointerProjector = new GridPointerProjector(_gridManager, _placementLayerMask, Camera.main);
+
+            _placementService
+                .RestoreCommittedStateAsync(this.GetCancellationTokenOnDestroy())
+                .Forget();
         }
 
-        public bool GetSelectedWorldPos(Vector2 screenPos, out Vector3 selectedWorldPos, out RaycastHit hitInfo)
+        private void OnDestroy()
         {
-            Ray ray = _mainCamera.ScreenPointToRay(screenPos);
-
-            if (Physics.Raycast(ray, out hitInfo, 100, _placementLayerMask))
-            {
-                // Offset slightly inside the structure to ensure we get the structure's actual position, not the surface
-                selectedWorldPos = hitInfo.point - hitInfo.normal * 0.01f;
-
-                return true;
-            }
-
-            selectedWorldPos = Vector3.zero;
-            return false;
+            _placementService?.ClearRuntimeStructures(false);
         }
 
-        // TODO: Clamp to grid bounds
+        #endregion
 
-        public UniTask<bool> PlaceStructureIfEmptyAsync(StructureSO itemSO, Vector3 worldPosition)
+        #region Public Methods
+
+        [Inject]
+        public void Construct(PlacementState placementState)
         {
-            UniTaskCompletionSource<bool> placementCompletionSource = new();
+            StructureInstanceFactory structureInstanceFactory = new(
+                _enableLogging,
+                this);
 
-            _currentStructurePrefabHandle = Addressables.LoadAssetAsync<GameObject>(itemSO.StructureAsset);
-            _currentStructurePrefabHandle.Completed += handle =>
-            {
-                if (handle.Status == AsyncOperationStatus.Succeeded)
-                {
-                    GameObject structurePrefab = handle.Result;
-                    Vector3 gridWorldPosition = _gridManager.WorldToGridWorld(worldPosition);
-                    GameObject structureInstance = Instantiate(structurePrefab, gridWorldPosition, Quaternion.identity);
+            _placementService = new StructurePlacementService(
+                _gridManager,
+                placementState,
+                new PlacedStructureRegistry(),
+                structureInstanceFactory,
+                _enableLogging,
+                this);
+            _placementService.OnPlaced += RaisePlacedEvent;
+            _placementService.OnRemoved += RaiseRemovedEvent;
+        }
 
-                    if (!_gridManager.IsEmptyGridSpace(structureInstance, gridWorldPosition))
-                    {
-                        Echo.Warning("Cannot place structure: Grid space is occupied or outside bounds.", _enableLogging);
-                        Destroy(structureInstance);
-                        Addressables.Release(handle);
-                        placementCompletionSource.TrySetResult(false);
-                        return;
-                    }
+        public IReadOnlyCollection<StructurePlacement> GetPlacedStructures()
+        {
+            return _placementService.GetPlacedStructures();
+        }
 
-                    string instanceID = Guid.NewGuid().ToString();
+        public void ClearAllStructures()
+        {
+            _placementService.ClearAllStructures();
+        }
 
-                    _gridManager.RegisterStructure(structureInstance, instanceID, gridWorldPosition);
+        public bool TryGetGridWorldPosition(
+            Vector2 pointerPositionPixels,
+            out Vector3 gridWorldPosition,
+            out RaycastHit hitInfo)
+        {
+            return _gridPointerProjector.TryGetGridWorldPosition(
+                pointerPositionPixels,
+                out gridWorldPosition,
+                out hitInfo);
+        }
 
-                    _placedStructureInstances[instanceID] = structureInstance;
-                    _placedStructureHandles[instanceID] = handle;
-                    _placedStructureItemSOs[instanceID] = itemSO;
+        public UniTask<bool> PlaceStructureIfEmptyAsync(StructureSO structureSO, Vector3 worldPosition)
+        {
+            return _placementService.PlaceStructureIfEmptyAsync(
+                structureSO,
+                worldPosition,
+                this.GetCancellationTokenOnDestroy());
+        }
 
-                    OnPlaced?.Invoke();
-                    placementCompletionSource.TrySetResult(true);
-                }
-                else
-                {
-                    Echo.Error("Failed to load structure prefab.", _enableLogging);
-                    placementCompletionSource.TrySetResult(false);
-                }
-            };
+        public bool TryPickUpStructure(Vector3 worldPosition, out StructurePlacement heldStructurePlacement)
+        {
+            return _placementService.TryPickUpStructure(worldPosition, out heldStructurePlacement);
+        }
 
-            return placementCompletionSource.Task;
+        public bool TryPlaceHeldStructure(StructurePlacement heldStructurePlacement, Vector3 worldPosition)
+        {
+            return _placementService.TryPlaceHeldStructure(heldStructurePlacement, worldPosition);
+        }
+
+        public bool RestoreHeldStructure(StructurePlacement heldStructurePlacement)
+        {
+            return _placementService.RestoreHeldStructure(heldStructurePlacement);
+        }
+
+        public bool DestroyStructure(Vector3 worldPosition)
+        {
+            return _placementService.DestroyStructure(worldPosition);
         }
 
         public StructureSO RemoveStructure(Vector3 worldPosition)
         {
-            if (_gridManager.TryRemoveStructure(worldPosition, out string instanceID))
-            {
-                if (_placedStructureInstances.TryGetValue(instanceID, out GameObject structureInstance))
-                {
-                    Destroy(structureInstance);
-                    _placedStructureInstances.Remove(instanceID);
-                    OnRemoved?.Invoke();
-                }
-                else
-                {
-                    Echo.Log($"No structure instance found with ID: {instanceID}", _enableLogging);
-                }
-
-                if (_placedStructureHandles.TryGetValue(instanceID, out var handle))
-                {
-                    if (handle.IsValid())
-                    {
-                        Addressables.Release(handle);
-                    }
-                    _placedStructureHandles.Remove(instanceID);
-                }
-
-                if (_placedStructureItemSOs.TryGetValue(instanceID, out StructureSO itemSO))
-                {
-                    _placedStructureItemSOs.Remove(instanceID);
-                }
-
-                return itemSO;
-            }
-            else
-            {
-                Echo.Log("No structure found at the specified position to remove.", _enableLogging);
-            }
-
-            return null;
+            return _placementService.RemoveStructure(worldPosition);
         }
 
-        public StructureSO GetItemSOAtPosition(Vector3 worldPosition)
+        public StructureSO GetStructureSOAtPosition(Vector3 worldPosition)
         {
-            Vector3Int cellPosition = _gridManager.WorldToCell(worldPosition);
+            return _placementService.GetStructureSOAtPosition(worldPosition);
+        }
 
-            if (_gridManager.GridData.TryGetValue(cellPosition, out PlacementData placementData))
-            {
-                if (_placedStructureItemSOs.TryGetValue(placementData.InstanceID, out StructureSO itemSO))
-                {
-                    return itemSO;
-                }
-            }
-
-            return null;
+        public bool TryGetStructurePosition(Vector3 worldPosition, out Vector3 structureWorldPosition)
+        {
+            return _placementService.TryGetStructurePosition(worldPosition, out structureWorldPosition);
         }
 
         public Vector3 GetStructurePosition(Vector3 worldPosition)
         {
-            Vector3Int cellPosition = _gridManager.WorldToCell(worldPosition);
-
-            if (_gridManager.GridData.TryGetValue(cellPosition, out PlacementData placementData))
-            {
-                if (_placedStructureInstances.TryGetValue(placementData.InstanceID, out GameObject structureInstance))
-                {
-                    return structureInstance.transform.position;
-                }
-            }
-
-            Echo.Error("No structure found at the specified position.", _enableLogging);
-
-            return Vector3.zero;
+            return _placementService.GetStructurePosition(worldPosition);
         }
+
+        public bool TryGetInstanceIdAtPosition(Vector3 worldPosition, out string instanceId)
+        {
+            return _placementService.TryGetInstanceIdAtPosition(worldPosition, out instanceId);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void RaisePlacedEvent()
+        {
+            OnPlaced?.Invoke();
+        }
+
+        private void RaiseRemovedEvent()
+        {
+            OnRemoved?.Invoke();
+        }
+
+        #endregion
     }
 }

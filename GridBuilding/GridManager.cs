@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
-namespace FakeMG.Framework.GridBuilding
+namespace FakeMG.GridBuilding
 {
     /// <summary>
     /// The Grid system only cares about which cells are occupied
@@ -32,13 +33,15 @@ namespace FakeMG.Framework.GridBuilding
         public float CellSize => _cellSize;
         public IReadOnlyDictionary<Vector3Int, PlacementData> GridData => _gridData;
 
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            _grid.cellSize = new Vector3(_cellSize, _cellSize, _cellSize);
+        }
+
         private void OnValidate()
         {
-            if (_grid && _cellSize > 0)
-            {
-                _grid.cellSize = new Vector3(_cellSize, _cellSize, _cellSize);
-            }
-
             if (_gridMaterial && _cellSize > 0)
             {
                 _gridMaterial.SetVector(_cellPerUnit, new Vector2(1 / _cellSize, 1 / _cellSize));
@@ -129,6 +132,8 @@ namespace FakeMG.Framework.GridBuilding
             }
         }
 
+        #endregion
+
         /// <summary>
         /// Registers a structure in the grid at the specified position.
         /// </summary>
@@ -178,6 +183,11 @@ namespace FakeMG.Framework.GridBuilding
             return false;
         }
 
+        public void Clear()
+        {
+            _gridData.Clear();
+        }
+
         public Vector3 WorldToGridWorld(Vector3 worldPosition)
         {
             Vector3Int cellPosition = WorldToCell(worldPosition);
@@ -194,6 +204,26 @@ namespace FakeMG.Framework.GridBuilding
         public Vector3Int WorldToCell(Vector3 worldPosition)
         {
             return _grid.WorldToCell(worldPosition);
+        }
+
+        /// <summary>
+        /// Converts world-space collider bounds into the grid-aligned footprint size in meters.
+        /// Applies the same edge inset placement validation uses, so footprint visuals cannot
+        /// silently diverge from the cells a structure actually occupies.
+        /// </summary>
+        public Vector3 GetFootprintScaleMeters(Bounds worldBounds)
+        {
+            // Offset 0.01 to avoid edge cases where bounds.min/max is exactly on the cell edge.
+            Vector3Int minCell = _grid.WorldToCell(worldBounds.min + 0.01f * Vector3.one);
+            Vector3Int maxCell = _grid.WorldToCell(worldBounds.max - 0.01f * Vector3.one);
+
+            int footprintCellCountX = Mathf.Max(1, maxCell.x - minCell.x + 1);
+            int footprintCellCountZ = Mathf.Max(1, maxCell.z - minCell.z + 1);
+
+            return new Vector3(
+                footprintCellCountX * _cellSize,
+                1f,
+                footprintCellCountZ * _cellSize);
         }
 
         public Bounds GetWorldBoundsMeters()
