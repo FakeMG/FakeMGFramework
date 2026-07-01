@@ -22,7 +22,7 @@ namespace FakeMG.Framework.UI.RewardFly
 
         #region Public Methods
 
-        public UniTask PlayCanvasScatterAsync(RewardFlyTokenView rewardFlyTokenView)
+        public UniTask PlayCanvasScatterAsync(RewardTokenView rewardFlyTokenView)
         {
             Transform flyTransform = rewardFlyTokenView.FlyTransform;
             Vector3 scatterTargetLocalPositionPixels = flyTransform.localPosition + ComputeCanvasScatterOffsetPixels();
@@ -33,7 +33,7 @@ namespace FakeMG.Framework.UI.RewardFly
             return scatterTween.ToUniTask(cancellationToken: rewardFlyTokenView.GetCancellationTokenOnDestroy());
         }
 
-        public UniTask PlayWorldScatterAsync(RewardFlyTokenView rewardFlyTokenView)
+        public UniTask PlayWorldScatterAsync(RewardTokenView rewardFlyTokenView)
         {
             Transform flyTransform = rewardFlyTokenView.FlyTransform;
             Vector3 scatterTargetWorldPosition = flyTransform.position + ComputeWorldScatterOffsetMeters();

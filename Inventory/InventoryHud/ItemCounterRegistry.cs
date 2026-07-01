@@ -5,7 +5,7 @@ namespace FakeMG.Inventory.Hud
 {
     public sealed class ItemCounterRegistry
     {
-        private readonly Dictionary<IdentitySO, ItemCounterView> _viewsByIdentity = new();
+        private readonly Dictionary<IdentitySO, List<ItemCounterView>> _viewsByIdentity = new();
 
         #region Public Methods
 
@@ -17,13 +17,16 @@ namespace FakeMG.Inventory.Hud
                 return;
             }
 
-            if (_viewsByIdentity.TryGetValue(view.IdentitySO, out ItemCounterView existingView) && existingView != view)
+            if (!_viewsByIdentity.TryGetValue(view.IdentitySO, out List<ItemCounterView> views))
             {
-                Echo.Warning($"Duplicate HUD counter for item '{view.IdentitySO.name}'. Existing: '{existingView.name}', duplicate: '{view.name}'.");
-                return;
+                views = new List<ItemCounterView>();
+                _viewsByIdentity[view.IdentitySO] = views;
             }
 
-            _viewsByIdentity[view.IdentitySO] = view;
+            if (!views.Contains(view))
+            {
+                views.Add(view);
+            }
         }
 
         public void Unregister(ItemCounterView view)
@@ -34,22 +37,41 @@ namespace FakeMG.Inventory.Hud
                 return;
             }
 
-            if (_viewsByIdentity.TryGetValue(view.IdentitySO, out ItemCounterView existingView) && existingView == view)
+            if (_viewsByIdentity.TryGetValue(view.IdentitySO, out List<ItemCounterView> views))
             {
-                _viewsByIdentity.Remove(view.IdentitySO);
+                views.Remove(view);
             }
         }
 
-        public bool TryGetCounter(IdentitySO identity, out ItemCounterView view)
+        public bool TryGetCounter(IdentitySO identitySO, out ItemCounterView view)
         {
-            if (!identity)
+            if (TryGetCounters(identitySO, out IReadOnlyList<ItemCounterView> views))
             {
-                Echo.Error($"{nameof(ItemCounterRegistry)} cannot resolve a counter for a null item identity.");
-                view = null;
+                view = views[0];
+                return true;
+            }
+
+            view = null;
+            return false;
+        }
+
+        public bool TryGetCounters(IdentitySO identitySO, out IReadOnlyList<ItemCounterView> views)
+        {
+            if (!identitySO)
+            {
+                Echo.Error($"{nameof(ItemCounterRegistry)} cannot resolve counters for a null item identity.");
+                views = null;
                 return false;
             }
 
-            return _viewsByIdentity.TryGetValue(identity, out view);
+            if (_viewsByIdentity.TryGetValue(identitySO, out List<ItemCounterView> registeredViews) && registeredViews.Count > 0)
+            {
+                views = registeredViews;
+                return true;
+            }
+
+            views = null;
+            return false;
         }
 
         #endregion

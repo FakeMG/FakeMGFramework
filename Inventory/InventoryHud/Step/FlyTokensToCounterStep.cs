@@ -135,7 +135,7 @@ namespace FakeMG.Inventory.Hud
                 await UniTask.Delay(startDelay, cancellationToken: cancellationToken);
             }
 
-            RewardFlyTokenView rewardFlyTokenView = SpawnRewardFlyToken(
+            RewardTokenView rewardFlyTokenView = SpawnRewardFlyToken(
                 counter,
                 rewardStartTransform,
                 rewardTokenSprite);
@@ -152,12 +152,12 @@ namespace FakeMG.Inventory.Hud
             }
         }
 
-        private RewardFlyTokenView SpawnRewardFlyToken(
+        private RewardTokenView SpawnRewardFlyToken(
             ItemCounterView counter,
             Transform rewardStartTransform,
             Sprite rewardTokenSprite)
         {
-            RewardFlyTokenView rewardFlyTokenView = UnityEngine.Object.Instantiate(
+            RewardTokenView rewardFlyTokenView = UnityEngine.Object.Instantiate(
                 counter.RewardFlyTokenPrefab,
                 _itemFlyRewardService.ScreenSpaceCanvasRectTransform);
 
@@ -168,7 +168,7 @@ namespace FakeMG.Inventory.Hud
             return rewardFlyTokenView;
         }
 
-        private async UniTask PlaySpawnAndScatterAsync(RewardFlyTokenView rewardFlyTokenView)
+        private async UniTask PlaySpawnAndScatterAsync(RewardTokenView rewardFlyTokenView)
         {
             await UniTask.WhenAll(
                 _scatterAnimator.PlayCanvasScatterAsync(rewardFlyTokenView),
@@ -178,7 +178,7 @@ namespace FakeMG.Inventory.Hud
         private UniTask PlayFlyToCounterAsync(
             IdentitySO identitySO,
             ItemCounterView counter,
-            RewardFlyTokenView rewardFlyTokenView,
+            RewardTokenView rewardFlyTokenView,
             CancellationToken cancellationToken)
         {
             if (rewardFlyTokenView.FlyTransform is not RectTransform flyingRectTransform)

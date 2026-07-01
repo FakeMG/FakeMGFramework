@@ -1,19 +1,32 @@
+using System.Numerics;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using UnityEngine;
 using UnityEngine.UI;
+using Vector3 = UnityEngine.Vector3;
 
 namespace FakeMG.Framework.UI.RewardFly
 {
-    public class RewardFlyTokenView : MonoBehaviour
+    public class RewardTokenView : MonoBehaviour
     {
         [SerializeField] private RectTransform _tokenRectTransform;
         [SerializeField] private Image _tokenIconImage;
         [SerializeField] private SpriteRenderer _tokenSpriteRenderer;
+        [SerializeField] private ItemIconUIUpdater _itemIconUiUpdater;
 
         public Transform FlyTransform => _tokenRectTransform ? _tokenRectTransform : transform;
 
         #region Public Methods
+
+        public async UniTask InitializeAsync(
+            IdentitySO identitySO,
+            BigInteger amount,
+            CancellationToken cancellationToken)
+        {
+            await _itemIconUiUpdater.UpdateUIAsync(identitySO, amount);
+            transform.localScale = Vector3.zero;
+        }
 
         public void SetRewardSprite(Sprite rewardSprite)
         {

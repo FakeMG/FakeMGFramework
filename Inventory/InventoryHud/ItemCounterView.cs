@@ -14,49 +14,21 @@ namespace FakeMG.Inventory.Hud
         [SerializeField] private ItemIconUIUpdater _itemIconUiUpdater;
         [SerializeField] private HudAdditivePulseAnimator _pulseAnimator;
         [SerializeField] private CounterCountAnimator _countAnimator;
-        [SerializeField] private RewardFlyTokenView _rewardFlyTokenPrefab;
-        [SerializeField] private bool _autoSyncWhenDrops;
-        [SerializeField] private bool _autoSyncWhenGains;
+        [SerializeField] private RewardTokenView _rewardFlyTokenPrefab;
+        [SerializeField] private CounterUpdateDelayGroupSO _delayGroupSO;
 
         private BigInteger _displayedCount;
-        private IInventoryBalanceRepository _inventoryRepository;
-        private bool _isAnimatingManually;
 
         public IdentitySO IdentitySO => _identitySO;
         public Transform FlyTargetTransform => _flyTargetTransform;
-        public RewardFlyTokenView RewardFlyTokenPrefab => _rewardFlyTokenPrefab;
+        public RewardTokenView RewardFlyTokenPrefab => _rewardFlyTokenPrefab;
         public BigInteger DisplayedCount => _displayedCount;
-
-        #region Unity Lifecycle
-
-        private void OnDestroy()
-        {
-            if (_inventoryRepository != null)
-            {
-                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceDrops;
-                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceGains;
-            }
-        }
-
-        #endregion
+        public CounterUpdateDelayGroupSO DelayGroupSO => _delayGroupSO;
 
         #region Public Methods
 
         public async UniTask InitializeAsync(IInventoryBalanceRepository inventoryRepository)
         {
-            _inventoryRepository = inventoryRepository;
-            if (_autoSyncWhenDrops)
-            {
-                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceDrops;
-                _inventoryRepository.OnBalanceChanged += SyncDisplayWhenBalanceDrops;
-            }
-
-            if (_autoSyncWhenGains)
-            {
-                _inventoryRepository.OnBalanceChanged -= SyncDisplayWhenBalanceGains;
-                _inventoryRepository.OnBalanceChanged += SyncDisplayWhenBalanceGains;
-            }
-
             BigInteger currentCount = inventoryRepository.GetBalance(_identitySO);
             _displayedCount = currentCount;
 
@@ -73,18 +45,10 @@ namespace FakeMG.Inventory.Hud
             BigInteger fromCount = _displayedCount;
             _displayedCount = targetCount;
 
-            _isAnimatingManually = true;
-            try
-            {
-                await _countAnimator.AnimateAsync(
-                    fromCount,
-                    targetCount,
-                    ApplyDisplayedCount);
-            }
-            finally
-            {
-                _isAnimatingManually = false;
-            }
+            await _countAnimator.AnimateAsync(
+                fromCount,
+                targetCount,
+                ApplyDisplayedCount);
         }
 
         public void SetCountImmediately(BigInteger count)
@@ -96,34 +60,6 @@ namespace FakeMG.Inventory.Hud
         #endregion
 
         #region Private Methods
-
-        // Reward gains stay driven by the manual reward path; this only reconciles drops that bypass it
-        // (spending, rebirth resets, etc.) so the counter never shows a stale, too-high value.
-        private void SyncDisplayWhenBalanceDrops(InventoryChange change)
-        {
-            if (change.IdentitySO != _identitySO || _isAnimatingManually)
-            {
-                return;
-            }
-
-            if (change.NewCount < _displayedCount)
-            {
-                AnimateDisplayedCountToAsync(change.NewCount).Forget();
-            }
-        }
-
-        private void SyncDisplayWhenBalanceGains(InventoryChange change)
-        {
-            if (change.IdentitySO != _identitySO || _isAnimatingManually)
-            {
-                return;
-            }
-
-            if (change.NewCount > _displayedCount)
-            {
-                AnimateDisplayedCountToAsync(change.NewCount).Forget();
-            }
-        }
 
         private void ApplyDisplayedCount(BigInteger count)
         {

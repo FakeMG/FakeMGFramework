@@ -11,11 +11,11 @@ namespace FakeMG.Shop.Services.Purchase
 {
     public class InGameCurrencyShopPurchaseExecutor : IShopPurchaseExecutor
     {
-        private readonly InventoryDataManager _inventoryDataManager;
+        private readonly IInventoryBalanceRepository _inventoryBalanceRepository;
 
-        public InGameCurrencyShopPurchaseExecutor(InventoryDataManager inventoryDataManager)
+        public InGameCurrencyShopPurchaseExecutor(IInventoryBalanceRepository inventoryBalanceRepository)
         {
-            _inventoryDataManager = inventoryDataManager;
+            _inventoryBalanceRepository = inventoryBalanceRepository;
         }
 
         #region Public Methods
@@ -58,7 +58,7 @@ namespace FakeMG.Shop.Services.Purchase
                     continue;
                 }
 
-                BigInteger balance = _inventoryDataManager.GetBalance(itemSo);
+                BigInteger balance = _inventoryBalanceRepository.GetBalance(itemSo);
                 if (balance < amount)
                 {
                     return false;
@@ -79,7 +79,7 @@ namespace FakeMG.Shop.Services.Purchase
                     continue;
                 }
 
-                bool wasSpent = _inventoryDataManager.TrySpend(itemSo, amount);
+                bool wasSpent = _inventoryBalanceRepository.TrySpend(itemSo, amount);
                 if (!wasSpent)
                 {
                     RollbackSpentEntries(spentEntries);
@@ -97,7 +97,7 @@ namespace FakeMG.Shop.Services.Purchase
             for (int entryIndex = 0; entryIndex < spentEntries.Count; entryIndex++)
             {
                 KeyValuePair<IdentitySO, int> spentEntry = spentEntries[entryIndex];
-                _inventoryDataManager.Add(spentEntry.Key, spentEntry.Value);
+                _inventoryBalanceRepository.Add(spentEntry.Key, spentEntry.Value);
             }
         }
 

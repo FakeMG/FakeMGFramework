@@ -26,11 +26,20 @@ animate the count to the target count
 # Remaining problems
 inventory data updates
 
+## Problem 1
+which counter should be updated when the inventory data changes? Which counter should be updated after the animation is finished?
+-> the source should decide
+1. tag
+2. channel
+3. rule
+
+## Problem 2
 each counter can have different animations
 1. -> spawn item UI icons -> fly it to the counter -> animate the counter when the icon reaches the counter
 2. -> animate the counter to the final target value
 3, 4, ... more animations in the future
 
+## Problem 3
 how to handle situation where counter object can be anywhere (UI and in world)? Each counter Register itself
 
 each IdentitySO can have many counters

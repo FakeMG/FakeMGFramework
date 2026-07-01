@@ -8,14 +8,14 @@ namespace FakeMG.Shop.Services.Purchase
 {
     public class ShopPurchaseFinalizationService
     {
-        private readonly InventoryDataManager _inventoryDataManager;
+        private readonly IInventoryBalanceRepository _inventoryBalanceRepository;
         private readonly ShopOwnershipStateRepository _shopOwnershipStateRepository;
 
         public ShopPurchaseFinalizationService(
-            InventoryDataManager inventoryDataManager,
+            IInventoryBalanceRepository inventoryBalanceRepository,
             ShopOwnershipStateRepository shopOwnershipStateRepository)
         {
-            _inventoryDataManager = inventoryDataManager;
+            _inventoryBalanceRepository = inventoryBalanceRepository;
             _shopOwnershipStateRepository = shopOwnershipStateRepository;
         }
 
@@ -44,7 +44,7 @@ namespace FakeMG.Shop.Services.Purchase
                     continue;
                 }
 
-                _inventoryDataManager.Add(itemSo, amount);
+                _inventoryBalanceRepository.Add(itemSo, amount);
             }
         }
 
