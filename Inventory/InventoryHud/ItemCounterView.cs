@@ -1,8 +1,8 @@
-using System.Numerics;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
 using FakeMG.Framework.UI;
 using FakeMG.Framework.UI.RewardFly;
+using FakeMG.Numbers;
 using UnityEngine;
 
 namespace FakeMG.Inventory.Hud
@@ -17,19 +17,19 @@ namespace FakeMG.Inventory.Hud
         [SerializeField] private RewardTokenView _rewardFlyTokenPrefab;
         [SerializeField] private CounterUpdateDelayGroupSO _delayGroupSO;
 
-        private BigInteger _displayedCount;
+        private GameNumber _displayedCount;
 
         public IdentitySO IdentitySO => _identitySO;
         public Transform FlyTargetTransform => _flyTargetTransform;
         public RewardTokenView RewardFlyTokenPrefab => _rewardFlyTokenPrefab;
-        public BigInteger DisplayedCount => _displayedCount;
+        public GameNumber DisplayedCount => _displayedCount;
         public CounterUpdateDelayGroupSO DelayGroupSO => _delayGroupSO;
 
         #region Public Methods
 
         public async UniTask InitializeAsync(IInventoryBalanceRepository inventoryRepository)
         {
-            BigInteger currentCount = inventoryRepository.GetBalance(_identitySO);
+            GameNumber currentCount = inventoryRepository.GetBalance(_identitySO);
             _displayedCount = currentCount;
 
             await _itemIconUiUpdater.UpdateUIAsync(_identitySO, currentCount);
@@ -40,9 +40,9 @@ namespace FakeMG.Inventory.Hud
             _pulseAnimator.PlayAdditivePulse();
         }
 
-        public async UniTask AnimateDisplayedCountToAsync(BigInteger targetCount)
+        public async UniTask AnimateDisplayedCountToAsync(GameNumber targetCount)
         {
-            BigInteger fromCount = _displayedCount;
+            GameNumber fromCount = _displayedCount;
             _displayedCount = targetCount;
 
             await _countAnimator.AnimateAsync(
@@ -51,7 +51,7 @@ namespace FakeMG.Inventory.Hud
                 ApplyDisplayedCount);
         }
 
-        public void SetCountImmediately(BigInteger count)
+        public void SetCountImmediately(GameNumber count)
         {
             _displayedCount = count;
             _itemIconUiUpdater.UpdateCount(count);
@@ -61,7 +61,7 @@ namespace FakeMG.Inventory.Hud
 
         #region Private Methods
 
-        private void ApplyDisplayedCount(BigInteger count)
+        private void ApplyDisplayedCount(GameNumber count)
         {
             _itemIconUiUpdater.UpdateCount(count);
         }

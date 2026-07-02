@@ -1,7 +1,7 @@
 using System;
-using System.Numerics;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework.ExtensionMethods;
+using FakeMG.Numbers;
 using TMPro;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -51,19 +51,19 @@ namespace FakeMG.Framework.UI
                 _showCountWhenZero || count > 0);
         }
 
-        public void UpdateCount(BigInteger count)
+        public void UpdateCount(GameNumber count)
         {
             ApplyCountPresentation(
-                count > BigInteger.Zero ? count.ToShorthand(3) : "0",
-                _showCountWhenZero || count > BigInteger.Zero);
+                count > GameNumber.Zero ? count.ToShorthand(3) : "0",
+                _showCountWhenZero || count > GameNumber.Zero);
         }
 
-        public async UniTask UpdateUIAsync(IdentitySO item, BigInteger count)
+        public async UniTask UpdateUIAsync(IdentitySO item, GameNumber count)
         {
             await UpdateUIAsync(
                 item,
-                count > BigInteger.Zero ? count.ToShorthand(3) : "0",
-                _showCountWhenZero || count > BigInteger.Zero);
+                count > GameNumber.Zero ? count.ToShorthand(3) : "0",
+                _showCountWhenZero || count > GameNumber.Zero);
         }
 
         public async UniTask UpdateUIAsync(IdentitySO item, int count)

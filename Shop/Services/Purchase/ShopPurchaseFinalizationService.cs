@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using FakeMG.Framework;
 using FakeMG.Inventory;
 using FakeMG.Shop.Config;
 using FakeMG.Shop.RuntimeData;
@@ -23,28 +21,11 @@ namespace FakeMG.Shop.Services.Purchase
 
         public void FinalizeSuccessfulPurchase(ShopListingSO shopListingSO, ShopPurchaseResult shopPurchaseResult)
         {
-            GrantItems(shopPurchaseResult.GrantedItemsByItem);
+            _inventoryBalanceRepository.Add(shopPurchaseResult.GrantedItems);
 
             if (shopListingSO.IsNonConsumable)
             {
                 _shopOwnershipStateRepository.MarkOwned(shopListingSO.Id);
-            }
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private void GrantItems(IReadOnlyDictionary<IdentitySO, int> grantedItemsByItem)
-        {
-            foreach ((IdentitySO itemSo, int amount) in grantedItemsByItem)
-            {
-                if (!itemSo || amount <= 0)
-                {
-                    continue;
-                }
-
-                _inventoryBalanceRepository.Add(itemSo, amount);
             }
         }
 

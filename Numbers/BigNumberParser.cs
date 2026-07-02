@@ -2,7 +2,7 @@ using System;
 using System.Globalization;
 using System.Numerics;
 
-namespace FakeMG.Framework
+namespace FakeMG.Numbers
 {
     public static class BigNumberParser
     {

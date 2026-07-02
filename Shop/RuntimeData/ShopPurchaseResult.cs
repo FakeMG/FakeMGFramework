@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using FakeMG.Framework;
+using FakeMG.Inventory;
 
 namespace FakeMG.Shop.RuntimeData
 {
@@ -7,25 +7,25 @@ namespace FakeMG.Shop.RuntimeData
     {
         public bool IsSuccess { get; }
         public string Message { get; }
-        public IReadOnlyDictionary<IdentitySO, int> GrantedItemsByItem { get; }
+        public IReadOnlyList<ItemAmountEntry> GrantedItems { get; }
 
-        private ShopPurchaseResult(bool isSuccess, string message, IReadOnlyDictionary<IdentitySO, int> grantedItemsByItem)
+        private ShopPurchaseResult(bool isSuccess, string message, IReadOnlyList<ItemAmountEntry> grantedItems)
         {
             IsSuccess = isSuccess;
             Message = message;
-            GrantedItemsByItem = grantedItemsByItem;
+            GrantedItems = grantedItems;
         }
 
         #region Public Methods
 
-        public static ShopPurchaseResult Succeeded(IReadOnlyDictionary<IdentitySO, int> grantedItemsByItem)
+        public static ShopPurchaseResult Succeeded(IReadOnlyList<ItemAmountEntry> grantedItems)
         {
-            return new ShopPurchaseResult(true, string.Empty, grantedItemsByItem);
+            return new ShopPurchaseResult(true, string.Empty, grantedItems);
         }
 
         public static ShopPurchaseResult Failed(string message)
         {
-            return new ShopPurchaseResult(false, message, new Dictionary<IdentitySO, int>());
+            return new ShopPurchaseResult(false, message, new List<ItemAmountEntry>());
         }
 
         #endregion

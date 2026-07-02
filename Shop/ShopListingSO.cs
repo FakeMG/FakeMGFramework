@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using FakeMG.Framework;
+using FakeMG.Inventory;
 using FakeMG.Shop.RuntimeData;
 using Sirenix.OdinInspector;
-using Sirenix.Serialization;
 using UnityEngine;
 
 namespace FakeMG.Shop.Config
@@ -12,8 +12,8 @@ namespace FakeMG.Shop.Config
     {
         [Title("Listing Info")]
         [SerializeField] private Sprite _listingSprite;
-        [OdinSerialize] private Dictionary<IdentitySO, int> _price = new();
-        [OdinSerialize] private Dictionary<IdentitySO, int> _itemsGranted = new();
+        [SerializeField] private List<ItemAmountEntry> _price = new();
+        [SerializeField] private List<ItemAmountEntry> _itemsGranted = new();
         [SerializeField] private bool _isNonConsumable;
         [SerializeField] private ShopPurchaseType _purchaseType = ShopPurchaseType.InGameCurrency;
 
@@ -28,12 +28,12 @@ namespace FakeMG.Shop.Config
 
         #region Public Methods
 
-        public IReadOnlyDictionary<IdentitySO, int> GetPrice()
+        public IReadOnlyList<ItemAmountEntry> GetPrice()
         {
             return _price;
         }
 
-        public virtual IReadOnlyDictionary<IdentitySO, int> GetAllItemsGranted()
+        public virtual IReadOnlyList<ItemAmountEntry> GetAllItemsGranted()
         {
             return _itemsGranted;
         }

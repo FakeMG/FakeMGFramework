@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Numerics;
+using System.Text;
 
 namespace FakeMG.Framework.ExtensionMethods
 {
@@ -29,6 +30,11 @@ namespace FakeMG.Framework.ExtensionMethods
         public static string SeparateNumberWithComma(this double number)
         {
             return number.ToString("F0").SeparateNumberWithComma();
+        }
+
+        public static string SeparateNumberWithComma(this BigInteger number)
+        {
+            return number.ToString().SeparateNumberWithComma();
         }
 
         public static string SeparateTextByUpperCase(this string text)

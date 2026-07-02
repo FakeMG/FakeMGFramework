@@ -1,6 +1,7 @@
 using System;
-using System.Numerics;
+using System.Collections.Generic;
 using FakeMG.Framework;
+using FakeMG.Numbers;
 
 namespace FakeMG.Inventory
 {
@@ -8,9 +9,11 @@ namespace FakeMG.Inventory
     {
         event Action<InventoryChange> OnBalanceChanged;
 
-        BigInteger GetBalance(IdentitySO itemSo);
-        bool TrySpend(IdentitySO itemSo, BigInteger amount);
-        void Add(IdentitySO itemSo, BigInteger amount);
-        void SetBalance(IdentitySO itemSo, BigInteger amount);
+        GameNumber GetBalance(IdentitySO itemSo);
+        bool TrySpend(IdentitySO itemSo, GameNumber amount);
+        bool TrySpend(IReadOnlyList<ItemAmountEntry> entries);
+        void Add(IdentitySO itemSo, GameNumber amount);
+        IReadOnlyList<ItemAmountEntry> Add(IReadOnlyList<ItemAmountEntry> entries);
+        void SetBalance(IdentitySO itemSo, GameNumber amount);
     }
 }

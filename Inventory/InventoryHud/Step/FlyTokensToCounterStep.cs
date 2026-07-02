@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
 using FakeMG.Framework.UI.RewardFly;
+using FakeMG.Numbers;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -47,8 +47,8 @@ namespace FakeMG.Inventory.Hud
             Transform rewardStartTransform,
             CancellationToken cancellationToken)
         {
-            BigInteger countIncrease = change.NewCount - change.OldCount;
-            if (countIncrease <= BigInteger.Zero)
+            GameNumber countIncrease = change.NewCount - change.OldCount;
+            if (countIncrease <= GameNumber.Zero)
             {
                 string itemName = change.IdentitySO ? change.IdentitySO.name : "<null>";
                 Debug.LogWarning($"{nameof(FlyTokensToCounterStep)} received a non-positive inventory increase for item '{itemName}'.");
@@ -75,7 +75,7 @@ namespace FakeMG.Inventory.Hud
         private async UniTask PlayRewardTokensAsync(
             IdentitySO identitySO,
             ItemCounterView counter,
-            BigInteger amount,
+            GameNumber amount,
             Transform rewardStartTransform,
             CancellationToken cancellationToken)
         {
@@ -203,14 +203,14 @@ namespace FakeMG.Inventory.Hud
                 cancellationToken);
         }
 
-        private int GetFlyTokenCount(BigInteger rewardAmount)
+        private int GetFlyTokenCount(GameNumber rewardAmount)
         {
             if (rewardAmount >= MAX_FLY_TOKEN_COUNT)
             {
                 return MAX_FLY_TOKEN_COUNT;
             }
 
-            return rewardAmount <= BigInteger.One ? 1 : (int)rewardAmount;
+            return rewardAmount <= GameNumber.One ? 1 : (int)rewardAmount;
         }
 
         private bool IsValidRequest(
@@ -262,12 +262,12 @@ namespace FakeMG.Inventory.Hud
             _arrivedTokenCount++;
 
             double arrivalProgress01 = Mathf.Clamp01((float)_arrivedTokenCount / _expectedTokenCount);
-            BigInteger countIncrease = _currentChange.NewCount - _currentChange.OldCount;
-            BigInteger nextDisplayedCount = _currentChange.OldCount + new BigInteger((double)countIncrease * arrivalProgress01);
+            GameNumber countIncrease = _currentChange.NewCount - _currentChange.OldCount;
+            GameNumber nextDisplayedCount = _currentChange.OldCount + GameNumber.FromDouble(countIncrease.ToDouble() * arrivalProgress01);
 
             if (nextDisplayedCount <= _currentCounter.DisplayedCount && _currentCounter.DisplayedCount < _currentChange.NewCount)
             {
-                nextDisplayedCount = _currentCounter.DisplayedCount + BigInteger.One;
+                nextDisplayedCount = _currentCounter.DisplayedCount + GameNumber.One;
             }
 
             if (nextDisplayedCount > _currentChange.NewCount)

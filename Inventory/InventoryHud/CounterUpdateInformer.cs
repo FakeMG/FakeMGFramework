@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
+using FakeMG.Numbers;
 
 namespace FakeMG.Inventory.Hud
 {
@@ -18,7 +18,7 @@ namespace FakeMG.Inventory.Hud
 
         #region Public Methods
 
-        public void Inform(IdentitySO itemSo, BigInteger newBalance)
+        public void Inform(IdentitySO itemSo, GameNumber newBalance)
         {
             if (!_counterRegistry.TryGetCounters(itemSo, out IReadOnlyList<ItemCounterView> counters))
             {

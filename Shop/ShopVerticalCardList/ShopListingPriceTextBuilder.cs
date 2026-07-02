@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using FakeMG.Framework;
+using FakeMG.Inventory;
+using FakeMG.Numbers;
 using FakeMG.Shop.Config;
 
 namespace FakeMG.Shop.UI
@@ -25,18 +27,20 @@ namespace FakeMG.Shop.UI
 
         #region Private Methods
 
-        private static string BuildItemPriceText(IReadOnlyDictionary<IdentitySO, int> priceByItem)
+        private static string BuildItemPriceText(IReadOnlyList<ItemAmountEntry> priceEntries)
         {
             var parts = new List<string>();
-            foreach ((IdentitySO itemSo, int amount) in priceByItem)
+            for (int entryIndex = 0; entryIndex < priceEntries.Count; entryIndex++)
             {
-                if (!itemSo || amount <= 0)
+                ItemAmountEntry entry = priceEntries[entryIndex];
+                if (!entry.IdentitySO || entry.Amount <= GameNumber.Zero)
                 {
                     continue;
                 }
 
+                IdentitySO itemSo = entry.IdentitySO;
                 string itemName = string.IsNullOrWhiteSpace(itemSo.ItemName) ? itemSo.name : itemSo.ItemName;
-                parts.Add($"{amount} {itemName}");
+                parts.Add($"{entry.Amount.SeparateNumberWithComma()} {itemName}");
             }
 
             return parts.Count == 0 ? FREE_PRICE_TEXT : string.Join(PRICE_SEPARATOR, parts);

@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using FakeMG.Framework;
+using FakeMG.Inventory;
+using FakeMG.Numbers;
 using UnityEngine;
 
 namespace FakeMG.Shop.Config
@@ -22,39 +24,55 @@ namespace FakeMG.Shop.Config
 
         #region Public Methods
 
-        public override IReadOnlyDictionary<IdentitySO, int> GetAllItemsGranted()
+        public override IReadOnlyList<ItemAmountEntry> GetAllItemsGranted()
         {
-            var mergedItemsByItem = new Dictionary<IdentitySO, int>();
+            var mergedAmountByItem = new Dictionary<IdentitySO, GameNumber>();
 
-            MergeInto(mergedItemsByItem, base.GetAllItemsGranted());
-            MergeAmount(mergedItemsByItem, _currencyItemGranted, _currencyAmountGranted);
+            MergeInto(mergedAmountByItem, base.GetAllItemsGranted());
+            MergeAmount(mergedAmountByItem, _currencyItemGranted, _currencyAmountGranted);
 
-            MergeInto(mergedItemsByItem, _boostersGranted);
-            MergeInto(mergedItemsByItem, _otherItemsGranted);
-            return mergedItemsByItem;
+            MergeInto(mergedAmountByItem, _boostersGranted);
+            MergeInto(mergedAmountByItem, _otherItemsGranted);
+
+            var mergedEntries = new List<ItemAmountEntry>(mergedAmountByItem.Count);
+            foreach ((IdentitySO itemSo, GameNumber amount) in mergedAmountByItem)
+            {
+                mergedEntries.Add(new ItemAmountEntry(itemSo, amount));
+            }
+
+            return mergedEntries;
         }
 
         #endregion
 
         #region Private Methods
 
-        private static void MergeInto(Dictionary<IdentitySO, int> mergedItemsByItem, IReadOnlyDictionary<IdentitySO, int> sourceItemsByItem)
+        private static void MergeInto(Dictionary<IdentitySO, GameNumber> mergedAmountByItem, IReadOnlyList<ItemAmountEntry> sourceEntries)
         {
-            foreach ((IdentitySO itemSo, int amount) in sourceItemsByItem)
+            for (int entryIndex = 0; entryIndex < sourceEntries.Count; entryIndex++)
             {
-                MergeAmount(mergedItemsByItem, itemSo, amount);
+                ItemAmountEntry entry = sourceEntries[entryIndex];
+                MergeAmount(mergedAmountByItem, entry.IdentitySO, entry.Amount);
             }
         }
 
-        private static void MergeAmount(Dictionary<IdentitySO, int> mergedItemsByItem, IdentitySO itemSo, int amount)
+        private static void MergeInto(Dictionary<IdentitySO, GameNumber> mergedAmountByItem, IReadOnlyDictionary<IdentitySO, int> sourceItemsByItem)
         {
-            if (!itemSo || amount <= 0)
+            foreach ((IdentitySO itemSo, int amount) in sourceItemsByItem)
+            {
+                MergeAmount(mergedAmountByItem, itemSo, amount);
+            }
+        }
+
+        private static void MergeAmount(Dictionary<IdentitySO, GameNumber> mergedAmountByItem, IdentitySO itemSo, GameNumber amount)
+        {
+            if (!itemSo || amount <= GameNumber.Zero)
             {
                 return;
             }
 
-            int currentAmount = mergedItemsByItem.TryGetValue(itemSo, out int existingAmount) ? existingAmount : 0;
-            mergedItemsByItem[itemSo] = currentAmount + amount;
+            GameNumber currentAmount = mergedAmountByItem.TryGetValue(itemSo, out GameNumber existingAmount) ? existingAmount : GameNumber.Zero;
+            mergedAmountByItem[itemSo] = currentAmount + amount;
         }
 
         #endregion

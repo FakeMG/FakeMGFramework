@@ -5,6 +5,8 @@ using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
 using FakeMG.Framework.ExtensionMethods;
 using FakeMG.Framework.UI;
+using FakeMG.Inventory;
+using FakeMG.Numbers;
 using FakeMG.Shop.Config;
 using Sirenix.OdinInspector;
 using TMPro;
@@ -163,12 +165,12 @@ namespace FakeMG.Shop.UI
 
         private void UpdateSpecialItemIcons(BundleListingSO bundleListingSo)
         {
-            IReadOnlyDictionary<IdentitySO, int> grantedItemsByItem = bundleListingSo.GetAllItemsGranted();
+            IReadOnlyList<ItemAmountEntry> grantedItems = bundleListingSo.GetAllItemsGranted();
 
-            bool hasInfiniteHeart = grantedItemsByItem.TryGetValue(_infiniteHeartItemSO, out int infiniteHeartAmount) &&
-                                    infiniteHeartAmount > 0;
-            bool hasNoAds = grantedItemsByItem.TryGetValue(_noAdsItemSO, out int noAdsAmount) &&
-                            noAdsAmount > 0;
+            bool hasInfiniteHeart = TryGetGrantedAmount(grantedItems, _infiniteHeartItemSO, out GameNumber infiniteHeartAmount) &&
+                                    infiniteHeartAmount > GameNumber.Zero;
+            bool hasNoAds = TryGetGrantedAmount(grantedItems, _noAdsItemSO, out GameNumber noAdsAmount) &&
+                            noAdsAmount > GameNumber.Zero;
 
             _infiniteHeartIcon.SetActive(hasInfiniteHeart);
             _infiniteHeartDurationText.text = _infiniteHeartDurationText2.text = hasInfiniteHeart
@@ -180,9 +182,24 @@ namespace FakeMG.Shop.UI
             _noAdsIcon.SetActive(hasNoAds);
         }
 
-        private static string BuildInfiniteHeartDurationText(int durationSeconds)
+        private static bool TryGetGrantedAmount(IReadOnlyList<ItemAmountEntry> grantedItems, IdentitySO itemSo, out GameNumber amount)
         {
-            float durationHours = Mathf.Max(0, durationSeconds) / 3600f;
+            for (int entryIndex = 0; entryIndex < grantedItems.Count; entryIndex++)
+            {
+                if (grantedItems[entryIndex].IdentitySO == itemSo)
+                {
+                    amount = grantedItems[entryIndex].Amount;
+                    return true;
+                }
+            }
+
+            amount = GameNumber.Zero;
+            return false;
+        }
+
+        private static string BuildInfiniteHeartDurationText(GameNumber durationSeconds)
+        {
+            float durationHours = (float)GameNumber.Max(GameNumber.Zero, durationSeconds).ToDouble() / 3600f;
             return $"{durationHours.ToString("0.#", CultureInfo.InvariantCulture)}h";
         }
 

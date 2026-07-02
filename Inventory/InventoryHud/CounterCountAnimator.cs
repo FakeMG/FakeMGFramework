@@ -1,7 +1,7 @@
 using System;
-using System.Numerics;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using FakeMG.Numbers;
 using UnityEngine;
 
 namespace FakeMG.Inventory.Hud
@@ -28,9 +28,9 @@ namespace FakeMG.Inventory.Hud
 
         #region Public Methods
 
-        // The rolling number tween runs over a double for smooth motion; the exact BigInteger
+        // The rolling number tween runs over a double for smooth motion; the exact GameNumber
         // target is applied on completion so arbitrary-magnitude counts stay precise.
-        public UniTask AnimateAsync(BigInteger fromCount, BigInteger targetCount, Action<BigInteger> applyCount)
+        public UniTask AnimateAsync(GameNumber fromCount, GameNumber targetCount, Action<GameNumber> applyCount)
         {
             KillActiveTween();
 
@@ -40,15 +40,15 @@ namespace FakeMG.Inventory.Hud
                 return UniTask.CompletedTask;
             }
 
-            double displayedCount = (double)fromCount;
+            double displayedCount = fromCount.ToDouble();
             _activeCountTween = DOTween.To(
                     () => displayedCount,
                     value =>
                     {
                         displayedCount = value;
-                        applyCount?.Invoke(new BigInteger(value));
+                        applyCount?.Invoke(GameNumber.FromDouble(value));
                     },
-                    (double)targetCount,
+                    targetCount.ToDouble(),
                     _countTweenDurationSeconds)
                 .SetEase(Ease.OutQuad)
                 .SetLink(gameObject)

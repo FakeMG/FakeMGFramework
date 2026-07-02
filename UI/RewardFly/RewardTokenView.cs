@@ -1,7 +1,7 @@
-using System.Numerics;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using FakeMG.Numbers;
 using UnityEngine;
 using UnityEngine.UI;
 using Vector3 = UnityEngine.Vector3;
@@ -21,7 +21,7 @@ namespace FakeMG.Framework.UI.RewardFly
 
         public async UniTask InitializeAsync(
             IdentitySO identitySO,
-            BigInteger amount,
+            GameNumber amount,
             CancellationToken cancellationToken)
         {
             await _itemIconUiUpdater.UpdateUIAsync(identitySO, amount);

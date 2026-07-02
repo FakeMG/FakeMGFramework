@@ -45,7 +45,7 @@ namespace FakeMG.Shop.UI
 
             foreach (var grantedItemEntry in shopListingViewDefinition.ListingSO.GetAllItemsGranted())
             {
-                _amountText.text = grantedItemEntry.Value.SeparateNumberWithComma();
+                _amountText.text = grantedItemEntry.Amount.SeparateNumberWithComma();
                 break;
             }
 
