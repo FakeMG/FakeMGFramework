@@ -67,6 +67,12 @@ namespace FakeMG.Framework.UI
 
         public void OnPointerUp(PointerEventData eventData)
         {
+            if (Application.isMobilePlatform)
+            {
+                AnimateScale(_normalScale);
+                return;
+            }
+
             if (EventSystem.current.currentSelectedGameObject == gameObject && _button.interactable)
             {
                 AnimateScale(_normalScale * _selectScaleMultiplier);
