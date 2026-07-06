@@ -1,3 +1,4 @@
+using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace FakeMG.GodCamera
     /// <summary>
     /// Defines projection, movement, zoom, rotation, and clipping settings for a camera rig.
     /// </summary>
-    [CreateAssetMenu(menuName = "Animals/Camera Movement/Camera Profile SO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.CAMERA + "/Camera Profile SO")]
     public class CameraProfileSO : ScriptableObject
     {
         [TitleGroup("Projection", "Selects the camera projection and controls its shared viewing angle.")]

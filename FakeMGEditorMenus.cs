@@ -47,5 +47,8 @@ namespace FakeMG.Framework
 
         // Tutorial
         public const string TUTORIAL = ROOT + "/Tutorial";
+
+        // Camera
+        public const string CAMERA = ROOT + "/Camera Movement";
     }
 }
