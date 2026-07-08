@@ -1,3 +1,4 @@
+using System.Numerics;
 using FakeMG.Framework.ExtensionMethods;
 using NUnit.Framework;
 
@@ -66,6 +67,39 @@ namespace ExtensionMethods.EditMode
         {
             var result = value.ToShorthand(decimalPlaces);
             Assert.AreEqual(expected, result);
+        }
+
+        [TestCase(0L, 1, "0")]
+        [TestCase(999L, 1, "999")]
+        [TestCase(1000L, 1, "1K")]
+        [TestCase(1500L, 1, "1.5K")]
+        [TestCase(1000000L, 1, "1M")]
+        [TestCase(2500000L, 1, "2.5M")]
+        [TestCase(1000000000L, 1, "1B")]
+        [TestCase(1234567890L, 2, "1.23B")]
+        [TestCase(1000000000000L, 1, "1T")]
+        [TestCase(-1500L, 1, "-1.5K")]
+        public void ToShorthand_BigInteger_Works(long value, int decimalPlaces, string expected)
+        {
+            var result = new BigInteger(value).ToShorthand(decimalPlaces);
+            Assert.AreEqual(expected, result);
+        }
+
+        [Test]
+        public void ToShorthand_BigInteger_BeyondQuintillion_UsesLargerSuffixes()
+        {
+            // BigInteger's backing lets it represent magnitudes the long-based overloads cannot (they cap at Quintillion).
+            Assert.AreEqual("1Qd", BigInteger.Pow(10, 15).ToShorthand());
+            Assert.AreEqual("1Qn", BigInteger.Pow(10, 18).ToShorthand());
+            Assert.AreEqual("1Sx", BigInteger.Pow(10, 21).ToShorthand());
+            Assert.AreEqual("1Sp", BigInteger.Pow(10, 24).ToShorthand());
+        }
+
+        [Test]
+        public void ToShorthand_BigInteger_DefaultDecimalPlaces_UsesOne()
+        {
+            var result = new BigInteger(1500).ToShorthand();
+            Assert.AreEqual("1.5K", result);
         }
     }
 }
