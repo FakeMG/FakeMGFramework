@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using FakeMG.Framework;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 
@@ -8,9 +9,10 @@ namespace FakeMG.Tutorial
 {
     /// <summary>
     /// Shared behavior for visual modules: load the addressable visual prefab,
-    /// instantiate it under the tutorial visual root, configure its content, then animate
-    /// it in. If configuration or the show animation fails the instance is destroyed and
-    /// the failure propagates so the step can skip (required) or continue (optional).
+    /// instantiate it under the default tutorial visual root or under a tutorial target
+    /// chosen per module, configure its content, then animate it in. Expected failures
+    /// (missing parent target, failed configuration) are reported by returning false so
+    /// the step can skip (required) or continue (optional) without exceptions.
     /// Visual modules block completion so the step waits for the show animation to finish.
     /// </summary>
     [Serializable]
@@ -18,6 +20,8 @@ namespace FakeMG.Tutorial
     {
         [SerializeField] private bool _isRequired;
         [SerializeField] private AssetReferenceT<GameObject> _visualPrefab;
+        [Tooltip("Optional. Parents the visual under this target's RectTransform instead of the default tutorial visual root.")]
+        [SerializeField] private TutorialTargetKeySO _parentTargetKey;
 
         private GameObject _instance;
         private TView _view;
@@ -27,17 +31,36 @@ namespace FakeMG.Tutorial
         public bool BlocksCompletion => true;
         public bool IsRequired => _isRequired;
 
-        public async UniTask ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
+        /// <summary>
+        /// The RectTransform the visual instance is parented under, and therefore the
+        /// coordinate space subclasses must position against. Set during activation.
+        /// </summary>
+        protected RectTransform ParentRect { get; private set; }
+
+        public async UniTask<bool> ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
         {
+            if (!TryResolveParent(context, out RectTransform parent))
+            {
+                return false;
+            }
+
+            ParentRect = parent;
+
             GameObject prefab = await context.Loader.LoadAsync(_visualPrefab, cancellationToken);
-            _instance = UnityEngine.Object.Instantiate(prefab, context.VisualRoot);
+            _instance = UnityEngine.Object.Instantiate(prefab, parent);
             _view = _instance.GetComponent<TView>();
             _hasStartedHiding = false;
             _hideCompletionSource = new UniTaskCompletionSource();
 
+            if (!ConfigureView(_view, context))
+            {
+                OnBeforeViewDestroyed();
+                DestroyInstance();
+                return false;
+            }
+
             try
             {
-                ConfigureView(_view, context);
                 await _view.ShowAsync(cancellationToken);
             }
             catch
@@ -46,6 +69,8 @@ namespace FakeMG.Tutorial
                 DestroyInstance();
                 throw;
             }
+
+            return true;
         }
 
         public async UniTask DeactivateAsync(CancellationToken cancellationToken)
@@ -56,7 +81,11 @@ namespace FakeMG.Tutorial
             DestroyInstance();
         }
 
-        protected abstract void ConfigureView(TView view, TutorialContext context);
+        /// <summary>
+        /// Configures the freshly instantiated view. Return false (after logging why) to
+        /// fail activation; the instance is destroyed and the step reacts per IsRequired.
+        /// </summary>
+        protected abstract bool ConfigureView(TView view, TutorialContext context);
 
         protected virtual void OnBeforeViewDestroyed()
         {
@@ -80,26 +109,39 @@ namespace FakeMG.Tutorial
         }
 
         /// <summary>
-        /// Resolves a UI target by key to its RectTransform, throwing if it is not
-        /// registered (e.g. its popup is not open) or has no RectTransform.
+        /// Resolves a UI target by key to its RectTransform. Logs and returns false when
+        /// it is not registered (e.g. its popup is not open) or has no RectTransform.
         /// </summary>
-        protected static RectTransform ResolveTargetRect(TutorialContext context, TutorialTargetKeySO key)
+        protected static bool TryResolveTargetRect(TutorialContext context, TutorialTargetKeySO key,
+            out RectTransform targetRect)
         {
+            targetRect = null;
+
             if (!context.TargetRegistry.TryGet(key, out ITutorialTarget target))
             {
-                // TODO: we should not throw.
-                throw new InvalidOperationException(
-                    $"Tutorial target '{(key == null ? "<none>" : key.name)}' is not registered. Is its UI active?");
+                Echo.Error($"Tutorial target '{(key == null ? "<none>" : key.name)}' is not registered. Is its UI active?");
+                return false;
             }
 
             if (target.InteractionTransform is RectTransform rect)
             {
-                return rect;
+                targetRect = rect;
+                return true;
             }
 
-            // TODO: we should not throw.
-            throw new InvalidOperationException(
-                $"Tutorial target '{key.name}' has no RectTransform to position against.");
+            Echo.Error($"Tutorial target '{key.name}' has no RectTransform to position against.");
+            return false;
+        }
+
+        private bool TryResolveParent(TutorialContext context, out RectTransform parent)
+        {
+            if (_parentTargetKey == null)
+            {
+                parent = context.VisualRoot;
+                return true;
+            }
+
+            return TryResolveTargetRect(context, _parentTargetKey, out parent);
         }
 
         private void DestroyInstance()

@@ -21,7 +21,13 @@ namespace FakeMG.Tutorial
         /// </summary>
         bool IsRequired { get; }
 
-        UniTask ActivateAsync(TutorialContext context, CancellationToken cancellationToken);
+        /// <summary>
+        /// Returns false when activation failed for an expected reason (missing target,
+        /// missing setup); the module must log why and clean up after itself before
+        /// returning. Exceptions are reserved for unexpected errors and cancellation.
+        /// </summary>
+        UniTask<bool> ActivateAsync(TutorialContext context, CancellationToken cancellationToken);
+
         UniTask DeactivateAsync(CancellationToken cancellationToken);
     }
 }

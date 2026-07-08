@@ -8,9 +8,10 @@ namespace FakeMG.Tutorial
     {
         [SerializeField, TextArea] private string _instruction;
 
-        protected override void ConfigureView(TopBannerTextView view, TutorialContext context)
+        protected override bool ConfigureView(TopBannerTextView view, TutorialContext context)
         {
             view.SetInstruction(_instruction);
+            return true;
         }
     }
 }

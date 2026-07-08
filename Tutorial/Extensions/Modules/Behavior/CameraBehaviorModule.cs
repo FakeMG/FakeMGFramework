@@ -34,7 +34,7 @@ namespace FakeMG.Tutorial
             _objectResolver = objectResolver;
         }
 
-        public async UniTask ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
+        public async UniTask<bool> ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
         {
             GameObject prefab = await context.Loader.LoadAsync(_cameraControllerPrefab, cancellationToken);
             _instance = UnityEngine.Object.Instantiate(prefab);
@@ -50,6 +50,8 @@ namespace FakeMG.Tutorial
                 DestroyInstance();
                 throw;
             }
+
+            return true;
         }
 
         public async UniTask DeactivateAsync(CancellationToken cancellationToken)

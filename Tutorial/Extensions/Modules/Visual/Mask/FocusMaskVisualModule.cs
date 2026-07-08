@@ -12,9 +12,15 @@ namespace FakeMG.Tutorial
     {
         [SerializeField] private TutorialTargetKeySO _focusTargetKey;
 
-        protected override void ConfigureView(TutorialFramingVisualView view, TutorialContext context)
+        protected override bool ConfigureView(TutorialFramingVisualView view, TutorialContext context)
         {
-            view.Frame(ResolveTargetRect(context, _focusTargetKey));
+            if (!TryResolveTargetRect(context, _focusTargetKey, out RectTransform focusRect))
+            {
+                return false;
+            }
+
+            view.Frame(focusRect);
+            return true;
         }
     }
 }

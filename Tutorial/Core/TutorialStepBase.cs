@@ -158,10 +158,10 @@ namespace FakeMG.Tutorial
 
         private async UniTask ActivateModuleAsync(ITutorialModule module, TutorialContext context, CancellationToken cancellationToken)
         {
+            bool isActivated;
             try
             {
-                await module.ActivateAsync(context, cancellationToken);
-                _activatedModules.Add(module);
+                isActivated = await module.ActivateAsync(context, cancellationToken);
             }
             catch (OperationCanceledException)
             {
@@ -169,15 +169,29 @@ namespace FakeMG.Tutorial
             }
             catch (Exception exception)
             {
-                if (module.IsRequired)
-                {
-                    Echo.Error($"Required tutorial module failed to activate on step '{_stepId}'. Skipping step. {exception}");
-                    _requiredModuleFailure = SkipReason.RequiredDependencyFailed;
-                }
-                else
-                {
-                    Echo.Warning($"Optional tutorial module failed to activate on step '{_stepId}'. Continuing without it. {exception}");
-                }
+                RecordActivationFailure(module, exception.ToString());
+                return;
+            }
+
+            if (isActivated)
+            {
+                _activatedModules.Add(module);
+                return;
+            }
+
+            RecordActivationFailure(module, "The module logged the failure reason above.");
+        }
+
+        private void RecordActivationFailure(ITutorialModule module, string details)
+        {
+            if (module.IsRequired)
+            {
+                Echo.Error($"Required tutorial module failed to activate on step '{_stepId}'. Skipping step. {details}");
+                _requiredModuleFailure = SkipReason.RequiredDependencyFailed;
+            }
+            else
+            {
+                Echo.Warning($"Optional tutorial module failed to activate on step '{_stepId}'. Continuing without it. {details}");
             }
         }
 

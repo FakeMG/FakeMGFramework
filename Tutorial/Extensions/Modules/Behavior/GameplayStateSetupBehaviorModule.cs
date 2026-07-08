@@ -19,7 +19,11 @@ namespace FakeMG.Tutorial
         public bool BlocksCompletion => true;
         public bool IsRequired => _isRequired;
 
-        public abstract UniTask ActivateAsync(TutorialContext context, CancellationToken cancellationToken);
+        /// <summary>
+        /// Return false (after logging why) when the required gameplay state cannot be
+        /// set up; the step then reacts per IsRequired.
+        /// </summary>
+        public abstract UniTask<bool> ActivateAsync(TutorialContext context, CancellationToken cancellationToken);
         public abstract UniTask DeactivateAsync(CancellationToken cancellationToken);
     }
 }

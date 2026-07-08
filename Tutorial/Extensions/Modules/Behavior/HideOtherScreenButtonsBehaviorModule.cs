@@ -27,18 +27,19 @@ namespace FakeMG.Tutorial
             _visibilityController = visibilityController;
         }
 
-        public UniTask ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
+        public UniTask<bool> ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
         {
             RectTransform canvasRoot = ResolveCanvasRoot(context);
             if (canvasRoot == null)
             {
-                throw new InvalidOperationException("Cannot hide gameplay buttons because no screen-space Canvas root is assigned.");
+                Echo.Error("Cannot hide gameplay buttons because no screen-space Canvas root is assigned.");
+                return UniTask.FromResult(false);
             }
 
             List<Transform> visibleRoots = ResolveVisibleRoots(context);
             _visibilityController.ApplyVisibility(canvasRoot, visibleRoots, _alwaysVisibleRoots);
 
-            return UniTask.CompletedTask;
+            return UniTask.FromResult(true);
         }
 
         private RectTransform ResolveCanvasRoot(TutorialContext context)

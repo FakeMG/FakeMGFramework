@@ -13,9 +13,15 @@ namespace FakeMG.Tutorial
     {
         [SerializeField] private TutorialTargetKeySO _targetKey;
 
-        protected override void ConfigureView(TutorialPointerView view, TutorialContext context)
+        protected override bool ConfigureView(TutorialPointerView view, TutorialContext context)
         {
-            view.PointAt(ResolveTargetRect(context, _targetKey), context.VisualRoot);
+            if (!TryResolveTargetRect(context, _targetKey, out RectTransform targetRect))
+            {
+                return false;
+            }
+
+            view.PointAt(targetRect, ParentRect);
+            return true;
         }
     }
 }

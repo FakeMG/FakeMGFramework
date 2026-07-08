@@ -24,7 +24,7 @@ namespace FakeMG.Tutorial
         public bool BlocksCompletion => false;
         public bool IsRequired => _isRequired;
 
-        public UniTask ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
+        public UniTask<bool> ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
         {
             _gate = context.Gate;
 
@@ -43,7 +43,7 @@ namespace FakeMG.Tutorial
             }
 
             _gate.RestrictToAllowList(resolvedTargets);
-            return UniTask.CompletedTask;
+            return UniTask.FromResult(true);
         }
 
         public UniTask DeactivateAsync(CancellationToken cancellationToken)

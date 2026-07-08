@@ -24,7 +24,7 @@ namespace FakeMG.Tutorial
         public bool BlocksCompletion => true;
         public bool IsRequired => _isRequired;
 
-        public async UniTask ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
+        public async UniTask<bool> ActivateAsync(TutorialContext context, CancellationToken cancellationToken)
         {
             _previousAlphas.Clear();
 
@@ -39,6 +39,7 @@ namespace FakeMG.Tutorial
             }
 
             await UniTask.WhenAll(fadeTasks);
+            return true;
         }
 
         public async UniTask DeactivateAsync(CancellationToken cancellationToken)
