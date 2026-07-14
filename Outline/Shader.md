@@ -1,0 +1,17 @@
+- cel shading
+  - cast and receieve shadow
+- Rim Lighting
+- outline
+  - inverted hull or stencil buffer
+  - work with hard edge objects (smooth normals)
+  - Use world-space normal expansion
+  - Avoid doesn't show when 2 outline objects overlap
+  - show through some objects (e.g. wall)
+- inner line
+
+- water
+- fill highlight behind obstacles
+- grass
+- foliage wind
+- dither
+- cloud shadow
