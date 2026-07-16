@@ -1,0 +1,276 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2079647509503559103
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8528456649458875845}
+  - component: {fileID: 7949069736608183559}
+  - component: {fileID: 1653817478559527794}
+  - component: {fileID: 2078791285753232366}
+  m_Layer: 0
+  m_Name: Sun Light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8528456649458875845
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079647509503559103}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0.29045948, y: 0.2468402, z: -0.077828415, w: -0.9212198}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2609909962539289686}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!108 &7949069736608183559
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079647509503559103}
+  m_Enabled: 1
+  serializedVersion: 12
+  m_Type: 1
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Intensity: 1
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 2
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!114 &1653817478559527794
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079647509503559103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c50fafa39040dfa47b302d2becec8043, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.DirectionalLightOutputApplicator
+  _directionalLight: {fileID: 7949069736608183559}
+  _enabledOutputId: main_light_enabled
+  _rotationOutputId: main_light_rotation
+  _colorOutputId: main_light_color
+  _intensityOutputId: main_light_intensity
+  _shadowStrengthOutputId: main_light_shadow_strength
+--- !u!114 &2078791285753232366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2079647509503559103}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalLightData
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_CustomShadowLayers: 0
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
+  m_RenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_ShadowRenderingLayersMask:
+    serializedVersion: 0
+    m_Bits: 1
+  m_Version: 4
+  m_LightLayerMask: 1
+  m_ShadowLayerMask: 1
+  m_RenderingLayers: 1
+  m_ShadowRenderingLayers: 1
+--- !u!1 &3083574417482667146
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2609909962539289686}
+  - component: {fileID: 478845687684008647}
+  - component: {fileID: 5361040681325969918}
+  - component: {fileID: 6002361671564423359}
+  - component: {fileID: 1506759437775434603}
+  - component: {fileID: 867503328098317592}
+  m_Layer: 0
+  m_Name: Day Night Cycle
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2609909962539289686
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3083574417482667146}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 8528456649458875845}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &478845687684008647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3083574417482667146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 586d47ec3cd924b4aaef41c3aa0cc80a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.TimeOfCycleLifetimeScope
+  parentReference:
+    TypeName: 
+  autoRun: 1
+  autoInjectGameObjects: []
+  _sharedProfileSO: {fileID: 11400000, guid: 4756f73682ceaca4fa2a4ef45900eceb, type: 2}
+  _outputApplicatorBehaviours:
+  - {fileID: 1653817478559527794}
+  - {fileID: 6002361671564423359}
+  - {fileID: 1506759437775434603}
+  - {fileID: 867503328098317592}
+--- !u!114 &5361040681325969918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3083574417482667146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a54e4e74ff4d0e44ba23891ce0896b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.EnvironmentCubemapRefreshController
+--- !u!114 &6002361671564423359
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3083574417482667146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 02799c3e4bb129a4c9ebe3556a819a27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.ProceduralSkyOutputApplicator
+  _proceduralSkyMaterialTemplate: {fileID: 2100000, guid: 680ec3a16cad7cb4c9d033f13809e735, type: 2}
+  _cubemapRefreshController: {fileID: 5361040681325969918}
+  _sunDiskOutputId: sky_sun_disk
+  _sunSizeOutputId: sky_sun_size
+  _sunSizeConvergenceOutputId: sky_sun_size_convergence
+  _atmosphereThicknessOutputId: sky_atmosphere_thickness
+  _skyTintOutputId: sky_tint
+  _groundColorOutputId: sky_ground_color
+  _exposureOutputId: sky_exposure
+--- !u!114 &1506759437775434603
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3083574417482667146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e50215f2ba04dd488ebb29cf2794076, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.FogRenderSettingsOutputApplicator
+  _enabledOutputId: fog_enabled
+  _modeOutputId: fog_mode
+  _colorOutputId: fog_color
+  _densityOutputId: fog_density
+  _startDistanceOutputId: fog_start_distance_meters
+  _endDistanceOutputId: fog_end_distance_meters
+--- !u!114 &867503328098317592
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3083574417482667146}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d3dd0c44b6a16ab4e85f7a09410cabdf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.AmbientRenderSettingsOutputApplicator
+  _modeOutputId: ambient_mode
+  _intensityOutputId: ambient_intensity
+  _flatColorOutputId: ambient_flat_color
+  _skyColorOutputId: ambient_sky_color
+  _equatorColorOutputId: ambient_equator_color
+  _groundColorOutputId: ambient_ground_color

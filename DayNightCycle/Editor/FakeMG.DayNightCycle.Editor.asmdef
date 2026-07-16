@@ -1,0 +1,20 @@
+{
+    "name": "FakeMG.DayNightCycle.Editor",
+    "rootNamespace": "FakeMG.DayNightCycle.Editor",
+    "references": [
+        "FakeMG.Framework",
+        "FakeMG.DayNightCycle",
+        "VContainer"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

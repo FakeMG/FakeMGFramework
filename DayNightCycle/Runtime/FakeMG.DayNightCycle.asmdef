@@ -1,0 +1,18 @@
+{
+    "name": "FakeMG.DayNightCycle",
+    "rootNamespace": "FakeMG.DayNightCycle",
+    "references": [
+        "FakeMG.Framework",
+        "UniTask",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
