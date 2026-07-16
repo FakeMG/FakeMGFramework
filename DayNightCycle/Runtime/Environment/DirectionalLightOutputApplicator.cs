@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FakeMG.DayNightCycle
@@ -9,12 +10,7 @@ namespace FakeMG.DayNightCycle
     public sealed class DirectionalLightOutputApplicator : MonoBehaviour, ITimeOfCycleOutputApplicator
     {
         [SerializeField] private Light _directionalLight;
-        [SerializeField] private string _enabledOutputId = DayNightEnvironmentOutputIds.MAIN_LIGHT_ENABLED;
-        [SerializeField] private string _rotationOutputId = DayNightEnvironmentOutputIds.MAIN_LIGHT_ROTATION;
-        [SerializeField] private string _colorOutputId = DayNightEnvironmentOutputIds.MAIN_LIGHT_COLOR;
-        [SerializeField] private string _intensityOutputId = DayNightEnvironmentOutputIds.MAIN_LIGHT_INTENSITY;
-        [SerializeField]
-        private string _shadowStrengthOutputId = DayNightEnvironmentOutputIds.MAIN_LIGHT_SHADOW_STRENGTH;
+        [SerializeField] private DayNightEnvironmentOutputSchemaSO _outputSchemaSO;
 
         private Light _previousSun;
         private Quaternion _previousRotation;
@@ -22,6 +18,8 @@ namespace FakeMG.DayNightCycle
         private float _previousIntensity;
         private float _previousShadowStrength;
         private bool _wasEnabled;
+
+        public IReadOnlyList<CycleOutputKeySO> RequiredOutputKeys => _outputSchemaSO.MainLightKeys;
 
         #region Unity Lifecycle
 
@@ -52,28 +50,28 @@ namespace FakeMG.DayNightCycle
 
         public void Apply(IReadOnlyCycleOutputState outputState)
         {
-            if (outputState.TryGetValue(new CycleOutputId(_enabledOutputId), out bool isEnabled))
+            if (outputState.TryGetValue(_outputSchemaSO.MainLightEnabled, out bool isEnabled))
             {
                 _directionalLight.enabled = isEnabled;
             }
 
-            if (outputState.TryGetValue(new CycleOutputId(_rotationOutputId), out Quaternion rotation))
+            if (outputState.TryGetValue(_outputSchemaSO.MainLightRotation, out Quaternion rotation))
             {
                 _directionalLight.transform.rotation = rotation;
             }
 
-            if (outputState.TryGetValue(new CycleOutputId(_colorOutputId), out Color color))
+            if (outputState.TryGetValue(_outputSchemaSO.MainLightColor, out Color color))
             {
                 _directionalLight.color = color;
             }
 
-            if (outputState.TryGetValue(new CycleOutputId(_intensityOutputId), out float intensity))
+            if (outputState.TryGetValue(_outputSchemaSO.MainLightIntensity, out float intensity))
             {
                 _directionalLight.intensity = Mathf.Max(0f, intensity);
             }
 
             if (outputState.TryGetValue(
-                    new CycleOutputId(_shadowStrengthOutputId),
+                    _outputSchemaSO.MainLightShadowStrength,
                     out float shadowStrength01))
             {
                 _directionalLight.shadowStrength = Mathf.Clamp01(shadowStrength01);
@@ -81,9 +79,17 @@ namespace FakeMG.DayNightCycle
         }
 
 #if UNITY_EDITOR
-        public void ConfigureForEditor(Light directionalLight)
+        public void ConfigureForEditor(
+            Light directionalLight,
+            DayNightEnvironmentOutputSchemaSO outputSchemaSO)
         {
             _directionalLight = directionalLight;
+            _outputSchemaSO = outputSchemaSO;
+        }
+
+        public void SetOutputSchemaForEditor(DayNightEnvironmentOutputSchemaSO outputSchemaSO)
+        {
+            _outputSchemaSO = outputSchemaSO;
         }
 #endif
 

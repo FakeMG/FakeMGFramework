@@ -51,46 +51,48 @@ MonoBehaviour:
   - _periodId: night
     _startTimeSeconds: 72000
   _outputDefinitions:
-  - rid: 7463804136324333696
-  - rid: 7463804136324333697
-  - rid: 7463804136324333698
-  - rid: 7463804136324333699
-  - rid: 7463804136324333700
-  - rid: 7463804136324333701
-  - rid: 7463804136324333702
-  - rid: 7463804136324333703
-  - rid: 7463804136324333704
-  - rid: 7463804136324333705
-  - rid: 7463804136324333706
-  - rid: 7463804136324333707
-  - rid: 7463804136324333708
-  - rid: 7463804136324333709
-  - rid: 7463804136324333710
-  - rid: 7463804136324333711
-  - rid: 7463804136324333712
-  - rid: 7463804136324333713
-  - rid: 7463804136324333714
-  - rid: 7463804136324333715
-  - rid: 7463804136324333716
-  - rid: 7463804136324333717
-  - rid: 7463804136324333718
-  - rid: 7463804136324333719
+  - rid: 7463804154534690920
+  - rid: 7463804154534690921
+  - rid: 7463804154534690922
+  - rid: 7463804154534690923
+  - rid: 7463804154534690924
+  - rid: 7463804154534690925
+  - rid: 7463804154534690926
+  - rid: 7463804154534690927
+  - rid: 7463804154534690928
+  - rid: 7463804154534690929
+  - rid: 7463804154534690930
+  - rid: 7463804154534690931
+  - rid: 7463804154534690932
+  - rid: 7463804154534690933
+  - rid: 7463804154534690934
+  - rid: 7463804154534690935
+  - rid: 7463804154534690936
+  - rid: 7463804154534690937
+  - rid: 7463804154534690938
+  - rid: 7463804154534690939
+  - rid: 7463804154534690940
+  - rid: 7463804154534690941
+  - rid: 7463804154534690942
+  - rid: 7463804154534690943
   references:
     version: 2
     RefIds:
-    - rid: 7463804136324333696
+    - rid: 7463804154534690920
       type: {class: BoolCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: main_light_enabled
+        _outputKeySO: {fileID: 11400000, guid: 56246dcc11b0f7648b46018f25c33bda, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _timelinePoints:
         - _timeSeconds: 0
           _value: 1
         _periodValues: []
-    - rid: 7463804136324333697
+    - rid: 7463804154534690921
       type: {class: RotationCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: main_light_rotation
+        _outputKeySO: {fileID: 11400000, guid: d240ceff7a84d164ebcbfc90764f12a8, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -125,10 +127,11 @@ MonoBehaviour:
           _eulerDegrees: {x: 90, y: 330, z: 0}
         - _timeSeconds: 64800
           _eulerDegrees: {x: 180, y: 330, z: 0}
-    - rid: 7463804136324333698
+    - rid: 7463804154534690922
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: main_light_color
+        _outputKeySO: {fileID: 11400000, guid: f5cce463191a4d04ca747ffa146d4ccb, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -165,10 +168,11 @@ MonoBehaviour:
           _value: {r: 1, g: 0.42, b: 0.2, a: 1}
         - _timeSeconds: 72000
           _value: {r: 0.28, g: 0.36, b: 0.62, a: 1}
-    - rid: 7463804136324333699
+    - rid: 7463804154534690923
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: main_light_intensity
+        _outputKeySO: {fileID: 11400000, guid: 855e385169a54d449b1acb55b835c534, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -205,10 +209,11 @@ MonoBehaviour:
           _value: 0.25
         - _timeSeconds: 72000
           _value: 0.04
-    - rid: 7463804136324333700
+    - rid: 7463804154534690924
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: main_light_shadow_strength
+        _outputKeySO: {fileID: 11400000, guid: 261696164d1c32746bfcb9beeb9b6b69, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -243,19 +248,21 @@ MonoBehaviour:
           _value: 0.45
         - _timeSeconds: 72000
           _value: 0.1
-    - rid: 7463804136324333701
+    - rid: 7463804154534690925
       type: {class: IntCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: sky_sun_disk
+        _outputKeySO: {fileID: 11400000, guid: 7639948cbb656f74291a4ca2a392d478, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _timelinePoints:
         - _timeSeconds: 0
           _value: 2
         _periodValues: []
-    - rid: 7463804136324333702
+    - rid: 7463804154534690926
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: sky_sun_size
+        _outputKeySO: {fileID: 11400000, guid: 31ec35b698b7ff448a4a6f49c3c8a38a, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -292,10 +299,11 @@ MonoBehaviour:
           _value: 0.065
         - _timeSeconds: 72000
           _value: 0.025
-    - rid: 7463804136324333703
+    - rid: 7463804154534690927
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: sky_sun_size_convergence
+        _outputKeySO: {fileID: 11400000, guid: 62c781d244939614e9703e2d2d4c4c24, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -324,10 +332,11 @@ MonoBehaviour:
         _points:
         - _timeSeconds: 0
           _value: 5
-    - rid: 7463804136324333704
+    - rid: 7463804154534690928
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: sky_atmosphere_thickness
+        _outputKeySO: {fileID: 11400000, guid: 8fdd3fceea9b3634796406837891d2bd, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -364,10 +373,11 @@ MonoBehaviour:
           _value: 1.45
         - _timeSeconds: 72000
           _value: 0.35
-    - rid: 7463804136324333705
+    - rid: 7463804154534690929
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: sky_tint
+        _outputKeySO: {fileID: 11400000, guid: ec64cd35241cde949bd8e3b609f334ec, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -404,10 +414,11 @@ MonoBehaviour:
           _value: {r: 0.82, g: 0.32, b: 0.28, a: 1}
         - _timeSeconds: 72000
           _value: {r: 0.08, g: 0.12, b: 0.28, a: 1}
-    - rid: 7463804136324333706
+    - rid: 7463804154534690930
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: sky_ground_color
+        _outputKeySO: {fileID: 11400000, guid: ecc22ddbf1270d14e867984f064cd9fb, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -444,10 +455,11 @@ MonoBehaviour:
           _value: {r: 0.28, g: 0.12, b: 0.09, a: 1}
         - _timeSeconds: 72000
           _value: {r: 0.03, g: 0.04, b: 0.08, a: 1}
-    - rid: 7463804136324333707
+    - rid: 7463804154534690931
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: sky_exposure
+        _outputKeySO: {fileID: 11400000, guid: 4a4427836c97f8341b5e3e1deb9893ef, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -484,28 +496,31 @@ MonoBehaviour:
           _value: 0.7
         - _timeSeconds: 72000
           _value: 0.35
-    - rid: 7463804136324333708
+    - rid: 7463804154534690932
       type: {class: BoolCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: fog_enabled
+        _outputKeySO: {fileID: 11400000, guid: 5e6c0ce0384529b4ab29dc6bfede4d8e, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _timelinePoints:
         - _timeSeconds: 0
           _value: 1
         _periodValues: []
-    - rid: 7463804136324333709
+    - rid: 7463804154534690933
       type: {class: IntCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: fog_mode
+        _outputKeySO: {fileID: 11400000, guid: 2ee407cd24a130748bd788477a367080, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _timelinePoints:
         - _timeSeconds: 0
           _value: 3
         _periodValues: []
-    - rid: 7463804136324333710
+    - rid: 7463804154534690934
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: fog_color
+        _outputKeySO: {fileID: 11400000, guid: 3c8bcd25e7a0fd347acd06738f4d95f9, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -542,10 +557,11 @@ MonoBehaviour:
           _value: {r: 0.48, g: 0.24, b: 0.22, a: 1}
         - _timeSeconds: 72000
           _value: {r: 0.055, g: 0.07, b: 0.14, a: 1}
-    - rid: 7463804136324333711
+    - rid: 7463804154534690935
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: fog_density
+        _outputKeySO: {fileID: 11400000, guid: 7731c68d705d30c4684d406914ea3cdf, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -580,10 +596,11 @@ MonoBehaviour:
           _value: 0.004
         - _timeSeconds: 72000
           _value: 0.008
-    - rid: 7463804136324333712
+    - rid: 7463804154534690936
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: fog_start_distance_meters
+        _outputKeySO: {fileID: 11400000, guid: c23f834a6ad18f84bad5c51fb93e6d7e, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -612,10 +629,11 @@ MonoBehaviour:
         _points:
         - _timeSeconds: 0
           _value: 0
-    - rid: 7463804136324333713
+    - rid: 7463804154534690937
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: fog_end_distance_meters
+        _outputKeySO: {fileID: 11400000, guid: 9e1684bc1605d6c4c8749e3ce9a8f33f, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -644,19 +662,21 @@ MonoBehaviour:
         _points:
         - _timeSeconds: 0
           _value: 300
-    - rid: 7463804136324333714
+    - rid: 7463804154534690938
       type: {class: IntCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: ambient_mode
+        _outputKeySO: {fileID: 11400000, guid: f1b34423eb9965141a232a608ebcdc7a, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _timelinePoints:
         - _timeSeconds: 0
           _value: 1
         _periodValues: []
-    - rid: 7463804136324333715
+    - rid: 7463804154534690939
       type: {class: FloatCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: ambient_intensity
+        _outputKeySO: {fileID: 11400000, guid: b5da37f685cab3449b57129709de6493, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -691,10 +711,11 @@ MonoBehaviour:
           _value: 0.55
         - _timeSeconds: 72000
           _value: 0.28
-    - rid: 7463804136324333716
+    - rid: 7463804154534690940
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: ambient_flat_color
+        _outputKeySO: {fileID: 11400000, guid: 4a45e4ad9c4faea48acca56e1b3a2d5c, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -723,10 +744,11 @@ MonoBehaviour:
         _points:
         - _timeSeconds: 0
           _value: {r: 0.22, g: 0.22, b: 0.22, a: 0.22}
-    - rid: 7463804136324333717
+    - rid: 7463804154534690941
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: ambient_sky_color
+        _outputKeySO: {fileID: 11400000, guid: 2c2265bf9cf0d6c4ca87ff28a9be49a4, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -761,10 +783,11 @@ MonoBehaviour:
           _value: {r: 0.5, g: 0.24, b: 0.22, a: 1}
         - _timeSeconds: 72000
           _value: {r: 0.035, g: 0.055, b: 0.14, a: 1}
-    - rid: 7463804136324333718
+    - rid: 7463804154534690942
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: ambient_equator_color
+        _outputKeySO: {fileID: 11400000, guid: a7bad99e67b8b7e47937bd16b3ace313, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2
@@ -799,10 +822,11 @@ MonoBehaviour:
           _value: {r: 0.32, g: 0.16, b: 0.13, a: 1}
         - _timeSeconds: 72000
           _value: {r: 0.025, g: 0.035, b: 0.07, a: 1}
-    - rid: 7463804136324333719
+    - rid: 7463804154534690943
       type: {class: ColorCycleOutputDefinition, ns: FakeMG.DayNightCycle, asm: FakeMG.DayNightCycle}
       data:
-        _outputId: ambient_ground_color
+        _outputKeySO: {fileID: 11400000, guid: 88b6518754f59c44091128c4a97f7d4b, type: 2}
+        _legacyOutputId: 
         _profileChangeTransitionDurationSeconds: 1
         _interpolationCurve:
           serializedVersion: 2

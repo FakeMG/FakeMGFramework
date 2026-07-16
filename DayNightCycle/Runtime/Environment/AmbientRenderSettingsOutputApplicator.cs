@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using FakeMG.Framework;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -10,12 +11,7 @@ namespace FakeMG.DayNightCycle
     [DefaultExecutionOrder(TimeOfCycleExecutionOrder.ENVIRONMENT_APPLICATOR)]
     public sealed class AmbientRenderSettingsOutputApplicator : MonoBehaviour, ITimeOfCycleOutputApplicator
     {
-        [SerializeField] private string _modeOutputId = DayNightEnvironmentOutputIds.AMBIENT_MODE;
-        [SerializeField] private string _intensityOutputId = DayNightEnvironmentOutputIds.AMBIENT_INTENSITY;
-        [SerializeField] private string _flatColorOutputId = DayNightEnvironmentOutputIds.AMBIENT_FLAT_COLOR;
-        [SerializeField] private string _skyColorOutputId = DayNightEnvironmentOutputIds.AMBIENT_SKY_COLOR;
-        [SerializeField] private string _equatorColorOutputId = DayNightEnvironmentOutputIds.AMBIENT_EQUATOR_COLOR;
-        [SerializeField] private string _groundColorOutputId = DayNightEnvironmentOutputIds.AMBIENT_GROUND_COLOR;
+        [SerializeField] private DayNightEnvironmentOutputSchemaSO _outputSchemaSO;
 
         private AmbientMode _previousAmbientMode;
         private float _previousAmbientIntensity;
@@ -24,6 +20,8 @@ namespace FakeMG.DayNightCycle
         private Color _previousAmbientEquatorColor;
         private Color _previousAmbientGroundColor;
         private bool _hasLoggedUnsupportedCustomMode;
+
+        public IReadOnlyList<CycleOutputKeySO> RequiredOutputKeys => _outputSchemaSO.AmbientKeys;
 
         #region Unity Lifecycle
 
@@ -55,31 +53,43 @@ namespace FakeMG.DayNightCycle
         {
             ApplyMode(outputState);
 
-            if (outputState.TryGetValue(new CycleOutputId(_intensityOutputId), out float intensity))
+            if (outputState.TryGetValue(_outputSchemaSO.AmbientIntensity, out float intensity))
             {
                 RenderSettings.ambientIntensity = Mathf.Max(0f, intensity);
             }
 
-            if (outputState.TryGetValue(new CycleOutputId(_flatColorOutputId), out Color flatColor))
+            if (outputState.TryGetValue(_outputSchemaSO.AmbientFlatColor, out Color flatColor))
             {
                 RenderSettings.ambientLight = flatColor;
             }
 
-            if (outputState.TryGetValue(new CycleOutputId(_skyColorOutputId), out Color skyColor))
+            if (outputState.TryGetValue(_outputSchemaSO.AmbientSkyColor, out Color skyColor))
             {
                 RenderSettings.ambientSkyColor = skyColor;
             }
 
-            if (outputState.TryGetValue(new CycleOutputId(_equatorColorOutputId), out Color equatorColor))
+            if (outputState.TryGetValue(_outputSchemaSO.AmbientEquatorColor, out Color equatorColor))
             {
                 RenderSettings.ambientEquatorColor = equatorColor;
             }
 
-            if (outputState.TryGetValue(new CycleOutputId(_groundColorOutputId), out Color groundColor))
+            if (outputState.TryGetValue(_outputSchemaSO.AmbientGroundColor, out Color groundColor))
             {
                 RenderSettings.ambientGroundColor = groundColor;
             }
         }
+
+#if UNITY_EDITOR
+        public void ConfigureForEditor(DayNightEnvironmentOutputSchemaSO outputSchemaSO)
+        {
+            _outputSchemaSO = outputSchemaSO;
+        }
+
+        public void SetOutputSchemaForEditor(DayNightEnvironmentOutputSchemaSO outputSchemaSO)
+        {
+            _outputSchemaSO = outputSchemaSO;
+        }
+#endif
 
         #endregion
 
@@ -87,7 +97,7 @@ namespace FakeMG.DayNightCycle
 
         private void ApplyMode(IReadOnlyCycleOutputState outputState)
         {
-            if (!outputState.TryGetValue(new CycleOutputId(_modeOutputId), out int ambientModeValue))
+            if (!outputState.TryGetValue(_outputSchemaSO.AmbientMode, out int ambientModeValue))
             {
                 return;
             }

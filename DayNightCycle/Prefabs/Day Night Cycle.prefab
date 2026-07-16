@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8528456649458875845}
   - component: {fileID: 7949069736608183559}
   - component: {fileID: 1653817478559527794}
-  - component: {fileID: 2078791285753232366}
+  - component: {fileID: 700113831842913577}
   m_Layer: 0
   m_Name: Sun Light
   m_TagString: Untagged
@@ -112,12 +112,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.DirectionalLightOutputApplicator
   _directionalLight: {fileID: 7949069736608183559}
-  _enabledOutputId: main_light_enabled
-  _rotationOutputId: main_light_rotation
-  _colorOutputId: main_light_color
-  _intensityOutputId: main_light_intensity
-  _shadowStrengthOutputId: main_light_shadow_strength
---- !u!114 &2078791285753232366
+  _outputSchemaSO: {fileID: 11400000, guid: efc06c2c3e009844496a8df047c61781, type: 2}
+  _legacyEnabledOutputId: 
+  _legacyRotationOutputId: 
+  _legacyColorOutputId: 
+  _legacyIntensityOutputId: 
+  _legacyShadowStrengthOutputId: 
+--- !u!114 &700113831842913577
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -231,13 +232,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.ProceduralSkyOutputApplicator
   _proceduralSkyMaterialTemplate: {fileID: 2100000, guid: 680ec3a16cad7cb4c9d033f13809e735, type: 2}
   _cubemapRefreshController: {fileID: 5361040681325969918}
-  _sunDiskOutputId: sky_sun_disk
-  _sunSizeOutputId: sky_sun_size
-  _sunSizeConvergenceOutputId: sky_sun_size_convergence
-  _atmosphereThicknessOutputId: sky_atmosphere_thickness
-  _skyTintOutputId: sky_tint
-  _groundColorOutputId: sky_ground_color
-  _exposureOutputId: sky_exposure
+  _outputSchemaSO: {fileID: 11400000, guid: efc06c2c3e009844496a8df047c61781, type: 2}
+  _legacySunDiskOutputId: 
+  _legacySunSizeOutputId: 
+  _legacySunSizeConvergenceOutputId: 
+  _legacyAtmosphereThicknessOutputId: 
+  _legacySkyTintOutputId: 
+  _legacyGroundColorOutputId: 
+  _legacyExposureOutputId: 
 --- !u!114 &1506759437775434603
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -250,12 +252,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e50215f2ba04dd488ebb29cf2794076, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.FogRenderSettingsOutputApplicator
-  _enabledOutputId: fog_enabled
-  _modeOutputId: fog_mode
-  _colorOutputId: fog_color
-  _densityOutputId: fog_density
-  _startDistanceOutputId: fog_start_distance_meters
-  _endDistanceOutputId: fog_end_distance_meters
+  _outputSchemaSO: {fileID: 11400000, guid: efc06c2c3e009844496a8df047c61781, type: 2}
+  _legacyEnabledOutputId: 
+  _legacyModeOutputId: 
+  _legacyColorOutputId: 
+  _legacyDensityOutputId: 
+  _legacyStartDistanceOutputId: 
+  _legacyEndDistanceOutputId: 
 --- !u!114 &867503328098317592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -268,9 +271,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3dd0c44b6a16ab4e85f7a09410cabdf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.AmbientRenderSettingsOutputApplicator
-  _modeOutputId: ambient_mode
-  _intensityOutputId: ambient_intensity
-  _flatColorOutputId: ambient_flat_color
-  _skyColorOutputId: ambient_sky_color
-  _equatorColorOutputId: ambient_equator_color
-  _groundColorOutputId: ambient_ground_color
+  _outputSchemaSO: {fileID: 11400000, guid: efc06c2c3e009844496a8df047c61781, type: 2}
+  _legacyModeOutputId: 
+  _legacyIntensityOutputId: 
+  _legacyFlatColorOutputId: 
+  _legacySkyColorOutputId: 
+  _legacyEquatorColorOutputId: 
+  _legacyGroundColorOutputId: 

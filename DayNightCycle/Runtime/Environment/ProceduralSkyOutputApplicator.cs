@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FakeMG.DayNightCycle
@@ -18,18 +19,12 @@ namespace FakeMG.DayNightCycle
 
         [SerializeField] private Material _proceduralSkyMaterialTemplate;
         [SerializeField] private EnvironmentCubemapRefreshController _cubemapRefreshController;
-        [SerializeField] private string _sunDiskOutputId = DayNightEnvironmentOutputIds.SKY_SUN_DISK;
-        [SerializeField] private string _sunSizeOutputId = DayNightEnvironmentOutputIds.SKY_SUN_SIZE;
-        [SerializeField]
-        private string _sunSizeConvergenceOutputId = DayNightEnvironmentOutputIds.SKY_SUN_SIZE_CONVERGENCE;
-        [SerializeField]
-        private string _atmosphereThicknessOutputId = DayNightEnvironmentOutputIds.SKY_ATMOSPHERE_THICKNESS;
-        [SerializeField] private string _skyTintOutputId = DayNightEnvironmentOutputIds.SKY_TINT;
-        [SerializeField] private string _groundColorOutputId = DayNightEnvironmentOutputIds.SKY_GROUND_COLOR;
-        [SerializeField] private string _exposureOutputId = DayNightEnvironmentOutputIds.SKY_EXPOSURE;
+        [SerializeField] private DayNightEnvironmentOutputSchemaSO _outputSchemaSO;
 
         private Material _previousSkyboxMaterial;
         private Material _runtimeSkyMaterial;
+
+        public IReadOnlyList<CycleOutputKeySO> RequiredOutputKeys => _outputSchemaSO.SkyKeys;
 
         #region Unity Lifecycle
 
@@ -65,27 +60,34 @@ namespace FakeMG.DayNightCycle
 
         public void Apply(IReadOnlyCycleOutputState outputState)
         {
-            if (outputState.TryGetValue(new CycleOutputId(_sunDiskOutputId), out int sunDiskMode))
+            if (outputState.TryGetValue(_outputSchemaSO.SkySunDisk, out int sunDiskMode))
             {
                 _runtimeSkyMaterial.SetInt(SUN_DISK_PROPERTY_ID, Mathf.Clamp(sunDiskMode, 0, 2));
             }
 
-            ApplyFloat(outputState, _sunSizeOutputId, SUN_SIZE_PROPERTY_ID, 0f, 1f);
-            ApplyFloat(outputState, _sunSizeConvergenceOutputId, SUN_SIZE_CONVERGENCE_PROPERTY_ID, 0f, 20f);
-            ApplyFloat(outputState, _atmosphereThicknessOutputId, ATMOSPHERE_THICKNESS_PROPERTY_ID, 0f, 5f);
-            ApplyColor(outputState, _skyTintOutputId, SKY_TINT_PROPERTY_ID);
-            ApplyColor(outputState, _groundColorOutputId, GROUND_COLOR_PROPERTY_ID);
-            ApplyFloat(outputState, _exposureOutputId, EXPOSURE_PROPERTY_ID, 0f, 8f);
+            ApplyFloat(outputState, _outputSchemaSO.SkySunSize, SUN_SIZE_PROPERTY_ID, 0f, 1f);
+            ApplyFloat(outputState, _outputSchemaSO.SkySunSizeConvergence, SUN_SIZE_CONVERGENCE_PROPERTY_ID, 0f, 20f);
+            ApplyFloat(outputState, _outputSchemaSO.SkyAtmosphereThickness, ATMOSPHERE_THICKNESS_PROPERTY_ID, 0f, 5f);
+            ApplyColor(outputState, _outputSchemaSO.SkyTint, SKY_TINT_PROPERTY_ID);
+            ApplyColor(outputState, _outputSchemaSO.SkyGroundColor, GROUND_COLOR_PROPERTY_ID);
+            ApplyFloat(outputState, _outputSchemaSO.SkyExposure, EXPOSURE_PROPERTY_ID, 0f, 8f);
             _cubemapRefreshController.RequestRefresh();
         }
 
 #if UNITY_EDITOR
         public void ConfigureForEditor(
             Material proceduralSkyMaterialTemplate,
-            EnvironmentCubemapRefreshController cubemapRefreshController)
+            EnvironmentCubemapRefreshController cubemapRefreshController,
+            DayNightEnvironmentOutputSchemaSO outputSchemaSO)
         {
             _proceduralSkyMaterialTemplate = proceduralSkyMaterialTemplate;
             _cubemapRefreshController = cubemapRefreshController;
+            _outputSchemaSO = outputSchemaSO;
+        }
+
+        public void SetOutputSchemaForEditor(DayNightEnvironmentOutputSchemaSO outputSchemaSO)
+        {
+            _outputSchemaSO = outputSchemaSO;
         }
 #endif
 
@@ -95,12 +97,12 @@ namespace FakeMG.DayNightCycle
 
         private void ApplyFloat(
             IReadOnlyCycleOutputState outputState,
-            string outputId,
+            FloatCycleOutputKeySO outputKeySO,
             int propertyId,
             float minimumValue,
             float maximumValue)
         {
-            if (outputState.TryGetValue(new CycleOutputId(outputId), out float value))
+            if (outputState.TryGetValue(outputKeySO, out float value))
             {
                 _runtimeSkyMaterial.SetFloat(propertyId, Mathf.Clamp(value, minimumValue, maximumValue));
             }
@@ -108,10 +110,10 @@ namespace FakeMG.DayNightCycle
 
         private void ApplyColor(
             IReadOnlyCycleOutputState outputState,
-            string outputId,
+            ColorCycleOutputKeySO outputKeySO,
             int propertyId)
         {
-            if (outputState.TryGetValue(new CycleOutputId(outputId), out Color value))
+            if (outputState.TryGetValue(outputKeySO, out Color value))
             {
                 _runtimeSkyMaterial.SetColor(propertyId, value);
             }
