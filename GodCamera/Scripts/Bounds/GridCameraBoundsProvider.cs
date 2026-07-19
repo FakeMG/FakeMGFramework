@@ -1,4 +1,4 @@
-using FakeMG.GridBuilding;
+using FakeMG.GridSystem;
 using UnityEngine;
 
 namespace FakeMG.GodCamera
