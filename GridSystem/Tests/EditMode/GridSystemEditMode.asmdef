@@ -2,12 +2,12 @@
     "name": "GridSystemEditMode",
     "rootNamespace": "",
     "references": [
-        "FakeMG.GridSystem",
-        "FakeMG.Framework",
-        "UnityEngine.TestRunner",
-        "TNRD.NSubstitute",
-        "UniTask",
-        "Unity.ResourceManager"
+        "GUID:56d800eec60a190498f47d1d35ac80cf",
+        "GUID:6ce9c02b47be2ca41ae7d84dcaec625a",
+        "GUID:27619889b8ba8c24980f49ee34dbb44a",
+        "GUID:9a88817da2cdeb94388ab1c4165583ac",
+        "GUID:f51ebe6a0ceec4240a699833d6309b23",
+        "GUID:84651a3751eca9349aac36a66bba901b"
     ],
     "includePlatforms": [
         "Editor"
