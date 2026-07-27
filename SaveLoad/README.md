@@ -38,5 +38,9 @@
   - Metadata validation: prevent unsupported types
   - Support Ctrl + Z undo
 - Make sure each field in the loaded data is initialized
+- Remove Easy Save 3 dependency and implement a custom serialization system
+  - Encryption
+  - Compression
+  - Caching: RAM-based caching to perform many reads/writes cheaply, then flush it to storage rather than constantly touching disk
 
 ### ❌ Out of Scope / Not Implemented
