@@ -4,8 +4,18 @@ using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
+#if UNITY_6000_3_OR_NEWER
+using ObjectID = UnityEngine.EntityId;
+#else
+using ObjectID = System.Int32;
+#endif
+
 namespace FakeMG.ActionMapManagement
 {
+    /// <summary>
+    /// Stores unordered pairs of action maps which cannot be active together.
+    /// It validates duplicate and self-referencing pairs and can remove invalid entries in the editor.
+    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ACTION_MAP_MANAGEMENT + "/ActionMapConflictsPairsSO")]
     public class ActionMapConflictsPairsSO : ScriptableObject
     {
@@ -21,7 +31,7 @@ namespace FakeMG.ActionMapManagement
 
             bool HasDuplicates()
             {
-                HashSet<(int, int)> seen = new();
+                HashSet<(ObjectID, ObjectID)> seen = new();
 
                 foreach (ConflictPair pair in _conflictPairs)
                 {
@@ -31,10 +41,10 @@ namespace FakeMG.ActionMapManagement
                     if (pair.ActionMapA == pair.ActionMapB)
                         return true;
 
-                    int idA = pair.ActionMapA.GetInstanceID();
-                    int idB = pair.ActionMapB.GetInstanceID();
+                    ObjectID idA = GetObjectID(pair.ActionMapA);
+                    ObjectID idB = GetObjectID(pair.ActionMapB);
 
-                    (int, int) normalizedPair = idA < idB ? (idA, idB) : (idB, idA);
+                    (ObjectID, ObjectID) normalizedPair = idA < idB ? (idA, idB) : (idB, idA);
 
                     if (!seen.Add(normalizedPair))
                         return true;
@@ -49,7 +59,7 @@ namespace FakeMG.ActionMapManagement
         [PropertyOrder(-1)]
         private void RemoveDuplicatePairs()
         {
-            HashSet<(int, int)> seen = new();
+            HashSet<(ObjectID, ObjectID)> seen = new();
             List<ConflictPair> uniquePairs = new();
 
             foreach (ConflictPair pair in _conflictPairs)
@@ -60,8 +70,8 @@ namespace FakeMG.ActionMapManagement
                 if (pair.ActionMapA == pair.ActionMapB)
                     continue;
 
-                int idA = pair.ActionMapA.GetInstanceID();
-                int idB = pair.ActionMapB.GetInstanceID();
+                ObjectID idA = GetObjectID(pair.ActionMapA);
+                ObjectID idB = GetObjectID(pair.ActionMapB);
 
                 // Normalize pair order to treat (A,B) and (B,A) as identical
                 var normalizedPair = idA < idB ? (idA, idB) : (idB, idA);
@@ -79,6 +89,15 @@ namespace FakeMG.ActionMapManagement
             }
         }
 #endif
+
+        private static ObjectID GetObjectID(ActionMapSO actionMapSO)
+        {
+#if UNITY_6000_3_OR_NEWER
+            return actionMapSO.GetEntityId();
+#else
+            return actionMapSO.GetInstanceID();
+#endif
+        }
 
         public HashSet<string> GetConflictsFor(string actionMapName)
         {
