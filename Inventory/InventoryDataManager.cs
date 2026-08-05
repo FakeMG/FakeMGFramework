@@ -20,7 +20,7 @@ namespace FakeMG.Inventory
     /// injected so other systems can resolve it directly (or via IInventoryBalanceRepository) without going
     /// through this Saveable.
     /// </summary>
-    public class InventoryDataManager : Saveable
+    public class InventoryDataManager : MonoBehaviour, ISaveable
     {
         [SerializeField] private List<ItemAmountEntry> _initialBalances = new();
 
@@ -34,12 +34,12 @@ namespace FakeMG.Inventory
             _state = state;
         }
 
-        public override object CaptureState()
+        public object CaptureState()
         {
             return _state.CaptureState();
         }
 
-        public override void RestoreState(object data)
+        public void RestoreState(object data)
         {
             if (!StateRestoreUtility.TryRestore(data, out InventoryData restoredData) || restoredData.AmountByItemId == null)
             {
@@ -51,7 +51,7 @@ namespace FakeMG.Inventory
             _state.RestoreState(restoredData);
         }
 
-        public override void RestoreDefaultState()
+        public void RestoreDefaultState()
         {
             _state.RestoreDefaultState(_initialBalances);
         }

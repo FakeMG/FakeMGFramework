@@ -1,9 +1,14 @@
 using FakeMG.Framework.EventBus;
-using FakeMG.SaveLoad.Advanced;
+using FakeMG.SaveLoad;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace FakeMG.Settings
 {
+    /// <summary>
+    /// Converts the settings save event into an asynchronous save request. Subscription ownership is
+    /// paired with this component's enabled lifetime so repeated scene activation cannot leak handlers.
+    /// </summary>
     public class SettingAutoSaveEventSubscriber : MonoBehaviour
     {
         [SerializeField] private SaveLoadSystem _saveLoadSystem;
@@ -20,7 +25,7 @@ namespace FakeMG.Settings
 
         private void HandleSettingsAutoSaveEvent()
         {
-            _saveLoadSystem.SaveGame();
+            _saveLoadSystem.SaveGameAsync().Forget();
         }
     }
 }

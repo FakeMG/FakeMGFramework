@@ -3,6 +3,7 @@
     "rootNamespace": "FakeMG.SaveLoad",
     "references": [
         "UniTask",
+        "VContainer",
         "FakeMG.Framework",
         "EasySave3"
     ],

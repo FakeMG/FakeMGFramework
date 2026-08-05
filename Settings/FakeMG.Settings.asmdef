@@ -6,6 +6,7 @@
         "FakeMG.Framework",
         "FakeMG.SaveLoad",
         "VContainer",
+        "UniTask",
         "EasySave3"
     ],
     "includePlatforms": [],

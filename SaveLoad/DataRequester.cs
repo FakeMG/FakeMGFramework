@@ -1,6 +1,5 @@
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework.EventBus;
-using FakeMG.SaveLoad.Advanced;
 using UnityEngine;
 
 namespace FakeMG.SaveLoad

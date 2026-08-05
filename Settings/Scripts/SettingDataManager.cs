@@ -4,16 +4,17 @@ using FakeMG.Framework;
 using FakeMG.Framework.EventBus;
 using FakeMG.SaveLoad;
 using FakeMG.Settings.Converters;
+using UnityEngine;
 
 namespace FakeMG.Settings
 {
-    public class SettingDataManager : Saveable
+    public class SettingDataManager : MonoBehaviour, ISaveable
     {
         private Dictionary<string, ISettingValueRuntimeStorage> _settingRuntimeStorages = new();
         private Dictionary<string, string> _serializedValues = new();
         private Dictionary<string, string> _serializedValueTypes = new();
 
-        public override object CaptureState()
+        public object CaptureState()
         {
             return new SettingDataSnapshot
             {
@@ -22,14 +23,14 @@ namespace FakeMG.Settings
             };
         }
 
-        public override void RestoreDefaultState()
+        public void RestoreDefaultState()
         {
             _settingRuntimeStorages = new Dictionary<string, ISettingValueRuntimeStorage>();
             _serializedValues = new Dictionary<string, string>();
             _serializedValueTypes = new Dictionary<string, string>();
         }
 
-        public override void RestoreState(object data)
+        public void RestoreState(object data)
         {
             if (data is SettingDataSnapshot snapshot)
             {
