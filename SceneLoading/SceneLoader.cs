@@ -1,28 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Threading;
 using Cysharp.Threading.Tasks;
 using FakeMG.SaveLoad;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using VContainer;
-using VContainer.Unity;
 
 namespace FakeMG.SceneLoading
 {
     /// <summary>
-    /// Owns Addressable scene controllers for the manager scope and forwards their lifecycle events.
-    /// It awaits registered application prerequisites before loading, then gives every created
-    /// controller this manager as the explicit VContainer parent so additive gameplay scenes resolve
-    /// initialized shared services without relying on scene discovery or load timing.
+    /// Owns Addressable scene controllers and forwards their lifecycle events. It performs only
+    /// generic scene loading; scene-specific prerequisites belong in custom triggers so independent
+    /// SceneLoader instances can load unrelated scenes without inheriting global application rules.
     /// </summary>
     public class SceneLoader : MonoBehaviour
     {
         [SerializeField] private DataApplicationManager _dataApplicationManager;
 
         private readonly Dictionary<string, SceneController> _sceneControllers = new();
-        private ISceneLoadContext _sceneLoadContext;
-        private IEnumerable<ISceneLoadPrerequisite> _sceneLoadPrerequisites;
 
         public event Action<AssetReferenceScene> OnSceneLoaded;
         public event Action<AssetReferenceScene> OnSceneUnloaded;
@@ -43,17 +37,8 @@ namespace FakeMG.SceneLoading
 
         #region Public Methods
 
-        [Inject]
-        public void Construct(
-            ISceneLoadContext sceneLoadContext, IEnumerable<ISceneLoadPrerequisite> sceneLoadPrerequisites)
-        {
-            _sceneLoadContext = sceneLoadContext;
-            _sceneLoadPrerequisites = sceneLoadPrerequisites;
-        }
-
         public async UniTask LoadSceneAsync(AssetReferenceScene sceneRef, LoadSceneMode mode = LoadSceneMode.Additive)
         {
-            await PrepareForSceneLoadAsync(this.GetCancellationTokenOnDestroy());
             var loader = GetOrCreateLoader(sceneRef);
             await loader.LoadSceneAsync(mode);
             await _dataApplicationManager.ApplyDataForSceneAsync(loader.GetLoadedSceneName());
@@ -110,7 +95,7 @@ namespace FakeMG.SceneLoading
             var key = sceneRef.AssetGUID;
             if (_sceneControllers.TryGetValue(key, out var sceneController)) return sceneController;
 
-            sceneController = new SceneController(sceneRef, _sceneLoadContext);
+            sceneController = new SceneController(sceneRef);
 
             sceneController.OnSceneLoaded += PublishSceneLoaded;
             sceneController.OnSceneUnloaded += PublishSceneUnloaded;
@@ -124,14 +109,6 @@ namespace FakeMG.SceneLoading
         #endregion
 
         #region Private Methods
-
-        private async UniTask PrepareForSceneLoadAsync(CancellationToken cancellationToken)
-        {
-            foreach (ISceneLoadPrerequisite prerequisite in _sceneLoadPrerequisites)
-            {
-                await prerequisite.PrepareForSceneLoadAsync(cancellationToken);
-            }
-        }
 
         private void UnsubscribeFromSceneController(SceneController sceneController)
         {
