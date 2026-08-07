@@ -44,5 +44,7 @@
   - Encryption
   - Compression
   - Caching: RAM-based caching to perform many reads/writes cheaply, then flush it to storage rather than constantly touching disk
+- Support multiple game sessions (worlds) with group for each session.
+  - Option to use 1 fixed save file per session or timestamped save files per session.
 
 ### ❌ Out of Scope / Not Implemented
