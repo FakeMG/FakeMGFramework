@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d054fb9cb7b2d2b498defaf69f4217db, type: 3}
+  m_Name: Default Environment Output Schema
+  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.DayNightEnvironmentOutputSchemaSO
+  _mainLightEnabled: {fileID: 11400000, guid: 56246dcc11b0f7648b46018f25c33bda, type: 2}
+  _mainLightRotation: {fileID: 11400000, guid: d240ceff7a84d164ebcbfc90764f12a8, type: 2}
+  _mainLightColor: {fileID: 11400000, guid: f5cce463191a4d04ca747ffa146d4ccb, type: 2}
+  _mainLightIntensity: {fileID: 11400000, guid: 855e385169a54d449b1acb55b835c534, type: 2}
+  _mainLightShadowStrength: {fileID: 11400000, guid: 261696164d1c32746bfcb9beeb9b6b69, type: 2}
+  _skySunDisk: {fileID: 11400000, guid: 7639948cbb656f74291a4ca2a392d478, type: 2}
+  _skySunSize: {fileID: 11400000, guid: 31ec35b698b7ff448a4a6f49c3c8a38a, type: 2}
+  _skySunSizeConvergence: {fileID: 11400000, guid: 62c781d244939614e9703e2d2d4c4c24, type: 2}
+  _skyAtmosphereThickness: {fileID: 11400000, guid: 8fdd3fceea9b3634796406837891d2bd, type: 2}
+  _skyTint: {fileID: 11400000, guid: ec64cd35241cde949bd8e3b609f334ec, type: 2}
+  _skyGroundColor: {fileID: 11400000, guid: ecc22ddbf1270d14e867984f064cd9fb, type: 2}
+  _skyExposure: {fileID: 11400000, guid: 4a4427836c97f8341b5e3e1deb9893ef, type: 2}
+  _fogEnabled: {fileID: 11400000, guid: 5e6c0ce0384529b4ab29dc6bfede4d8e, type: 2}
+  _fogMode: {fileID: 11400000, guid: 2ee407cd24a130748bd788477a367080, type: 2}
+  _fogColor: {fileID: 11400000, guid: 3c8bcd25e7a0fd347acd06738f4d95f9, type: 2}
+  _fogDensity: {fileID: 11400000, guid: 7731c68d705d30c4684d406914ea3cdf, type: 2}
+  _fogStartDistanceMeters: {fileID: 11400000, guid: c23f834a6ad18f84bad5c51fb93e6d7e, type: 2}
+  _fogEndDistanceMeters: {fileID: 11400000, guid: 9e1684bc1605d6c4c8749e3ce9a8f33f, type: 2}
+  _ambientMode: {fileID: 11400000, guid: f1b34423eb9965141a232a608ebcdc7a, type: 2}
+  _ambientIntensity: {fileID: 11400000, guid: b5da37f685cab3449b57129709de6493, type: 2}
+  _ambientFlatColor: {fileID: 11400000, guid: 4a45e4ad9c4faea48acca56e1b3a2d5c, type: 2}
+  _ambientSkyColor: {fileID: 11400000, guid: 2c2265bf9cf0d6c4ca87ff28a9be49a4, type: 2}
+  _ambientEquatorColor: {fileID: 11400000, guid: a7bad99e67b8b7e47937bd16b3ace313, type: 2}
+  _ambientGroundColor: {fileID: 11400000, guid: 88b6518754f59c44091128c4a97f7d4b, type: 2}

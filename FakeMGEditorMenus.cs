@@ -50,5 +50,8 @@ namespace FakeMG.Framework
 
         // Camera
         public const string CAMERA = ROOT + "/Camera Movement";
+
+        // Day Night Cycle
+        public const string DAY_NIGHT_CYCLE = ROOT + "/Day Night Cycle";
     }
 }
