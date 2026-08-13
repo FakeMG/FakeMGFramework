@@ -13,7 +13,7 @@ namespace FakeMG.Framework.UI
     public class ItemIconUIUpdater : MonoBehaviour
     {
         [SerializeField] private Image _icon;
-        [SerializeField] private TextMeshProUGUI _countText;
+        [SerializeField] private TMP_Text _countText;
         [SerializeField] private bool _showCountWhenZero;
 
         private AsyncOperationHandle<Sprite>? _loadedSpriteHandle;
@@ -130,6 +130,14 @@ namespace FakeMG.Framework.UI
             }
 
             ApplyCountPresentation(countText, isCountVisible);
+        }
+
+        public void ClearUI()
+        {
+            InvalidatePendingRequests();
+            UnloadHandle();
+            _icon.sprite = null;
+            ApplyCountPresentation(string.Empty, false);
         }
 
         #endregion
