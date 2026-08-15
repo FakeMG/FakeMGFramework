@@ -1,0 +1,18 @@
+{
+    "name": "FakeMG.TimeCycle",
+    "rootNamespace": "FakeMG.TimeCycle",
+    "references": [
+        "FakeMG.Framework",
+        "UniTask",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

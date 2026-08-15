@@ -1,0 +1,542 @@
+#if UNITY_EDITOR
+using System;
+using System.Collections.Generic;
+using System.IO;
+using FakeMG.Framework;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+namespace FakeMG.TimeCycle.Editor
+{
+    /// <summary>
+    /// Migrates legacy timeline seconds to normalized progress and environment applicators to typed output schemas.
+    /// </summary>
+    public static class TimeCycleLegacyAssetMigration
+    {
+        private const int CURRENT_MIGRATION_VERSION = 2;
+        private const string MIGRATION_VERSION_KEY = "FakeMG.TimeCycle.MigrationVersion";
+        private const string FEATURE_ROOT_PATH = "Assets/Thirdparty/FakeMGFramework/TimeCycle";
+        private const string OUTPUT_KEY_ROOT_PATH = "Assets/Thirdparty/FakeMGFramework/TimeCycle/Output Keys";
+        private const string MIGRATED_OUTPUT_KEY_FOLDER_PATH = OUTPUT_KEY_ROOT_PATH + "/Migrated";
+        private const string EASY_SAVE_DEFAULTS_PATH = "Assets/Thirdparty/Easy Save 3/Resources/ES3/ES3Defaults.asset";
+        private const string LEGACY_ASSEMBLY_NAME = "FakeMG.DayNightCycle";
+        private const string TIME_CYCLE_ASSEMBLY_NAME = "FakeMG.TimeCycle";
+
+        #region Public Methods
+
+        [MenuItem(FakeMGEditorMenus.TIME_CYCLE + "/Migrate Legacy Assets")]
+        public static void MigrateAllAssets()
+        {
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+            {
+                Echo.Warning("Legacy time-cycle migration was cancelled because open scenes were not saved.");
+                return;
+            }
+
+            EnsureMigrationFolderExists();
+            Dictionary<string, CycleOutputKeySO> keyByLegacyId = LoadKeyRegistry();
+            int migratedAssetCount = MigrateTimelineAssets<TimeOfCycleProfileSO>();
+            migratedAssetCount += MigrateTimelineAssets<TimeOfCycleOverrideSO>();
+            migratedAssetCount += MigratePrefabs(keyByLegacyId);
+            migratedAssetCount += MigrateScenes(keyByLegacyId);
+            AssetDatabase.SaveAssets();
+            EditorPrefs.SetInt(MIGRATION_VERSION_KEY, CURRENT_MIGRATION_VERSION);
+            Echo.Log($"Time-cycle migration version {CURRENT_MIGRATION_VERSION} completed. " + $"Updated {migratedAssetCount} assets.");
+        }
+
+        [MenuItem(FakeMGEditorMenus.TIME_CYCLE + "/Migrate Timeline Positions")]
+        public static void MigrateTimelinePositions()
+        {
+            int migratedAssetCount = MigrateTimelineAssets<TimeOfCycleProfileSO>();
+            migratedAssetCount += MigrateTimelineAssets<TimeOfCycleOverrideSO>();
+            AssetDatabase.SaveAssets();
+            Echo.Log($"Normalized time-cycle timeline migration updated {migratedAssetCount} assets.");
+        }
+
+        [MenuItem(FakeMGEditorMenus.TIME_CYCLE + "/Finalize System Rename")]
+        public static void FinalizeSystemRename()
+        {
+            if (!TryRenameEasySaveAssemblyReference())
+            {
+                Echo.Error("TimeCycle rename finalization stopped because the Easy Save assembly reference could not be updated.");
+                return;
+            }
+
+            string[] assetGuids = AssetDatabase.FindAssets(string.Empty, new[] { FEATURE_ROOT_PATH });
+            List<string> assetPaths = new(assetGuids.Length);
+            for (int assetIndex = 0; assetIndex < assetGuids.Length; assetIndex++)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(assetGuids[assetIndex]);
+                if (assetPath.EndsWith(".asset", StringComparison.OrdinalIgnoreCase)
+                    || assetPath.EndsWith(".prefab", StringComparison.OrdinalIgnoreCase))
+                {
+                    assetPaths.Add(assetPath);
+                }
+            }
+
+            AssetDatabase.ForceReserializeAssets(assetPaths);
+            AssetDatabase.SaveAssets();
+            Echo.Log($"Finalized the TimeCycle rename and reserialized {assetPaths.Count} module assets.");
+        }
+
+        public static void MigrateProfilesOverridesAndPrefabs()
+        {
+            EnsureMigrationFolderExists();
+            Dictionary<string, CycleOutputKeySO> keyByLegacyId = LoadKeyRegistry();
+            MigrateTimelineAssets<TimeOfCycleProfileSO>();
+            MigrateTimelineAssets<TimeOfCycleOverrideSO>();
+            MigratePrefabs(keyByLegacyId);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static bool TryRenameEasySaveAssemblyReference()
+        {
+            UnityEngine.Object easySaveDefaults = AssetDatabase.LoadMainAssetAtPath(EASY_SAVE_DEFAULTS_PATH);
+            if (easySaveDefaults == null)
+            {
+                Echo.Error($"Easy Save defaults asset was not found at '{EASY_SAVE_DEFAULTS_PATH}'.");
+                return false;
+            }
+
+            SerializedObject serializedEasySaveDefaults = new(easySaveDefaults);
+            SerializedProperty assemblyNamesProperty = serializedEasySaveDefaults.FindProperty("settings.assemblyNames");
+            if (assemblyNamesProperty == null || !assemblyNamesProperty.isArray)
+            {
+                Echo.Error("Easy Save defaults does not expose the expected settings.assemblyNames array.");
+                return false;
+            }
+
+            bool hasTimeCycleAssembly = false;
+            for (int assemblyIndex = 0; assemblyIndex < assemblyNamesProperty.arraySize; assemblyIndex++)
+            {
+                SerializedProperty assemblyNameProperty = assemblyNamesProperty.GetArrayElementAtIndex(assemblyIndex);
+                if (assemblyNameProperty.stringValue == LEGACY_ASSEMBLY_NAME)
+                {
+                    assemblyNameProperty.stringValue = TIME_CYCLE_ASSEMBLY_NAME;
+                }
+
+                hasTimeCycleAssembly |= assemblyNameProperty.stringValue == TIME_CYCLE_ASSEMBLY_NAME;
+            }
+
+            if (!hasTimeCycleAssembly)
+            {
+                Echo.Error($"Easy Save defaults contains neither '{LEGACY_ASSEMBLY_NAME}' nor '{TIME_CYCLE_ASSEMBLY_NAME}'.");
+                return false;
+            }
+
+            serializedEasySaveDefaults.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(easySaveDefaults);
+            return true;
+        }
+
+        private static int MigrateTimelineAssets<T>()
+            where T : ScriptableObject
+        {
+            int migratedAssetCount = 0;
+            string[] assetGuids = AssetDatabase.FindAssets($"t:{typeof(T).Name}");
+            for (int assetIndex = 0; assetIndex < assetGuids.Length; assetIndex++)
+            {
+                string assetPath = AssetDatabase.GUIDToAssetPath(assetGuids[assetIndex]);
+                T timelineAsset = AssetDatabase.LoadAssetAtPath<T>(assetPath);
+                SerializedObject serializedTimelineAsset = new(timelineAsset);
+                SerializedProperty migrationVersionProperty = serializedTimelineAsset.FindProperty("_timelineProgressMigrationVersion");
+                if (migrationVersionProperty == null)
+                {
+                    Echo.Error($"Timeline asset '{assetPath}' has no migration version field.");
+                    continue;
+                }
+
+                if (migrationVersionProperty.intValue >= CURRENT_MIGRATION_VERSION)
+                {
+                    continue;
+                }
+
+                if (DoesAssetContainLegacyTimelineSeconds(assetPath))
+                {
+                    SerializedProperty cycleDurationProperty = serializedTimelineAsset.FindProperty("_cycleDurationSeconds");
+                    double oldCycleDurationSeconds = cycleDurationProperty.doubleValue;
+                    if (double.IsNaN(oldCycleDurationSeconds)
+                        || double.IsInfinity(oldCycleDurationSeconds)
+                        || oldCycleDurationSeconds <= 0d)
+                    {
+                        Echo.Error($"Cannot migrate timeline asset '{assetPath}' because its old cycle duration is invalid.");
+                        continue;
+                    }
+
+                    ConvertTimelineSecondsToProgress(serializedTimelineAsset, oldCycleDurationSeconds);
+                }
+
+                migrationVersionProperty.intValue = CURRENT_MIGRATION_VERSION;
+                serializedTimelineAsset.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(timelineAsset);
+                migratedAssetCount++;
+            }
+
+            return migratedAssetCount;
+        }
+
+        private static bool DoesAssetContainLegacyTimelineSeconds(string assetPath)
+        {
+            string serializedAsset = File.ReadAllText(assetPath);
+            return serializedAsset.Contains("_defaultStartingTimeSeconds:")
+                   || serializedAsset.Contains("_startTimeSeconds:")
+                   || serializedAsset.Contains("_timeSeconds:");
+        }
+
+        private static void ConvertTimelineSecondsToProgress(
+            SerializedObject serializedTimelineAsset,
+            double oldCycleDurationSeconds)
+        {
+            SerializedProperty property = serializedTimelineAsset.GetIterator();
+            bool doesHaveNextProperty = property.NextVisible(true);
+            while (doesHaveNextProperty)
+            {
+                if (IsTimelineProgressProperty(property.name))
+                {
+                    property.doubleValue /= oldCycleDurationSeconds;
+                }
+
+                doesHaveNextProperty = property.NextVisible(true);
+            }
+        }
+
+        private static bool IsTimelineProgressProperty(string propertyName)
+        {
+            return propertyName == "_defaultStartingProgress01"
+                   || propertyName == "_startProgress01"
+                   || propertyName == "_pointProgress01";
+        }
+
+        private static int MigratePrefabs(IDictionary<string, CycleOutputKeySO> keyByLegacyId)
+        {
+            int migratedAssetCount = 0;
+            string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab");
+            for (int prefabIndex = 0; prefabIndex < prefabGuids.Length; prefabIndex++)
+            {
+                string prefabPath = AssetDatabase.GUIDToAssetPath(prefabGuids[prefabIndex]);
+                GameObject prefabRoot = PrefabUtility.LoadPrefabContents(prefabPath);
+                try
+                {
+                    if (!TryMigrateHierarchy(prefabRoot, prefabGuids[prefabIndex], keyByLegacyId))
+                    {
+                        continue;
+                    }
+
+                    PrefabUtility.SaveAsPrefabAsset(prefabRoot, prefabPath);
+                    migratedAssetCount++;
+                }
+                finally
+                {
+                    PrefabUtility.UnloadPrefabContents(prefabRoot);
+                }
+            }
+
+            return migratedAssetCount;
+        }
+
+        private static int MigrateScenes(IDictionary<string, CycleOutputKeySO> keyByLegacyId)
+        {
+            SceneSetup[] originalSetup = EditorSceneManager.GetSceneManagerSetup();
+            int migratedAssetCount = 0;
+            try
+            {
+                string[] sceneGuids = AssetDatabase.FindAssets("t:Scene");
+                for (int sceneIndex = 0; sceneIndex < sceneGuids.Length; sceneIndex++)
+                {
+                    string scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[sceneIndex]);
+                    if (!MightContainOutputApplicator(scenePath))
+                    {
+                        continue;
+                    }
+
+                    Scene scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+                    bool hasChanged = false;
+                    GameObject[] rootObjects = scene.GetRootGameObjects();
+                    for (int rootIndex = 0; rootIndex < rootObjects.Length; rootIndex++)
+                    {
+                        hasChanged |= TryMigrateHierarchy(rootObjects[rootIndex], sceneGuids[sceneIndex], keyByLegacyId);
+                    }
+
+                    if (hasChanged)
+                    {
+                        EditorSceneManager.SaveScene(scene);
+                        migratedAssetCount++;
+                    }
+
+                    EditorSceneManager.CloseScene(scene, true);
+                }
+            }
+            finally
+            {
+                EditorSceneManager.RestoreSceneManagerSetup(originalSetup);
+            }
+
+            return migratedAssetCount;
+        }
+
+        private static bool MightContainOutputApplicator(string scenePath)
+        {
+            string[] dependencies = AssetDatabase.GetDependencies(scenePath, false);
+            for (int dependencyIndex = 0; dependencyIndex < dependencies.Length; dependencyIndex++)
+            {
+                string dependencyPath = dependencies[dependencyIndex];
+                if (
+                    dependencyPath.EndsWith("/DirectionalLightOutputApplicator.cs", StringComparison.Ordinal)
+                    || dependencyPath.EndsWith("/ProceduralSkyOutputApplicator.cs", StringComparison.Ordinal)
+                    || dependencyPath.EndsWith("/FogRenderSettingsOutputApplicator.cs", StringComparison.Ordinal)
+                    || dependencyPath.EndsWith("/AmbientRenderSettingsOutputApplicator.cs", StringComparison.Ordinal)
+                )
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryMigrateHierarchy(GameObject root, string sourceGuid, IDictionary<string, CycleOutputKeySO> keyByLegacyId)
+        {
+            MonoBehaviour[] behaviours = root.GetComponentsInChildren<MonoBehaviour>(true);
+            List<MonoBehaviour> legacyApplicators = new();
+            for (int behaviourIndex = 0; behaviourIndex < behaviours.Length; behaviourIndex++)
+            {
+                MonoBehaviour behaviour = behaviours[behaviourIndex];
+                if (behaviour is ITimeOfCycleOutputApplicator && GetSchemaReference(behaviour) == null)
+                {
+                    legacyApplicators.Add(behaviour);
+                }
+            }
+
+            if (legacyApplicators.Count == 0)
+            {
+                return false;
+            }
+
+            if (!TryCreateMigratedSchema(sourceGuid, legacyApplicators, keyByLegacyId, out DayNightEnvironmentOutputSchemaSO outputSchemaSO))
+            {
+                return false;
+            }
+
+            for (int applicatorIndex = 0; applicatorIndex < legacyApplicators.Count; applicatorIndex++)
+            {
+                SerializedObject serializedApplicator = new(legacyApplicators[applicatorIndex]);
+                serializedApplicator.FindProperty("_outputSchemaSO").objectReferenceValue = outputSchemaSO;
+                serializedApplicator.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            return true;
+        }
+
+        private static bool TryCreateMigratedSchema(
+            string sourceGuid,
+            IReadOnlyList<MonoBehaviour> applicators,
+            IDictionary<string, CycleOutputKeySO> keyByLegacyId,
+            out DayNightEnvironmentOutputSchemaSO outputSchemaSO
+        )
+        {
+            string schemaPath = MIGRATED_OUTPUT_KEY_FOLDER_PATH + "/" + sourceGuid + " Environment Schema.asset";
+            outputSchemaSO = AssetDatabase.LoadAssetAtPath<DayNightEnvironmentOutputSchemaSO>(schemaPath);
+            bool hasCreatedSchema = outputSchemaSO == null;
+            if (outputSchemaSO == null)
+            {
+                outputSchemaSO = ScriptableObject.CreateInstance<DayNightEnvironmentOutputSchemaSO>();
+                AssetDatabase.CreateAsset(outputSchemaSO, schemaPath);
+            }
+
+            MonoBehaviour light = FindApplicator<DirectionalLightOutputApplicator>(applicators);
+            MonoBehaviour sky = FindApplicator<ProceduralSkyOutputApplicator>(applicators);
+            MonoBehaviour fog = FindApplicator<FogRenderSettingsOutputApplicator>(applicators);
+            MonoBehaviour ambient = FindApplicator<AmbientRenderSettingsOutputApplicator>(applicators);
+            try
+            {
+                outputSchemaSO.ConfigureForEditor(
+                    mainLightEnabled: Resolve<BoolCycleOutputKeySO>(light, "_legacyEnabledOutputId", "main_light_enabled", keyByLegacyId),
+                    mainLightRotation: Resolve<RotationCycleOutputKeySO>(light, "_legacyRotationOutputId", "main_light_rotation", keyByLegacyId),
+                    mainLightColor: Resolve<ColorCycleOutputKeySO>(light, "_legacyColorOutputId", "main_light_color", keyByLegacyId),
+                    mainLightIntensity: Resolve<FloatCycleOutputKeySO>(light, "_legacyIntensityOutputId", "main_light_intensity", keyByLegacyId),
+                    mainLightShadowStrength: Resolve<FloatCycleOutputKeySO>(
+                        light,
+                        "_legacyShadowStrengthOutputId",
+                        "main_light_shadow_strength",
+                        keyByLegacyId
+                    ),
+                    skySunDisk: Resolve<IntCycleOutputKeySO>(sky, "_legacySunDiskOutputId", "sky_sun_disk", keyByLegacyId),
+                    skySunSize: Resolve<FloatCycleOutputKeySO>(sky, "_legacySunSizeOutputId", "sky_sun_size", keyByLegacyId),
+                    skySunSizeConvergence: Resolve<FloatCycleOutputKeySO>(sky, "_legacySunSizeConvergenceOutputId", "sky_sun_size_convergence", keyByLegacyId),
+                    skyAtmosphereThickness: Resolve<FloatCycleOutputKeySO>(
+                        sky,
+                        "_legacyAtmosphereThicknessOutputId",
+                        "sky_atmosphere_thickness",
+                        keyByLegacyId
+                    ),
+                    skyTint: Resolve<ColorCycleOutputKeySO>(sky, "_legacySkyTintOutputId", "sky_tint", keyByLegacyId),
+                    skyGroundColor: Resolve<ColorCycleOutputKeySO>(sky, "_legacyGroundColorOutputId", "sky_ground_color", keyByLegacyId),
+                    skyExposure: Resolve<FloatCycleOutputKeySO>(sky, "_legacyExposureOutputId", "sky_exposure", keyByLegacyId),
+                    fogEnabled: Resolve<BoolCycleOutputKeySO>(fog, "_legacyEnabledOutputId", "fog_enabled", keyByLegacyId),
+                    fogMode: Resolve<IntCycleOutputKeySO>(fog, "_legacyModeOutputId", "fog_mode", keyByLegacyId),
+                    fogColor: Resolve<ColorCycleOutputKeySO>(fog, "_legacyColorOutputId", "fog_color", keyByLegacyId),
+                    fogDensity: Resolve<FloatCycleOutputKeySO>(fog, "_legacyDensityOutputId", "fog_density", keyByLegacyId),
+                    fogStartDistanceMeters: Resolve<FloatCycleOutputKeySO>(fog, "_legacyStartDistanceOutputId", "fog_start_distance_meters", keyByLegacyId),
+                    fogEndDistanceMeters: Resolve<FloatCycleOutputKeySO>(fog, "_legacyEndDistanceOutputId", "fog_end_distance_meters", keyByLegacyId),
+                    ambientMode: Resolve<IntCycleOutputKeySO>(ambient, "_legacyModeOutputId", "ambient_mode", keyByLegacyId),
+                    ambientIntensity: Resolve<FloatCycleOutputKeySO>(ambient, "_legacyIntensityOutputId", "ambient_intensity", keyByLegacyId),
+                    ambientFlatColor: Resolve<ColorCycleOutputKeySO>(ambient, "_legacyFlatColorOutputId", "ambient_flat_color", keyByLegacyId),
+                    ambientSkyColor: Resolve<ColorCycleOutputKeySO>(ambient, "_legacySkyColorOutputId", "ambient_sky_color", keyByLegacyId),
+                    ambientEquatorColor: Resolve<ColorCycleOutputKeySO>(ambient, "_legacyEquatorColorOutputId", "ambient_equator_color", keyByLegacyId),
+                    ambientGroundColor: Resolve<ColorCycleOutputKeySO>(ambient, "_legacyGroundColorOutputId", "ambient_ground_color", keyByLegacyId)
+                );
+            }
+            catch (InvalidOperationException exception)
+            {
+                if (hasCreatedSchema)
+                {
+                    AssetDatabase.DeleteAsset(schemaPath);
+                    outputSchemaSO = null;
+                }
+
+                Echo.Error($"Could not migrate environment schema for source {sourceGuid}. {exception.Message}");
+                return false;
+            }
+
+            EditorUtility.SetDirty(outputSchemaSO);
+            return true;
+        }
+
+        private static T FindApplicator<T>(IReadOnlyList<MonoBehaviour> applicators)
+            where T : MonoBehaviour
+        {
+            for (int applicatorIndex = 0; applicatorIndex < applicators.Count; applicatorIndex++)
+            {
+                if (applicators[applicatorIndex] is T typedApplicator)
+                {
+                    return typedApplicator;
+                }
+            }
+
+            return null;
+        }
+
+        private static T Resolve<T>(
+            MonoBehaviour applicator,
+            string legacyPropertyName,
+            string defaultLegacyId,
+            IDictionary<string, CycleOutputKeySO> keyByLegacyId
+        )
+            where T : CycleOutputKeySO
+        {
+            string legacyId = defaultLegacyId;
+            if (applicator != null)
+            {
+                SerializedProperty legacyProperty = new SerializedObject(applicator).FindProperty(legacyPropertyName);
+                if (legacyProperty != null && !string.IsNullOrWhiteSpace(legacyProperty.stringValue))
+                {
+                    legacyId = legacyProperty.stringValue;
+                }
+            }
+
+            if (keyByLegacyId.TryGetValue(legacyId, out CycleOutputKeySO outputKeySO) && outputKeySO is T typedOutputKeySO)
+            {
+                return typedOutputKeySO;
+            }
+
+            throw new InvalidOperationException($"Legacy output '{legacyId}' has no migrated {typeof(T).Name} key.");
+        }
+
+        private static CycleOutputKeySO ResolveOrCreateKey(string legacyId, Type valueType, IDictionary<string, CycleOutputKeySO> keyByLegacyId)
+        {
+            if (keyByLegacyId.TryGetValue(legacyId, out CycleOutputKeySO existingKeySO))
+            {
+                if (existingKeySO.ValueType == valueType)
+                {
+                    return existingKeySO;
+                }
+
+                Echo.Error($"Legacy output '{legacyId}' is used as both {existingKeySO.ValueType.Name} " + $"and {valueType.Name}.");
+                return null;
+            }
+
+            Type keyType = GetKeyType(valueType);
+            if (keyType == null)
+            {
+                Echo.Error($"Legacy output '{legacyId}' uses unsupported type {valueType.Name}.");
+                return null;
+            }
+
+            CycleOutputKeySO outputKeySO = (CycleOutputKeySO)ScriptableObject.CreateInstance(keyType);
+            outputKeySO.ConfigureLegacyIdForEditor(legacyId);
+            string assetPath = AssetDatabase.GenerateUniqueAssetPath(MIGRATED_OUTPUT_KEY_FOLDER_PATH + "/" + SanitizeFileName(legacyId) + ".asset");
+            AssetDatabase.CreateAsset(outputKeySO, assetPath);
+            keyByLegacyId.Add(legacyId, outputKeySO);
+            return outputKeySO;
+        }
+
+        private static Type GetKeyType(Type valueType)
+        {
+            if (valueType == typeof(bool))
+                return typeof(BoolCycleOutputKeySO);
+            if (valueType == typeof(int))
+                return typeof(IntCycleOutputKeySO);
+            if (valueType == typeof(float))
+                return typeof(FloatCycleOutputKeySO);
+            if (valueType == typeof(Color))
+                return typeof(ColorCycleOutputKeySO);
+            if (valueType == typeof(Quaternion))
+                return typeof(RotationCycleOutputKeySO);
+            return null;
+        }
+
+        private static Dictionary<string, CycleOutputKeySO> LoadKeyRegistry()
+        {
+            Dictionary<string, CycleOutputKeySO> keyByLegacyId = new(StringComparer.Ordinal);
+            string[] assetGuids = AssetDatabase.FindAssets(string.Empty, new[] { OUTPUT_KEY_ROOT_PATH });
+            for (int assetIndex = 0; assetIndex < assetGuids.Length; assetIndex++)
+            {
+                CycleOutputKeySO outputKeySO = AssetDatabase.LoadAssetAtPath<CycleOutputKeySO>(AssetDatabase.GUIDToAssetPath(assetGuids[assetIndex]));
+                if (outputKeySO == null || string.IsNullOrWhiteSpace(outputKeySO.LegacyId))
+                {
+                    continue;
+                }
+
+                if (!keyByLegacyId.TryAdd(outputKeySO.LegacyId, outputKeySO))
+                {
+                    Echo.Error($"More than one output key declares legacy ID '{outputKeySO.LegacyId}'.");
+                }
+            }
+
+            return keyByLegacyId;
+        }
+
+        private static DayNightEnvironmentOutputSchemaSO GetSchemaReference(MonoBehaviour applicator)
+        {
+            return (DayNightEnvironmentOutputSchemaSO)new SerializedObject(applicator).FindProperty("_outputSchemaSO").objectReferenceValue;
+        }
+
+        private static void EnsureMigrationFolderExists()
+        {
+            if (!AssetDatabase.IsValidFolder(MIGRATED_OUTPUT_KEY_FOLDER_PATH))
+            {
+                AssetDatabase.CreateFolder(OUTPUT_KEY_ROOT_PATH, "Migrated");
+            }
+        }
+
+        private static string SanitizeFileName(string value)
+        {
+            string sanitizedValue = value;
+            char[] invalidCharacters = Path.GetInvalidFileNameChars();
+            for (int characterIndex = 0; characterIndex < invalidCharacters.Length; characterIndex++)
+            {
+                sanitizedValue = sanitizedValue.Replace(invalidCharacters[characterIndex], '_');
+            }
+
+            return sanitizedValue;
+        }
+
+        #endregion
+    }
+}
+#endif

@@ -1,0 +1,20 @@
+{
+    "name": "FakeMG.TimeCycle.Editor",
+    "rootNamespace": "FakeMG.TimeCycle.Editor",
+    "references": [
+        "FakeMG.Framework",
+        "FakeMG.TimeCycle",
+        "VContainer"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
