@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using FakeMG.SaveLoad.Advanced;
+using FakeMG.SaveLoad;
 using UnityEditor.IMGUI.Controls;
 
 namespace FakeMG.SaveLoad.Editor
@@ -25,7 +25,7 @@ namespace FakeMG.SaveLoad.Editor
             _fileEntries.Clear();
             _fileEntries.AddRange(fileEntries
                 .OrderBy(entry => entry.SaveDirectoryPath, StringComparer.Ordinal)
-                .ThenByDescending(entry => entry.Metadata.Timestamp)
+                .ThenByDescending(entry => entry.Metadata.GetTimestampUtc())
                 .ThenBy(entry => entry.SaveFileName, StringComparer.Ordinal));
 
             Reload();
@@ -149,7 +149,7 @@ namespace FakeMG.SaveLoad.Editor
         private static string BuildFileDisplayName(ManagedSaveFileInfo entry)
         {
             string badge = SaveFileCatalog.GetSaveKindBadge(entry.Metadata);
-            return $"{badge} {entry.SaveFileName}    {entry.Metadata.Timestamp:yyyy-MM-dd HH:mm:ss}";
+            return $"{badge} {entry.SaveFileName}    {entry.Metadata.GetTimestampUtc():yyyy-MM-dd HH:mm:ss} UTC";
         }
     }
 

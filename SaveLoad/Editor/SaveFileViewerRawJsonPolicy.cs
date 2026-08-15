@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using ES3Internal;
 using ES3Types;
-using FakeMG.SaveLoad.Advanced;
+using FakeMG.SaveLoad;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

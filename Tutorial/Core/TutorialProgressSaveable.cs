@@ -1,5 +1,6 @@
 using FakeMG.Framework;
 using FakeMG.SaveLoad;
+using UnityEngine;
 using VContainer;
 
 namespace FakeMG.Tutorial
@@ -8,7 +9,7 @@ namespace FakeMG.Tutorial
     /// Bridges tutorial progress into the save system. Captures and restores the
     /// canonical progress held by <see cref="TutorialProgressStore"/>.
     /// </summary>
-    public sealed class TutorialProgressSaveable : Saveable
+    public sealed class TutorialProgressSaveable : MonoBehaviour, ISaveable
     {
         private TutorialProgressStore _store;
 
@@ -20,12 +21,12 @@ namespace FakeMG.Tutorial
             _store = store;
         }
 
-        public override object CaptureState()
+        public object CaptureState()
         {
             return _store.CaptureSaveData();
         }
 
-        public override void RestoreState(object data)
+        public void RestoreState(object data)
         {
             if (!StateRestoreUtility.TryRestore(data, out TutorialProgress progress))
             {
@@ -37,7 +38,7 @@ namespace FakeMG.Tutorial
             _store.RestoreSaveData(progress);
         }
 
-        public override void RestoreDefaultState()
+        public void RestoreDefaultState()
         {
             _store.RestoreDefaultState();
         }

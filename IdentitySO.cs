@@ -24,6 +24,13 @@ namespace FakeMG.Framework
         public AssetReferenceSprite IconSpriteAsset => _iconSpriteAsset;
 
 #if UNITY_EDITOR
+        public void ConfigureIdentityForEditor(string id, string itemName, AssetReferenceSprite iconSpriteAsset)
+        {
+            _id = id;
+            _itemName = itemName;
+            _iconSpriteAsset = iconSpriteAsset;
+        }
+
         [Button("Set ID From Name")]
         private void SetIDFromName()
         {

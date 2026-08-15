@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FakeMG.Framework;
-using FakeMG.SaveLoad.Advanced;
+using FakeMG.SaveLoad;
 using UnityEditor;
 using UnityEditor.IMGUI.Controls;
 using UnityEngine;
@@ -399,11 +399,11 @@ namespace FakeMG.SaveLoad.Editor
             _fileEntries.Clear();
             ResetViewerSelectionState();
 
-            _fileEntries = SaveFileCatalog.GetManagedSaveFiles();
+            _fileEntries = new SaveFileCatalog(new Es3SaveDataStore()).GetManagedSaveFiles();
 
             _fileEntries = _fileEntries
                 .OrderBy(entry => entry.SaveDirectoryPath, StringComparer.Ordinal)
-                .ThenByDescending(entry => entry.Metadata.Timestamp)
+                .ThenByDescending(entry => entry.Metadata.GetTimestampUtc())
                 .ToList();
 
             _fileTree?.SetEntries(_fileEntries);

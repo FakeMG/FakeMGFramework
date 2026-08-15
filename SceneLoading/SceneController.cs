@@ -9,6 +9,10 @@ using UnityEngine.SceneManagement;
 
 namespace FakeMG.SceneLoading
 {
+    /// <summary>
+    /// Owns one Addressable scene handle through load, unload, and reload. Scope parenting is kept
+    /// outside this generic loader so callers may choose the correct VContainer parent explicitly.
+    /// </summary>
     public class SceneController
     {
         private readonly AssetReferenceScene _sceneReference;
@@ -20,10 +24,10 @@ namespace FakeMG.SceneLoading
         public bool IsSceneLoaded => TryGetLoadedSceneHandle(out _);
         public AssetReferenceScene SceneReference => _sceneReference;
 
-        public event Action OnSceneLoaded;
-        public event Action OnSceneUnloaded;
-        public event Action<string> OnSceneLoadFailed;
-        public event Action<string> OnSceneUnloadFailed;
+        public event Action<SceneController> OnSceneLoaded;
+        public event Action<SceneController> OnSceneUnloaded;
+        public event Action<SceneController, string> OnSceneLoadFailed;
+        public event Action<SceneController, string> OnSceneUnloadFailed;
 
         public SceneController(AssetReferenceScene sceneReference)
         {
@@ -70,7 +74,7 @@ namespace FakeMG.SceneLoading
             catch (Exception ex)
             {
                 Echo.Error($"Unexpected error during scene loading: {ex.Message}");
-                OnSceneLoadFailed?.Invoke($"Unexpected error: {ex.Message}");
+                OnSceneLoadFailed?.Invoke(this, $"Unexpected error: {ex.Message}");
             }
             finally
             {
@@ -83,7 +87,7 @@ namespace FakeMG.SceneLoading
             if (_sceneReference == null)
             {
                 Echo.Error("Scene reference is null.");
-                OnSceneLoadFailed?.Invoke("Scene reference is null");
+                OnSceneLoadFailed?.Invoke(this, "Scene reference is null");
                 return false;
             }
 
@@ -93,10 +97,17 @@ namespace FakeMG.SceneLoading
                 return true;
             }
 
-            AsyncOperationHandle<SceneInstance> handle =
-                Addressables.LoadSceneAsync(_sceneReference, loadMode);
-
-            await handle;
+            AsyncOperationHandle<SceneInstance> handle = default;
+            try
+            {
+                handle = Addressables.LoadSceneAsync(_sceneReference, loadMode);
+                await handle;
+            }
+            catch
+            {
+                ReleaseOwnedSceneHandle(handle);
+                throw;
+            }
 
             if (handle.Status == AsyncOperationStatus.Succeeded)
             {
@@ -104,14 +115,15 @@ namespace FakeMG.SceneLoading
                 string sceneName = handle.Result.Scene.name;
 
                 Echo.Log($"Successfully loaded scene: {sceneName}");
-                OnSceneLoaded?.Invoke();
+                OnSceneLoaded?.Invoke(this);
                 return true;
             }
 
             _loadedSceneHandle = null;
+            ReleaseOwnedSceneHandle(handle);
             string errorMsg = $"Failed to load scene: {_sceneReference}";
             Echo.Error(errorMsg);
-            OnSceneLoadFailed?.Invoke(errorMsg);
+            OnSceneLoadFailed?.Invoke(this, errorMsg);
             return false;
         }
 
@@ -131,7 +143,7 @@ namespace FakeMG.SceneLoading
             catch (Exception ex)
             {
                 Echo.Error($"Unexpected error during scene unloading: {ex.Message}");
-                OnSceneUnloadFailed?.Invoke($"Unexpected error: {ex.Message}");
+                OnSceneUnloadFailed?.Invoke(this, $"Unexpected error: {ex.Message}");
             }
             finally
             {
@@ -159,13 +171,13 @@ namespace FakeMG.SceneLoading
             {
                 _loadedSceneHandle = null;
                 Echo.Log($"Successfully unloaded scene: {sceneName}");
-                OnSceneUnloaded?.Invoke();
+                OnSceneUnloaded?.Invoke(this);
                 return true;
             }
 
             string errorMsg = $"Failed to unload scene: {sceneName}";
             Echo.Error(errorMsg);
-            OnSceneUnloadFailed?.Invoke(errorMsg);
+            OnSceneUnloadFailed?.Invoke(this, errorMsg);
             return false;
         }
 
@@ -200,7 +212,7 @@ namespace FakeMG.SceneLoading
             if (_sceneReference == null)
             {
                 Echo.Error("Scene reference is null.");
-                OnSceneLoadFailed?.Invoke("Scene reference is null");
+                OnSceneLoadFailed?.Invoke(this, "Scene reference is null");
                 return false;
             }
 
@@ -246,10 +258,19 @@ namespace FakeMG.SceneLoading
             if (!loadedScene.IsValid() || !loadedScene.isLoaded)
             {
                 _loadedSceneHandle = null;
+                ReleaseOwnedSceneHandle(handle);
                 return false;
             }
 
             return true;
+        }
+
+        private static void ReleaseOwnedSceneHandle(AsyncOperationHandle<SceneInstance> handle)
+        {
+            if (handle.IsValid())
+            {
+                Addressables.Release(handle);
+            }
         }
     }
 }

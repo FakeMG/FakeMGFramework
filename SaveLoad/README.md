@@ -22,7 +22,9 @@
     - Add new keys (Handled by the SaveLoadSystem, if a key is missing in the save file, it will restore the default state for that key)
     - Remove fields (Don't need to do anything, ES3 ignores removed fields)
     - Remove keys (Don't need to do anything, the unused data will be ignored when loading and removed when saving)
-- Use Easy Save 3: Leverages the Easy Save 3 asset for serialization, compression, and encryption
+- Pluggable storage: `ISaveDataStore` isolates orchestration from serialization and file APIs
+- Easy Save 3 adapter: `Es3SaveDataStore` owns serialization only
+- Atomic durability: `AtomicFileTransaction` owns flushing, replacement, backup rotation, and recovery
 - Editor tool to edit save data directly in the editor when the data is encrypted
   - Edit existing key
   - Remove existing key
@@ -32,15 +34,17 @@
   - Multiple folders support
 
 ### ⏳ Planned (To-Do)
+- Separate files per data. Save each data file individually instead of a central file like current implementation
 - UI Integration: Provide user interface components for save/load operations
 - Encrypted Save Files per instance of SaveLoadSystem
 - Editor tool
   - Metadata validation: prevent unsupported types
   - Support Ctrl + Z undo
 - Make sure each field in the loaded data is initialized
-- Remove Easy Save 3 dependency and implement a custom serialization system
   - Encryption
   - Compression
   - Caching: RAM-based caching to perform many reads/writes cheaply, then flush it to storage rather than constantly touching disk
+- Support multiple game sessions (worlds) with group for each session.
+  - Option to use 1 fixed save file per session or timestamped save files per session.
 
 ### ❌ Out of Scope / Not Implemented

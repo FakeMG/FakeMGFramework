@@ -11,7 +11,7 @@ namespace FakeMG.Shop
         public List<string> OwnedListingIds = new();
     }
 
-    public class ShopOwnershipStateRepository : Saveable
+    public class ShopOwnershipStateRepository : MonoBehaviour, ISaveable
     {
         [SerializeField] private List<string> _defaultOwnedListingIds = new();
 
@@ -42,7 +42,7 @@ namespace FakeMG.Shop
             OnOwnershipChanged?.Invoke(listingId);
         }
 
-        public override object CaptureState()
+        public object CaptureState()
         {
             return new ShopOwnershipStateData
             {
@@ -50,7 +50,7 @@ namespace FakeMG.Shop
             };
         }
 
-        public override void RestoreState(object data)
+        public void RestoreState(object data)
         {
             if (!StateRestoreUtility.TryRestore(data, out ShopOwnershipStateData shopOwnershipStateData)
                 || shopOwnershipStateData.OwnedListingIds == null)
@@ -72,7 +72,7 @@ namespace FakeMG.Shop
             }
         }
 
-        public override void RestoreDefaultState()
+        public void RestoreDefaultState()
         {
             _ownedListingIds.Clear();
             for (int listingIndex = 0; listingIndex < _defaultOwnedListingIds.Count; listingIndex++)

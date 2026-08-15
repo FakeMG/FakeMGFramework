@@ -1,0 +1,24 @@
+{
+    "name": "FakeMG.SaveLoad.EditModeTests",
+    "rootNamespace": "FakeMG.SaveLoad.Tests",
+    "references": [
+        "FakeMG.SaveLoad",
+        "UniTask",
+        "TNRD.NSubstitute",
+        "EasySave3"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
