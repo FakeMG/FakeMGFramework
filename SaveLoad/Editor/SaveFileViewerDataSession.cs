@@ -90,10 +90,13 @@ namespace FakeMG.SaveLoad.Editor
 
     internal sealed class SaveFileViewerDataSession
     {
+        private readonly SaveFileViewerMutationService _mutationService = new();
+
         public SaveFileViewerLoadResult ReloadCurrentDataView(
             string selectedFilePath,
             string selectedKey,
-            SaveFileViewerDataViewMode currentDataViewMode)
+            SaveFileViewerDataViewMode currentDataViewMode,
+            SaveFileProtectionSettings protectionSettings)
         {
             SaveFileViewerLoadResult emptyResult = CreateLoadResult(currentDataViewMode);
             if (string.IsNullOrEmpty(selectedFilePath))
@@ -101,9 +104,17 @@ namespace FakeMG.SaveLoad.Editor
                 return emptyResult;
             }
 
+            ES3Settings fileSettings = Es3FileSettingsFactory.Create(
+                selectedFilePath,
+                protectionSettings);
+
             if (!string.IsNullOrEmpty(selectedKey))
             {
-                bool isTypedViewAvailable = TryLoadTypedKeyData(selectedFilePath, selectedKey, out object typedKeyData);
+                bool isTypedViewAvailable = TryLoadTypedKeyData(
+                    selectedFilePath,
+                    selectedKey,
+                    fileSettings,
+                    out object typedKeyData);
                 if (currentDataViewMode == SaveFileViewerDataViewMode.Typed && isTypedViewAvailable)
                 {
                     return new SaveFileViewerLoadResult(
@@ -133,10 +144,18 @@ namespace FakeMG.SaveLoad.Editor
                     return CreateLoadResult(currentDataViewMode);
                 }
 
-                return LoadKeyAsRawJson(selectedFilePath, selectedKey, currentDataViewMode);
+                return LoadKeyAsRawJson(
+                    selectedFilePath,
+                    selectedKey,
+                    currentDataViewMode,
+                    fileSettings);
             }
 
-            return LoadFullFileAsRawJson(selectedFilePath, selectedKey, currentDataViewMode);
+            return LoadFullFileAsRawJson(
+                selectedFilePath,
+                selectedKey,
+                currentDataViewMode,
+                fileSettings);
         }
 
         public SaveFileViewerSaveResult SaveCurrentData(
@@ -145,7 +164,8 @@ namespace FakeMG.SaveLoad.Editor
             SaveFileViewerDataViewMode currentDataViewMode,
             object cachedKeyData,
             string cachedKeyRawJson,
-            string cachedFullFileRawJson)
+            string cachedFullFileRawJson,
+            SaveFileProtectionSettings protectionSettings)
         {
             if (string.IsNullOrEmpty(selectedFilePath))
             {
@@ -158,13 +178,34 @@ namespace FakeMG.SaveLoad.Editor
                     null);
             }
 
+            ES3Settings fileSettings = Es3FileSettingsFactory.Create(
+                selectedFilePath,
+                protectionSettings);
+
             try
             {
                 SaveFileViewerSaveResult result = currentDataViewMode switch
                 {
-                    SaveFileViewerDataViewMode.Typed => SaveTypedKeyData(selectedFilePath, selectedKey, cachedKeyData),
-                    SaveFileViewerDataViewMode.KeyRaw => SaveRawJsonKeyData(selectedFilePath, selectedKey, currentDataViewMode, cachedKeyRawJson),
-                    SaveFileViewerDataViewMode.FileRaw => SaveFullFileRawJson(selectedFilePath, selectedKey, currentDataViewMode, cachedFullFileRawJson),
+                    SaveFileViewerDataViewMode.Typed => SaveTypedKeyData(
+                        selectedFilePath,
+                        selectedKey,
+                        cachedKeyData,
+                        fileSettings,
+                        protectionSettings),
+                    SaveFileViewerDataViewMode.KeyRaw => SaveRawJsonKeyData(
+                        selectedFilePath,
+                        selectedKey,
+                        currentDataViewMode,
+                        cachedKeyRawJson,
+                        fileSettings,
+                        protectionSettings),
+                    SaveFileViewerDataViewMode.FileRaw => SaveFullFileRawJson(
+                        selectedFilePath,
+                        selectedKey,
+                        currentDataViewMode,
+                        cachedFullFileRawJson,
+                        fileSettings,
+                        protectionSettings),
                     _ => CreateFailedSaveResult(selectedKey, currentDataViewMode, cachedKeyData, cachedKeyRawJson, cachedFullFileRawJson, null)
                 };
 
@@ -177,7 +218,7 @@ namespace FakeMG.SaveLoad.Editor
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to save changes to {selectedFilePath}: {exception.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to save changes to {selectedFilePath}: {exception}");
                 return CreateFailedSaveResult(
                     selectedKey,
                     currentDataViewMode,
@@ -191,9 +232,10 @@ namespace FakeMG.SaveLoad.Editor
         private static SaveFileViewerLoadResult LoadKeyAsRawJson(
             string selectedFilePath,
             string selectedKey,
-            SaveFileViewerDataViewMode currentDataViewMode)
+            SaveFileViewerDataViewMode currentDataViewMode,
+            ES3Settings fileSettings)
         {
-            if (!TryLoadFullFileJson(selectedFilePath, out JObject rootObject, out string errorMessage))
+            if (!TryLoadFullFileJson(selectedFilePath, fileSettings, out JObject rootObject, out string errorMessage))
             {
                 Debug.LogError($"[SaveFileViewer] {errorMessage}");
                 return new SaveFileViewerLoadResult(
@@ -234,9 +276,10 @@ namespace FakeMG.SaveLoad.Editor
         private static SaveFileViewerLoadResult LoadFullFileAsRawJson(
             string selectedFilePath,
             string selectedKey,
-            SaveFileViewerDataViewMode currentDataViewMode)
+            SaveFileViewerDataViewMode currentDataViewMode,
+            ES3Settings fileSettings)
         {
-            if (!TryLoadFullFileJson(selectedFilePath, out JObject rootObject, out string errorMessage))
+            if (!TryLoadFullFileJson(selectedFilePath, fileSettings, out JObject rootObject, out string errorMessage))
             {
                 Debug.LogError($"[SaveFileViewer] {errorMessage}");
                 return new SaveFileViewerLoadResult(
@@ -268,10 +311,12 @@ namespace FakeMG.SaveLoad.Editor
                 null);
         }
 
-        private static SaveFileViewerSaveResult SaveTypedKeyData(
+        private SaveFileViewerSaveResult SaveTypedKeyData(
             string selectedFilePath,
             string selectedKey,
-            object cachedKeyData)
+            object cachedKeyData,
+            ES3Settings fileSettings,
+            SaveFileProtectionSettings protectionSettings)
         {
             if (cachedKeyData == null || string.IsNullOrEmpty(selectedKey))
             {
@@ -284,7 +329,11 @@ namespace FakeMG.SaveLoad.Editor
                     null);
             }
 
-            ES3.Save(selectedKey, cachedKeyData, selectedFilePath);
+            _mutationService.SaveKey(
+                selectedFilePath,
+                selectedKey,
+                cachedKeyData,
+                protectionSettings);
 
             return new SaveFileViewerSaveResult(
                 true,
@@ -298,11 +347,13 @@ namespace FakeMG.SaveLoad.Editor
                 null);
         }
 
-        private static SaveFileViewerSaveResult SaveRawJsonKeyData(
+        private SaveFileViewerSaveResult SaveRawJsonKeyData(
             string selectedFilePath,
             string selectedKey,
             SaveFileViewerDataViewMode currentDataViewMode,
-            string cachedKeyRawJson)
+            string cachedKeyRawJson,
+            ES3Settings fileSettings,
+            SaveFileProtectionSettings protectionSettings)
         {
             if (string.IsNullOrEmpty(selectedKey))
             {
@@ -315,7 +366,7 @@ namespace FakeMG.SaveLoad.Editor
                 return CreateFailedSaveResult(selectedKey, currentDataViewMode, null, cachedKeyRawJson, null, errorMessage);
             }
 
-            if (!TryLoadFullFileJson(selectedFilePath, out JObject rootObject, out errorMessage))
+            if (!TryLoadFullFileJson(selectedFilePath, fileSettings, out JObject rootObject, out errorMessage))
             {
                 Debug.LogError($"[SaveFileViewer] {errorMessage}");
                 return CreateFailedSaveResult(selectedKey, currentDataViewMode, null, cachedKeyRawJson, null, errorMessage);
@@ -363,14 +414,23 @@ namespace FakeMG.SaveLoad.Editor
                 return CreateFailedSaveResult(selectedKey, currentDataViewMode, null, cachedKeyRawJson, null, errorMessage);
             }
 
-            return PersistRawFile(selectedFilePath, updatedKeyName, currentDataViewMode, rootObject, rawToken);
+            return PersistRawFile(
+                selectedFilePath,
+                updatedKeyName,
+                currentDataViewMode,
+                rootObject,
+                rawToken,
+                fileSettings,
+                protectionSettings);
         }
 
-        private static SaveFileViewerSaveResult SaveFullFileRawJson(
+        private SaveFileViewerSaveResult SaveFullFileRawJson(
             string selectedFilePath,
             string selectedKey,
             SaveFileViewerDataViewMode currentDataViewMode,
-            string cachedFullFileRawJson)
+            string cachedFullFileRawJson,
+            ES3Settings fileSettings,
+            SaveFileProtectionSettings protectionSettings)
         {
             if (!SaveFileViewerRawJsonPolicy.TryParseFullFileJson(cachedFullFileRawJson, out JObject rootObject, out string errorMessage))
             {
@@ -384,38 +444,51 @@ namespace FakeMG.SaveLoad.Editor
                 return CreateFailedSaveResult(selectedKey, currentDataViewMode, null, null, cachedFullFileRawJson, errorMessage);
             }
 
-            return PersistRawFile(selectedFilePath, selectedKey, currentDataViewMode, rootObject, null);
+            return PersistRawFile(
+                selectedFilePath,
+                selectedKey,
+                currentDataViewMode,
+                rootObject,
+                null,
+                fileSettings,
+                protectionSettings);
         }
 
-        private static SaveFileViewerSaveResult PersistRawFile(
+        private SaveFileViewerSaveResult PersistRawFile(
             string selectedFilePath,
             string selectedKey,
             SaveFileViewerDataViewMode currentDataViewMode,
             JObject rootObject,
-            JToken updatedRawToken)
+            JToken updatedRawToken,
+            ES3Settings fileSettings,
+            SaveFileProtectionSettings protectionSettings)
         {
             string serializedJson = rootObject.ToString(Formatting.None);
-            ES3.SaveRaw(serializedJson, selectedFilePath);
+            _mutationService.ReplaceRawJson(
+                selectedFilePath,
+                serializedJson,
+                protectionSettings);
 
-            string[] keys = LoadKeysFromSelectedFile(selectedFilePath);
+            string[] keys = LoadKeysFromSelectedFile(selectedFilePath, fileSettings);
             return RefreshSelectedKeyStateFromRoot(
                 selectedFilePath,
                 selectedKey,
                 currentDataViewMode,
                 rootObject,
                 keys,
-                updatedRawToken);
+                updatedRawToken,
+                fileSettings);
         }
 
-        private static string[] LoadKeysFromSelectedFile(string selectedFilePath)
+        private static string[] LoadKeysFromSelectedFile(string selectedFilePath, ES3Settings fileSettings)
         {
             try
             {
-                return ES3.GetKeys(selectedFilePath);
+                return ES3.GetKeys(fileSettings);
             }
             catch (Exception exception)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to refresh keys for {selectedFilePath}: {exception.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to refresh keys for {selectedFilePath}: {exception}");
                 return Array.Empty<string>();
             }
         }
@@ -426,7 +499,8 @@ namespace FakeMG.SaveLoad.Editor
             SaveFileViewerDataViewMode currentDataViewMode,
             JObject rootObject,
             string[] keys,
-            JToken updatedRawToken)
+            JToken updatedRawToken,
+            ES3Settings fileSettings)
         {
             string cachedFullFileRawJson = rootObject.ToString(Formatting.Indented);
 
@@ -470,7 +544,7 @@ namespace FakeMG.SaveLoad.Editor
                 ? SaveFileViewerRawJsonPolicy.CreateSingleKeyRawJson(property)
                 : SaveFileViewerRawJsonPolicy.CreateSingleKeyRawJson(selectedKey, updatedRawToken);
 
-            bool isTypedViewAvailable = TryLoadTypedKeyData(selectedFilePath, selectedKey, out object typedKeyData);
+            bool isTypedViewAvailable = TryLoadTypedKeyData(selectedFilePath, selectedKey, fileSettings, out object typedKeyData);
             object cachedKeyData = currentDataViewMode == SaveFileViewerDataViewMode.Typed && isTypedViewAvailable
                 ? typedKeyData
                 : null;
@@ -487,7 +561,11 @@ namespace FakeMG.SaveLoad.Editor
                 keys);
         }
 
-        private static bool TryLoadTypedKeyData(string selectedFilePath, string selectedKey, out object typedKeyData)
+        private static bool TryLoadTypedKeyData(
+            string selectedFilePath,
+            string selectedKey,
+            ES3Settings fileSettings,
+            out object typedKeyData)
         {
             typedKeyData = null;
 
@@ -498,7 +576,7 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                typedKeyData = ES3.Load(selectedKey, selectedFilePath);
+                typedKeyData = ES3.Load(selectedKey, fileSettings);
                 return true;
             }
             catch
@@ -507,18 +585,22 @@ namespace FakeMG.SaveLoad.Editor
             }
         }
 
-        private static bool TryLoadFullFileJson(string selectedFilePath, out JObject rootObject, out string errorMessage)
+        private static bool TryLoadFullFileJson(
+            string selectedFilePath,
+            ES3Settings fileSettings,
+            out JObject rootObject,
+            out string errorMessage)
         {
             rootObject = null;
 
             try
             {
-                string rawJson = ES3.LoadRawString(selectedFilePath);
+                string rawJson = ES3.LoadRawString(fileSettings);
                 return SaveFileViewerRawJsonPolicy.TryParseFullFileJson(rawJson, out rootObject, out errorMessage);
             }
             catch (Exception exception)
             {
-                errorMessage = $"Failed to load raw JSON from {selectedFilePath}: {exception.Message}";
+                errorMessage = $"Failed to load raw JSON from {selectedFilePath}: {exception}";
                 return false;
             }
         }

@@ -1,6 +1,5 @@
 using System;
 using System.IO;
-using UnityEngine;
 
 namespace FakeMG.SaveLoad
 {
@@ -12,9 +11,14 @@ namespace FakeMG.SaveLoad
     {
         private readonly string _storageRootPath;
 
-        public AtomicFileTransaction(string storageRootPath = null)
+        public AtomicFileTransaction(ISaveEnvironment saveEnvironment)
         {
-            _storageRootPath = storageRootPath;
+            _storageRootPath = saveEnvironment?.StorageRootPath ?? throw new ArgumentNullException(nameof(saveEnvironment));
+        }
+
+        public AtomicFileTransaction(string storageRootPath)
+        {
+            _storageRootPath = storageRootPath ?? throw new ArgumentNullException(nameof(storageRootPath));
         }
 
         #region Public Methods
@@ -90,7 +94,7 @@ namespace FakeMG.SaveLoad
         {
             return Path.IsPathRooted(filePath)
                 ? filePath
-                : Path.Combine(_storageRootPath ?? Application.persistentDataPath, filePath);
+                : Path.Combine(_storageRootPath, filePath);
         }
 
         #endregion

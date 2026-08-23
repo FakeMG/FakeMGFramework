@@ -22,9 +22,7 @@ namespace FakeMG.Audio
         private AudioCuePlayAction _musicPlayHandler;
         private AudioCueStopAction _musicStopHandler;
 
-        public AudioChannelRegistry(
-            List<AudioCueEventChannelSO> pooledChannels,
-            AudioCueEventChannelSO musicChannel)
+        public AudioChannelRegistry(List<AudioCueEventChannelSO> pooledChannels, AudioCueEventChannelSO musicChannel)
         {
             _pooledChannels = pooledChannels;
             _musicChannel = musicChannel;
@@ -89,7 +87,7 @@ namespace FakeMG.Audio
             _musicChannel.OnAudioCueStopRequested -= _musicStopHandler;
         }
 
-        public void SubscribeToVolumeChanges(SettingDataManager settingDataManager)
+        public void SubscribeToVolumeChanges(SettingsStateRepository settingsStateRepository)
         {
             _subscribedVolumeChannels = GetUniqueVolumeChannels();
 
@@ -102,11 +100,12 @@ namespace FakeMG.Audio
                                    "Check the channel configuration and make sure it has a valid volume slider setting assigned.");
                     continue;
                 }
-                settingDataManager.Subscribe(channel.VolumeSliderSetting, ApplyVolumeWhenSettingChanged);
+                settingsStateRepository.RegisterSetting(channel.VolumeSliderSetting);
+                settingsStateRepository.Subscribe(channel.VolumeSliderSetting, ApplyVolumeWhenSettingChanged);
             }
         }
 
-        public void UnsubscribeFromVolumeChanges(SettingDataManager settingDataManager)
+        public void UnsubscribeFromVolumeChanges(SettingsStateRepository settingsStateRepository)
         {
             foreach (var channel in _subscribedVolumeChannels)
             {
@@ -117,7 +116,7 @@ namespace FakeMG.Audio
                                    "Check the channel configuration and make sure it has a valid volume slider setting assigned.");
                     continue;
                 }
-                settingDataManager.Unsubscribe(channel.VolumeSliderSetting, ApplyVolumeWhenSettingChanged);
+                settingsStateRepository.Unsubscribe(channel.VolumeSliderSetting, ApplyVolumeWhenSettingChanged);
             }
 
             _subscribedVolumeChannels.Clear();
@@ -133,11 +132,11 @@ namespace FakeMG.Audio
             ApplyVolumeToChannel(channel, volume);
         }
 
-        public void InitializeChannelVolumes(SettingDataManager settingDataManager)
+        public void InitializeChannelVolumes(SettingsStateRepository settingsStateRepository)
         {
             foreach (var channel in _subscribedVolumeChannels)
             {
-                float persistedVolume = settingDataManager.GetValue(channel.VolumeSliderSetting);
+                float persistedVolume = settingsStateRepository.GetValue(channel.VolumeSliderSetting);
                 ApplyVolumeToChannel(channel, persistedVolume);
             }
         }

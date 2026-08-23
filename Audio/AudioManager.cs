@@ -20,7 +20,7 @@ namespace FakeMG.Audio
         [Tooltip("Music uses a dedicated emitter to preserve crossfade behavior.")]
         [SerializeField] private AudioCueEventChannelSO _musicEventChannel;
 
-        [Inject] private readonly SettingDataManager _settingDataManager;
+        [Inject] private readonly SettingsStateRepository _settingsStateRepository;
 
         private Queue<SoundEmitter> _soundEmitterQueue;
         private SoundEmitterVault _soundEmitterVault;
@@ -42,13 +42,13 @@ namespace FakeMG.Audio
 
         private void Start()
         {
-            _channelRegistry.SubscribeToVolumeChanges(_settingDataManager);
-            _channelRegistry.InitializeChannelVolumes(_settingDataManager);
+            _channelRegistry.SubscribeToVolumeChanges(_settingsStateRepository);
+            _channelRegistry.InitializeChannelVolumes(_settingsStateRepository);
         }
 
         private void OnDisable()
         {
-            _channelRegistry.UnsubscribeFromVolumeChanges(_settingDataManager);
+            _channelRegistry.UnsubscribeFromVolumeChanges(_settingsStateRepository);
             _channelRegistry.UnregisterPooledChannels();
             _channelRegistry.UnregisterMusicChannel();
 

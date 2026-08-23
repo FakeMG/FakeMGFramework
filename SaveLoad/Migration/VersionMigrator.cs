@@ -1,70 +1,97 @@
 using System;
 using System.Collections.Generic;
 using FakeMG.Framework;
-using UnityEngine;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Executes pending migrations in order and advances metadata after each successful step. A
-    /// failure leaves metadata at the last completed version so the next load can resume safely.
-    /// </summary>
+    public readonly struct MigrationResult
+    {
+        public bool Succeeded { get; }
+        public string FailureReason { get; }
+
+        private MigrationResult(bool succeeded, string failureReason)
+        {
+            Succeeded = succeeded;
+            FailureReason = failureReason ?? string.Empty;
+        }
+
+        public static MigrationResult Success()
+        {
+            return new MigrationResult(true, string.Empty);
+        }
+
+        public static MigrationResult Failure(string failureReason)
+        {
+            return new MigrationResult(false, failureReason);
+        }
+    }
+
     public sealed class VersionMigrator
     {
         private readonly ISaveMigrationPlan _migrationPlan;
         private readonly ISaveDataStore _saveDataStore;
+        private readonly IAtomicFileTransaction _atomicFileTransaction;
+        private readonly string _targetVersion;
 
         public VersionMigrator(
             ISaveMigrationPlan migrationPlan,
-            ISaveDataStore saveDataStore)
+            ISaveDataStore saveDataStore,
+            IAtomicFileTransaction atomicFileTransaction,
+            string targetVersion)
         {
             _migrationPlan = migrationPlan;
             _saveDataStore = saveDataStore;
+            _atomicFileTransaction = atomicFileTransaction;
+            _targetVersion = targetVersion;
         }
 
         #region Public Methods
 
-        public bool MigrateSaveFile(string saveFilePath, string savedVersion)
+        public MigrationResult MigrateSaveFile(string saveFilePath, string savedVersion)
         {
-            IReadOnlyList<ISaveMigrationStep> pendingMigrations =
-                _migrationPlan.GetPendingMigrations(savedVersion);
-            if (pendingMigrations.Count == 0)
+            if (!_migrationPlan.TryGetMigrationPath(
+                    savedVersion,
+                    _targetVersion,
+                    out IReadOnlyList<ISaveMigrationStep> migrationSteps,
+                    out string failureReason))
             {
-                Echo.Log($"No pending migrations for version {savedVersion}.");
-                return true;
+                Echo.Error(failureReason);
+                return MigrationResult.Failure(failureReason);
             }
 
-            Echo.Log($"Running {pendingMigrations.Count} migration(s) from version {savedVersion}.");
-            foreach (ISaveMigrationStep migrationStep in pendingMigrations)
+            foreach (ISaveMigrationStep migrationStep in migrationSteps)
             {
                 try
                 {
-                    migrationStep.Migrate(_saveDataStore, saveFilePath);
-                    UpdateSaveVersion(saveFilePath, migrationStep.TargetVersion);
-                    Echo.Log($"Migration to {migrationStep.TargetVersion} succeeded.");
+                    _atomicFileTransaction.Commit(
+                        saveFilePath,
+                        temporaryFilePath => MigrateTemporaryFile(saveFilePath, temporaryFilePath, migrationStep));
                 }
                 catch (Exception exception)
                 {
-                    Echo.Error(
-                        $"Migration to {migrationStep.TargetVersion} failed: {exception.Message}. " +
-                        "Save file remains at the last successful version.");
-                    return false;
+                    string stepFailureReason = $"Migration from '{migrationStep.SourceVersion}' to '{migrationStep.TargetVersion}' failed: {exception}";
+                    Echo.Error(stepFailureReason);
+                    return MigrationResult.Failure(stepFailureReason);
                 }
             }
 
-            Echo.Log($"All migrations complete. Current application version is {Application.version}.");
-            return true;
+            return MigrationResult.Success();
         }
 
         #endregion
 
         #region Private Methods
 
-        private void UpdateSaveVersion(string saveFilePath, string newVersion)
+        private void MigrateTemporaryFile(
+            string sourceFilePath,
+            string temporaryFilePath,
+            ISaveMigrationStep migrationStep)
         {
-            SaveMetadata metadata = _saveDataStore.LoadMetadata(saveFilePath);
-            metadata.GameVersion = newVersion;
-            _saveDataStore.SaveMetadata(saveFilePath, metadata);
+            _saveDataStore.CopyFile(sourceFilePath, temporaryFilePath);
+            migrationStep.Migrate(_saveDataStore, temporaryFilePath);
+            SaveMetadata metadata = _saveDataStore.LoadMetadata(temporaryFilePath);
+            metadata.ApplicationVersion = migrationStep.TargetVersion;
+            _saveDataStore.SaveMetadata(temporaryFilePath, metadata);
         }
 
         #endregion

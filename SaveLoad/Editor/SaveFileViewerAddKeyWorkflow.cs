@@ -25,7 +25,7 @@ namespace FakeMG.SaveLoad.Editor
         private const int MAX_TYPE_MATCHES = 200;
         private const string NEW_KEY_PREVIEW_PATH = "new-key-preview";
 
-        private static readonly SaveFileViewerTypeCatalog TypeCatalog = SaveFileViewerTypeCatalog.Default;
+        private static readonly SaveFileViewerTypeCatalog _typeCatalog = SaveFileViewerTypeCatalog.Default;
 
         private string _newKeyName = string.Empty;
         private string _newKeyTypeSearch = typeof(string).FullName;
@@ -98,7 +98,7 @@ namespace FakeMG.SaveLoad.Editor
 
             if (_exactNewKeyTypeMatch != null)
             {
-                EditorGUILayout.LabelField("Resolved Type", TypeCatalog.GetDisplayName(_exactNewKeyTypeMatch));
+                EditorGUILayout.LabelField("Resolved Type", _typeCatalog.GetDisplayName(_exactNewKeyTypeMatch));
                 return;
             }
 
@@ -118,7 +118,7 @@ namespace FakeMG.SaveLoad.Editor
                 ApplySelectedNewKeyType(_newKeyTypeMatches[_newKeyTypeMatchIndex]);
             }
 
-            EditorGUILayout.LabelField("Selected Type", TypeCatalog.GetDisplayName(_selectedNewKeyType));
+            EditorGUILayout.LabelField("Selected Type", _typeCatalog.GetDisplayName(_selectedNewKeyType));
         }
 
         private void DrawInitialValueEditor()
@@ -174,19 +174,19 @@ namespace FakeMG.SaveLoad.Editor
         private void RefreshNewKeyTypeMatches()
         {
             string search = _newKeyTypeSearch?.Trim() ?? string.Empty;
-            _exactNewKeyTypeMatch = TypeCatalog.ResolveSupportedType(search);
+            _exactNewKeyTypeMatch = _typeCatalog.ResolveSupportedType(search);
             if (_exactNewKeyTypeMatch != null)
             {
                 _newKeyTypeMatches = new List<Type> { _exactNewKeyTypeMatch };
-                _newKeyTypeMatchLabels = new[] { TypeCatalog.GetDisplayName(_exactNewKeyTypeMatch) };
+                _newKeyTypeMatchLabels = new[] { _typeCatalog.GetDisplayName(_exactNewKeyTypeMatch) };
                 _newKeyTypeMatchIndex = 0;
                 ApplySelectedNewKeyType(_exactNewKeyTypeMatch);
                 return;
             }
 
-            _newKeyTypeMatches = TypeCatalog.GetMatches(search, MAX_TYPE_MATCHES);
+            _newKeyTypeMatches = _typeCatalog.GetMatches(search, MAX_TYPE_MATCHES);
             _newKeyTypeMatchLabels = _newKeyTypeMatches
-                .Select(TypeCatalog.GetDisplayName)
+                .Select(_typeCatalog.GetDisplayName)
                 .ToArray();
 
             if (_newKeyTypeMatches.Count == 0)

@@ -4,7 +4,6 @@
     "references": [
         "Unity.TextMeshPro",
         "FakeMG.Framework",
-        "FakeMG.SaveLoad",
         "VContainer",
         "UniTask",
         "EasySave3"

@@ -10,8 +10,28 @@ namespace FakeMG.SaveLoad.Editor
 {
     public static class ReflectionDataDrawer
     {
-        private static readonly HashSet<string> ExpandedPaths = new();
-        private static readonly Dictionary<Type, FieldInfo[]> EditableFieldsByType = new();
+        private delegate object ScalarDrawer(string label, object value, out bool didChange);
+
+        private static readonly HashSet<string> _expandedPaths = new();
+        private static readonly Dictionary<Type, FieldInfo[]> _editableFieldsByType = new();
+        private static readonly IReadOnlyDictionary<Type, ScalarDrawer> _scalarDrawersByType =
+            new Dictionary<Type, ScalarDrawer>
+            {
+                [typeof(int)] = DrawInt,
+                [typeof(float)] = DrawFloat,
+                [typeof(double)] = DrawDouble,
+                [typeof(long)] = DrawLong,
+                [typeof(bool)] = DrawBool,
+                [typeof(string)] = DrawString,
+                [typeof(Vector2)] = DrawVector2,
+                [typeof(Vector3)] = DrawVector3,
+                [typeof(Vector4)] = DrawVector4,
+                [typeof(Vector2Int)] = DrawVector2Int,
+                [typeof(Vector3Int)] = DrawVector3Int,
+                [typeof(Quaternion)] = DrawQuaternion,
+                [typeof(Color)] = DrawColor,
+                [typeof(DateTime)] = DrawDateTime,
+            };
 
         public static bool DrawRootValue(Type valueType, ref object value, string path = "root")
         {
@@ -29,15 +49,15 @@ namespace FakeMG.SaveLoad.Editor
             return CreateDefaultInstance(type);
         }
 
-        public static bool DrawObject(object obj, string path = "")
+        public static bool DrawObject(object valueObject, string path = "")
         {
-            if (obj == null)
+            if (valueObject == null)
             {
                 EditorGUILayout.HelpBox("Value is null.", MessageType.Info);
                 return false;
             }
 
-            Type type = obj.GetType();
+            Type type = valueObject.GetType();
             FieldInfo[] fields = GetEditableFields(type);
 
             bool changed = false;
@@ -48,12 +68,12 @@ namespace FakeMG.SaveLoad.Editor
                     ? field.Name
                     : $"{path}.{field.Name}";
 
-                object value = field.GetValue(obj);
+                object value = field.GetValue(valueObject);
                 object newValue = DrawField(field.Name, field.FieldType, value, fieldPath, out bool fieldChanged);
 
                 if (fieldChanged)
                 {
-                    field.SetValue(obj, newValue);
+                    field.SetValue(valueObject, newValue);
                     changed = true;
                 }
             }
@@ -63,7 +83,7 @@ namespace FakeMG.SaveLoad.Editor
 
         private static FieldInfo[] GetEditableFields(Type type)
         {
-            if (EditableFieldsByType.TryGetValue(type, out FieldInfo[] fields))
+            if (_editableFieldsByType.TryGetValue(type, out FieldInfo[] fields))
             {
                 return fields;
             }
@@ -74,7 +94,7 @@ namespace FakeMG.SaveLoad.Editor
                 .Where(field => !typeof(Delegate).IsAssignableFrom(field.FieldType))
                 .ToArray();
 
-            EditableFieldsByType[type] = fields;
+            _editableFieldsByType[type] = fields;
             return fields;
         }
 
@@ -122,117 +142,9 @@ namespace FakeMG.SaveLoad.Editor
             out object drawnValue,
             out bool changed)
         {
-            if (fieldType == typeof(int))
+            if (_scalarDrawersByType.TryGetValue(fieldType, out ScalarDrawer scalarDrawer))
             {
-                drawnValue = DrawPrimitive(label, value is int intValue ? intValue : default, EditorGUILayout.IntField, out changed);
-                return true;
-            }
-
-            if (fieldType == typeof(float))
-            {
-                drawnValue = DrawPrimitive(label, value is float floatValue ? floatValue : default, EditorGUILayout.FloatField, out changed);
-                return true;
-            }
-
-            if (fieldType == typeof(double))
-            {
-                double old = value is double doubleValue ? doubleValue : default;
-                double next = EditorGUILayout.DoubleField(label, old);
-                changed = !old.Equals(next);
-                drawnValue = next;
-                return true;
-            }
-
-            if (fieldType == typeof(long))
-            {
-                long old = value is long longValue ? longValue : default;
-                long next = EditorGUILayout.LongField(label, old);
-                changed = old != next;
-                drawnValue = next;
-                return true;
-            }
-
-            if (fieldType == typeof(bool))
-            {
-                bool old = value is bool boolValue && boolValue;
-                bool next = EditorGUILayout.Toggle(label, old);
-                changed = old != next;
-                drawnValue = next;
-                return true;
-            }
-
-            if (fieldType == typeof(string))
-            {
-                string old = value as string ?? string.Empty;
-                string next = EditorGUILayout.TextField(label, old);
-                changed = old != next;
-                drawnValue = next;
-                return true;
-            }
-
-            if (fieldType == typeof(Vector2))
-            {
-                drawnValue = DrawPrimitive(label, value is Vector2 vector2 ? vector2 : default, EditorGUILayout.Vector2Field, out changed);
-                return true;
-            }
-
-            if (fieldType == typeof(Vector3))
-            {
-                drawnValue = DrawPrimitive(label, value is Vector3 vector3 ? vector3 : default, EditorGUILayout.Vector3Field, out changed);
-                return true;
-            }
-
-            if (fieldType == typeof(Vector4))
-            {
-                drawnValue = DrawPrimitive(label, value is Vector4 vector4 ? vector4 : default, EditorGUILayout.Vector4Field, out changed);
-                return true;
-            }
-
-            if (fieldType == typeof(Vector2Int))
-            {
-                drawnValue = DrawPrimitive(label, value is Vector2Int vector2Int ? vector2Int : default, EditorGUILayout.Vector2IntField, out changed);
-                return true;
-            }
-
-            if (fieldType == typeof(Vector3Int))
-            {
-                drawnValue = DrawPrimitive(label, value is Vector3Int vector3Int ? vector3Int : default, EditorGUILayout.Vector3IntField, out changed);
-                return true;
-            }
-
-            if (fieldType == typeof(Quaternion))
-            {
-                Quaternion old = value is Quaternion quaternion ? quaternion : default;
-                Vector4 asVector = new(old.x, old.y, old.z, old.w);
-                Vector4 next = EditorGUILayout.Vector4Field(label, asVector);
-                Quaternion result = new(next.x, next.y, next.z, next.w);
-                changed = old != result;
-                drawnValue = result;
-                return true;
-            }
-
-            if (fieldType == typeof(Color))
-            {
-                Color old = value is Color color ? color : default;
-                Color next = EditorGUILayout.ColorField(label, old);
-                changed = old != next;
-                drawnValue = next;
-                return true;
-            }
-
-            if (fieldType == typeof(DateTime))
-            {
-                DateTime old = value is DateTime dateTime ? dateTime : default;
-                string text = EditorGUILayout.TextField(label, old.ToString("O"));
-                if (DateTime.TryParse(text, out DateTime parsed) && parsed != old)
-                {
-                    changed = true;
-                    drawnValue = parsed;
-                    return true;
-                }
-
-                changed = false;
-                drawnValue = old;
+                drawnValue = scalarDrawer(label, value, out changed);
                 return true;
             }
 
@@ -248,6 +160,141 @@ namespace FakeMG.SaveLoad.Editor
             changed = false;
             drawnValue = null;
             return false;
+        }
+
+        private static object DrawInt(string label, object value, out bool didChange)
+        {
+            return DrawPrimitive(
+                label,
+                value is int intValue ? intValue : default,
+                EditorGUILayout.IntField,
+                out didChange);
+        }
+
+        private static object DrawFloat(string label, object value, out bool didChange)
+        {
+            return DrawPrimitive(
+                label,
+                value is float floatValue ? floatValue : default,
+                EditorGUILayout.FloatField,
+                out didChange);
+        }
+
+        private static object DrawDouble(string label, object value, out bool didChange)
+        {
+            double previousValue = value is double doubleValue ? doubleValue : default;
+            double nextValue = EditorGUILayout.DoubleField(label, previousValue);
+            didChange = !previousValue.Equals(nextValue);
+            return nextValue;
+        }
+
+        private static object DrawLong(string label, object value, out bool didChange)
+        {
+            long previousValue = value is long longValue ? longValue : default;
+            long nextValue = EditorGUILayout.LongField(label, previousValue);
+            didChange = previousValue != nextValue;
+            return nextValue;
+        }
+
+        private static object DrawBool(string label, object value, out bool didChange)
+        {
+            bool wasEnabled = value is bool boolValue && boolValue;
+            bool isEnabled = EditorGUILayout.Toggle(label, wasEnabled);
+            didChange = wasEnabled != isEnabled;
+            return isEnabled;
+        }
+
+        private static object DrawString(string label, object value, out bool didChange)
+        {
+            string previousValue = value as string ?? string.Empty;
+            string nextValue = EditorGUILayout.TextField(label, previousValue);
+            didChange = previousValue != nextValue;
+            return nextValue;
+        }
+
+        private static object DrawVector2(string label, object value, out bool didChange)
+        {
+            return DrawPrimitive(
+                label,
+                value is Vector2 vectorValue ? vectorValue : default,
+                EditorGUILayout.Vector2Field,
+                out didChange);
+        }
+
+        private static object DrawVector3(string label, object value, out bool didChange)
+        {
+            return DrawPrimitive(
+                label,
+                value is Vector3 vectorValue ? vectorValue : default,
+                EditorGUILayout.Vector3Field,
+                out didChange);
+        }
+
+        private static object DrawVector4(string label, object value, out bool didChange)
+        {
+            return DrawPrimitive(
+                label,
+                value is Vector4 vectorValue ? vectorValue : default,
+                EditorGUILayout.Vector4Field,
+                out didChange);
+        }
+
+        private static object DrawVector2Int(string label, object value, out bool didChange)
+        {
+            return DrawPrimitive(
+                label,
+                value is Vector2Int vectorValue ? vectorValue : default,
+                EditorGUILayout.Vector2IntField,
+                out didChange);
+        }
+
+        private static object DrawVector3Int(string label, object value, out bool didChange)
+        {
+            return DrawPrimitive(
+                label,
+                value is Vector3Int vectorValue ? vectorValue : default,
+                EditorGUILayout.Vector3IntField,
+                out didChange);
+        }
+
+        private static object DrawQuaternion(string label, object value, out bool didChange)
+        {
+            Quaternion previousValue = value is Quaternion quaternionValue ? quaternionValue : default;
+            Vector4 editableValue = new(
+                previousValue.x,
+                previousValue.y,
+                previousValue.z,
+                previousValue.w);
+            Vector4 nextEditableValue = EditorGUILayout.Vector4Field(label, editableValue);
+            Quaternion nextValue = new(
+                nextEditableValue.x,
+                nextEditableValue.y,
+                nextEditableValue.z,
+                nextEditableValue.w);
+            didChange = previousValue != nextValue;
+            return nextValue;
+        }
+
+        private static object DrawColor(string label, object value, out bool didChange)
+        {
+            Color previousValue = value is Color colorValue ? colorValue : default;
+            Color nextValue = EditorGUILayout.ColorField(label, previousValue);
+            didChange = previousValue != nextValue;
+            return nextValue;
+        }
+
+        private static object DrawDateTime(string label, object value, out bool didChange)
+        {
+            DateTime previousValue = value is DateTime dateTimeValue ? dateTimeValue : default;
+            string editedTimestamp = EditorGUILayout.TextField(label, previousValue.ToString("O"));
+            if (DateTime.TryParse(editedTimestamp, out DateTime parsedValue) && parsedValue != previousValue)
+            {
+                didChange = true;
+                return parsedValue;
+            }
+
+            didChange = false;
+            return previousValue;
         }
 
         private static T DrawPrimitive<T>(
@@ -271,13 +318,13 @@ namespace FakeMG.SaveLoad.Editor
                 return value;
             }
 
-            bool expanded = ExpandedPaths.Contains(path);
+            bool expanded = _expandedPaths.Contains(path);
             bool newExpanded = EditorGUILayout.Foldout(expanded, label, true);
 
             if (newExpanded != expanded)
             {
-                if (newExpanded) ExpandedPaths.Add(path);
-                else ExpandedPaths.Remove(path);
+                if (newExpanded) _expandedPaths.Add(path);
+                else _expandedPaths.Remove(path);
             }
 
             if (newExpanded)
@@ -305,13 +352,13 @@ namespace FakeMG.SaveLoad.Editor
                 return dictionary;
             }
 
-            bool expanded = ExpandedPaths.Contains(path);
+            bool expanded = _expandedPaths.Contains(path);
             bool newExpanded = EditorGUILayout.Foldout(expanded, $"{label} [{dictionary.Count}]", true);
 
             if (newExpanded != expanded)
             {
-                if (newExpanded) ExpandedPaths.Add(path);
-                else ExpandedPaths.Remove(path);
+                if (newExpanded) _expandedPaths.Add(path);
+                else _expandedPaths.Remove(path);
             }
 
             if (!newExpanded)
@@ -381,13 +428,13 @@ namespace FakeMG.SaveLoad.Editor
                 return list;
             }
 
-            bool expanded = ExpandedPaths.Contains(path);
+            bool expanded = _expandedPaths.Contains(path);
             bool newExpanded = EditorGUILayout.Foldout(expanded, $"{label} [{list.Count}]", true);
 
             if (newExpanded != expanded)
             {
-                if (newExpanded) ExpandedPaths.Add(path);
-                else ExpandedPaths.Remove(path);
+                if (newExpanded) _expandedPaths.Add(path);
+                else _expandedPaths.Remove(path);
             }
 
             if (!newExpanded)
@@ -453,13 +500,13 @@ namespace FakeMG.SaveLoad.Editor
                 return array;
             }
 
-            bool expanded = ExpandedPaths.Contains(path);
+            bool expanded = _expandedPaths.Contains(path);
             bool newExpanded = EditorGUILayout.Foldout(expanded, $"{label} [{array.Length}]", true);
 
             if (newExpanded != expanded)
             {
-                if (newExpanded) ExpandedPaths.Add(path);
-                else ExpandedPaths.Remove(path);
+                if (newExpanded) _expandedPaths.Add(path);
+                else _expandedPaths.Remove(path);
             }
 
             if (!newExpanded)
@@ -620,7 +667,7 @@ namespace FakeMG.SaveLoad.Editor
 
         public static void ClearExpandedState()
         {
-            ExpandedPaths.Clear();
+            _expandedPaths.Clear();
         }
     }
 }

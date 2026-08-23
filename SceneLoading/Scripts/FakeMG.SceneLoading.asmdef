@@ -1,0 +1,23 @@
+{
+    "name": "FakeMG.SceneLoading",
+    "rootNamespace": "FakeMG.SceneLoading",
+    "references": [
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask",
+        "UniTask.DOTween",
+        "UniTask.Addressables",
+        "FakeMG.Framework",
+        "VContainer",
+        "DOTween.Modules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

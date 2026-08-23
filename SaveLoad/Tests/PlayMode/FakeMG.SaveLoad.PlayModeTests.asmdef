@@ -1,0 +1,27 @@
+{
+    "name": "FakeMG.SaveLoad.PlayModeTests",
+    "rootNamespace": "FakeMG.SaveLoad.Tests.PlayMode",
+    "references": [
+        "FakeMG.SaveLoad",
+        "FakeMG.SceneLoading",
+        "UniTask",
+        "VContainer",
+        "VContainer.Unity",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

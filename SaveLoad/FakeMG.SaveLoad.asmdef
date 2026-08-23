@@ -4,6 +4,7 @@
     "references": [
         "UniTask",
         "VContainer",
+        "VContainer.Unity",
         "FakeMG.Framework",
         "EasySave3"
     ],

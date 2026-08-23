@@ -7,7 +7,7 @@ namespace FakeMG.Inventory
 {
     /// <summary>
     /// Single source of truth for inventory balances. Injected directly so callers depend on this (or its
-    /// IInventoryBalanceRepository interface) rather than on InventoryDataManager, which is only the thin
+    /// IInventoryBalanceRepository interface) rather than on InventoryStateSaveable, which is only the thin
     /// Saveable adapter that loads and saves this state.
     /// </summary>
     public sealed class InventoryBalanceState : IInventoryBalanceRepository

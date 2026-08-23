@@ -1,5 +1,6 @@
 using FakeMG.Framework.ExtensionMethods;
 using TMPro;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
 using VContainer;
@@ -10,23 +11,22 @@ namespace FakeMG.Settings
     {
         private const string DEFAULT_VALUE_FORMAT = "0.##";
 
-        [SerializeField] private SliderSettingSO _sliderSetting;
-        [SerializeField] private Slider _slider;
-        [SerializeField] private TMP_Text _labelText;
-        [SerializeField] private TMP_Text _valueText;
+        [Required, SerializeField] private SliderSettingSO _sliderSettingSO;
+        [Required, SerializeField] private Slider _slider;
+        [Required, SerializeField] private TMP_Text _labelText;
+        [Required, SerializeField] private TMP_Text _valueText;
         [SerializeField] private float _uiMinValue;
         [SerializeField] private float _uiMaxValue = 1f;
         [SerializeField] private bool _useWholeNumbers;
         [SerializeField] private string _valueFormat = DEFAULT_VALUE_FORMAT;
 
-        [Inject] private readonly SettingDataManager _settingDataManager;
+        [Inject] private readonly SettingsStateRepository _settingsStateRepository;
+
+        #region Unity Lifecycle
 
         private void OnValidate()
         {
-            if (_slider)
-            {
-                ApplySliderPresentation();
-            }
+            ApplySliderPresentation();
         }
 
         private void OnEnable()
@@ -36,6 +36,7 @@ namespace FakeMG.Settings
 
         private void Start()
         {
+            _settingsStateRepository.RegisterSetting(_sliderSettingSO);
             ApplyLabel();
             ApplySliderPresentation();
             ApplyStoredSettingValueToSlider();
@@ -46,9 +47,13 @@ namespace FakeMG.Settings
             _slider.onValueChanged.RemoveListener(StoreSliderValue);
         }
 
+        #endregion
+
+        #region Private Methods
+
         private void ApplyLabel()
         {
-            _labelText.text = _sliderSetting.Label;
+            _labelText.text = _sliderSettingSO.Label;
         }
 
         private void ApplySliderPresentation()
@@ -60,7 +65,7 @@ namespace FakeMG.Settings
 
         private void ApplyStoredSettingValueToSlider()
         {
-            float storedSliderValue = ClampStoredValue(_settingDataManager.GetValue(_sliderSetting));
+            float storedSliderValue = ClampStoredValue(_settingsStateRepository.GetValue(_sliderSettingSO));
             float sliderValue = ConvertStoredValueToSliderValue(storedSliderValue);
 
             _slider.SetValueWithoutNotify(sliderValue);
@@ -73,7 +78,7 @@ namespace FakeMG.Settings
             float normalizedSliderValue = ConvertSliderValueToStoredValue(sliderValue);
 
             UpdateValueLabel(sliderValue);
-            _settingDataManager.SetValue(_sliderSetting, normalizedSliderValue);
+            _settingsStateRepository.SetValue(_sliderSettingSO, normalizedSliderValue);
         }
 
         private void StoreNormalizedSliderValueIfNeeded(float storedSliderValue)
@@ -85,7 +90,7 @@ namespace FakeMG.Settings
                 return;
             }
 
-            _settingDataManager.SetValue(_sliderSetting, normalizedSliderValue);
+            _settingsStateRepository.SetValue(_sliderSettingSO, normalizedSliderValue);
         }
 
         private void UpdateValueLabel(float sliderValue)
@@ -97,15 +102,15 @@ namespace FakeMG.Settings
         {
             float clampedStoredValue = ClampStoredValue(storedSliderValue);
 
-            if (HasCollapsedRange(_sliderSetting.StorageMinValue, _sliderSetting.StorageMaxValue) ||
+            if (HasCollapsedRange(_sliderSettingSO.StorageMinValue, _sliderSettingSO.StorageMaxValue) ||
                 HasCollapsedRange(_uiMinValue, _uiMaxValue))
             {
                 return NormalizeSliderValue(_uiMinValue);
             }
 
             float sliderValue = clampedStoredValue.Remap(
-                _sliderSetting.StorageMinValue,
-                _sliderSetting.StorageMaxValue,
+                _sliderSettingSO.StorageMinValue,
+                _sliderSettingSO.StorageMaxValue,
                 _uiMinValue,
                 _uiMaxValue);
 
@@ -117,16 +122,16 @@ namespace FakeMG.Settings
             float normalizedSliderValue = NormalizeSliderValue(sliderValue);
 
             if (HasCollapsedRange(_uiMinValue, _uiMaxValue) ||
-                HasCollapsedRange(_sliderSetting.StorageMinValue, _sliderSetting.StorageMaxValue))
+                HasCollapsedRange(_sliderSettingSO.StorageMinValue, _sliderSettingSO.StorageMaxValue))
             {
-                return ClampStoredValue(_sliderSetting.StorageMinValue);
+                return ClampStoredValue(_sliderSettingSO.StorageMinValue);
             }
 
             float storedValue = normalizedSliderValue.Remap(
                 _uiMinValue,
                 _uiMaxValue,
-                _sliderSetting.StorageMinValue,
-                _sliderSetting.StorageMaxValue);
+                _sliderSettingSO.StorageMinValue,
+                _sliderSettingSO.StorageMaxValue);
 
             return ClampStoredValue(storedValue);
         }
@@ -145,12 +150,14 @@ namespace FakeMG.Settings
 
         private float ClampStoredValue(float storedValue)
         {
-            return Mathf.Clamp(storedValue, _sliderSetting.StorageMinValue, _sliderSetting.StorageMaxValue);
+            return Mathf.Clamp(storedValue, _sliderSettingSO.StorageMinValue, _sliderSettingSO.StorageMaxValue);
         }
 
         private static bool HasCollapsedRange(float minValue, float maxValue)
         {
             return Mathf.Approximately(minValue, maxValue);
         }
+
+        #endregion
     }
 }

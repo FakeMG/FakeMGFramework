@@ -6,13 +6,11 @@ namespace FakeMG.SaveLoad
     /// </summary>
     public interface ISaveable
     {
-        string GetUniqueId()
-        {
-            return GetType().ToString();
-        }
+        string SaveId { get; }
 
         object CaptureState();
-        void RestoreState(object data);
+        bool TryValidateState(object state, out string failureReason);
+        void RestoreState(object state);
         void RestoreDefaultState();
     }
 }

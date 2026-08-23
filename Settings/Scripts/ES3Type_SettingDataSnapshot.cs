@@ -19,9 +19,9 @@ namespace ES3Types
             Instance = this;
         }
 
-        public override void Write(object obj, ES3Writer writer)
+        public override void Write(object value, ES3Writer writer)
         {
-            SettingDataSnapshot snapshot = (SettingDataSnapshot)obj;
+            SettingDataSnapshot snapshot = (SettingDataSnapshot)value;
 
             writer.WriteProperty(VALUE_TYPES_PROPERTY_NAME, snapshot.ValueTypes);
 
@@ -37,12 +37,18 @@ namespace ES3Types
                     continue;
                 }
 
-                if (!SettingValueConverterRegistry.TryDeserialize(valueType, entry.Value, out object value))
+                if (!SettingValueConverterRegistry.TryDeserialize(
+                        valueType,
+                        entry.Value,
+                        out object deserializedValue))
                 {
                     continue;
                 }
 
-                writer.WriteProperty(entry.Key, value, ES3TypeMgr.GetOrCreateES3Type(valueType));
+                writer.WriteProperty(
+                    entry.Key,
+                    deserializedValue,
+                    ES3TypeMgr.GetOrCreateES3Type(valueType));
             }
         }
 

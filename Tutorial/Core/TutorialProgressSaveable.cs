@@ -11,7 +11,11 @@ namespace FakeMG.Tutorial
     /// </summary>
     public sealed class TutorialProgressSaveable : MonoBehaviour, ISaveable
     {
+        public const string SAVE_ID = nameof(TutorialProgressSaveable);
+
         private TutorialProgressStore _store;
+
+        public string SaveId => SAVE_ID;
 
         #region Public Methods
 
@@ -26,16 +30,21 @@ namespace FakeMG.Tutorial
             return _store.CaptureSaveData();
         }
 
-        public void RestoreState(object data)
+        public bool TryValidateState(object state, out string failureReason)
         {
-            if (!StateRestoreUtility.TryRestore(data, out TutorialProgress progress))
+            if (state is TutorialProgress)
             {
-                Echo.Warning("Tutorial progress save data is invalid. Restoring default tutorial progress.");
-                _store.RestoreDefaultState();
-                return;
+                failureReason = string.Empty;
+                return true;
             }
 
-            _store.RestoreSaveData(progress);
+            failureReason = "Tutorial progress state is invalid.";
+            return false;
+        }
+
+        public void RestoreState(object data)
+        {
+            _store.RestoreSaveData((TutorialProgress)data);
         }
 
         public void RestoreDefaultState()

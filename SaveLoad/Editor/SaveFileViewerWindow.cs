@@ -18,9 +18,11 @@ namespace FakeMG.SaveLoad.Editor
 
         private readonly SaveFileViewerAddKeyWorkflow _addKeyWorkflow = new();
         private readonly SaveFileViewerDataSession _dataSession = new();
-        private static GUIStyle s_selectedButtonStyle;
-        private static Texture2D s_selectedBackgroundTexture;
-        private static bool? s_isProSkin;
+        private readonly SaveFileViewerMutationService _mutationService = new();
+        private readonly SaveFileProtectionProfileResolver _protectionProfileResolver = new();
+        private static GUIStyle _selectedButtonStyle;
+        private static Texture2D _selectedBackgroundTexture;
+        private static bool? _isProSkin;
 
         private const float LEFT_PANEL_MIN_WIDTH = 220f;
         private const float LEFT_PANEL_MAX_WIDTH = 500f;
@@ -31,7 +33,8 @@ namespace FakeMG.SaveLoad.Editor
         private TreeViewState<int> _fileTreeState;
         private SaveFileViewerFileTreeView _fileTree;
 
-        private List<ManagedSaveFileInfo> _fileEntries = new();
+        private List<ValidatedSaveFileInfo> _fileEntries = new();
+        private IReadOnlyList<string> _profileDiagnostics = Array.Empty<string>();
         private string _selectedFilePath;
         private string[] _keys = Array.Empty<string>();
         private readonly HashSet<string> _keyLookup = new(StringComparer.Ordinal);
@@ -48,21 +51,15 @@ namespace FakeMG.SaveLoad.Editor
         private Vector2 _keyListScroll;
         private Vector2 _dataEditorScroll;
 
-        [MenuItem(FakeMGEditorMenus.SAVE_FILE_VIEWER)]
-        private static void ShowWindow()
-        {
-            var window = GetWindow<SaveFileViewerWindow>("Save File Viewer");
-            window.minSize = new Vector2(700, 400);
-            window.Show();
-        }
+        #region Unity Lifecycle
 
         private void OnEnable()
         {
             _addKeyWorkflow.Initialize();
             _fileTreeState ??= new TreeViewState<int>();
             _fileTree ??= new SaveFileViewerFileTreeView(_fileTreeState);
-            _fileTree.FileSelected -= HandleFileSelected;
-            _fileTree.FileSelected += HandleFileSelected;
+            _fileTree.FileSelected -= SelectRequestedFile;
+            _fileTree.FileSelected += SelectRequestedFile;
             RefreshFileList();
         }
 
@@ -70,7 +67,7 @@ namespace FakeMG.SaveLoad.Editor
         {
             if (_fileTree != null)
             {
-                _fileTree.FileSelected -= HandleFileSelected;
+                _fileTree.FileSelected -= SelectRequestedFile;
             }
         }
 
@@ -85,6 +82,18 @@ namespace FakeMG.SaveLoad.Editor
             HandleSplitterDrag();
         }
 
+        #endregion
+
+        #region Private Methods
+
+        [MenuItem(FakeMGEditorMenus.SAVE_FILE_VIEWER)]
+        private static void ShowWindow()
+        {
+            var window = GetWindow<SaveFileViewerWindow>("Save File Viewer");
+            window.minSize = new Vector2(700, 400);
+            window.Show();
+        }
+
         #region Left Panel — File List
 
         private void DrawLeftPanel()
@@ -92,6 +101,7 @@ namespace FakeMG.SaveLoad.Editor
             EditorGUILayout.BeginVertical(GUILayout.Width(_leftPanelWidth));
 
             DrawFileListToolbar();
+            DrawProfileDiagnostics();
             DrawFileListEntries();
 
             EditorGUILayout.EndVertical();
@@ -106,7 +116,7 @@ namespace FakeMG.SaveLoad.Editor
                 RefreshFileList();
             }
 
-            ManagedSaveFileInfo selectedEntry = GetSelectedFileEntry();
+            ValidatedSaveFileInfo selectedEntry = GetSelectedFileEntry();
             EditorGUI.BeginDisabledGroup(selectedEntry == null);
 
             if (GUILayout.Button("Delete Selected", EditorStyles.toolbarButton))
@@ -117,6 +127,14 @@ namespace FakeMG.SaveLoad.Editor
             EditorGUI.EndDisabledGroup();
 
             EditorGUILayout.EndHorizontal();
+        }
+
+        private void DrawProfileDiagnostics()
+        {
+            foreach (string diagnostic in _profileDiagnostics)
+            {
+                EditorGUILayout.HelpBox(diagnostic, MessageType.Warning);
+            }
         }
 
         private void DrawFileListEntries()
@@ -399,11 +417,12 @@ namespace FakeMG.SaveLoad.Editor
             _fileEntries.Clear();
             ResetViewerSelectionState();
 
-            _fileEntries = new SaveFileCatalog(new Es3SaveDataStore()).GetManagedSaveFiles();
+            _fileEntries = _protectionProfileResolver.GetManagedSaveFiles();
+            _profileDiagnostics = _protectionProfileResolver.Diagnostics;
 
             _fileEntries = _fileEntries
                 .OrderBy(entry => entry.SaveDirectoryPath, StringComparer.Ordinal)
-                .ThenByDescending(entry => entry.Metadata.GetTimestampUtc())
+                .ThenByDescending(entry => entry.TimestampUtc)
                 .ToList();
 
             _fileTree?.SetEntries(_fileEntries);
@@ -424,12 +443,12 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                _keys = ES3.GetKeys(filePath);
+                _keys = ES3.GetKeys(CreateSelectedFileSettings());
                 RebuildKeyLookup();
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to load keys from {filePath}: {e.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to load keys from {filePath}: {exception}");
                 _keys = Array.Empty<string>();
                 _keyLookup.Clear();
             }
@@ -439,7 +458,7 @@ namespace FakeMG.SaveLoad.Editor
             Repaint();
         }
 
-        private void HandleFileSelected(string filePath)
+        private void SelectRequestedFile(string filePath)
         {
             if (_selectedFilePath == filePath)
             {
@@ -474,7 +493,8 @@ namespace FakeMG.SaveLoad.Editor
             SaveFileViewerLoadResult loadResult = _dataSession.ReloadCurrentDataView(
                 _selectedFilePath,
                 _selectedKey,
-                _currentDataViewMode);
+                _currentDataViewMode,
+                GetSelectedProtectionSettings());
 
             _currentDataViewMode = loadResult.CurrentDataViewMode;
             _isTypedViewAvailable = loadResult.IsTypedViewAvailable;
@@ -492,7 +512,8 @@ namespace FakeMG.SaveLoad.Editor
                 _currentDataViewMode,
                 _cachedKeyData,
                 _cachedKeyRawJson,
-                _cachedFullFileRawJson);
+                _cachedFullFileRawJson,
+                GetSelectedProtectionSettings());
 
             _selectedKey = saveResult.SelectedKey;
             _currentDataViewMode = saveResult.CurrentDataViewMode;
@@ -516,11 +537,14 @@ namespace FakeMG.SaveLoad.Editor
             _isDirty = false;
         }
 
-        private void DeleteFile(ManagedSaveFileInfo entry)
+        private void DeleteFile(ValidatedSaveFileInfo entry)
         {
+            bool isWorldManifest = entry.SaveKind == SaveFileKind.WorldManifest;
             bool confirmed = EditorUtility.DisplayDialog(
-                "Delete Save File",
-                $"Are you sure you want to delete '{entry.SaveFileName}'?\nThis cannot be undone.",
+                isWorldManifest ? "Delete World" : "Delete Save File",
+                isWorldManifest
+                    ? $"Are you sure you want to delete world '{entry.OwnerId}' and every snapshot?\nThis cannot be undone."
+                    : $"Are you sure you want to delete '{entry.SaveFileName}' and its transaction companions?\nThis cannot be undone.",
                 "Delete",
                 "Cancel");
 
@@ -531,12 +555,20 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                ES3.DeleteFile(entry.SaveFilePath);
-                Debug.Log($"[SaveFileViewer] Deleted {entry.SaveFilePath}");
+                if (entry.SaveKind == SaveFileKind.WorldManifest)
+                {
+                    _mutationService.DeleteWorld(entry);
+                    Debug.Log($"[SaveFileViewer] Deleted world '{entry.OwnerId}'.");
+                }
+                else
+                {
+                    _mutationService.DeleteFileAndCompanions(entry);
+                    Debug.Log($"[SaveFileViewer] Deleted {entry.SaveFilePath} and its transaction companions.");
+                }
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to delete {entry.SaveFilePath}: {e.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to delete {entry.SaveFilePath}: {exception}");
             }
 
             RefreshFileList();
@@ -563,12 +595,14 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                ES3.DeleteKey(key, _selectedFilePath);
+                SaveFileProtectionSettings protectionSettings =
+                    (SaveFileProtectionSettings)GetSelectedFileEntry().StorageProfile;
+                _mutationService.DeleteKey(_selectedFilePath, key, protectionSettings);
                 Debug.Log($"[SaveFileViewer] Deleted key '{key}' from {_selectedFilePath}");
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to delete key '{key}': {e.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to delete key '{key}': {exception}");
             }
 
             if (_selectedKey == key)
@@ -594,7 +628,7 @@ namespace FakeMG.SaveLoad.Editor
                 return;
             }
 
-            if (_keyLookup.Contains(keyName) || ES3.KeyExists(keyName, _selectedFilePath))
+            if (_keyLookup.Contains(keyName) || ES3.KeyExists(keyName, CreateSelectedFileSettings()))
             {
                 EditorUtility.DisplayDialog(
                     "Key Already Exists",
@@ -605,13 +639,19 @@ namespace FakeMG.SaveLoad.Editor
 
             try
             {
-                ES3.Save(keyName, addKeyRequest.InitialValue, _selectedFilePath);
+                SaveFileProtectionSettings protectionSettings =
+                    (SaveFileProtectionSettings)GetSelectedFileEntry().StorageProfile;
+                _mutationService.SaveKey(
+                    _selectedFilePath,
+                    keyName,
+                    addKeyRequest.InitialValue,
+                    protectionSettings);
                 _addKeyWorkflow.CompleteAdd();
                 Debug.Log($"[SaveFileViewer] Added key '{keyName}' to {_selectedFilePath}");
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Debug.LogError($"[SaveFileViewer] Failed to add key '{keyName}': {e.Message}");
+                Debug.LogError($"[SaveFileViewer] Failed to add key '{keyName}': {exception}");
             }
 
             SelectFile(_selectedFilePath);
@@ -677,9 +717,27 @@ namespace FakeMG.SaveLoad.Editor
             return HasCurrentViewTarget();
         }
 
-        private ManagedSaveFileInfo GetSelectedFileEntry()
+        private ValidatedSaveFileInfo GetSelectedFileEntry()
         {
             return _fileEntries.FirstOrDefault(entry => entry.SaveFilePath == _selectedFilePath);
+        }
+
+        private SaveFileProtectionSettings GetSelectedProtectionSettings()
+        {
+            ValidatedSaveFileInfo selectedEntry = GetSelectedFileEntry();
+            if (selectedEntry == null)
+            {
+                throw new InvalidOperationException("No managed save file is selected.");
+            }
+
+            return (SaveFileProtectionSettings)selectedEntry.StorageProfile;
+        }
+
+        private ES3Settings CreateSelectedFileSettings()
+        {
+            return Es3FileSettingsFactory.Create(
+                _selectedFilePath,
+                GetSelectedProtectionSettings());
         }
 
         private void ResetViewerSelectionState()
@@ -775,43 +833,45 @@ namespace FakeMG.SaveLoad.Editor
         private static GUIStyle GetSelectedButtonStyle()
         {
             EnsureSelectedStyles();
-            return s_selectedButtonStyle;
+            return _selectedButtonStyle;
         }
 
         private static void EnsureSelectedStyles()
         {
             bool isProSkin = EditorGUIUtility.isProSkin;
-            if (s_selectedButtonStyle != null
-                && s_selectedBackgroundTexture != null
-                && s_isProSkin == isProSkin)
+            if (_selectedButtonStyle != null
+                && _selectedBackgroundTexture != null
+                && _isProSkin == isProSkin)
             {
                 return;
             }
 
-            if (s_selectedBackgroundTexture)
+            if (_selectedBackgroundTexture)
             {
-                DestroyImmediate(s_selectedBackgroundTexture);
+                DestroyImmediate(_selectedBackgroundTexture);
             }
 
             Color highlight = isProSkin
                 ? new Color(0.24f, 0.37f, 0.59f, 1f)
                 : new Color(0.58f, 0.75f, 1f, 1f);
 
-            s_selectedBackgroundTexture = MakeSolidTexture(highlight);
+            _selectedBackgroundTexture = MakeSolidTexture(highlight);
 
-            s_selectedButtonStyle = new GUIStyle(GUI.skin.button);
-            s_selectedButtonStyle.normal.background = s_selectedBackgroundTexture;
-            s_selectedButtonStyle.fontStyle = FontStyle.Bold;
-            s_isProSkin = isProSkin;
+            _selectedButtonStyle = new GUIStyle(GUI.skin.button);
+            _selectedButtonStyle.normal.background = _selectedBackgroundTexture;
+            _selectedButtonStyle.fontStyle = FontStyle.Bold;
+            _isProSkin = isProSkin;
         }
 
         private static Texture2D MakeSolidTexture(Color color)
         {
-            Texture2D tex = new(1, 1);
-            tex.SetPixel(0, 0, color);
-            tex.Apply();
-            return tex;
+            Texture2D texture = new(1, 1);
+            texture.SetPixel(0, 0, color);
+            texture.Apply();
+            return texture;
         }
+
+        #endregion
 
         #endregion
     }

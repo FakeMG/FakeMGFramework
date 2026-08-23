@@ -1,38 +1,83 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Exposes save requests without coupling callers to the scene-owned SaveLoadSystem component.
-    /// A caller cancellation token cancels only that caller's wait; it never cancels the shared save.
-    /// </summary>
-    public interface ISaveRequester
+    public interface IGlobalSaveDocument : ISaveable
     {
-        UniTask<bool> SaveGameAsync(CancellationToken cancellationToken = default);
-        UniTask<bool> TriggerAutoSaveAsync(CancellationToken cancellationToken = default);
+        string DocumentId { get; }
+        string FileName { get; }
+        ISaveDataStoreProfile StorageProfile { get; }
     }
 
-    /// <summary>
-    /// Registers asynchronous save participants explicitly across VContainer and scene hierarchy
-    /// boundaries. Register and unregister must be paired by the participant's lifecycle owner.
-    /// </summary>
+    public interface IGlobalSaveInitializer
+    {
+        UniTask<GlobalSaveInitializationResult> InitializeAsync(CancellationToken cancellationToken = default);
+    }
+
+    public interface IGlobalDocumentSaveRequester
+    {
+        UniTask<GlobalDocumentSaveResult> SaveAsync(string documentId, CancellationToken cancellationToken = default);
+    }
+
+    public interface IGlobalSaveManager : IGlobalSaveInitializer, IGlobalDocumentSaveRequester
+    {
+    }
+
+    public interface IWorldAutoSaveRequester
+    {
+        bool HasActiveWorld { get; }
+        UniTask<WorldSaveResult> TriggerAutoSaveAsync(CancellationToken cancellationToken = default);
+    }
+
+    public interface IWorldManualSaveRequester
+    {
+        UniTask<WorldSaveResult> SaveManualAsync(CancellationToken cancellationToken = default);
+    }
+
+    public interface IWorldSaveQueries
+    {
+        string ActiveWorldId { get; }
+        bool IsSaving { get; }
+        IReadOnlyList<WorldSummary> GetWorlds();
+        IReadOnlyList<WorldSnapshotSummary> GetSnapshots(string worldId);
+    }
+
+    public interface IWorldStartupContext : IWorldSaveQueries
+    {
+        UniTask<WorldCreationResult> CreateWorldAsync(string displayName, CancellationToken cancellationToken = default);
+        UniTask<WorldOperationResult> OpenWorldAsync(string worldId, CancellationToken cancellationToken = default);
+    }
+
+    public interface IWorldLifecycleCommands : IWorldStartupContext
+    {
+        UniTask<WorldOperationResult> LoadSnapshotAsync(
+            string worldId,
+            string snapshotFileName,
+            CancellationToken cancellationToken = default);
+        UniTask<WorldOperationResult> DeleteWorldAsync(string worldId, CancellationToken cancellationToken = default);
+    }
+
+    public interface IWorldSaveManager :
+        IWorldAutoSaveRequester,
+        IWorldManualSaveRequester,
+        IWorldLifecycleCommands,
+        IAsyncSaveParticipantRegistry,
+        IDisposable
+    {
+    }
+
     public interface IAsyncSaveParticipantRegistry
     {
         bool RegisterAsyncSaveParticipant(IAsyncSaveParticipant participant);
         void UnregisterAsyncSaveParticipant(IAsyncSaveParticipant participant);
     }
 
-    /// <summary>
-    /// Defines the path, label, and retention behavior for a save request kind. Adding a
-    /// new request kind requires a policy implementation rather than branches in the coordinator.
-    /// </summary>
-    public interface ISaveRequestPolicy
+    public interface ISaveTimeProvider
     {
-        SaveFileKind SaveKind { get; }
-        string DisplayName { get; }
-        string CreateSaveFilePath(string saveDirectoryPath, string fixedSaveFilePath, DateTime timestampUtc);
-        void ApplyRetention(string saveDirectoryPath, int maximumAutoSaveCount);
+        DateTime GetUtcNow();
     }
+
 }

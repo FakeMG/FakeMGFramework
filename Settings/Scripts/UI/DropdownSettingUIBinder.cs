@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TMPro;
+using Sirenix.OdinInspector;
 using UnityEngine;
 using VContainer;
 
@@ -8,23 +9,20 @@ namespace FakeMG.Settings
 {
     public class DropdownSettingUIBinder : MonoBehaviour
     {
-        [SerializeField] private OptionSettingSO _optionSetting;
-        [SerializeField] private TMP_Dropdown _dropdown;
-        [SerializeField] private TMP_Text _labelText;
+        [Required, SerializeField] private OptionSettingSO _optionSettingSO;
+        [Required, SerializeField] private TMP_Dropdown _dropdown;
+        [Required, SerializeField] private TMP_Text _labelText;
 
-        [Inject]
-        private readonly SettingDataManager _settingDataManager;
+        [Inject] private readonly SettingsStateRepository _settingsStateRepository;
+
+        #region Unity Lifecycle
 
         private void Start()
         {
+            _settingsStateRepository.RegisterSetting(_optionSettingSO);
             ApplyLabel();
             ApplySettingOptionsToDropdown();
             ApplyStoredSettingValueToDropdown();
-        }
-
-        private void ApplyLabel()
-        {
-            _labelText.text = _optionSetting.Label;
         }
 
         private void OnEnable()
@@ -37,9 +35,18 @@ namespace FakeMG.Settings
             _dropdown.onValueChanged.RemoveListener(StoreSelectedOptionIndex);
         }
 
+        #endregion
+
+        #region Private Methods
+
+        private void ApplyLabel()
+        {
+            _labelText.text = _optionSettingSO.Label;
+        }
+
         private void ApplySettingOptionsToDropdown()
         {
-            List<string> optionLabels = _optionSetting.GetOptions();
+            List<string> optionLabels = _optionSettingSO.GetOptions();
             List<string> safeOptionLabels = GetSafeOptionLabels(optionLabels);
 
             _dropdown.ClearOptions();
@@ -48,7 +55,7 @@ namespace FakeMG.Settings
 
         private void ApplyStoredSettingValueToDropdown()
         {
-            string storedOptionValue = _settingDataManager.GetValue(_optionSetting);
+            string storedOptionValue = _settingsStateRepository.GetValue(_optionSettingSO);
             int matchedOptionIndex = GetOptionIndex(storedOptionValue);
 
             int clampedOptionIndex = ClampOptionIndex(matchedOptionIndex);
@@ -62,7 +69,7 @@ namespace FakeMG.Settings
         {
             int clampedOptionIndex = ClampOptionIndex(selectedOptionIndex);
             string selectedOptionValue = GetOptionValue(clampedOptionIndex);
-            _settingDataManager.SetValue(_optionSetting, selectedOptionValue);
+            _settingsStateRepository.SetValue(_optionSettingSO, selectedOptionValue);
         }
 
         private void StoreResolvedOptionValueIfNeeded(string storedOptionValue, string resolvedOptionValue)
@@ -72,7 +79,7 @@ namespace FakeMG.Settings
                 return;
             }
 
-            _settingDataManager.SetValue(_optionSetting, resolvedOptionValue);
+            _settingsStateRepository.SetValue(_optionSettingSO, resolvedOptionValue);
         }
 
         private int ClampOptionIndex(int optionIndex)
@@ -123,5 +130,7 @@ namespace FakeMG.Settings
 
             return optionLabels;
         }
+
+        #endregion
     }
 }

@@ -25,7 +25,7 @@ namespace FakeMG.SaveLoad.Tests
                 .Returns(UniTask.FromException(new InvalidOperationException("prepare failed")));
 
             var batch = new AsyncSaveParticipantBatch();
-            var context = new SaveOperationContext(string.Empty, "test.es3", SaveFileKind.Fixed, DateTime.UtcNow);
+            var context = new SaveOperationContext(string.Empty, "test.sav", SaveFileKind.Manual, DateTime.UtcNow);
 
             Assert.ThrowsAsync<InvalidOperationException>(async () =>
                 await batch.PrepareAsync(new[] { first, failing, neverEntered }, context, CancellationToken.None));

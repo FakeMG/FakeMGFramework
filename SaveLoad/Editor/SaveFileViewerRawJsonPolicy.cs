@@ -12,12 +12,12 @@ namespace FakeMG.SaveLoad.Editor
 {
     internal static class SaveFileViewerRawJsonPolicy
     {
-        private static readonly HashSet<string> MetadataFieldNames = typeof(SaveMetadata)
+        private static readonly HashSet<string> _metadataFieldNames = typeof(SaveMetadata)
             .GetFields(BindingFlags.Public | BindingFlags.Instance)
             .Select(field => field.Name)
             .ToHashSet(StringComparer.Ordinal);
 
-        private static readonly HashSet<string> ReservedMetadataFieldNames = new(StringComparer.Ordinal)
+        private static readonly HashSet<string> _reservedMetadataFieldNames = new(StringComparer.Ordinal)
         {
             ES3Type.typeFieldName,
             ES3ReferenceMgrBase.referencePropertyName
@@ -142,7 +142,7 @@ namespace FakeMG.SaveLoad.Editor
             {
                 string fieldName = metadataProperties[i].Name;
 
-                if (ReservedMetadataFieldNames.Contains(fieldName))
+                if (_reservedMetadataFieldNames.Contains(fieldName))
                 {
                     continue;
                 }
@@ -153,16 +153,16 @@ namespace FakeMG.SaveLoad.Editor
                     return false;
                 }
 
-                if (!MetadataFieldNames.Contains(fieldName))
+                if (!_metadataFieldNames.Contains(fieldName))
                 {
-                    errorMessage = $"Metadata field '{fieldName}' is not supported. Allowed fields: {string.Join(", ", MetadataFieldNames)}.";
+                    errorMessage = $"Metadata field '{fieldName}' is not supported. Allowed fields: {string.Join(", ", _metadataFieldNames)}.";
                     return false;
                 }
             }
 
-            if (encounteredFieldNames.Count != MetadataFieldNames.Count)
+            if (encounteredFieldNames.Count != _metadataFieldNames.Count)
             {
-                List<string> missingFields = MetadataFieldNames
+                List<string> missingFields = _metadataFieldNames
                     .Where(fieldName => !encounteredFieldNames.Contains(fieldName))
                     .ToList();
                 errorMessage = $"Metadata is missing required fields: {string.Join(", ", missingFields)}.";
@@ -194,12 +194,12 @@ namespace FakeMG.SaveLoad.Editor
             List<string> unsupportedWrapperFields = metadataObject
                 .Properties()
                 .Select(property => property.Name)
-                .Where(fieldName => !ReservedMetadataFieldNames.Contains(fieldName) && !string.Equals(fieldName, VALUE_PROPERTY_NAME, StringComparison.Ordinal))
+                .Where(fieldName => !_reservedMetadataFieldNames.Contains(fieldName) && !string.Equals(fieldName, VALUE_PROPERTY_NAME, StringComparison.Ordinal))
                 .ToList();
 
             if (unsupportedWrapperFields.Count > 0)
             {
-                errorMessage = $"Metadata field '{unsupportedWrapperFields[0]}' is not supported. Allowed fields: {string.Join(", ", MetadataFieldNames)}.";
+                errorMessage = $"Metadata field '{unsupportedWrapperFields[0]}' is not supported. Allowed fields: {string.Join(", ", _metadataFieldNames)}.";
                 return false;
             }
 

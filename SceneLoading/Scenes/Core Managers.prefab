@@ -33,56 +33,9 @@ Transform:
   - {fileID: 1993822612476852077}
   - {fileID: 3502115834829314216}
   - {fileID: 199255318745523917}
-  - {fileID: 7767351161063959537}
   - {fileID: 5975242467536486260}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &2667030331617325783
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 7767351161063959537}
-  - component: {fileID: 7845126007450714959}
-  m_Layer: 0
-  m_Name: Data Application Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &7767351161063959537
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2667030331617325783}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6290263486021593633}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7845126007450714959
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2667030331617325783}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b4f3efe80742614d8f5e4b2da2069ed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _applicationTimeoutSeconds: 10
-  _enableDebug: 1
 --- !u!1 &2912867472724427489
 GameObject:
   m_ObjectHideFlags: 0
@@ -92,7 +45,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1993822612476852077}
-  - component: {fileID: 9033908637583536586}
   - component: {fileID: 530244868620601662}
   m_Layer: 0
   m_Name: Save Load System Setting
@@ -113,31 +65,9 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1615880847372662002}
+  m_Children: []
   m_Father: {fileID: 6290263486021593633}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9033908637583536586
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2912867472724427489}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6df41bad26dc481a89b1939a8c95807b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _saveDirectoryPath: 
-  _saveFileMode: 1
-  _fixedSaveFileName: Settings
-  _saveablesRoot: {fileID: 1993822612476852077}
-  _enableAutoSave: 0
-  _maxAutoSaves: 5
-  _autoSaveInterval: 300
-  _enableDebug: 1
-  _migrationRegistry: {fileID: 0}
 --- !u!114 &530244868620601662
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -150,7 +80,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 38d4f8e7f0d21d44caa635a348683988, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Fruits::Fruits.Settings.SettingAutoSaveEventSubscriber
-  _saveLoadSystem: {fileID: 9033908637583536586}
 --- !u!1 &4364114724844911322
 GameObject:
   m_ObjectHideFlags: 0
@@ -211,7 +140,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 842901096460867873}
-  - component: {fileID: 7314148259928032107}
   m_Layer: 0
   m_Name: Save Load System Gameplay
   m_TagString: Untagged
@@ -234,27 +162,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6290263486021593633}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7314148259928032107
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4624873479294473802}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6df41bad26dc481a89b1939a8c95807b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _saveDirectoryPath: Saves
-  _saveFileMode: 0
-  _fixedSaveFileName: Settings
-  _saveablesRoot: {fileID: 842901096460867873}
-  _enableAutoSave: 1
-  _maxAutoSaves: 5
-  _autoSaveInterval: 300
-  _enableDebug: 1
-  _migrationRegistry: {fileID: 0}
 --- !u!1 &5133335594514053503
 GameObject:
   m_ObjectHideFlags: 0
@@ -299,51 +206,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e98722d2d0ec4cf6ae222a0794f3bb19, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _dataApplicationManager: {fileID: 7845126007450714959}
---- !u!1 &5238762086573267100
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1615880847372662002}
-  - component: {fileID: 1546493877287332598}
-  m_Layer: 0
-  m_Name: Setting Data Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1615880847372662002
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5238762086573267100}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1993822612476852077}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1546493877287332598
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5238762086573267100}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b7e1d05ec475bbd41a64d84aa06f9c0f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.SettingDataManager
 --- !u!1 &7951961117390034008
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,7 +15,9 @@ namespace FakeMG.SaveLoad
         object LoadState(string key, string saveFilePath);
         string[] GetFiles(string saveDirectoryPath);
         string[] GetDirectories(string saveDirectoryPath);
+        void CopyFile(string sourceFilePath, string destinationFilePath);
         void DeleteFile(string saveFilePath);
+        void DeleteDirectory(string saveDirectoryPath);
         void DeleteKey(string key, string saveFilePath);
         void SaveMetadata(string saveFilePath, SaveMetadata metadata);
         void SaveState(string key, object state, string saveFilePath);

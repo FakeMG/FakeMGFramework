@@ -15,7 +15,7 @@ namespace FakeMG.SaveLoad
     }
 
     /// <summary>
-    /// Describes one save operation without exposing the SaveLoadSystem implementation. External
+    /// Describes one save operation without exposing either high-level save manager. External
     /// payload participants use its stable path and save kind to coordinate their own transactions.
     /// </summary>
     public readonly struct SaveOperationContext

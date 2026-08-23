@@ -9,13 +9,8 @@ namespace FakeMG.SaveLoad
     public class SaveMetadata
     {
         public DateTime TimestampUtc;
-
-        public string GameVersion;
+        public string ApplicationVersion;
         public SaveFileKind SaveKind;
-
-        public DateTime GetTimestampUtc()
-        {
-            return TimestampUtc;
-        }
+        public string OwnerId;
     }
 }

@@ -1,97 +1,167 @@
 using System;
 using System.Collections.Generic;
 using FakeMG.Framework;
+using Sirenix.OdinInspector;
 using UnityEngine;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Stores migration steps from oldest to newest and selects every step newer than a saved
-    /// version. Editor validation reports null, duplicate, and incorrectly ordered entries.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/SaveLoad/Migration Registry")]
     public sealed class MigrationRegistrySO : ScriptableObject, ISaveMigrationPlan
     {
-        [SerializeField] private List<MigrationStepSO> _migrationSteps = new();
+        [ValidateInput(nameof(AreMigrationStepEntriesAssigned), "Every migration step must be assigned.")]
+        [SerializeField] private List<MigrationStepSO> _migrationStepSOs = new();
 
-        public IReadOnlyList<MigrationStepSO> MigrationSteps => _migrationSteps;
+        public IReadOnlyList<MigrationStepSO> MigrationStepSOs => _migrationStepSOs;
 
         #region Unity Lifecycle
 
         private void OnValidate()
         {
-            ValidateNoNullEntries();
-            ValidateNoDuplicateVersions();
-            ValidateAscendingOrder();
+            foreach (string failureReason in GetRegistryValidationFailures())
+            {
+                Echo.Error($"[{name}] {failureReason}");
+            }
         }
 
         #endregion
 
         #region Public Methods
 
-        public IReadOnlyList<ISaveMigrationStep> GetPendingMigrations(string savedVersion)
+        public bool TryGetMigrationPath(
+            string savedVersion,
+            string targetVersion,
+            out IReadOnlyList<ISaveMigrationStep> migrationSteps,
+            out string failureReason)
         {
-            Version parsedSavedVersion = Version.Parse(savedVersion);
-            List<ISaveMigrationStep> pendingMigrations = new();
-            foreach (MigrationStepSO migrationStepSO in _migrationSteps)
+            migrationSteps = Array.Empty<ISaveMigrationStep>();
+            if (!Version.TryParse(savedVersion, out Version parsedSavedVersion))
             {
-                if (migrationStepSO.ParsedTargetVersion > parsedSavedVersion)
-                {
-                    pendingMigrations.Add(migrationStepSO);
-                }
+                failureReason = $"Saved version '{savedVersion}' is invalid.";
+                return false;
             }
 
-            return pendingMigrations;
+            if (!Version.TryParse(targetVersion, out Version parsedTargetVersion))
+            {
+                failureReason = $"Runtime version '{targetVersion}' is invalid.";
+                return false;
+            }
+
+            if (parsedSavedVersion > parsedTargetVersion)
+            {
+                failureReason = $"Save version '{savedVersion}' is newer than runtime version '{targetVersion}'.";
+                return false;
+            }
+
+            if (parsedSavedVersion == parsedTargetVersion)
+            {
+                failureReason = string.Empty;
+                return true;
+            }
+
+            if (!TryValidateRegistry(out failureReason))
+            {
+                return false;
+            }
+
+            Dictionary<Version, MigrationStepSO> stepsBySourceVersion = new();
+            foreach (MigrationStepSO migrationStepSO in _migrationStepSOs)
+            {
+                stepsBySourceVersion.Add(Version.Parse(migrationStepSO.SourceVersion), migrationStepSO);
+            }
+
+            List<ISaveMigrationStep> resolvedSteps = new();
+            Version currentVersion = parsedSavedVersion;
+            while (currentVersion < parsedTargetVersion)
+            {
+                if (!stepsBySourceVersion.TryGetValue(currentVersion, out MigrationStepSO migrationStepSO))
+                {
+                    failureReason = $"Migration chain has a gap after version '{currentVersion}'.";
+                    return false;
+                }
+
+                Version nextVersion = Version.Parse(migrationStepSO.TargetVersion);
+                if (nextVersion > parsedTargetVersion)
+                {
+                    failureReason = $"Migration to '{nextVersion}' exceeds runtime target '{parsedTargetVersion}'.";
+                    return false;
+                }
+
+                resolvedSteps.Add(migrationStepSO);
+                currentVersion = nextVersion;
+            }
+
+            if (currentVersion != parsedTargetVersion)
+            {
+                failureReason = $"Migration chain ended at '{currentVersion}' instead of '{parsedTargetVersion}'.";
+                return false;
+            }
+
+            migrationSteps = resolvedSteps;
+            failureReason = string.Empty;
+            return true;
         }
 
         #endregion
 
         #region Private Methods
 
-        private void ValidateNoNullEntries()
+        private bool TryValidateRegistry(out string failureReason)
         {
-            for (int migrationIndex = 0; migrationIndex < _migrationSteps.Count; migrationIndex++)
+            IReadOnlyList<string> validationFailures = GetRegistryValidationFailures();
+            if (validationFailures.Count > 0)
             {
-                if (!_migrationSteps[migrationIndex])
-                {
-                    Echo.Warning($"[{name}] Migration step at index {migrationIndex} is null.");
-                }
+                failureReason = string.Join(Environment.NewLine, validationFailures);
+                return false;
             }
+
+            failureReason = string.Empty;
+            return true;
         }
 
-        private void ValidateNoDuplicateVersions()
+        private IReadOnlyList<string> GetRegistryValidationFailures()
         {
-            HashSet<string> seenVersions = new();
-            foreach (MigrationStepSO migrationStepSO in _migrationSteps)
+            List<string> validationFailures = new();
+            HashSet<string> sourceVersions = new(StringComparer.Ordinal);
+            HashSet<string> targetVersions = new(StringComparer.Ordinal);
+            for (int migrationIndex = 0; migrationIndex < _migrationStepSOs.Count; migrationIndex++)
             {
-                if (migrationStepSO && !seenVersions.Add(migrationStepSO.TargetVersion))
+                MigrationStepSO migrationStepSO = _migrationStepSOs[migrationIndex];
+                if (!migrationStepSO)
                 {
-                    Echo.Error(
-                        $"[{name}] Duplicate TargetVersion '{migrationStepSO.TargetVersion}' found.");
-                }
-            }
-        }
-
-        private void ValidateAscendingOrder()
-        {
-            Version previousVersion = null;
-            foreach (MigrationStepSO migrationStepSO in _migrationSteps)
-            {
-                if (!migrationStepSO ||
-                    !Version.TryParse(migrationStepSO.TargetVersion, out Version currentVersion))
-                {
+                    validationFailures.Add($"Migration step at index {migrationIndex} is missing.");
                     continue;
                 }
 
-                if (previousVersion != null && currentVersion <= previousVersion)
+                if (!Version.TryParse(migrationStepSO.SourceVersion, out Version sourceVersion) ||
+                    !Version.TryParse(migrationStepSO.TargetVersion, out Version targetVersion))
                 {
-                    Echo.Warning(
-                        $"[{name}] Migration steps are not in ascending order at " +
-                        $"'{migrationStepSO.TargetVersion}'.");
+                    validationFailures.Add($"Migration '{migrationStepSO.name}' has an invalid or empty version.");
+                    continue;
                 }
 
-                previousVersion = currentVersion;
+                if (targetVersion <= sourceVersion)
+                {
+                    validationFailures.Add($"Migration '{migrationStepSO.name}' does not advance the version.");
+                }
+
+                if (!sourceVersions.Add(migrationStepSO.SourceVersion))
+                {
+                    validationFailures.Add($"Duplicate migration source '{migrationStepSO.SourceVersion}'.");
+                }
+
+                if (!targetVersions.Add(migrationStepSO.TargetVersion))
+                {
+                    validationFailures.Add($"Duplicate migration target '{migrationStepSO.TargetVersion}'.");
+                }
             }
+
+            return validationFailures;
+        }
+
+        private bool AreMigrationStepEntriesAssigned(List<MigrationStepSO> migrationStepSOs)
+        {
+            return migrationStepSOs != null && migrationStepSOs.TrueForAll(migrationStepSO => migrationStepSO);
         }
 
         #endregion

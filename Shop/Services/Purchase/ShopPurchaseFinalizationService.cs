@@ -7,14 +7,14 @@ namespace FakeMG.Shop.Services.Purchase
     public class ShopPurchaseFinalizationService
     {
         private readonly IInventoryBalanceRepository _inventoryBalanceRepository;
-        private readonly ShopOwnershipStateRepository _shopOwnershipStateRepository;
+        private readonly ShopOwnershipStateSaveable _shopOwnershipStateSaveable;
 
         public ShopPurchaseFinalizationService(
             IInventoryBalanceRepository inventoryBalanceRepository,
-            ShopOwnershipStateRepository shopOwnershipStateRepository)
+            ShopOwnershipStateSaveable shopOwnershipStateSaveable)
         {
             _inventoryBalanceRepository = inventoryBalanceRepository;
-            _shopOwnershipStateRepository = shopOwnershipStateRepository;
+            _shopOwnershipStateSaveable = shopOwnershipStateSaveable;
         }
 
         #region Public Methods
@@ -25,7 +25,7 @@ namespace FakeMG.Shop.Services.Purchase
 
             if (shopListingSO.IsNonConsumable)
             {
-                _shopOwnershipStateRepository.MarkOwned(shopListingSO.Id);
+                _shopOwnershipStateSaveable.MarkOwned(shopListingSO.Id);
             }
         }
 

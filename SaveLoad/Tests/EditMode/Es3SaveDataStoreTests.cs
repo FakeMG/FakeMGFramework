@@ -34,12 +34,13 @@ namespace FakeMG.SaveLoad.Tests
         [Test]
         public void WriteSaveFile_MetadataAndState_CanBeReadBack()
         {
-            var saveDataStore = new Es3SaveDataStore();
+            var saveDataStore = new Es3SaveDataStore(SaveFileProtectionSettings.Plain, Path.GetTempPath());
             var metadata = new SaveMetadata
             {
                 TimestampUtc = new DateTime(2026, 8, 5, 0, 0, 0, DateTimeKind.Utc),
-                GameVersion = "1.0.0",
-                SaveKind = SaveFileKind.Fixed,
+                ApplicationVersion = "1.0.0",
+                SaveKind = SaveFileKind.GlobalDocument,
+                OwnerId = "settings",
             };
             var capturedStates = new Dictionary<string, object>
             {
@@ -49,7 +50,7 @@ namespace FakeMG.SaveLoad.Tests
             saveDataStore.WriteSaveFile(_temporaryFilePath, metadata, capturedStates);
 
             Assert.That(
-                saveDataStore.LoadMetadata(_temporaryFilePath).GameVersion,
+                saveDataStore.LoadMetadata(_temporaryFilePath).ApplicationVersion,
                 Is.EqualTo("1.0.0"));
             Assert.That(saveDataStore.LoadState("Score", _temporaryFilePath), Is.EqualTo(42));
             Assert.That(

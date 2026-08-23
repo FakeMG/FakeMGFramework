@@ -1,57 +1,144 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using FakeMG.Framework;
-using UnityEngine;
 
 namespace FakeMG.SaveLoad
 {
     /// <summary>
-    /// Discovers managed save files and owns their validated relative-path conventions. Durable
-    /// reads are delegated to the configured store so catalog behavior is serialization-agnostic.
+    /// Owns canonical global/world path conventions and discovers only files created by the current
+    /// persistence layout. All returned paths remain relative to Application.persistentDataPath.
     /// </summary>
     public sealed class SaveFileCatalog
     {
-        public const string ROOT_FOLDER_DISPLAY_NAME = "Root";
-        public const string DEFAULT_FIXED_SAVE_FILE_NAME = "Settings";
-        public const string MANUAL_SAVE_PATH_PREFIX = "ManualSave_";
-        public const string AUTO_SAVE_PATH_PREFIX = "AutoSave_";
+        public const string WORLD_ROOT_DIRECTORY_PATH = "Saves";
+        public const string WORLD_MANIFEST_FILE_NAME = "world.json";
+        public const string WORLD_MANIFEST_KEY = "WorldManifest";
+        public const string MANUAL_SAVE_PATH_PREFIX = "manual_";
+        public const string AUTO_SAVE_PATH_PREFIX = "autosave_";
+        public const string WORLD_ID_PREFIX = "world_";
         public const string METADATA_KEY = "Metadata";
+        public const string GLOBAL_FILE_EXTENSION = ".json";
+        public const string WORLD_SNAPSHOT_FILE_EXTENSION = ".sav";
 
         private readonly ISaveDataStore _saveDataStore;
+        private readonly ISaveDataStoreProfile _storageProfile;
+        private readonly bool _shouldLogInvalidFiles;
+        private readonly ISaveEnvironment _saveEnvironment;
+        private readonly List<SaveCatalogDiagnostic> _diagnostics = new();
 
-        public SaveFileCatalog(ISaveDataStore saveDataStore)
+        public SaveFileCatalog(
+            ISaveDataStore saveDataStore,
+            ISaveDataStoreProfile storageProfile = null,
+            bool shouldLogInvalidFiles = true,
+            ISaveEnvironment saveEnvironment = null)
         {
             _saveDataStore = saveDataStore;
+            _storageProfile = storageProfile ?? SaveFileProtectionSettings.Plain;
+            _shouldLogInvalidFiles = shouldLogInvalidFiles;
+            _saveEnvironment = saveEnvironment;
         }
 
-        public List<ManagedSaveFileInfo> GetManagedSaveFiles()
+        #region Public Methods
+
+        public List<ValidatedSaveFileInfo> GetManagedSaveFiles()
         {
-            return GetManagedSaveFilesInDirectory(string.Empty, true);
+            return new List<ValidatedSaveFileInfo>(DiscoverManagedSaveFiles().Files);
         }
 
-        public List<ManagedSaveFileInfo> GetManagedSaveFiles(string saveDirectoryPath)
+        public SaveCatalogDiscoveryResult DiscoverManagedSaveFiles()
         {
-            string normalizedDirectoryPath = NormalizeSaveDirectoryPath(saveDirectoryPath);
-            return GetManagedSaveFilesInDirectory(normalizedDirectoryPath, false);
+            _diagnostics.Clear();
+            List<ValidatedSaveFileInfo> saveFiles = new();
+            CollectGlobalDocuments(saveFiles);
+            CollectWorldFiles(saveFiles);
+            return new SaveCatalogDiscoveryResult(saveFiles, _diagnostics.ToArray());
         }
 
-        public static string CreateManualSaveFilePath(string saveDirectoryPath, DateTime timestamp)
+        public List<ValidatedSaveFileInfo> GetWorldSnapshotFiles(string worldId)
         {
-            string manualSaveFileName = $"{MANUAL_SAVE_PATH_PREFIX}{timestamp.Ticks}";
-            return NormalizeSaveFilePath(manualSaveFileName, saveDirectoryPath);
+            ValidateWorldId(worldId);
+            string worldDirectoryPath = CreateWorldDirectoryPath(worldId);
+            List<ValidatedSaveFileInfo> saveFiles = new();
+            if (!_saveDataStore.DirectoryExists(worldDirectoryPath))
+            {
+                return saveFiles;
+            }
+
+            foreach (string fileName in _saveDataStore.GetFiles(worldDirectoryPath + "/"))
+            {
+                string saveFilePath = NormalizeSaveFilePath(fileName, worldDirectoryPath);
+                if (!IsWorldSnapshotPath(saveFilePath) ||
+                    !TryLoadManagedMetadataWithBackup(saveFilePath, out SaveMetadata metadata))
+                {
+                    continue;
+                }
+
+                if (metadata.OwnerId == worldId && SaveKindPolicy.IsWorldSnapshot(metadata.SaveKind))
+                {
+                    saveFiles.Add(new ValidatedSaveFileInfo(saveFilePath, metadata, _storageProfile));
+                }
+                else
+                {
+                    AddDiagnostic(
+                        saveFilePath,
+                        SaveCatalogRejectionReason.InvalidOwnership,
+                        $"Snapshot metadata does not match world '{worldId}'.");
+                }
+            }
+
+            return saveFiles;
         }
 
-        public static string CreateAutoSaveFilePath(string saveDirectoryPath, DateTime timestamp)
+        public static string CreateGlobalSaveFilePath(string globalFileName)
         {
-            string autoSaveFileName = $"{AUTO_SAVE_PATH_PREFIX}{timestamp.Ticks}";
-            return NormalizeSaveFilePath(autoSaveFileName, saveDirectoryPath);
+            if (string.IsNullOrWhiteSpace(globalFileName))
+            {
+                throw new ArgumentException("Global save file name is required.", nameof(globalFileName));
+            }
+
+            string normalizedFileName = NormalizePathSeparators(globalFileName).Trim();
+            if (HasDirectorySegments(normalizedFileName))
+            {
+                throw new ArgumentException("Global save files must live in the storage root.", nameof(globalFileName));
+            }
+
+            ValidatePathSegments(normalizedFileName, nameof(globalFileName), false);
+            if (!normalizedFileName.EndsWith(GLOBAL_FILE_EXTENSION, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Global save file names must use the .json extension.", nameof(globalFileName));
+            }
+
+            return normalizedFileName;
         }
 
-        public static string CreateFixedSaveFilePath(string saveDirectoryPath, string saveFileName)
+        public static string CreateWorldId(Guid worldGuid)
         {
-            return NormalizeSaveFilePath(saveFileName, saveDirectoryPath);
+            return WORLD_ID_PREFIX + worldGuid.ToString("N");
+        }
+
+        public static string CreateWorldDirectoryPath(string worldId)
+        {
+            ValidateWorldId(worldId);
+            return $"{WORLD_ROOT_DIRECTORY_PATH}/{worldId}";
+        }
+
+        public static string CreateWorldManifestFilePath(string worldId)
+        {
+            return $"{CreateWorldDirectoryPath(worldId)}/{WORLD_MANIFEST_FILE_NAME}";
+        }
+
+        public static string CreateWorldSnapshotFilePath(string worldId, SaveFileKind saveKind, DateTime timestampUtc)
+        {
+            if (saveKind != SaveFileKind.Manual && saveKind != SaveFileKind.Auto)
+            {
+                throw new ArgumentException("World snapshots must be manual or automatic.", nameof(saveKind));
+            }
+
+            string prefix = saveKind == SaveFileKind.Auto ? AUTO_SAVE_PATH_PREFIX : MANUAL_SAVE_PATH_PREFIX;
+            return $"{CreateWorldDirectoryPath(worldId)}/{prefix}{timestampUtc.Ticks}{WORLD_SNAPSHOT_FILE_EXTENSION}";
         }
 
         public static string NormalizeSaveFilePath(string saveFilePath)
@@ -73,10 +160,8 @@ namespace FakeMG.SaveLoad
             }
 
             string trimmedPath = normalizedPath.Trim('/');
-            ValidatePathSegments(trimmedPath, nameof(saveFilePath), allowEmpty: false);
-
-            string normalizedDirectoryPath = NormalizeDirectoryPath(saveDirectoryPath);
-
+            ValidatePathSegments(trimmedPath, nameof(saveFilePath), false);
+            string normalizedDirectoryPath = NormalizeSaveDirectoryPath(saveDirectoryPath);
             if (HasDirectorySegments(trimmedPath))
             {
                 ValidateDirectoryOwnership(trimmedPath, normalizedDirectoryPath, nameof(saveFilePath));
@@ -90,11 +175,6 @@ namespace FakeMG.SaveLoad
 
         public static string NormalizeSaveDirectoryPath(string saveDirectoryPath)
         {
-            return NormalizeDirectoryPath(saveDirectoryPath);
-        }
-
-        private static string NormalizeDirectoryPath(string saveDirectoryPath)
-        {
             if (string.IsNullOrWhiteSpace(saveDirectoryPath))
             {
                 return string.Empty;
@@ -106,7 +186,7 @@ namespace FakeMG.SaveLoad
                 throw new ArgumentException("Save directory path must be relative.", nameof(saveDirectoryPath));
             }
 
-            ValidatePathSegments(normalizedPath, nameof(saveDirectoryPath), allowEmpty: true);
+            ValidatePathSegments(normalizedPath, nameof(saveDirectoryPath), true);
             return normalizedPath;
         }
 
@@ -114,74 +194,181 @@ namespace FakeMG.SaveLoad
         {
             string normalizedPath = NormalizeSaveFilePath(saveFilePath);
             int lastSeparatorIndex = normalizedPath.LastIndexOf('/');
-            if (lastSeparatorIndex < 0)
-            {
-                return string.Empty;
-            }
-
-            return normalizedPath[..lastSeparatorIndex];
-        }
-
-        public static string GetSaveKindBadge(SaveMetadata metadata)
-        {
-            SaveFileKind saveKind = metadata.SaveKind;
-
-            return saveKind switch
-            {
-                SaveFileKind.Auto => "[Auto]",
-                SaveFileKind.Fixed => "[Fixed]",
-                _ => "[Manual]",
-            };
+            return lastSeparatorIndex < 0 ? string.Empty : normalizedPath[..lastSeparatorIndex];
         }
 
         public static string GetSaveFileName(string saveFilePath)
         {
-            string normalizedPath = NormalizePathSeparators(saveFilePath);
-            return Path.GetFileNameWithoutExtension(normalizedPath);
+            return Path.GetFileName(NormalizePathSeparators(saveFilePath));
         }
 
-        private List<ManagedSaveFileInfo> GetManagedSaveFilesInDirectory(string normalizedDirectoryPath, bool recursive)
+        public static void ValidateWorldId(string worldId)
         {
-            List<ManagedSaveFileInfo> saveFiles = new();
-            string[] saveFilePaths = GetSaveFilePathsInDirectory(normalizedDirectoryPath, recursive);
+            WorldId.Parse(worldId);
+        }
 
-            foreach (string saveFilePath in saveFilePaths)
+        public static bool IsWorldSnapshotPath(string saveFilePath)
+        {
+            string fileName = GetSaveFileName(saveFilePath);
+            if (!fileName.EndsWith(WORLD_SNAPSHOT_FILE_EXTENSION, StringComparison.Ordinal))
             {
-                if (TryLoadManagedMetadata(saveFilePath, out SaveMetadata metadata))
-                {
-                    saveFiles.Add(new ManagedSaveFileInfo(saveFilePath, metadata));
-                }
+                return false;
             }
 
-            return saveFiles;
+            string prefix = fileName.StartsWith(MANUAL_SAVE_PATH_PREFIX, StringComparison.Ordinal)
+                ? MANUAL_SAVE_PATH_PREFIX
+                : fileName.StartsWith(AUTO_SAVE_PATH_PREFIX, StringComparison.Ordinal)
+                    ? AUTO_SAVE_PATH_PREFIX
+                    : null;
+            if (prefix == null)
+            {
+                return false;
+            }
+
+            int timestampLength = fileName.Length - prefix.Length - WORLD_SNAPSHOT_FILE_EXTENSION.Length;
+            string timestampText = fileName.Substring(prefix.Length, timestampLength);
+            return long.TryParse(timestampText, NumberStyles.None, CultureInfo.InvariantCulture, out long timestampTicks) &&
+                   timestampTicks >= DateTime.MinValue.Ticks &&
+                   timestampTicks <= DateTime.MaxValue.Ticks;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void CollectGlobalDocuments(ICollection<ValidatedSaveFileInfo> saveFiles)
+        {
+            if (!_saveDataStore.DirectoryExists(string.Empty))
+            {
+                return;
+            }
+
+            foreach (string fileName in _saveDataStore.GetFiles(string.Empty))
+            {
+                string saveFilePath = NormalizeSaveFilePath(fileName);
+                if (!saveFilePath.EndsWith(GLOBAL_FILE_EXTENSION, StringComparison.OrdinalIgnoreCase) ||
+                    IsTransactionCompanion(saveFilePath) ||
+                    !TryLoadManagedMetadata(saveFilePath, out SaveMetadata metadata) ||
+                    metadata.SaveKind != SaveFileKind.GlobalDocument)
+                {
+                    continue;
+                }
+
+                saveFiles.Add(new ValidatedSaveFileInfo(saveFilePath, metadata, _storageProfile));
+            }
+        }
+
+        private void CollectWorldFiles(ICollection<ValidatedSaveFileInfo> saveFiles)
+        {
+            if (!_saveDataStore.DirectoryExists(WORLD_ROOT_DIRECTORY_PATH))
+            {
+                return;
+            }
+
+            foreach (string worldDirectoryName in _saveDataStore.GetDirectories(WORLD_ROOT_DIRECTORY_PATH))
+            {
+                string worldId = NormalizePathSeparators(worldDirectoryName).Trim('/');
+                if (!WorldId.TryParse(worldId, out _))
+                {
+                    continue;
+                }
+
+                string manifestPath = CreateWorldManifestFilePath(worldId);
+                if (TryLoadManagedMetadataWithBackup(manifestPath, out SaveMetadata manifestMetadata) &&
+                    manifestMetadata.OwnerId == worldId &&
+                    manifestMetadata.SaveKind == SaveFileKind.WorldManifest)
+                {
+                    saveFiles.Add(new ValidatedSaveFileInfo(manifestPath, manifestMetadata, _storageProfile));
+                }
+
+                foreach (ValidatedSaveFileInfo snapshot in GetWorldSnapshotFiles(worldId))
+                {
+                    saveFiles.Add(snapshot);
+                }
+            }
         }
 
         private bool TryLoadManagedMetadata(string saveFilePath, out SaveMetadata metadata)
         {
             metadata = null;
-
             try
             {
-                if (!_saveDataStore.KeyExists(METADATA_KEY, saveFilePath))
+                if (IsTransactionCompanion(saveFilePath) || !_saveDataStore.FileExists(saveFilePath) ||
+                    !_saveDataStore.KeyExists(METADATA_KEY, saveFilePath))
                 {
                     return false;
                 }
 
                 metadata = _saveDataStore.LoadMetadata(saveFilePath);
-                return metadata.SaveKind != SaveFileKind.Unknown;
+                if (metadata == null)
+                {
+                    AddDiagnostic(
+                        saveFilePath,
+                        SaveCatalogRejectionReason.MissingMetadata,
+                        "Save metadata is missing.");
+                    return false;
+                }
+
+                SaveKindPolicy.ValidatePersistedKind(metadata.SaveKind);
+                if (_saveEnvironment != null &&
+                    !SaveVersionPolicy.TryValidateReadableVersion(
+                        metadata.ApplicationVersion,
+                        _saveEnvironment.ApplicationVersion,
+                        out string versionFailureReason))
+                {
+                    AddDiagnostic(
+                        saveFilePath,
+                        SaveCatalogRejectionReason.UnsupportedVersion,
+                        versionFailureReason);
+                    metadata = null;
+                    return false;
+                }
+
+                return true;
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                // Invalid or incompatible files should not block discovery of valid save files.
-                LogSkippedManagedFileIfEditor(saveFilePath, "Failed to read managed metadata.");
+                AddDiagnostic(
+                    saveFilePath,
+                    SaveCatalogRejectionReason.IncompatibleProfile,
+                    exception.Message);
+                if (_shouldLogInvalidFiles)
+                {
+                    LogSkippedManagedFileIfEditor(saveFilePath, exception);
+                }
+
                 return false;
             }
         }
 
-        [Conditional("UNITY_EDITOR")]
-        private static void LogSkippedManagedFileIfEditor(string saveFilePath, string reason)
+        private bool TryLoadManagedMetadataWithBackup(string saveFilePath, out SaveMetadata metadata)
         {
-            Echo.Warning($"[SaveFileCatalog] Skipped '{saveFilePath}' while scanning managed save files. {reason}");
+            if (TryLoadManagedMetadata(saveFilePath, out metadata))
+            {
+                return true;
+            }
+
+            return TryLoadManagedMetadata(AtomicFileTransactionPaths.GetBackupPath(saveFilePath), out metadata);
+        }
+
+        public static bool IsTransactionCompanion(string saveFilePath)
+        {
+            return saveFilePath.EndsWith(".bak", StringComparison.OrdinalIgnoreCase) ||
+                   saveFilePath.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase);
+        }
+
+        [Conditional("UNITY_EDITOR")]
+        private static void LogSkippedManagedFileIfEditor(string saveFilePath, Exception exception)
+        {
+            Echo.Warning($"[SaveFileCatalog] Skipped invalid managed file '{saveFilePath}': {exception}");
+        }
+
+        private void AddDiagnostic(
+            string saveFilePath,
+            SaveCatalogRejectionReason reason,
+            string message)
+        {
+            _diagnostics.Add(new SaveCatalogDiagnostic(saveFilePath, reason, message));
         }
 
         private static void ValidatePathSegments(string normalizedPath, string parameterName, bool allowEmpty)
@@ -192,72 +379,13 @@ namespace FakeMG.SaveLoad
                 throw new ArgumentException("Path must contain at least one segment.", parameterName);
             }
 
-            for (int i = 0; i < segments.Length; i++)
+            foreach (string segment in segments)
             {
-                if (segments[i] == "." || segments[i] == "..")
+                if (segment == "." || segment == ".." || segment.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
                 {
-                    throw new ArgumentException("Path cannot contain relative traversal segments.", parameterName);
-                }
-
-                if (segments[i].IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
-                {
-                    throw new ArgumentException($"Path segment '{segments[i]}' contains invalid characters.", parameterName);
+                    throw new ArgumentException($"Path segment '{segment}' is invalid.", parameterName);
                 }
             }
-        }
-
-        private string[] GetSaveFilePathsInDirectory(string normalizedDirectoryPath, bool recursive)
-        {
-            if (!DirectoryExists(normalizedDirectoryPath))
-            {
-                return Array.Empty<string>();
-            }
-
-            List<string> saveFilePaths = new();
-            CollectSaveFilePaths(normalizedDirectoryPath, recursive, saveFilePaths);
-            return saveFilePaths.ToArray();
-        }
-
-        private void CollectSaveFilePaths(string normalizedDirectoryPath, bool recursive, ICollection<string> saveFilePaths)
-        {
-            string[] saveFiles = GetFiles(normalizedDirectoryPath);
-            for (int i = 0; i < saveFiles.Length; i++)
-            {
-                saveFilePaths.Add(NormalizeSaveFilePath(saveFiles[i], normalizedDirectoryPath));
-            }
-
-            if (!recursive)
-            {
-                return;
-            }
-
-            string[] subdirectories = GetDirectories(normalizedDirectoryPath);
-            for (int i = 0; i < subdirectories.Length; i++)
-            {
-                string subdirectoryName = NormalizePathSeparators(subdirectories[i]).Trim('/');
-                string subdirectoryPath = string.IsNullOrEmpty(normalizedDirectoryPath)
-                    ? subdirectoryName
-                    : $"{normalizedDirectoryPath}/{subdirectoryName}";
-                CollectSaveFilePaths(subdirectoryPath, true, saveFilePaths);
-            }
-        }
-
-        private bool DirectoryExists(string normalizedDirectoryPath)
-        {
-            return _saveDataStore.DirectoryExists(normalizedDirectoryPath);
-        }
-
-        private string[] GetFiles(string normalizedDirectoryPath)
-        {
-            string storeDirectoryPath = string.IsNullOrEmpty(normalizedDirectoryPath)
-                ? string.Empty
-                : normalizedDirectoryPath + "/";
-            return _saveDataStore.GetFiles(storeDirectoryPath);
-        }
-
-        private string[] GetDirectories(string normalizedDirectoryPath)
-        {
-            return _saveDataStore.GetDirectories(normalizedDirectoryPath);
         }
 
         private static bool HasDirectorySegments(string normalizedPath)
@@ -267,14 +395,10 @@ namespace FakeMG.SaveLoad
 
         private static void ValidateDirectoryOwnership(string normalizedPath, string normalizedDirectoryPath, string parameterName)
         {
-            if (string.IsNullOrEmpty(normalizedDirectoryPath))
+            if (!string.IsNullOrEmpty(normalizedDirectoryPath) &&
+                !normalizedPath.StartsWith(normalizedDirectoryPath + "/", StringComparison.Ordinal))
             {
-                return;
-            }
-
-            if (!normalizedPath.StartsWith(normalizedDirectoryPath + "/", StringComparison.Ordinal))
-            {
-                throw new ArgumentException("Save file path must stay within the configured save directory.", parameterName);
+                throw new ArgumentException("Save file path escaped its configured directory.", parameterName);
             }
         }
 
@@ -282,5 +406,7 @@ namespace FakeMG.SaveLoad
         {
             return path.Replace("\\", "/");
         }
+
+        #endregion
     }
 }

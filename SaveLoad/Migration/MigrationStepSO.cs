@@ -10,24 +10,42 @@ namespace FakeMG.SaveLoad
     /// </summary>
     public abstract class MigrationStepSO : ScriptableObject, ISaveMigrationStep
     {
+        [Tooltip("The exact version accepted by this migration, for example 1.0.0.")]
+        [SerializeField] private string _sourceVersion;
+
         [Tooltip("The version the save file becomes after this migration runs, for example 1.1.0.")]
         [SerializeField] private string _targetVersion;
 
+        public string SourceVersion => _sourceVersion;
         public string TargetVersion => _targetVersion;
-        public Version ParsedTargetVersion => Version.Parse(_targetVersion);
 
         #region Unity Lifecycle
 
         private void OnValidate()
         {
-            if (string.IsNullOrWhiteSpace(_targetVersion))
+            if (string.IsNullOrWhiteSpace(_sourceVersion))
             {
-                return;
+                Echo.Error($"[{name}] SourceVersion is required.");
+            }
+            else if (!Version.TryParse(_sourceVersion, out _))
+            {
+                Echo.Error($"[{name}] SourceVersion '{_sourceVersion}' is not a valid version format.");
             }
 
-            if (!Version.TryParse(_targetVersion, out _))
+            if (string.IsNullOrWhiteSpace(_targetVersion))
+            {
+                Echo.Error($"[{name}] TargetVersion is required.");
+            }
+            else if (!Version.TryParse(_targetVersion, out _))
             {
                 Echo.Error($"[{name}] TargetVersion '{_targetVersion}' is not a valid version format.");
+            }
+
+            if (Version.TryParse(_sourceVersion, out Version sourceVersion) &&
+                Version.TryParse(_targetVersion, out Version targetVersion) &&
+                targetVersion <= sourceVersion)
+            {
+                Echo.Error($"[{name}] TargetVersion must be newer than SourceVersion.");
             }
         }
 

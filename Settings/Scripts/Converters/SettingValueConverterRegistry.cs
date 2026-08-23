@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using FakeMG.Framework;
 
 namespace FakeMG.Settings.Converters
 {
@@ -30,8 +31,23 @@ namespace FakeMG.Settings.Converters
                 throw new ArgumentNullException(nameof(converter));
             }
 
-            _converters[converter.ValueType] = converter;
-            _typeIds[converter.TypeId] = converter.ValueType;
+            lock (_initializationLock)
+            {
+                if (_converters.ContainsKey(converter.ValueType))
+                {
+                    throw new InvalidOperationException(
+                        $"A settings converter for '{converter.ValueType.FullName}' is already registered.");
+                }
+
+                if (_typeIds.ContainsKey(converter.TypeId))
+                {
+                    throw new InvalidOperationException(
+                        $"Settings converter type ID '{converter.TypeId}' is already registered.");
+                }
+
+                _converters.Add(converter.ValueType, converter);
+                _typeIds.Add(converter.TypeId, converter.ValueType);
+            }
         }
 
         public static bool TrySerialize(Type valueType, object value, out string serializedValue)
@@ -101,6 +117,12 @@ namespace FakeMG.Settings.Converters
         {
             EnsureInitialized();
 
+            if (string.IsNullOrWhiteSpace(typeId))
+            {
+                valueType = null;
+                return false;
+            }
+
             if (_typeIds.TryGetValue(typeId, out valueType))
             {
                 return true;
@@ -111,7 +133,7 @@ namespace FakeMG.Settings.Converters
                 string enumTypeName = typeId.Substring(ENUM_TYPE_ID_PREFIX.Length);
                 valueType = Type.GetType(enumTypeName);
 
-                if (valueType != null)
+                if (valueType != null && valueType.IsEnum)
                 {
                     _typeIds[typeId] = valueType;
                     return true;
@@ -145,6 +167,7 @@ namespace FakeMG.Settings.Converters
 
         private static void DiscoverConverters()
         {
+            List<ISettingValueConverter> discoveredConverters = new();
             foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (!ShouldScanAssembly(assembly))
@@ -161,9 +184,36 @@ namespace FakeMG.Settings.Converters
 
                     if (Activator.CreateInstance(converterType, true) is ISettingValueConverter converter)
                     {
-                        Register(converter);
+                        discoveredConverters.Add(converter);
                     }
                 }
+            }
+
+            Dictionary<Type, ISettingValueConverter> convertersByType = new();
+            Dictionary<string, Type> valueTypesById = new(StringComparer.Ordinal);
+            foreach (ISettingValueConverter converter in discoveredConverters)
+            {
+                if (!convertersByType.TryAdd(converter.ValueType, converter))
+                {
+                    throw new InvalidOperationException(
+                        $"Duplicate discovered settings converter for '{converter.ValueType.FullName}'.");
+                }
+
+                if (!valueTypesById.TryAdd(converter.TypeId, converter.ValueType))
+                {
+                    throw new InvalidOperationException(
+                        $"Duplicate discovered settings type ID '{converter.TypeId}'.");
+                }
+            }
+
+            foreach (KeyValuePair<Type, ISettingValueConverter> converterEntry in convertersByType)
+            {
+                _converters.Add(converterEntry.Key, converterEntry.Value);
+            }
+
+            foreach (KeyValuePair<string, Type> typeEntry in valueTypesById)
+            {
+                _typeIds.Add(typeEntry.Key, typeEntry.Value);
             }
         }
 
@@ -198,7 +248,14 @@ namespace FakeMG.Settings.Converters
             }
             catch (ReflectionTypeLoadException exception)
             {
-                return exception.Types;
+                foreach (Exception loaderException in exception.LoaderExceptions)
+                {
+                    Echo.Error(
+                        $"A settings converter type could not be loaded from " +
+                        $"'{assembly.GetName().Name}': {loaderException}");
+                }
+
+                return Array.FindAll(exception.Types, type => type != null);
             }
         }
 
@@ -275,16 +332,15 @@ namespace FakeMG.Settings.Converters
                     return true;
                 }
 
-                try
+                if (Enum.TryParse(_enumType, serializedValue, true, out object parsedValue) &&
+                    Enum.IsDefined(_enumType, parsedValue))
                 {
-                    value = Enum.Parse(_enumType, serializedValue, true);
+                    value = parsedValue;
                     return true;
                 }
-                catch (ArgumentException)
-                {
-                    value = null;
-                    return false;
-                }
+
+                value = null;
+                return false;
             }
         }
     }

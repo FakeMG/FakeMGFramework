@@ -1,4 +1,5 @@
 using FakeMG.Framework.UI.Toggle;
+using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using VContainer;
@@ -7,12 +8,12 @@ namespace FakeMG.Settings
 {
     public class ToggleSwitchSettingUIBinder : MonoBehaviour
     {
-        [SerializeField] private SliderSettingSO _sliderSetting;
-        [SerializeField] private ToggleSwitch _toggleSwitch;
-        [SerializeField] private TMP_Text _labelText;
+        [Required, SerializeField] private SliderSettingSO _sliderSettingSO;
+        [Required, SerializeField] private ToggleSwitch _toggleSwitch;
+        [Required, SerializeField] private TMP_Text _labelText;
         [SerializeField] private bool _revert;
 
-        [Inject] private readonly SettingDataManager _settingDataManager;
+        [Inject] private readonly SettingsStateRepository _settingsStateRepository;
 
         private bool _isApplyingStoredValue;
 
@@ -25,6 +26,7 @@ namespace FakeMG.Settings
 
         private void Start()
         {
+            _settingsStateRepository.RegisterSetting(_sliderSettingSO);
             ApplyLabel();
             ApplyStoredValue();
         }
@@ -40,12 +42,12 @@ namespace FakeMG.Settings
 
         private void ApplyLabel()
         {
-            _labelText.text = _sliderSetting.Label;
+            _labelText.text = _sliderSettingSO.Label;
         }
 
         private void ApplyStoredValue()
         {
-            float storedValue = ClampStoredValue(_settingDataManager.GetValue(_sliderSetting));
+            float storedValue = ClampStoredValue(_settingsStateRepository.GetValue(_sliderSettingSO));
             bool isOn = ConvertStoredValueToToggleState(storedValue);
 
             _isApplyingStoredValue = true;
@@ -61,7 +63,7 @@ namespace FakeMG.Settings
                 return;
 
             float storedValue = ConvertToggleStateToStoredValue(isOn);
-            _settingDataManager.SetValue(_sliderSetting, storedValue);
+            _settingsStateRepository.SetValue(_sliderSettingSO, storedValue);
         }
 
         private void StoreNormalizedValueIfNeeded(float storedValue, bool isOn)
@@ -70,15 +72,15 @@ namespace FakeMG.Settings
             if (Mathf.Approximately(storedValue, normalizedValue))
                 return;
 
-            _settingDataManager.SetValue(_sliderSetting, normalizedValue);
+            _settingsStateRepository.SetValue(_sliderSettingSO, normalizedValue);
         }
 
         private bool ConvertStoredValueToToggleState(float storedValue)
         {
-            if (Mathf.Approximately(_sliderSetting.StorageMinValue, _sliderSetting.StorageMaxValue))
+            if (Mathf.Approximately(_sliderSettingSO.StorageMinValue, _sliderSettingSO.StorageMaxValue))
                 return false;
 
-            float thresholdValue = (_sliderSetting.StorageMinValue + _sliderSetting.StorageMaxValue) * 0.5f;
+            float thresholdValue = (_sliderSettingSO.StorageMinValue + _sliderSettingSO.StorageMaxValue) * 0.5f;
             bool isOn = storedValue >= thresholdValue;
             return _revert ? !isOn : isOn;
         }
@@ -86,12 +88,12 @@ namespace FakeMG.Settings
         private float ConvertToggleStateToStoredValue(bool isOn)
         {
             bool isEnabled = _revert ? !isOn : isOn;
-            return isEnabled ? _sliderSetting.StorageMaxValue : _sliderSetting.StorageMinValue;
+            return isEnabled ? _sliderSettingSO.StorageMaxValue : _sliderSettingSO.StorageMinValue;
         }
 
         private float ClampStoredValue(float storedValue)
         {
-            return Mathf.Clamp(storedValue, _sliderSetting.StorageMinValue, _sliderSetting.StorageMaxValue);
+            return Mathf.Clamp(storedValue, _sliderSettingSO.StorageMinValue, _sliderSettingSO.StorageMaxValue);
         }
 
         #endregion

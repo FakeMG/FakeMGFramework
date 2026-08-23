@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.TimeCycle
@@ -6,7 +7,7 @@ namespace FakeMG.TimeCycle
     /// <summary>
     /// Owns the compiler-checked output-key contract shared by the default profile and environment applicators.
     /// </summary>
-    [CreateAssetMenu(menuName = "FakeMG/Time Cycle/Environment Output Schema")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.TIME_CYCLE + "/Environment Output Schema")]
     public sealed class DayNightEnvironmentOutputSchemaSO : ScriptableObject
     {
         [Header("Main Light")]

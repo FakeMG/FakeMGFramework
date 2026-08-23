@@ -5,11 +5,11 @@ namespace FakeMG.Shop.Filters
 {
     public class ShopOwnedNonConsumableVisibilityFilter
     {
-        private readonly ShopOwnershipStateRepository _shopOwnershipStateRepository;
+        private readonly ShopOwnershipStateSaveable _shopOwnershipStateSaveable;
 
-        public ShopOwnedNonConsumableVisibilityFilter(ShopOwnershipStateRepository shopOwnershipStateRepository)
+        public ShopOwnedNonConsumableVisibilityFilter(ShopOwnershipStateSaveable shopOwnershipStateSaveable)
         {
-            _shopOwnershipStateRepository = shopOwnershipStateRepository;
+            _shopOwnershipStateSaveable = shopOwnershipStateSaveable;
         }
 
         #region Public Methods
@@ -29,7 +29,7 @@ namespace FakeMG.Shop.Filters
                     continue;
                 }
 
-                bool shouldHideListing = listing.IsNonConsumable && _shopOwnershipStateRepository.IsOwned(listing.Id);
+                bool shouldHideListing = listing.IsNonConsumable && _shopOwnershipStateSaveable.IsOwned(listing.Id);
                 if (shouldHideListing)
                 {
                     continue;

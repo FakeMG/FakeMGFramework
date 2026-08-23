@@ -12,6 +12,7 @@ namespace FakeMG.SaveLoad
     public sealed class AsyncSaveParticipantBatch
     {
         private readonly List<IAsyncSaveParticipant> _enteredParticipants = new();
+        private readonly List<IAsyncSaveParticipant> _appliedLoadParticipants = new();
 
         #region Public Methods
 
@@ -31,16 +32,42 @@ namespace FakeMG.SaveLoad
             IReadOnlyList<IAsyncSaveParticipant> participants, LoadOperationContext context,
             CancellationToken cancellationToken)
         {
+            _appliedLoadParticipants.Clear();
             foreach (IAsyncSaveParticipant participant in participants)
             {
                 await participant.ApplyLoadedStateAsync(context, cancellationToken);
+                _appliedLoadParticipants.Add(participant);
             }
         }
 
-        public async UniTask CompleteAsync(
+        public async UniTask RollBackLoadedStateAsync(
+            LoadOperationContext context,
+            CancellationToken cancellationToken,
+            Action<IAsyncSaveParticipant, Exception> reportFailure)
+        {
+            for (int participantIndex = _appliedLoadParticipants.Count - 1;
+                 participantIndex >= 0;
+                 participantIndex--)
+            {
+                IAsyncSaveParticipant participant = _appliedLoadParticipants[participantIndex];
+                try
+                {
+                    await participant.RollBackLoadedStateAsync(context, cancellationToken);
+                }
+                catch (Exception exception)
+                {
+                    reportFailure?.Invoke(participant, exception);
+                }
+            }
+
+            _appliedLoadParticipants.Clear();
+        }
+
+        public async UniTask<IReadOnlyList<string>> CompleteAsync(
             SaveOperationContext context, bool didMetadataCommit,
             CancellationToken cancellationToken, Action<IAsyncSaveParticipant, Exception> reportFailure)
         {
+            List<string> failureReasons = new();
             for (int participantIndex = _enteredParticipants.Count - 1; participantIndex >= 0; participantIndex--)
             {
                 IAsyncSaveParticipant participant = _enteredParticipants[participantIndex];
@@ -50,11 +77,13 @@ namespace FakeMG.SaveLoad
                 }
                 catch (Exception exception)
                 {
+                    failureReasons.Add($"{participant.ParticipantId}: {exception.Message}");
                     reportFailure?.Invoke(participant, exception);
                 }
             }
 
             _enteredParticipants.Clear();
+            return failureReasons;
         }
 
         #endregion
