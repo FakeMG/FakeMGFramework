@@ -47,8 +47,7 @@ namespace FakeMG.GridSystem
             Vector3 worldPosition,
             int rotationDegrees)
         {
-            CommittedGridOccupantPlacement existingPlacement = _structures.Find(
-                structurePlacement => structurePlacement.InstanceId == instanceId);
+            CommittedGridOccupantPlacement existingPlacement = _structures.Find(structurePlacement => structurePlacement.InstanceId == instanceId);
 
             if (existingPlacement != null)
             {
@@ -65,8 +64,7 @@ namespace FakeMG.GridSystem
 
         public bool TryGetStructure(string instanceId, out StructureSO structureSO)
         {
-            CommittedGridOccupantPlacement structurePlacement = _structures.Find(
-                candidatePlacement => candidatePlacement.InstanceId == instanceId);
+            CommittedGridOccupantPlacement structurePlacement = _structures.Find(candidatePlacement => candidatePlacement.InstanceId == instanceId);
 
             if (structurePlacement != null)
             {
@@ -120,10 +118,7 @@ namespace FakeMG.GridSystem
 
         #region Public Methods
 
-        public void SetStructure(
-            StructureSO structureSO,
-            Vector3 worldPosition,
-            int rotationDegrees)
+        public void SetStructure(StructureSO structureSO, Vector3 worldPosition, int rotationDegrees)
         {
             _structureSO = structureSO;
             _worldPosition = worldPosition;
@@ -132,11 +127,7 @@ namespace FakeMG.GridSystem
 
         public CommittedGridOccupantPlacement Clone()
         {
-            return new CommittedGridOccupantPlacement(
-                _instanceId,
-                _structureSO,
-                _worldPosition,
-                _rotationDegrees);
+            return new CommittedGridOccupantPlacement(_instanceId, _structureSO, _worldPosition, _rotationDegrees);
         }
 
         #endregion

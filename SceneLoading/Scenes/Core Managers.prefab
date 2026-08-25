@@ -140,6 +140,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 842901096460867873}
+  - component: {fileID: 8934379105610506104}
+  - component: {fileID: 2549883841345494189}
+  - component: {fileID: 5666525172105411081}
   m_Layer: 0
   m_Name: Save Load System Gameplay
   m_TagString: Untagged
@@ -162,6 +165,42 @@ Transform:
   m_Children: []
   m_Father: {fileID: 6290263486021593633}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8934379105610506104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4624873479294473802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46c75a6e115ed3a4bbfee3519cefc38b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.SaveLoad::FakeMG.SaveLoad.PersistenceStartupSubscriber
+--- !u!114 &2549883841345494189
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4624873479294473802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53d7f5c50021fdf41b7dd88835627dd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.SaveLoad::FakeMG.SaveLoad.WorldIntervalAutoSaveSubscriber
+--- !u!114 &5666525172105411081
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4624873479294473802}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bb4bc6000ac06c43a0e817cb04768df, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.SaveLoad::FakeMG.SaveLoad.WorldLifecycleAutoSaveSubscriber
 --- !u!1 &5133335594514053503
 GameObject:
   m_ObjectHideFlags: 0
