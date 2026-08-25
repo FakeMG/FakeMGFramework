@@ -17,7 +17,8 @@ namespace FakeMG.SaveLoad
         #region Public Methods
 
         public async UniTask PrepareAsync(
-            IReadOnlyList<IAsyncSaveParticipant> participants, SaveOperationContext context,
+            IReadOnlyList<IAsyncSaveParticipant> participants,
+            SaveOperationContext context,
             CancellationToken cancellationToken)
         {
             _enteredParticipants.Clear();
@@ -29,7 +30,8 @@ namespace FakeMG.SaveLoad
         }
 
         public async UniTask ApplyLoadedStateAsync(
-            IReadOnlyList<IAsyncSaveParticipant> participants, LoadOperationContext context,
+            IReadOnlyList<IAsyncSaveParticipant> participants,
+            LoadOperationContext context,
             CancellationToken cancellationToken)
         {
             _appliedLoadParticipants.Clear();
@@ -43,11 +45,10 @@ namespace FakeMG.SaveLoad
         public async UniTask RollBackLoadedStateAsync(
             LoadOperationContext context,
             CancellationToken cancellationToken,
-            Action<IAsyncSaveParticipant, Exception> reportFailure)
+            Action<IAsyncSaveParticipant,
+            Exception> reportFailure)
         {
-            for (int participantIndex = _appliedLoadParticipants.Count - 1;
-                 participantIndex >= 0;
-                 participantIndex--)
+            for (int participantIndex = _appliedLoadParticipants.Count - 1; participantIndex >= 0; participantIndex--)
             {
                 IAsyncSaveParticipant participant = _appliedLoadParticipants[participantIndex];
                 try
@@ -64,8 +65,10 @@ namespace FakeMG.SaveLoad
         }
 
         public async UniTask<IReadOnlyList<string>> CompleteAsync(
-            SaveOperationContext context, bool didMetadataCommit,
-            CancellationToken cancellationToken, Action<IAsyncSaveParticipant, Exception> reportFailure)
+            SaveOperationContext context,
+            bool didMetadataCommit,
+            CancellationToken cancellationToken,
+            Action<IAsyncSaveParticipant, Exception> reportFailure)
         {
             List<string> failureReasons = new();
             for (int participantIndex = _enteredParticipants.Count - 1; participantIndex >= 0; participantIndex--)
