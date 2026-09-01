@@ -11,11 +11,10 @@ using VContainer.Unity;
 namespace FakeMG.GridSystem.Tests.PlayMode
 {
     /// <summary>
-    /// Locks GridManager's public coordinate, bounds, footprint, and occupancy behavior against production prefabs.
+    /// Locks GridManager's public coordinate, bounds, footprint, and occupancy behavior against framework-owned fixtures.
     /// </summary>
     public sealed class GridManagerTests
     {
-        private const string CONFIG_RESOURCE_NAME = "GridSystemTestAssetConfig";
         private const string FIRST_INSTANCE_ID = "structure-a";
         private const string SECOND_INSTANCE_ID = "structure-b";
 
@@ -30,9 +29,7 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            GridSystemTestAssetConfigSO testAssetConfig =
-                Resources.Load<GridSystemTestAssetConfigSO>(CONFIG_RESOURCE_NAME);
-            Assert.IsNotNull(testAssetConfig, $"Missing Resources/{CONFIG_RESOURCE_NAME} asset.");
+            GridSystemTestAssetConfigSO testAssetConfig = GridSystemPlayModeTestAssets.LoadConfig();
 
             _gridManagerPrefabHandle = Addressables.LoadAssetAsync<GameObject>(testAssetConfig.GridManagerPrefab);
             _structureFootprintPrefabHandle =
@@ -205,6 +202,41 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         }
 
         [Test]
+        public void RebuildOccupancyIndex_EmptyPlacements_ClearsAllOccupiedCells()
+        {
+            OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
+            _gridManager.RebuildOccupancyIndex(new[]
+            {
+                CreatePlacement(FIRST_INSTANCE_ID, Vector3Int.zero)
+            });
+
+            _gridManager.RebuildOccupancyIndex(new GridOccupantPlacement[0]);
+
+            Assert.AreEqual(0, _gridManager.OccupiedCells.Count);
+        }
+
+        [Test]
+        public void GetCanonicalOccupiedCellOffsets_AsymmetricBounds_ReturnsDeterministicOrder()
+        {
+            OverrideFootprintBounds(
+                new Vector3Int(-1, 0, -1),
+                new Vector3Int(2, 1, 2));
+
+            IReadOnlyList<Vector3Int> occupiedCellOffsets =
+                _gridManager.GetCanonicalOccupiedCellOffsets(_structureFootprint);
+
+            CollectionAssert.AreEqual(
+                new[]
+                {
+                    new Vector3Int(-1, 0, -1),
+                    new Vector3Int(-1, 0, 0),
+                    new Vector3Int(0, 0, -1),
+                    new Vector3Int(0, 0, 0),
+                },
+                occupiedCellOffsets);
+        }
+
+        [Test]
         public void TryGetInstanceIdAtPosition_NonPivotOccupiedCell_ReturnsInstanceId()
         {
             OverrideFootprintBounds(
@@ -275,6 +307,26 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         }
 
         [Test]
+        public void CanOccupy_IgnoredInstanceAlsoOverlapsDifferentInstance_ReturnsFalse()
+        {
+            OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
+            _gridManager.RebuildOccupancyIndex(new[]
+            {
+                CreatePlacement(FIRST_INSTANCE_ID, Vector3Int.zero),
+                CreatePlacement(SECOND_INSTANCE_ID, Vector3Int.right),
+            });
+            OverrideFootprintBounds(Vector3Int.zero, new Vector3Int(2, 1, 1));
+
+            bool canOccupy = _gridManager.CanOccupy(
+                _structureFootprint,
+                _gridManager.CellToWorld(Vector3Int.zero),
+                0,
+                FIRST_INSTANCE_ID);
+
+            Assert.IsFalse(canOccupy);
+        }
+
+        [Test]
         public void CanOccupy_CellsOnPositiveAndNegativeBounds_ReturnsTrue()
         {
             OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
@@ -312,6 +364,34 @@ namespace FakeMG.GridSystem.Tests.PlayMode
 
             Assert.IsFalse(canOccupyBeyondPositiveBoundary);
             Assert.IsFalse(canOccupyBeyondNegativeBoundary);
+        }
+
+        [Test]
+        public void CanOccupy_MultiCellFootprintStraddlesPositiveBoundary_ReturnsFalse()
+        {
+            OverrideFootprintBounds(Vector3Int.zero, new Vector3Int(2, 1, 1));
+            GetBoundaryCells(_gridManager.GetWorldBoundsMeters(), out _, out Vector3Int maxCell);
+
+            bool canOccupy = _gridManager.CanOccupy(
+                _structureFootprint,
+                _gridManager.CellToWorld(maxCell),
+                0);
+
+            Assert.IsFalse(canOccupy);
+        }
+
+        [Test]
+        public void CanOccupy_MultiCellFootprintStraddlesNegativeBoundary_ReturnsFalse()
+        {
+            OverrideFootprintBounds(new Vector3Int(-1, 0, 0), new Vector3Int(2, 1, 1));
+            GetBoundaryCells(_gridManager.GetWorldBoundsMeters(), out Vector3Int minCell, out _);
+
+            bool canOccupy = _gridManager.CanOccupy(
+                _structureFootprint,
+                _gridManager.CellToWorld(minCell),
+                0);
+
+            Assert.IsFalse(canOccupy);
         }
 
         #endregion

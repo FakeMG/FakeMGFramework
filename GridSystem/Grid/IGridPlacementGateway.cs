@@ -8,6 +8,8 @@ namespace FakeMG.GridSystem
     /// </summary>
     public interface IGridPlacementGateway
     {
+        float CellSizeMeters { get; }
+
         #region Public Methods
 
         void RebuildOccupancyIndex(IReadOnlyCollection<GridOccupantPlacement> structurePlacements);
@@ -15,6 +17,8 @@ namespace FakeMG.GridSystem
         bool TryGetInstanceIdAtPosition(Vector3 worldPosition, out string instanceId);
 
         Vector3 WorldToGridWorld(Vector3 worldPosition);
+
+        IReadOnlyList<Vector3Int> GetCanonicalOccupiedCellOffsets(GridFootprint footprint);
 
         bool CanOccupy(
             GridFootprint footprint,

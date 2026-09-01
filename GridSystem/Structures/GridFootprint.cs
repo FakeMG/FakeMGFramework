@@ -213,8 +213,7 @@ namespace FakeMG.GridSystem
 
         private static int ToVerticalMaximumCellOffset(float maximumMeters, float cellSizeMeters)
         {
-            return Mathf.CeilToInt(
-                (maximumMeters - CELL_FIT_TOLERANCE_METERS) / cellSizeMeters) - 1;
+            return Mathf.CeilToInt((maximumMeters - CELL_FIT_TOLERANCE_METERS) / cellSizeMeters) - 1;
         }
 
         // Bounds are combined from shared mesh data in root-local space so this also works on

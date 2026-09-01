@@ -44,8 +44,7 @@ namespace FakeMG.GridSystem
 
             try
             {
-                GameObject structurePrefab = await structurePrefabHandle.ToUniTask(
-                    cancellationToken: cancellationToken);
+                GameObject structurePrefab = await structurePrefabHandle.ToUniTask(cancellationToken: cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
 
                 if (structurePrefabHandle.Status != AsyncOperationStatus.Succeeded || !structurePrefab)
@@ -62,8 +61,7 @@ namespace FakeMG.GridSystem
 
                 placementProcessor?.Process(structureInstance);
 
-                GridOccupantIdentity structureInstanceIdentity =
-                    structureInstance.GetComponent<GridOccupantIdentity>();
+                GridOccupantIdentity structureInstanceIdentity = structureInstance.GetComponent<GridOccupantIdentity>();
                 if (!structureInstanceIdentity)
                 {
                     Echo.Error($"Cannot place structure '{structureSO.Id}' because its prefab is missing {nameof(GridOccupantIdentity)}.", _enableLogging, _logContext);
@@ -127,9 +125,7 @@ namespace FakeMG.GridSystem
 
         #region Private Methods
 
-        private static void NotifyIdentityReceivers(
-            GameObject structureInstance,
-            GridOccupantIdentity structureInstanceIdentity)
+        private static void NotifyIdentityReceivers(GameObject structureInstance, GridOccupantIdentity structureInstanceIdentity)
         {
             MonoBehaviour[] behaviours = structureInstance.GetComponentsInChildren<MonoBehaviour>(true);
             foreach (MonoBehaviour behaviour in behaviours)

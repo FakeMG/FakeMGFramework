@@ -85,6 +85,11 @@ namespace FakeMG.GridSystem
             return CellToWorld(cellPosition);
         }
 
+        public IReadOnlyList<Vector3Int> GetCanonicalOccupiedCellOffsets(GridFootprint footprint)
+        {
+            return RectangularGridFootprintCellOffsets.Create(footprint.GetCellBounds(_cellSizeMeters));
+        }
+
         public Vector3 CellToWorld(Vector3Int cellPosition)
         {
             Vector3 bottomCenterOffsetMeters = new(_cellSizeMeters * 0.5f, 0f, _cellSizeMeters * 0.5f);
@@ -112,25 +117,13 @@ namespace FakeMG.GridSystem
             return new Bounds(center, size);
         }
 
-        public bool CanOccupy(
-            GridFootprint footprint,
-            Vector3 worldPosition,
-            int rotationDegrees,
-            string ignoredInstanceId = null)
+        public bool CanOccupy(GridFootprint footprint, Vector3 worldPosition, int rotationDegrees, string ignoredInstanceId = null)
         {
             IReadOnlyList<Vector3Int> occupiedCells = GetOccupiedCells(footprint, worldPosition, rotationDegrees);
-            return _occupancyIndex.CanOccupy(
-                occupiedCells,
-                _gridHalfSize,
-                ignoredInstanceId,
-                _enableLogging,
-                this);
+            return _occupancyIndex.CanOccupy(occupiedCells, _gridHalfSize, ignoredInstanceId, _enableLogging, this);
         }
 
-        public IReadOnlyList<Vector3Int> GetOccupiedCells(
-            GridFootprint footprint,
-            Vector3 worldPosition,
-            int rotationDegrees)
+        public IReadOnlyList<Vector3Int> GetOccupiedCells(GridFootprint footprint, Vector3 worldPosition, int rotationDegrees)
         {
             Vector3Int pivotCell = WorldToCell(worldPosition);
             return footprint.GetOccupiedCells(pivotCell, rotationDegrees, _cellSizeMeters);

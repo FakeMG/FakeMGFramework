@@ -64,12 +64,7 @@ namespace FakeMG.GridSystem
             IGridOccupantPlacementProcessor placementProcessor,
             CancellationToken cancellationToken)
         {
-            return PlaceStructureIfEmptyAsync(
-                structureSO,
-                worldPosition,
-                DEFAULT_ROTATION_DEGREES,
-                placementProcessor,
-                cancellationToken);
+            return PlaceStructureIfEmptyAsync(structureSO, worldPosition, DEFAULT_ROTATION_DEGREES, placementProcessor, cancellationToken);
         }
 
         public async UniTask<bool> PlaceStructureIfEmptyAsync(
@@ -108,10 +103,7 @@ namespace FakeMG.GridSystem
             return true;
         }
 
-        public async UniTask<bool> ReplaceStructureAsync(
-            string instanceId,
-            StructureSO replacementStructureSO,
-            CancellationToken cancellationToken)
+        public async UniTask<bool> ReplaceStructureAsync(string instanceId, StructureSO replacementStructureSO, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(instanceId))
             {
@@ -147,11 +139,7 @@ namespace FakeMG.GridSystem
                 return false;
             }
 
-            if (!_gridPlacementGateway.CanOccupy(
-                    replacementPlacement.Footprint,
-                    gridWorldPosition,
-                    rotationDegrees,
-                    currentPlacement.InstanceId))
+            if (!_gridPlacementGateway.CanOccupy(replacementPlacement.Footprint, gridWorldPosition, rotationDegrees, currentPlacement.InstanceId))
             {
                 Echo.Log("Replacement structure was rejected because its grid footprint is occupied or outside the grid.");
                 _structurePlacementFactory.DestroyStructure(replacementPlacement);
@@ -167,10 +155,7 @@ namespace FakeMG.GridSystem
 
         public bool TryPickUpStructure(Vector3 worldPosition, out GridOccupantPlacement heldStructurePlacement)
         {
-            return TryDetachRuntimeStructure(
-                worldPosition,
-                PlacementChangeKind.Removed,
-                out heldStructurePlacement);
+            return TryDetachRuntimeStructure(worldPosition, PlacementChangeKind.Removed, out heldStructurePlacement);
         }
 
         public bool TryPlaceHeldStructure(GridOccupantPlacement heldStructurePlacement, Vector3 worldPosition)
@@ -186,10 +171,7 @@ namespace FakeMG.GridSystem
                 return false;
             }
 
-            if (TryPlaceHeldStructure(
-                    heldStructurePlacement,
-                    heldStructurePlacement.OriginalWorldPosition,
-                    PlacementChangeKind.Restored))
+            if (TryPlaceHeldStructure(heldStructurePlacement, heldStructurePlacement.OriginalWorldPosition, PlacementChangeKind.Restored))
             {
                 return true;
             }
@@ -200,10 +182,7 @@ namespace FakeMG.GridSystem
 
         public bool DestroyStructure(Vector3 worldPosition)
         {
-            if (!TryDetachRuntimeStructure(
-                    worldPosition,
-                    null,
-                    out GridOccupantPlacement removedStructurePlacement))
+            if (!TryDetachRuntimeStructure(worldPosition, null, out GridOccupantPlacement removedStructurePlacement))
             {
                 return false;
             }
@@ -222,9 +201,7 @@ namespace FakeMG.GridSystem
 
         public StructureSO GetStructureSOAtPosition(Vector3 worldPosition)
         {
-            return TryGetStructureSOAtPosition(worldPosition, out StructureSO structureSO)
-                ? structureSO
-                : null;
+            return TryGetStructureSOAtPosition(worldPosition, out StructureSO structureSO) ? structureSO : null;
         }
 
         public bool TryGetStructurePosition(Vector3 worldPosition, out Vector3 structureWorldPosition)
@@ -268,8 +245,7 @@ namespace FakeMG.GridSystem
         public bool TryGetPlacementAtPosition(Vector3 worldPosition, out GridOccupantPlacement structurePlacement)
         {
             structurePlacement = null;
-            return TryGetInstanceIdAtPosition(worldPosition, out string instanceId) &&
-                   _placedStructureRegistry.TryGet(instanceId, out structurePlacement);
+            return TryGetInstanceIdAtPosition(worldPosition, out string instanceId) && _placedStructureRegistry.TryGet(instanceId, out structurePlacement);
         }
 
         public async UniTask RestoreCommittedStateAsync(CancellationToken cancellationToken)
@@ -286,9 +262,7 @@ namespace FakeMG.GridSystem
 
                 try
                 {
-                    await RestoreStructureAsync(
-                        structurePlacement,
-                        cancellationToken);
+                    await RestoreStructureAsync(structurePlacement, cancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -322,10 +296,7 @@ namespace FakeMG.GridSystem
 
         #region Private Methods
 
-        private bool TryPlaceHeldStructure(
-            GridOccupantPlacement heldStructurePlacement,
-            Vector3 worldPosition,
-            PlacementChangeKind placementChangeKind)
+        private bool TryPlaceHeldStructure(GridOccupantPlacement heldStructurePlacement, Vector3 worldPosition, PlacementChangeKind placementChangeKind)
         {
             if (heldStructurePlacement == null)
             {
@@ -335,11 +306,7 @@ namespace FakeMG.GridSystem
 
             Vector3 gridWorldPosition = _gridPlacementGateway.WorldToGridWorld(worldPosition);
             int rotationDegrees = heldStructurePlacement.RotationDegrees;
-            if (!_gridPlacementGateway.CanOccupy(
-                    heldStructurePlacement.Footprint,
-                    gridWorldPosition,
-                    rotationDegrees,
-                    heldStructurePlacement.InstanceId))
+            if (!_gridPlacementGateway.CanOccupy(heldStructurePlacement.Footprint, gridWorldPosition, rotationDegrees, heldStructurePlacement.InstanceId))
             {
                 Echo.Log("Held structure placement was rejected because its grid footprint is occupied or outside the grid.");
                 return false;
@@ -351,10 +318,7 @@ namespace FakeMG.GridSystem
             return true;
         }
 
-        private bool TryDetachRuntimeStructure(
-            Vector3 worldPosition,
-            PlacementChangeKind? placementChangeKind,
-            out GridOccupantPlacement detachedStructurePlacement)
+        private bool TryDetachRuntimeStructure(Vector3 worldPosition, PlacementChangeKind? placementChangeKind, out GridOccupantPlacement detachedStructurePlacement)
         {
             if (!TryGetInstanceIdAtPosition(worldPosition, out string instanceId))
             {
@@ -383,11 +347,19 @@ namespace FakeMG.GridSystem
             return true;
         }
 
-        private async UniTask RestoreStructureAsync(
-            CommittedGridOccupantPlacement structurePlacement,
-            CancellationToken cancellationToken)
+        private async UniTask RestoreStructureAsync(CommittedGridOccupantPlacement structurePlacement, CancellationToken cancellationToken)
         {
+            if (!RectangularGridFootprintCellOffsets.TryCreateBounds(
+                    structurePlacement.OccupiedCellOffsets,
+                    out BoundsInt savedCellBounds,
+                    out string footprintFailureReason))
+            {
+                Echo.Error($"Cannot restore saved structure '{structurePlacement.InstanceId}' because its footprint is invalid: " + footprintFailureReason);
+                return;
+            }
+
             Vector3 gridWorldPosition = _gridPlacementGateway.WorldToGridWorld(structurePlacement.WorldPosition);
+            IGridOccupantPlacementProcessor placementProcessor = new GridFootprintScalePlacementProcessor(savedCellBounds, _gridPlacementGateway.CellSizeMeters);
             GridOccupantPlacement runtimePlacement =
                 await _structurePlacementFactory.CreateStructureAsync(
                     structurePlacement.InstanceId,
@@ -395,17 +367,15 @@ namespace FakeMG.GridSystem
                     gridWorldPosition,
                     structurePlacement.RotationDegrees,
                     cancellationToken,
-                    $"Failed to restore saved structure '{structurePlacement.InstanceId}' for '{structurePlacement.StructureSO.Id}'.");
+                    $"Failed to restore saved structure '{structurePlacement.InstanceId}' for '{structurePlacement.StructureSO.Id}'.",
+                    placementProcessor);
 
             if (runtimePlacement == null)
             {
                 return;
             }
 
-            if (!_gridPlacementGateway.CanOccupy(
-                    runtimePlacement.Footprint,
-                    gridWorldPosition,
-                    structurePlacement.RotationDegrees))
+            if (!_gridPlacementGateway.CanOccupy(runtimePlacement.Footprint, gridWorldPosition, structurePlacement.RotationDegrees))
             {
                 Echo.Error($"Cannot restore saved structure '{structurePlacement.InstanceId}' because its grid space is occupied or outside the grid.");
                 _structurePlacementFactory.DestroyStructure(runtimePlacement);
@@ -416,17 +386,16 @@ namespace FakeMG.GridSystem
             RaisePlacementChanged(PlacementChangeKind.Restored, runtimePlacement, runtimePlacement.InstanceId);
         }
 
-        private void CommitRuntimeStructure(
-            GridOccupantPlacement structurePlacement,
-            Vector3 gridWorldPosition,
-            int rotationDegrees)
+        private void CommitRuntimeStructure(GridOccupantPlacement structurePlacement, Vector3 gridWorldPosition, int rotationDegrees)
         {
+            IReadOnlyList<Vector3Int> occupiedCellOffsets = _gridPlacementGateway.GetCanonicalOccupiedCellOffsets(structurePlacement.Footprint);
             _placedStructureRegistry.Upsert(structurePlacement);
             _placementState.UpsertStructure(
                 structurePlacement.InstanceId,
                 structurePlacement.StructureSO,
                 gridWorldPosition,
-                rotationDegrees);
+                rotationDegrees,
+                occupiedCellOffsets);
             RebuildOccupancyIndex();
         }
 
@@ -435,15 +404,9 @@ namespace FakeMG.GridSystem
             _gridPlacementGateway.RebuildOccupancyIndex(_placedStructureRegistry.GetStructures());
         }
 
-        private void RaisePlacementChanged(
-            PlacementChangeKind kind,
-            GridOccupantPlacement structurePlacement,
-            string instanceId)
+        private void RaisePlacementChanged(PlacementChangeKind kind, GridOccupantPlacement structurePlacement, string instanceId)
         {
-            OnPlacementChanged?.Invoke(new PlacementChange(
-                kind,
-                structurePlacement,
-                instanceId));
+            OnPlacementChanged?.Invoke(new PlacementChange(kind, structurePlacement, instanceId));
         }
 
         private bool TryGetStructureSOAtPosition(Vector3 worldPosition, out StructureSO structureSO)

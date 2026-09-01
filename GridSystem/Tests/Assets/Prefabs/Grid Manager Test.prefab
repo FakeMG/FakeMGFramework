@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1922041859635416325
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3848267660049538278}
+  - component: {fileID: 4936559642699721575}
+  - component: {fileID: 5065126858818876}
+  m_Layer: 0
+  m_Name: Grid Manager Test
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3848267660049538278
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922041859635416325}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!156049354 &4936559642699721575
+Grid:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922041859635416325}
+  m_Enabled: 1
+  m_CellSize: {x: 1, y: 1, z: 1}
+  m_CellGap: {x: 0, y: 0, z: 0}
+  m_CellLayout: 0
+  m_CellSwizzle: 0
+--- !u!114 &5065126858818876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1922041859635416325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71c1263dd7bf84245a7f40df8449929f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.GridSystem::FakeMG.GridSystem.GridManager
+  _grid: {fileID: 4936559642699721575}
+  _gridMaterial: {fileID: 0}
+  _cellSizeMeters: 1
+  _gridHalfSize: {x: 20, y: 10, z: 20}
+  _enableLogging: 0
+  _drawGridGizmos: 0
+  _drawEmptyCells: 0
+  _gridBoundsColor: {r: 0.25, g: 0.8, b: 1, a: 0.9}
+  _occupiedCellColor: {r: 1, g: 0.45, b: 0.2, a: 0.45}
+  _pivotCellColor: {r: 1, g: 0.95, b: 0.2, a: 0.6}
+  _emptyCellColor: {r: 0.2, g: 0.35, b: 0.6, a: 0.12}

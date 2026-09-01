@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.GridSystem
@@ -45,13 +46,18 @@ namespace FakeMG.GridSystem
             string instanceId,
             StructureSO structureSO,
             Vector3 worldPosition,
-            int rotationDegrees)
+            int rotationDegrees,
+            IReadOnlyCollection<Vector3Int> occupiedCellOffsets)
         {
             CommittedGridOccupantPlacement existingPlacement = _structures.Find(structurePlacement => structurePlacement.InstanceId == instanceId);
 
             if (existingPlacement != null)
             {
-                existingPlacement.SetStructure(structureSO, worldPosition, rotationDegrees);
+                existingPlacement.SetStructure(
+                    structureSO,
+                    worldPosition,
+                    rotationDegrees,
+                    occupiedCellOffsets);
                 return;
             }
 
@@ -59,7 +65,8 @@ namespace FakeMG.GridSystem
                 instanceId,
                 structureSO,
                 worldPosition,
-                rotationDegrees));
+                rotationDegrees,
+                occupiedCellOffsets));
         }
 
         public bool TryGetStructure(string instanceId, out StructureSO structureSO)
@@ -94,40 +101,66 @@ namespace FakeMG.GridSystem
         [SerializeField] private StructureSO _structureSO;
         [SerializeField] private Vector3 _worldPosition;
         [SerializeField] private int _rotationDegrees;
-
-        public CommittedGridOccupantPlacement()
-        {
-        }
+        [SerializeField] private List<Vector3Int> _occupiedCellOffsets = new();
 
         public CommittedGridOccupantPlacement(
             string instanceId,
             StructureSO structureSO,
             Vector3 worldPosition,
-            int rotationDegrees)
+            int rotationDegrees,
+            IReadOnlyCollection<Vector3Int> occupiedCellOffsets)
         {
             _instanceId = instanceId;
             _structureSO = structureSO;
             _worldPosition = worldPosition;
             _rotationDegrees = rotationDegrees;
+            ReplaceOccupiedCellOffsets(occupiedCellOffsets);
         }
 
         public string InstanceId => _instanceId;
         public StructureSO StructureSO => _structureSO;
         public Vector3 WorldPosition => _worldPosition;
         public int RotationDegrees => _rotationDegrees;
+        public IReadOnlyList<Vector3Int> OccupiedCellOffsets => _occupiedCellOffsets;
 
         #region Public Methods
 
-        public void SetStructure(StructureSO structureSO, Vector3 worldPosition, int rotationDegrees)
+        public void SetStructure(
+            StructureSO structureSO,
+            Vector3 worldPosition,
+            int rotationDegrees,
+            IReadOnlyCollection<Vector3Int> occupiedCellOffsets)
         {
             _structureSO = structureSO;
             _worldPosition = worldPosition;
             _rotationDegrees = rotationDegrees;
+            ReplaceOccupiedCellOffsets(occupiedCellOffsets);
         }
 
         public CommittedGridOccupantPlacement Clone()
         {
-            return new CommittedGridOccupantPlacement(_instanceId, _structureSO, _worldPosition, _rotationDegrees);
+            return new CommittedGridOccupantPlacement(
+                _instanceId,
+                _structureSO,
+                _worldPosition,
+                _rotationDegrees,
+                _occupiedCellOffsets);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void ReplaceOccupiedCellOffsets(IReadOnlyCollection<Vector3Int> occupiedCellOffsets)
+        {
+            if (occupiedCellOffsets == null)
+            {
+                Echo.Error($"Cannot store footprint for placement '{_instanceId}' because occupied cell offsets are missing.");
+                _occupiedCellOffsets = new List<Vector3Int>();
+                return;
+            }
+
+            _occupiedCellOffsets = new List<Vector3Int>(occupiedCellOffsets);
         }
 
         #endregion

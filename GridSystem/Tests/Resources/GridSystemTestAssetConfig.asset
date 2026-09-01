@@ -13,14 +13,22 @@ MonoBehaviour:
   m_Name: GridSystemTestAssetConfig
   m_EditorClassIdentifier: GridSystemPlayMode::FakeMG.GridSystem.Tests.PlayMode.GridSystemTestAssetConfigSO
   _gridManagerPrefab:
-    m_AssetGUID: 1c34b059770188549a7a730f222400b6
+    m_AssetGUID: c400609af128a0c4c906ebd10534065b
     m_SubObjectName: 
     m_SubObjectType: 
     m_SubObjectGUID: 
     m_EditorAssetChanged: 0
   _structureFootprintPrefab:
-    m_AssetGUID: 8b2fe55f4cd4f0046bd73e7f6927d05d
+    m_AssetGUID: 6ad3613ca4f4f654284043be56fa7039
     m_SubObjectName: 
     m_SubObjectType: 
     m_SubObjectGUID: 
     m_EditorAssetChanged: 0
+  _cameraPrefab:
+    m_AssetGUID: 649180d0c3b9a904b9dca0cbfec00cdc
+    m_SubObjectName: 
+    m_SubObjectType: 
+    m_SubObjectGUID: 
+    m_EditorAssetChanged: 0
+  _projectionStructureSO: {fileID: 11400000, guid: c819c09977a33764eb403ee67b34bf43, type: 2}
+  _factoryStructureSO: {fileID: 11400000, guid: bc9e134a9391e1a46b0813c8560c44d8, type: 2}

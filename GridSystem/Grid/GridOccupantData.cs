@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -7,7 +6,6 @@ namespace FakeMG.GridSystem
     /// <summary>
     /// Describes an object occupying one or more grid cells.
     /// </summary>
-    [Serializable]
     public sealed class GridOccupantData
     {
         private readonly List<Vector3Int> _occupiedCells;
