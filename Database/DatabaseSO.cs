@@ -7,7 +7,7 @@ namespace FakeMG.Framework.Database
     public abstract class DatabaseSO<T> : SerializedScriptableObject where T : IdentitySO
     {
         [DictionaryDrawerSettings(KeyLabel = "ID", ValueLabel = "Asset Reference")]
-        [SerializeField] protected Dictionary<string, T> _items = new();
+        [SerializeField, ReadOnly] protected Dictionary<string, T> _items = new();
 
         public T GetAssetByID(string id)
         {
