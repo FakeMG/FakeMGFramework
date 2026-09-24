@@ -5,7 +5,7 @@ namespace FakeMG.TimeCycle
     /// </summary>
     public readonly struct TimeOfCycleState
     {
-        public double AuthoritativeTimeSeconds { get; }
+        public double CycleTimeSeconds { get; }
         public double PresentationTimeSeconds { get; }
         public double NormalizedCycleProgress01 { get; }
         public CyclePeriodId CurrentPeriodId { get; }
@@ -13,14 +13,14 @@ namespace FakeMG.TimeCycle
         public double AdvancementRateCycleSecondsPerRealSecond { get; }
 
         public TimeOfCycleState(
-            double authoritativeTimeSeconds,
+            double cycleTimeSeconds,
             double presentationTimeSeconds,
             double normalizedCycleProgress01,
             CyclePeriodId currentPeriodId,
             bool isAutomaticAdvancementActive,
             double advancementRateCycleSecondsPerRealSecond)
         {
-            AuthoritativeTimeSeconds = authoritativeTimeSeconds;
+            CycleTimeSeconds = cycleTimeSeconds;
             PresentationTimeSeconds = presentationTimeSeconds;
             NormalizedCycleProgress01 = normalizedCycleProgress01;
             CurrentPeriodId = currentPeriodId;

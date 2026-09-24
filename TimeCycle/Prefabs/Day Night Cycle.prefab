@@ -151,7 +151,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2609909962539289686}
-  - component: {fileID: 478845687684008647}
   - component: {fileID: 5361040681325969918}
   - component: {fileID: 6002361671564423359}
   - component: {fileID: 1506759437775434603}
@@ -179,28 +178,6 @@ Transform:
   - {fileID: 8528456649458875845}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &478845687684008647
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3083574417482667146}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 586d47ec3cd924b4aaef41c3aa0cc80a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FakeMG.DayNightCycle::FakeMG.DayNightCycle.TimeOfCycleLifetimeScope
-  parentReference:
-    TypeName: 
-  autoRun: 1
-  autoInjectGameObjects: []
-  _sharedProfileSO: {fileID: 11400000, guid: 4756f73682ceaca4fa2a4ef45900eceb, type: 2}
-  _outputApplicatorBehaviours:
-  - {fileID: 1653817478559527794}
-  - {fileID: 6002361671564423359}
-  - {fileID: 1506759437775434603}
-  - {fileID: 867503328098317592}
 --- !u!114 &5361040681325969918
 MonoBehaviour:
   m_ObjectHideFlags: 0

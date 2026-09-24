@@ -3,6 +3,8 @@
     "rootNamespace": "FakeMG.TimeCycle",
     "references": [
         "FakeMG.Framework",
+        "FakeMG.SaveLoad",
+        "FakeMG.SceneLoading.Contracts",
         "UniTask",
         "VContainer"
     ],

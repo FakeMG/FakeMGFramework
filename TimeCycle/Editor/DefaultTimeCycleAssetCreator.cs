@@ -8,7 +8,7 @@ using UnityEngine.Rendering;
 namespace FakeMG.TimeCycle.Editor
 {
     /// <summary>
-    /// Creates or refreshes the reusable default profile, procedural-sky material, and standalone prefab.
+    /// Creates or refreshes the reusable default profile, procedural-sky material, and environment prefab.
     /// </summary>
     public static class DefaultTimeCycleAssetCreator
     {
@@ -43,8 +43,8 @@ namespace FakeMG.TimeCycle.Editor
             EnsureAssetFoldersExist();
             DayNightEnvironmentOutputSchemaSO outputSchemaSO = CreateOrUpdateOutputSchema();
             Material proceduralSkyMaterial = CreateOrUpdateProceduralSkyMaterial(proceduralSkyShader);
-            TimeOfCycleProfileSO profileSO = CreateOrUpdateProfile(outputSchemaSO);
-            CreateOrUpdatePrefab(profileSO, proceduralSkyMaterial, outputSchemaSO);
+            CreateOrUpdateProfile(outputSchemaSO);
+            CreateOrUpdatePrefab(proceduralSkyMaterial, outputSchemaSO);
             TimeCycleLegacyAssetMigration.MigrateProfilesOverridesAndPrefabs();
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -442,15 +442,12 @@ namespace FakeMG.TimeCycle.Editor
         }
 
         private static void CreateOrUpdatePrefab(
-            TimeOfCycleProfileSO profileSO,
             Material proceduralSkyMaterial,
-            DayNightEnvironmentOutputSchemaSO outputSchemaSO
-        )
+            DayNightEnvironmentOutputSchemaSO outputSchemaSO)
         {
             GameObject root = new("Day Night Cycle");
             try
             {
-                TimeOfCycleLifetimeScope lifetimeScope = root.AddComponent<TimeOfCycleLifetimeScope>();
                 EnvironmentCubemapRefreshController refreshController = root.AddComponent<EnvironmentCubemapRefreshController>();
                 ProceduralSkyOutputApplicator skyApplicator = root.AddComponent<ProceduralSkyOutputApplicator>();
                 FogRenderSettingsOutputApplicator fogApplicator = root.AddComponent<FogRenderSettingsOutputApplicator>();
@@ -469,8 +466,6 @@ namespace FakeMG.TimeCycle.Editor
                 skyApplicator.ConfigureForEditor(proceduralSkyMaterial, refreshController, outputSchemaSO);
                 fogApplicator.ConfigureForEditor(outputSchemaSO);
                 ambientApplicator.ConfigureForEditor(outputSchemaSO);
-                lifetimeScope.ConfigureForEditor(profileSO, new MonoBehaviour[] { lightApplicator, skyApplicator, fogApplicator, ambientApplicator });
-
                 PrefabUtility.SaveAsPrefabAsset(root, PREFAB_PATH);
             }
             finally
