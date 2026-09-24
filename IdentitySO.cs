@@ -12,6 +12,7 @@ namespace FakeMG.Framework
     {
         [Title("Identity Info")]
         [Required]
+        [DelayedProperty]
         [SerializeField] private string _id;
         [SerializeField] private string _itemName;
         [SerializeField, TextArea(3, 5)] protected string _description;

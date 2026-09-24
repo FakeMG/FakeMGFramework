@@ -1,27 +1,23 @@
+using FakeMG.SceneLoading;
 using UnityEngine;
 using VContainer;
-using VContainer.Unity;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Registers the grid building runtime (placement service, pointer projector and lifecycle entry point)
-    /// into a container.
-    /// </summary>
     public static class GridSystemInstaller
     {
         #region Public Methods
 
         public static void Register(IContainerBuilder builder, LayerMask placementLayerMask)
         {
-            builder.Register(resolver => CreateStructurePlacementService(resolver), Lifetime.Scoped);
+            builder.Register(resolver => CreateStructurePlacementService(resolver), Lifetime.Scoped)
+                .AsSelf()
+                .As<ILoadedSceneDataApplier>();
 
             builder.Register(resolver => new GridPointerProjector(
                 resolver.Resolve<GridManager>(),
                 placementLayerMask,
                 resolver.Resolve<Camera>()), Lifetime.Scoped);
-
-            builder.RegisterEntryPoint<GridSystemLifecycle>();
         }
 
         #endregion

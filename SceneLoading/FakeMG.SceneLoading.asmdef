@@ -1,0 +1,22 @@
+{
+    "name": "FakeMG.SceneLoading",
+    "rootNamespace": "FakeMG.SceneLoading",
+    "references": [
+        "FakeMG.SceneLoading.Contracts",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask",
+        "UniTask.Addressables",
+        "FakeMG.Framework",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
+using FakeMG.SceneLoading;
 using UnityEngine;
 
 namespace FakeMG.GridSystem
@@ -13,8 +14,9 @@ namespace FakeMG.GridSystem
     /// the saved placement state, runtime structure registry, and grid occupancy data synchronized.
     /// It also notifies other systems whenever the committed placement state changes.
     /// </summary>
-    public sealed class GridOccupantPlacementService
+    public sealed class GridOccupantPlacementService : ILoadedSceneDataApplier, IDisposable
     {
+        public const string DATA_APPLIER_ID = "grid.occupant-placement";
         private const int DEFAULT_ROTATION_DEGREES = 0;
 
         private readonly IGridPlacementGateway _gridPlacementGateway;
@@ -37,6 +39,7 @@ namespace FakeMG.GridSystem
 
         public event Action OnCommittedStateRestored;
         public event Action<PlacementChange> OnPlacementChanged;
+        public string DataApplierId => DATA_APPLIER_ID;
 
         #region Public Methods
 
@@ -248,7 +251,7 @@ namespace FakeMG.GridSystem
             return TryGetInstanceIdAtPosition(worldPosition, out string instanceId) && _placedStructureRegistry.TryGet(instanceId, out structurePlacement);
         }
 
-        public async UniTask RestoreCommittedStateAsync(CancellationToken cancellationToken)
+        public async UniTask ApplyLoadedDataAsync(CancellationToken cancellationToken)
         {
             ClearRuntimeStructures(false);
 
@@ -264,14 +267,19 @@ namespace FakeMG.GridSystem
                 {
                     await RestoreStructureAsync(structurePlacement, cancellationToken);
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
-                    Echo.Log("Placement restore was canceled because the placement system was destroyed.");
-                    return;
+                    Echo.Log("Placement restore was cancelled during scene data application teardown.");
+                    throw;
                 }
             }
 
             OnCommittedStateRestored?.Invoke();
+        }
+
+        public void Dispose()
+        {
+            ClearRuntimeStructures(false);
         }
 
         public void ClearRuntimeStructures(bool shouldRaiseRemovedEvent)

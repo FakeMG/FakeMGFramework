@@ -282,7 +282,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_ValidSavedPlacement_RecreatesRuntimePlacementAndRaisesRestored()
+        public async Task ApplyLoadedDataAsync_ValidSavedPlacement_RecreatesRuntimePlacementAndRaisesRestored()
         {
             Vector3 savedWorldPosition = new(4f, 0f, 5f);
             Vector3 savedGridWorldPosition = new(4.5f, 0f, 5.5f);
@@ -296,7 +296,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
             _gridPlacementGateway.WorldToGridWorld(savedWorldPosition).Returns(savedGridWorldPosition);
             SetFactoryCreatedPlacement(restoredPlacement);
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            await _service.ApplyLoadedDataAsync(CancellationToken.None);
 
             Assert.IsTrue(_wasCommittedStateRestored);
             Assert.IsTrue(_service.TryGetPlacement(INSTANCE_ID, out GridOccupantPlacement committedPlacement));
@@ -746,7 +746,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_MissingStructure_SkipsRecordAndRaisesCompletion()
+        public async Task ApplyLoadedDataAsync_MissingStructure_SkipsRecordAndRaisesCompletion()
         {
             _placementState.UpsertStructure(
                 INSTANCE_ID,
@@ -755,7 +755,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
                 ROTATION_DEGREES,
                 OCCUPIED_CELL_OFFSETS);
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            await _service.ApplyLoadedDataAsync(CancellationToken.None);
 
             Assert.IsTrue(_wasCommittedStateRestored);
             Assert.AreEqual(0, _service.GetPlacedStructures().Count);
@@ -771,7 +771,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_InvalidFootprint_SkipsRecordAndRaisesCompletion()
+        public async Task ApplyLoadedDataAsync_InvalidFootprint_SkipsRecordAndRaisesCompletion()
         {
             _placementState.UpsertStructure(
                 INSTANCE_ID,
@@ -785,7 +785,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
                 "<color=red>[GridOccupantPlacementService]</color> Cannot restore saved structure 'structure-instance' because its footprint is invalid: Occupied cell offsets do not form a filled rectangular footprint.");
 #endif
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            await _service.ApplyLoadedDataAsync(CancellationToken.None);
 
             Assert.IsTrue(_wasCommittedStateRestored);
             Assert.AreEqual(0, _service.GetPlacedStructures().Count);
@@ -793,7 +793,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_EmptyFootprint_SkipsRecordAndRaisesCompletion()
+        public async Task ApplyLoadedDataAsync_EmptyFootprint_SkipsRecordAndRaisesCompletion()
         {
             _placementState.UpsertStructure(
                 INSTANCE_ID,
@@ -807,7 +807,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
                 "<color=red>[GridOccupantPlacementService]</color> Cannot restore saved structure 'structure-instance' because its footprint is invalid: Occupied cell offsets are missing.");
 #endif
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            await _service.ApplyLoadedDataAsync(CancellationToken.None);
 
             Assert.IsTrue(_wasCommittedStateRestored);
             Assert.AreEqual(0, _service.GetPlacedStructures().Count);
@@ -815,7 +815,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_FactoryReturnsNull_LeavesCommittedStateWithoutRuntime()
+        public async Task ApplyLoadedDataAsync_FactoryReturnsNull_LeavesCommittedStateWithoutRuntime()
         {
             _placementState.UpsertStructure(
                 INSTANCE_ID,
@@ -825,7 +825,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
                 OCCUPIED_CELL_OFFSETS);
             SetFactoryCreatedPlacement(null);
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            await _service.ApplyLoadedDataAsync(CancellationToken.None);
 
             Assert.IsTrue(_wasCommittedStateRestored);
             Assert.IsTrue(_placementState.TryGetStructure(INSTANCE_ID, out _));
@@ -834,7 +834,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_OccupiedPlacement_DestroysRuntimeAndContinuesCompletion()
+        public async Task ApplyLoadedDataAsync_OccupiedPlacement_DestroysRuntimeAndContinuesCompletion()
         {
             _placementState.UpsertStructure(
                 INSTANCE_ID,
@@ -859,7 +859,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
                 "<color=red>[GridOccupantPlacementService]</color> Cannot restore saved structure 'structure-instance' because its grid space is occupied or outside the grid.");
 #endif
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            await _service.ApplyLoadedDataAsync(CancellationToken.None);
 
             Assert.IsTrue(_wasCommittedStateRestored);
             Assert.AreEqual(0, _service.GetPlacedStructures().Count);
@@ -868,7 +868,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_CanceledFactory_DoesNotRaiseCompletion()
+        public void ApplyLoadedDataAsync_CanceledFactory_ThrowsAndDoesNotRaiseCompletion()
         {
             _placementState.UpsertStructure(
                 INSTANCE_ID,
@@ -886,7 +886,8 @@ namespace FakeMG.GridSystem.Tests.EditMode
                     Arg.Any<IGridOccupantPlacementProcessor>())
                 .Returns(UniTask.FromException<GridOccupantPlacement>(new OperationCanceledException()));
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            Assert.CatchAsync<OperationCanceledException>(async () =>
+                await _service.ApplyLoadedDataAsync(new CancellationToken(true)));
 
             Assert.IsFalse(_wasCommittedStateRestored);
             Assert.AreEqual(0, _service.GetPlacedStructures().Count);
@@ -894,7 +895,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
-        public async Task RestoreCommittedStateAsync_InvalidThenValidRecord_ContinuesAndCompletesAfterPlacementEvent()
+        public async Task ApplyLoadedDataAsync_InvalidThenValidRecord_ContinuesAndCompletesAfterPlacementEvent()
         {
             const string VALID_INSTANCE_ID = "valid-structure";
             _placementState.UpsertStructure(
@@ -915,7 +916,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
                 ROTATION_DEGREES);
             SetFactoryCreatedPlacement(runtimePlacement);
 
-            await _service.RestoreCommittedStateAsync(CancellationToken.None);
+            await _service.ApplyLoadedDataAsync(CancellationToken.None);
 
             Assert.IsTrue(_wasCommittedStateRestored);
             Assert.IsTrue(_service.TryGetPlacement(VALID_INSTANCE_ID, out _));

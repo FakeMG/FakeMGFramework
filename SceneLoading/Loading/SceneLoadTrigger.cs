@@ -7,36 +7,22 @@ using UnityEngine;
 
 namespace FakeMG.SceneLoading
 {
-    public class SceneLoadTrigger : MonoBehaviour
+    public sealed class SceneLoadTrigger : MonoBehaviour
     {
         [Required, SerializeField] private AssetReferenceScene _sceneToLoad;
         [Required, SerializeField] private SceneLoader _sceneLoader;
-        [SerializeField] private bool _loadOnStart;
+        [SerializeField] private bool _shouldLoadOnStart;
         [SerializeField] private float _delayBeforeLoadSeconds;
-        [SerializeField] private bool _setActiveAfterLoad = true;
-
-        private CancellationTokenSource _lifetimeCancellationSource;
+        [SerializeField] private bool _shouldSetActiveAfterLoad = true;
 
         #region Unity Lifecycle
 
-        private void Awake()
-        {
-            _lifetimeCancellationSource = new CancellationTokenSource();
-        }
-
         private void Start()
         {
-            if (_loadOnStart)
+            if (_shouldLoadOnStart)
             {
-                LoadTargetSceneSafelyAsync(_lifetimeCancellationSource.Token).Forget();
+                LoadAndActivateTargetSceneSafelyAsync(destroyCancellationToken).Forget();
             }
-        }
-
-        private void OnDestroy()
-        {
-            _lifetimeCancellationSource.Cancel();
-            _lifetimeCancellationSource.Dispose();
-            _lifetimeCancellationSource = null;
         }
 
         #endregion
@@ -50,28 +36,33 @@ namespace FakeMG.SceneLoading
                 await UniTask.Delay(TimeSpan.FromSeconds(_delayBeforeLoadSeconds), cancellationToken: cancellationToken);
             }
 
-            SceneLoadResult result = await _sceneLoader.LoadSceneAsync(_sceneToLoad, cancellationToken: cancellationToken);
-
-            if (result.Succeeded && _setActiveAfterLoad)
-            {
-                _sceneLoader.SetActiveScene(_sceneToLoad);
-            }
-
-            return result;
+            return await _sceneLoader.LoadSceneAsync(_sceneToLoad, cancellationToken: cancellationToken);
         }
 
         #endregion
 
         #region Private Methods
 
-        private async UniTaskVoid LoadTargetSceneSafelyAsync(CancellationToken cancellationToken)
+        private async UniTaskVoid LoadAndActivateTargetSceneSafelyAsync(CancellationToken cancellationToken)
         {
             try
             {
                 SceneLoadResult result = await LoadTargetSceneAsync(cancellationToken);
+                if (cancellationToken.IsCancellationRequested || result.Status == SceneLoadStatus.Cancelled)
+                {
+                    Echo.Log("Scene load trigger was cancelled during teardown.");
+                    return;
+                }
+
                 if (!result.Succeeded)
                 {
                     Echo.Error($"Scene load trigger failed: {result.FailureReason}", context: this);
+                    return;
+                }
+
+                if (_shouldSetActiveAfterLoad && !_sceneLoader.SetActiveScene(_sceneToLoad))
+                {
+                    Echo.Error("Scene load trigger could not activate the loaded scene.", context: this);
                 }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

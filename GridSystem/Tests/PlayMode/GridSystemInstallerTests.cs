@@ -1,4 +1,5 @@
 using System.Collections;
+using FakeMG.SceneLoading;
 using NUnit.Framework;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -22,10 +23,8 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         {
             GridSystemTestAssetConfigSO testAssetConfig = GridSystemPlayModeTestAssets.LoadConfig();
 
-            _gridManagerPrefabHandle =
-                Addressables.LoadAssetAsync<GameObject>(testAssetConfig.GridManagerPrefab);
-            _cameraPrefabHandle =
-                Addressables.LoadAssetAsync<GameObject>(testAssetConfig.CameraPrefab);
+            _gridManagerPrefabHandle = Addressables.LoadAssetAsync<GameObject>(testAssetConfig.GridManagerPrefab);
+            _cameraPrefabHandle = Addressables.LoadAssetAsync<GameObject>(testAssetConfig.CameraPrefab);
             yield return _gridManagerPrefabHandle;
             yield return _cameraPrefabHandle;
 
@@ -49,10 +48,8 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         [Test]
         public void Register_FrameworkTestDependencies_ResolvesPlacementAndProjectionServices()
         {
-            GridManager gridManagerPrefab =
-                _gridManagerPrefabHandle.Result.GetComponent<GridManager>();
-            Camera cameraPrefab =
-                _cameraPrefabHandle.Result.GetComponentInChildren<Camera>(true);
+            GridManager gridManagerPrefab = _gridManagerPrefabHandle.Result.GetComponent<GridManager>();
+            Camera cameraPrefab = _cameraPrefabHandle.Result.GetComponentInChildren<Camera>(true);
             Assert.IsNotNull(gridManagerPrefab);
             Assert.IsNotNull(cameraPrefab);
             ContainerBuilder builder = new();
@@ -62,12 +59,12 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             GridSystemInstaller.Register(builder, 1 << 8);
 
             _container = builder.Build();
-            GridOccupantPlacementService placementService =
-                _container.Resolve<GridOccupantPlacementService>();
-            GridPointerProjector gridPointerProjector =
-                _container.Resolve<GridPointerProjector>();
+            GridOccupantPlacementService placementService = _container.Resolve<GridOccupantPlacementService>();
+            ILoadedSceneDataApplier dataApplier = _container.Resolve<ILoadedSceneDataApplier>();
+            GridPointerProjector gridPointerProjector = _container.Resolve<GridPointerProjector>();
 
             Assert.IsNotNull(placementService);
+            Assert.AreSame(placementService, dataApplier);
             Assert.IsNotNull(gridPointerProjector);
         }
 
