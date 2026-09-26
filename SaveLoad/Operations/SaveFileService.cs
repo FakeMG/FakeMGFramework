@@ -64,6 +64,7 @@ namespace FakeMG.SaveLoad
                     descriptor.FilePath,
                     temporaryFilePath => saveDataStore.WriteSaveFile(temporaryFilePath, metadata, states));
                 didCommitFile = true;
+                Echo.Log($"Saved '{descriptor.FilePath}'.");
             }
             catch (OperationCanceledException)
             {
