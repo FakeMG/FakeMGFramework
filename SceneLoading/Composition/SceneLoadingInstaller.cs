@@ -23,6 +23,7 @@ namespace FakeMG.SceneLoading
             builder.RegisterEntryPoint<SceneDataApplicationSceneUnloadSubscriber>();
             builder.Register<AddressableSceneGateway>(Lifetime.Singleton).As<ISceneGateway>();
             builder.RegisterComponentInHierarchy<SceneLoader>().AsSelf().As<ISceneLoader>();
+            builder.RegisterComponentInHierarchy<SceneLoadTrigger>();
         }
 
         #endregion

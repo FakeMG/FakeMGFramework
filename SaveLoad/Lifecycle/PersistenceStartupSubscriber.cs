@@ -9,9 +9,7 @@ namespace FakeMG.SaveLoad
 {
     public sealed class PersistenceStartupSubscriber : MonoBehaviour
     {
-        private IGlobalSaveInitializer _globalSaveInitializer;
-        private IWorldStartupContext _worldStartupContext;
-        private WorldSaveConfiguration _configuration;
+        private PersistenceStartupCoordinator _startupCoordinator;
         private CancellationTokenSource _lifetimeCancellationSource;
 
         #region Unity Lifecycle
@@ -38,14 +36,9 @@ namespace FakeMG.SaveLoad
         #region Public Methods
 
         [Inject]
-        public void Construct(
-            IGlobalSaveInitializer globalSaveInitializer,
-            IWorldStartupContext worldStartupContext,
-            WorldSaveConfiguration configuration)
+        public void Construct(PersistenceStartupCoordinator startupCoordinator)
         {
-            _globalSaveInitializer = globalSaveInitializer;
-            _worldStartupContext = worldStartupContext;
-            _configuration = configuration;
+            _startupCoordinator = startupCoordinator;
         }
 
         #endregion
@@ -56,16 +49,15 @@ namespace FakeMG.SaveLoad
         {
             try
             {
-                GlobalSaveInitializationResult globalResult = await _globalSaveInitializer.InitializeAsync(cancellationToken);
-                if (!globalResult.Succeeded)
+                StartupReadinessResult result = await _startupCoordinator.InitializeAsync(cancellationToken);
+                if (result.Status == StartupReadinessStatus.Cancelled)
                 {
-                    Echo.Error(string.Join(Environment.NewLine, globalResult.FailureReasons), context: this);
+                    Echo.Log(result.FailureReason);
                 }
-
-                await _configuration.StartupPolicySO.InitializeAsync(
-                    _worldStartupContext,
-                    _configuration.DefaultWorldDisplayName,
-                    cancellationToken);
+                else if (!result.Succeeded)
+                {
+                    Echo.Error(result.FailureReason, context: this);
+                }
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

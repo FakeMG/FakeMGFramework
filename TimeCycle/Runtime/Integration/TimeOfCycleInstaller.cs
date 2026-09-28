@@ -17,7 +17,6 @@ namespace FakeMG.TimeCycle
 
         public static void InstallGameplay(
             IContainerBuilder builder,
-            TimeOfCycleProfileSO sharedProfileSO,
             IReadOnlyList<MonoBehaviour> outputApplicatorBehaviours)
         {
             List<ITimeOfCycleOutputApplicator> outputApplicators = CollectOutputApplicators(outputApplicatorBehaviours);
@@ -26,7 +25,6 @@ namespace FakeMG.TimeCycle
                 builder.RegisterInstance(outputApplicators[applicatorIndex]);
             }
 
-            builder.RegisterInstance(sharedProfileSO);
             builder.RegisterEntryPoint<TimeOfCycleService>().AsSelf().As<ITimeOfCycle>();
             builder.RegisterEntryPoint<WorldTimelineService>()
                 .AsSelf()
@@ -34,8 +32,9 @@ namespace FakeMG.TimeCycle
                 .As<ILoadedSceneDataApplier>();
         }
 
-        public static void InstallPersistence(IContainerBuilder builder)
+        public static void InstallPersistence(IContainerBuilder builder, TimeOfCycleProfileSO profileSO)
         {
+            builder.RegisterInstance(profileSO);
             builder.Register<WorldTimelinePersistence>(Lifetime.Singleton);
             builder.RegisterComponentInHierarchy<WorldTimelineSaveable>().As<ISaveable>();
         }

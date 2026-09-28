@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using UnityEngine;
 
 namespace FakeMG.TimeCycle.Tests.EditMode
 {
@@ -30,6 +31,28 @@ namespace FakeMG.TimeCycle.Tests.EditMode
 
             Assert.Throws<System.ArgumentOutOfRangeException>(
                 () => timeline.RestoreAuthoritativeTime(authoritativeTimeSeconds));
+        }
+
+        [Test]
+        public void DefaultPersistenceContainsTheConfiguredStartingTime()
+        {
+            TimeOfCycleProfileSO profileSO = ScriptableObject.CreateInstance<TimeOfCycleProfileSO>();
+            try
+            {
+                var persistence = new WorldTimelinePersistence(profileSO);
+                double startingTimeSeconds = profileSO.CycleDurationSeconds * profileSO.DefaultStartingProgress01;
+
+                Assert.That(persistence.SaveData.AuthoritativeTimeSeconds, Is.EqualTo(startingTimeSeconds));
+
+                persistence.Restore(new WorldTimelineSaveData { AuthoritativeTimeSeconds = startingTimeSeconds + 100d });
+                persistence.Reset();
+
+                Assert.That(persistence.SaveData.AuthoritativeTimeSeconds, Is.EqualTo(startingTimeSeconds));
+            }
+            finally
+            {
+                Object.DestroyImmediate(profileSO);
+            }
         }
 
         #endregion

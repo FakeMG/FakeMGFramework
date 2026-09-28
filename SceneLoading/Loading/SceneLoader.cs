@@ -14,7 +14,8 @@ namespace FakeMG.SceneLoading
         RawLoadFailed = 1,
         DataApplicationFailed = 2,
         Cancelled = 3,
-        Busy = 4
+        Busy = 4,
+        StartupFailed = 5
     }
 
     public readonly struct SceneLoadResult

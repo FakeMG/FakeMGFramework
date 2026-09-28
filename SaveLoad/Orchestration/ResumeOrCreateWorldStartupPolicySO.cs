@@ -11,7 +11,7 @@ namespace FakeMG.SaveLoad
     {
         #region Public Methods
 
-        public override async UniTask InitializeAsync(
+        public override async UniTask<StartupReadinessResult> InitializeAsync(
             IWorldStartupContext worldStartupContext,
             string defaultWorldDisplayName,
             CancellationToken cancellationToken)
@@ -19,24 +19,24 @@ namespace FakeMG.SaveLoad
             IReadOnlyList<WorldSummary> worlds = worldStartupContext.GetWorlds();
             foreach (WorldSummary world in worlds)
             {
-                WorldOperationResult openResult = await worldStartupContext.OpenWorldAsync(
-                    world.WorldId,
-                    cancellationToken);
+                WorldOperationResult openResult = await worldStartupContext.OpenWorldAsync(world.WorldId, cancellationToken);
                 if (openResult.Succeeded)
                 {
-                    return;
+                    return StartupReadinessResult.Ready();
                 }
 
-                Echo.Warning($"Could not resume world '{world.WorldId}'. Trying the next world.");
+                Echo.Warning(
+                    $"Could not resume world '{world.WorldId}': {openResult.FailureReason}. Trying the next world.");
             }
 
-            WorldCreationResult creationResult = await worldStartupContext.CreateWorldAsync(
-                defaultWorldDisplayName,
-                cancellationToken);
+            WorldCreationResult creationResult = await worldStartupContext.CreateWorldAsync(defaultWorldDisplayName, cancellationToken);
             if (!creationResult.Succeeded)
             {
-                Echo.Error($"Could not create the default world: {creationResult.FailureReason}");
+                return StartupReadinessResult.Failed(
+                    $"Could not create the default world: {creationResult.FailureReason}");
             }
+
+            return StartupReadinessResult.Ready();
         }
 
         #endregion

@@ -3,6 +3,9 @@
     "rootNamespace": "FakeMG.SaveLoad.Tests",
     "references": [
         "FakeMG.SaveLoad",
+        "FakeMG.SceneLoading",
+        "FakeMG.SceneLoading.Contracts",
+        "FakeMG.Framework",
         "UniTask",
         "TNRD.NSubstitute",
         "EasySave3"

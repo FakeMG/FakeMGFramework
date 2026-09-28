@@ -10,13 +10,13 @@ namespace FakeMG.SaveLoad
     {
         #region Public Methods
 
-        public override UniTask InitializeAsync(
+        public override UniTask<StartupReadinessResult> InitializeAsync(
             IWorldStartupContext worldStartupContext,
             string defaultWorldDisplayName,
             CancellationToken cancellationToken)
         {
             Echo.Log("World persistence is waiting for explicit world selection.");
-            return UniTask.CompletedTask;
+            return UniTask.FromResult(StartupReadinessResult.Failed("A world must be selected before gameplay can load."));
         }
 
         #endregion

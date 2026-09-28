@@ -7,7 +7,6 @@ namespace FakeMG.TimeCycle
     [Serializable]
     public sealed class WorldTimelineSaveData
     {
-        public bool HasWorld;
         public double AuthoritativeTimeSeconds;
     }
 
@@ -24,29 +23,41 @@ namespace FakeMG.TimeCycle
     {
         private IWorldTimelineCaptureSource _captureSource;
 
-        public WorldTimelineSaveData SaveData { get; private set; } = new();
+        private readonly double _startingTimeSeconds;
+
+        public WorldTimelineSaveData SaveData { get; private set; }
 
         public int Revision { get; private set; }
 
-        public event Action OnRestoreRequested;
-
         #region Public Methods
+
+        public WorldTimelinePersistence(TimeOfCycleProfileSO profileSO)
+        {
+            _startingTimeSeconds = profileSO.CycleDurationSeconds * profileSO.DefaultStartingProgress01;
+            SaveData = CreateStartingState();
+        }
 
         public void Attach(IWorldTimelineCaptureSource captureSource) => _captureSource = captureSource;
 
         public void Detach(IWorldTimelineCaptureSource captureSource)
         {
             if (ReferenceEquals(_captureSource, captureSource))
+            {
                 _captureSource = null;
+            }
         }
 
         public WorldTimelineSaveData CaptureForStorage()
         {
             if (_captureSource == null)
+            {
                 return SaveData;
+            }
 
             if (_captureSource.TryCapture(out WorldTimelineSaveData saveData, out string failureReason))
+            {
                 return saveData;
+            }
 
             throw new IOException(failureReason);
         }
@@ -61,14 +72,12 @@ namespace FakeMG.TimeCycle
 
             SaveData = saveData;
             Revision++;
-            OnRestoreRequested?.Invoke();
         }
 
         public void Reset()
         {
-            SaveData = new WorldTimelineSaveData();
+            SaveData = CreateStartingState();
             Revision++;
-            OnRestoreRequested?.Invoke();
         }
 
         public static bool TryValidate(object state, out string failureReason)
@@ -86,6 +95,11 @@ namespace FakeMG.TimeCycle
         #endregion
 
         #region Private Methods
+
+        private WorldTimelineSaveData CreateStartingState()
+        {
+            return new WorldTimelineSaveData { AuthoritativeTimeSeconds = _startingTimeSeconds };
+        }
 
         private static bool IsFiniteNonnegative(double timeSeconds)
         {

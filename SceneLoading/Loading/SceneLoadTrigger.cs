@@ -4,6 +4,7 @@ using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
+using VContainer;
 
 namespace FakeMG.SceneLoading
 {
@@ -12,8 +13,9 @@ namespace FakeMG.SceneLoading
         [Required, SerializeField] private AssetReferenceScene _sceneToLoad;
         [Required, SerializeField] private SceneLoader _sceneLoader;
         [SerializeField] private bool _shouldLoadOnStart;
-        [SerializeField] private float _delayBeforeLoadSeconds;
         [SerializeField] private bool _shouldSetActiveAfterLoad = true;
+
+        private StartupSceneLoadRequest _startupSceneLoadRequest;
 
         #region Unity Lifecycle
 
@@ -29,14 +31,15 @@ namespace FakeMG.SceneLoading
 
         #region Public Methods
 
+        [Inject]
+        public void Construct(IStartupReadiness readiness)
+        {
+            _startupSceneLoadRequest = new StartupSceneLoadRequest(readiness, _sceneLoader);
+        }
+
         public async UniTask<SceneLoadResult> LoadTargetSceneAsync(CancellationToken cancellationToken = default)
         {
-            if (_delayBeforeLoadSeconds > 0f)
-            {
-                await UniTask.Delay(TimeSpan.FromSeconds(_delayBeforeLoadSeconds), cancellationToken: cancellationToken);
-            }
-
-            return await _sceneLoader.LoadSceneAsync(_sceneToLoad, cancellationToken: cancellationToken);
+            return await _startupSceneLoadRequest.LoadAsync(_sceneToLoad, cancellationToken);
         }
 
         #endregion
@@ -56,7 +59,11 @@ namespace FakeMG.SceneLoading
 
                 if (!result.Succeeded)
                 {
-                    Echo.Error($"Scene load trigger failed: {result.FailureReason}", context: this);
+                    if (result.Status != SceneLoadStatus.StartupFailed)
+                    {
+                        Echo.Error($"Scene load trigger failed: {result.FailureReason}", context: this);
+                    }
+
                     return;
                 }
 

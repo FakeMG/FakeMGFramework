@@ -1,5 +1,6 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using FakeMG.Framework;
 using UnityEngine;
 
 namespace FakeMG.SaveLoad
@@ -8,7 +9,7 @@ namespace FakeMG.SaveLoad
     {
         #region Public Methods
 
-        public abstract UniTask InitializeAsync(
+        public abstract UniTask<StartupReadinessResult> InitializeAsync(
             IWorldStartupContext worldStartupContext,
             string defaultWorldDisplayName,
             CancellationToken cancellationToken);

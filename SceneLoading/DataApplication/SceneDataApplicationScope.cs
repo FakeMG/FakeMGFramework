@@ -57,9 +57,14 @@ namespace FakeMG.SceneLoading
                     Echo.Error($"Initial data application for scene '{_sceneContext.Name}' failed: {result.FailureReason}", context: this);
                 }
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            catch (OperationCanceledException)
             {
-                Echo.Log($"Initial data application for scene '{_sceneContext.Name}' was cancelled during teardown.");
+                string cancellationReason = cancellationToken.IsCancellationRequested
+                    ? "scene teardown"
+                    : "the data application coordinator";
+                Echo.Warning(
+                    $"Initial data application for scene '{_sceneContext.Name}' was cancelled by {cancellationReason}.",
+                    context: this);
             }
             catch (Exception exception)
             {

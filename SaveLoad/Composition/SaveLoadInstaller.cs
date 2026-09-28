@@ -1,4 +1,5 @@
 using System;
+using FakeMG.Framework;
 using VContainer;
 using VContainer.Unity;
 
@@ -67,6 +68,9 @@ namespace FakeMG.SaveLoad
                 .As<IWorldStartupContext>()
                 .As<IWorldLifecycleCommands>()
                 .As<IAsyncSaveParticipantRegistry>();
+            builder.Register<PersistenceStartupCoordinator>(Lifetime.Singleton)
+                .AsSelf()
+                .As<IStartupReadiness>();
             builder.RegisterComponentInHierarchy<PersistenceStartupSubscriber>();
             builder.RegisterComponentInHierarchy<WorldIntervalAutoSaveSubscriber>();
             builder.RegisterComponentInHierarchy<WorldLifecycleAutoSaveSubscriber>();
