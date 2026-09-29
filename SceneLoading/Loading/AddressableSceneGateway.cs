@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
@@ -241,7 +242,14 @@ namespace FakeMG.SceneLoading
                     state.LoadedSceneHandle = null;
                     if (loadedHandle.IsValid())
                     {
-                        Addressables.UnloadSceneAsync(loadedHandle, true);
+                        if (Application.isPlaying)
+                        {
+                            Addressables.UnloadSceneAsync(loadedHandle, true);
+                        }
+                        else
+                        {
+                            Addressables.Release(loadedHandle);
+                        }
                     }
                 }
             }
