@@ -78,6 +78,7 @@ namespace FakeMG.Framework.UI
         {
             int requestVersion = InvalidatePendingRequests();
             UnloadHandle();
+            ApplyCountPresentation(countText, isCountVisible);
 
             if (item.IconSpriteAsset != null && item.IconSpriteAsset.RuntimeKeyIsValid())
             {
@@ -124,12 +125,6 @@ namespace FakeMG.Framework.UI
                 Echo.Error($"Invalid icon sprite reference for item '{item.name}'.");
             }
 
-            if (requestVersion != _updateRequestVersion)
-            {
-                return;
-            }
-
-            ApplyCountPresentation(countText, isCountVisible);
         }
 
         public void ClearUI()
