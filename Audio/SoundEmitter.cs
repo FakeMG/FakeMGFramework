@@ -1,8 +1,10 @@
-﻿using System.Collections;
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using DG.Tweening;
+using FakeMG.Framework;
 using UnityEngine;
 using UnityEngine.Audio;
-using UnityEngine.Events;
 
 namespace FakeMG.Audio
 {
@@ -10,9 +12,13 @@ namespace FakeMG.Audio
     public class SoundEmitter : MonoBehaviour
     {
         private AudioSource _audioSource;
-        public event UnityAction<SoundEmitter> OnSoundFinishedPlaying;
-        public event UnityAction<SoundEmitter> OnSoundDestroyed;
+        private CancellationTokenSource _completionCancellationSource;
+
+        public event Action<SoundEmitter> OnSoundFinishedPlaying;
+        public event Action<SoundEmitter> OnSoundDestroyed;
         public AudioCueKey AudioCueKey;
+
+        #region Unity Lifecycle
 
         private void Awake()
         {
@@ -23,8 +29,14 @@ namespace FakeMG.Audio
 
         private void OnDestroy()
         {
+            CancelCompletionWait();
+            _audioSource.DOKill();
             OnSoundDestroyed?.Invoke(this);
         }
+
+        #endregion
+
+        #region Public Methods
 
         public void Play(
             AudioClip clip,
@@ -33,46 +45,27 @@ namespace FakeMG.Audio
             AudioMixerGroup outputAudioMixerGroup,
             Vector3 position = default)
         {
+            CancelCompletionWait();
+            _audioSource.DOKill();
             _audioSource.clip = clip;
             _audioSource.outputAudioMixerGroup = outputAudioMixerGroup;
             audioConfigSO.ApplyToWithVariations(_audioSource, audioCueSO);
             _audioSource.transform.position = position;
             _audioSource.loop = audioCueSO.Looping;
-            _audioSource.time = audioCueSO.RandomStartTime ? Random.Range(0f, clip.length) : 0f;
+            _audioSource.time = audioCueSO.RandomStartTime ? UnityEngine.Random.Range(0f, clip.length) : 0f;
             _audioSource.Play();
-
             if (!audioCueSO.Looping)
             {
-                var remainingTime = clip.length - _audioSource.time;
-                StartCoroutine(FinishedPlaying(remainingTime));
-            }
-        }
-
-        private IEnumerator FinishedPlaying(float clipLength)
-        {
-            yield return new WaitForSeconds(clipLength);
-
-            NotifyBeingDone();
-        }
-
-        private void NotifyBeingDone()
-        {
-            if (OnSoundFinishedPlaying != null)
-            {
-                OnSoundFinishedPlaying.Invoke(this);
-            }
-            else
-            {
-                // Sometimes sound emitters are stopped twice
-                Debug.LogWarning("No listeners for OnSoundFinishedPlaying event.", this);
+                StartCompletionWait();
             }
         }
 
         public void Stop()
         {
+            CancelCompletionWait();
+            _audioSource.DOKill();
             _audioSource.Stop();
-            StopAllCoroutines();
-            NotifyBeingDone();
+            NotifySoundFinishedPlaying();
         }
 
         public void Finish()
@@ -80,42 +73,88 @@ namespace FakeMG.Audio
             if (_audioSource.loop)
             {
                 _audioSource.loop = false;
-                float timeRemaining = _audioSource.clip.length - _audioSource.time;
-                StartCoroutine(FinishedPlaying(timeRemaining));
+                StartCompletionWait();
             }
         }
 
         public void FadeInAudioClip(
             AudioClip musicClip,
-            AudioConfigurationSO settings,
-            AudioCueSO audioCue,
+            AudioConfigurationSO audioConfigSO,
+            AudioCueSO audioCueSO,
             AudioMixerGroup outputAudioMixerGroup)
         {
-            Play(musicClip, settings, audioCue, outputAudioMixerGroup);
-            float targetVolume = _audioSource.volume; // Get the volume after variations are applied
+            Play(musicClip, audioConfigSO, audioCueSO, outputAudioMixerGroup);
+            float targetVolume = _audioSource.volume;
             _audioSource.volume = 0f;
-
-            _audioSource.DOFade(targetVolume, audioCue.FadeInDuration);
+            _audioSource.DOFade(targetVolume, audioCueSO.FadeInDuration).SetUpdate(true);
         }
 
-        public void FadeOutAudioClip(float duration)
+        public void FadeOutAudioClip(float durationSeconds)
         {
-            _audioSource.DOFade(0f, duration).SetLink(gameObject).OnComplete(NotifyBeingDone);
+            CancelCompletionWait();
+            _audioSource.DOKill();
+            _audioSource.DOFade(0f, durationSeconds).SetUpdate(true).SetLink(gameObject).OnComplete(Stop);
         }
 
-        public AudioClip GetClip()
+        public AudioClip GetClip() => _audioSource.clip;
+
+        public bool IsPlaying() => _audioSource.isPlaying;
+
+        public void IgnoreListenerPause() => _audioSource.ignoreListenerPause = true;
+
+        #endregion
+
+        #region Private Methods
+
+        private void StartCompletionWait()
         {
-            return _audioSource.clip;
+            CancelCompletionWait();
+            _completionCancellationSource = new CancellationTokenSource();
+            WaitForPlaybackCompletionAsync(_completionCancellationSource.Token).Forget();
         }
 
-        public bool IsPlaying()
+        private async UniTask WaitForPlaybackCompletionAsync(CancellationToken cancellationToken)
         {
-            return _audioSource.isPlaying;
+            try
+            {
+                // Audio playback uses the DSP clock, independent of simulation speed and clip pitch.
+                await UniTask.WaitUntil(HasPlaybackFinished, cancellationToken: cancellationToken);
+                NotifySoundFinishedPlaying();
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                Echo.Log("Sound completion wait cancelled because playback stopped or the emitter was destroyed.");
+            }
+            catch (Exception exception)
+            {
+                Echo.Error(exception.ToString());
+            }
         }
 
-        public void IgnoreListenerPause()
+        private bool HasPlaybackFinished() => !_audioSource.isPlaying;
+
+        private void CancelCompletionWait()
         {
-            _audioSource.ignoreListenerPause = true;
+            if (_completionCancellationSource != null)
+            {
+                _completionCancellationSource.Cancel();
+                _completionCancellationSource.Dispose();
+                _completionCancellationSource = null;
+            }
         }
+
+        private void NotifySoundFinishedPlaying()
+        {
+            if (OnSoundFinishedPlaying != null)
+            {
+                OnSoundFinishedPlaying.Invoke(this);
+            }
+            else
+            {
+                Echo.Warning("Sound emitter finished without a completion subscriber.", context: this);
+            }
+        }
+
+        #endregion
     }
 }

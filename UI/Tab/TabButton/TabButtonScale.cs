@@ -15,7 +15,7 @@ namespace FakeMG.Framework.UI.Tab.TabButton
             _tabButton.DOKill();
 
             Vector3 targetScale = Vector3.one * 1.2f;
-            _tabButton.DOScale(targetScale, _animationDuration).SetEase(_scaleEase).SetLink(_tabButton.gameObject);
+            _tabButton.DOScale(targetScale, _animationDuration).SetUpdate(true).SetEase(_scaleEase).SetLink(_tabButton.gameObject);
         }
 
         public override void AnimateDeselection()
@@ -23,7 +23,7 @@ namespace FakeMG.Framework.UI.Tab.TabButton
             _tabButton.DOKill();
 
             Vector3 targetScale = Vector3.one;
-            _tabButton.DOScale(targetScale, _animationDuration).SetEase(_deselectEase).SetLink(_tabButton.gameObject);
+            _tabButton.DOScale(targetScale, _animationDuration).SetUpdate(true).SetEase(_deselectEase).SetLink(_tabButton.gameObject);
         }
 
         public override void InstantlySelect()

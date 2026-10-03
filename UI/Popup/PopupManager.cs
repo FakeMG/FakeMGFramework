@@ -57,9 +57,7 @@ namespace FakeMG.Framework.UI.Popup
         private const float BACKGROUND_FADE_DURATION = 0.3f;
         private float _backgroundFadeAlpha;
 
-        // -----------------------------------------------------------------------------------------
-        // Unity lifecycle
-        // -----------------------------------------------------------------------------------------
+        #region Unity Lifecycle
 
         private void Start()
         {
@@ -84,6 +82,8 @@ namespace FakeMG.Framework.UI.Popup
             _loadedPopups.Clear();
             _layers.Clear();
         }
+
+        #endregion
 
         // -----------------------------------------------------------------------------------------
         // Show / Hide callbacks
@@ -144,8 +144,7 @@ namespace FakeMG.Framework.UI.Popup
 
             incoming.DOKill();
             incoming.gameObject.SetActive(true);
-            incoming.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
-                .SetLink(incoming.gameObject);
+            incoming.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION).SetUpdate(true).SetLink(incoming.gameObject);
         }
 
         private void PopBackground()
@@ -175,6 +174,7 @@ namespace FakeMG.Framework.UI.Popup
                 topLayer.Background.DOKill();
                 topLayer.Background.gameObject.SetActive(true);
                 topLayer.Background.DOFade(_backgroundFadeAlpha, BACKGROUND_FADE_DURATION)
+                    .SetUpdate(true)
                     .SetLink(topLayer.Background.gameObject);
             }
         }
@@ -195,7 +195,7 @@ namespace FakeMG.Framework.UI.Popup
         private void FadeOut(Image bg, bool disable)
         {
             bg.DOKill();
-            var tween = bg.DOFade(0f, BACKGROUND_FADE_DURATION).SetLink(bg.gameObject);
+            var tween = bg.DOFade(0f, BACKGROUND_FADE_DURATION).SetUpdate(true).SetLink(bg.gameObject);
 
             if (disable)
                 tween.OnComplete(() =>

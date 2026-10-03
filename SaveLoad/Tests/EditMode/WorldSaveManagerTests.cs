@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Text.RegularExpressions;
 using NSubstitute;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 
 namespace FakeMG.SaveLoad.Tests
 {
@@ -82,6 +84,49 @@ namespace FakeMG.SaveLoad.Tests
                 Arg.Is<string>(path => path.Contains("manual_") && path.EndsWith(".sav.tmp")),
                 Arg.Is<SaveMetadata>(metadata => metadata.SaveKind == SaveFileKind.Manual),
                 Arg.Any<IReadOnlyDictionary<string, object>>());
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("invalid-world")]
+        public async System.Threading.Tasks.Task OpenWorldAsync_InvalidId_IsRejectedWithoutStorageAccess(string worldId)
+        {
+            ISaveDataStore store = Substitute.For<ISaveDataStore>();
+            using WorldSaveManager manager = CreateManager(
+                store, CreateCommittingTransaction(), Substitute.For<ISaveTimeProvider>(), new TestSaveable());
+            WorldOperationResult result = await manager.OpenWorldAsync(worldId);
+            Assert.That(result.Status, Is.EqualTo(WorldOperationStatus.Rejected));
+            Assert.That(result.FailureReason, Does.Contain("Invalid world ID"));
+            Assert.That(store.ReceivedCalls(), Is.Empty);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("invalid-world")]
+        public async System.Threading.Tasks.Task DeleteWorldAsync_InvalidId_IsRejectedWithoutStorageAccess(string worldId)
+        {
+            ISaveDataStore store = Substitute.For<ISaveDataStore>();
+            using WorldSaveManager manager = CreateManager(
+                store, CreateCommittingTransaction(), Substitute.For<ISaveTimeProvider>(), new TestSaveable());
+            WorldOperationResult result = await manager.DeleteWorldAsync(worldId);
+            Assert.That(result.Status, Is.EqualTo(WorldOperationStatus.Rejected));
+            Assert.That(result.FailureReason, Does.Contain("Invalid world ID"));
+            Assert.That(store.ReceivedCalls(), Is.Empty);
+        }
+
+        [Test]
+        public async System.Threading.Tasks.Task CreateWorldAsync_CaptureFault_LogsExceptionAndPreservesFailureResult()
+        {
+            ISaveable saveable = Substitute.For<ISaveable>();
+            saveable.SaveId.Returns("faulting-saveable");
+            saveable.CaptureState().Returns(_ => throw new InvalidOperationException("capture regression failure"));
+            using WorldSaveManager manager = CreateManager(
+                Substitute.For<ISaveDataStore>(), CreateCommittingTransaction(), Substitute.For<ISaveTimeProvider>(), saveable);
+            LogAssert.Expect(LogType.Error, new Regex("InvalidOperationException: capture regression failure"));
+            WorldCreationResult result = await manager.CreateWorldAsync("New world");
+            Assert.That(result.Succeeded, Is.False);
+            Assert.That(result.FailureReason, Does.Contain("capture regression failure"));
+            Assert.That(manager.HasActiveWorld, Is.False);
         }
 
         private WorldSaveManager CreateManager(

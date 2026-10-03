@@ -12,6 +12,8 @@ namespace FakeMG.GodCamera
         public float OrthographicSizeMeters;
         public float CameraDistanceMeters;
 
+        #region Public Methods
+
         public CameraRigState(
             Vector3 focusPositionMeters,
             float yawDegrees,
@@ -23,5 +25,24 @@ namespace FakeMG.GodCamera
             OrthographicSizeMeters = orthographicSizeMeters;
             CameraDistanceMeters = cameraDistanceMeters;
         }
+
+        public float GetZoomMeters(CameraProjectionType projectionType)
+        {
+            return projectionType == CameraProjectionType.Perspective ? CameraDistanceMeters : OrthographicSizeMeters;
+        }
+
+        public void SetZoomMeters(CameraProjectionType projectionType, float zoomMeters)
+        {
+            if (projectionType == CameraProjectionType.Perspective)
+            {
+                CameraDistanceMeters = zoomMeters;
+            }
+            else
+            {
+                OrthographicSizeMeters = zoomMeters;
+            }
+        }
+
+        #endregion
     }
 }

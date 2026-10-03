@@ -19,9 +19,13 @@ namespace FakeMG.Framework.UI.Tab.TabButton
             Vector3 targetScale = Vector3.one * _buttonScaleMultiplier;
             float targetY = _buttonYOffset;
 
-            _buttonIconRect.DOScale(targetScale, _animationDuration).SetEase(_scaleEase)
+            _buttonIconRect.DOScale(targetScale, _animationDuration)
+                .SetUpdate(true)
+                .SetEase(_scaleEase)
                 .SetLink(_buttonIconRect.gameObject);
-            _buttonIconRect.DOAnchorPosY(targetY, _animationDuration).SetEase(_moveYEase)
+            _buttonIconRect.DOAnchorPosY(targetY, _animationDuration)
+                .SetUpdate(true)
+                .SetEase(_moveYEase)
                 .SetLink(_buttonIconRect.gameObject);
         }
 
@@ -32,9 +36,13 @@ namespace FakeMG.Framework.UI.Tab.TabButton
             Vector3 targetScale = Vector3.one;
             float targetY = 0f;
 
-            _buttonIconRect.DOScale(targetScale, _animationDuration).SetEase(_scaleEase)
+            _buttonIconRect.DOScale(targetScale, _animationDuration)
+                .SetUpdate(true)
+                .SetEase(_scaleEase)
                 .SetLink(_buttonIconRect.gameObject);
-            _buttonIconRect.DOAnchorPosY(targetY, _animationDuration).SetEase(_moveYEase)
+            _buttonIconRect.DOAnchorPosY(targetY, _animationDuration)
+                .SetUpdate(true)
+                .SetEase(_moveYEase)
                 .SetLink(_buttonIconRect.gameObject);
         }
 

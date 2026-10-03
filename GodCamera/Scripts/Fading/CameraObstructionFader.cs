@@ -105,7 +105,7 @@ namespace FakeMG.GodCamera
 
         private void UpdateFadeEffects()
         {
-            float deltaTimeSeconds = Time.deltaTime;
+            float deltaTimeSeconds = Time.unscaledDeltaTime;
 
             foreach (FadeableObject fadeableObject in _activeFadeableObjects)
             {

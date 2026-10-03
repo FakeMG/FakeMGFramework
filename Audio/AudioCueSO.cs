@@ -55,24 +55,34 @@ namespace FakeMG.Audio
 
         public bool CanPlaySound()
         {
+            return CanPlaySound(Time.unscaledTime);
+        }
+
+        public bool CanPlaySound(float currentUnscaledTimeSeconds)
+        {
             const float DEFAULT_LAST_PLAY_TIME = -1f;
             const float NO_DELAY = 0f;
 
 #if UNITY_EDITOR
             // Editor stores SO value across play sessions, so we need to reset _lastPlayTime
-            if (_lastPlayTime > Time.time)
+            if (_lastPlayTime > currentUnscaledTimeSeconds)
             {
                 _lastPlayTime = DEFAULT_LAST_PLAY_TIME;
             }
 #endif
 
-            return _replayDelay <= NO_DELAY || _lastPlayTime == DEFAULT_LAST_PLAY_TIME ||
-                   Time.time >= _lastPlayTime + _replayDelay;
+            return _replayDelay <= NO_DELAY || _lastPlayTime == DEFAULT_LAST_PLAY_TIME
+                || currentUnscaledTimeSeconds >= _lastPlayTime + _replayDelay;
         }
 
         public void UpdateLastPlayTime()
         {
-            _lastPlayTime = Time.time;
+            UpdateLastPlayTime(Time.unscaledTime);
+        }
+
+        public void UpdateLastPlayTime(float currentUnscaledTimeSeconds)
+        {
+            _lastPlayTime = currentUnscaledTimeSeconds;
         }
     }
 

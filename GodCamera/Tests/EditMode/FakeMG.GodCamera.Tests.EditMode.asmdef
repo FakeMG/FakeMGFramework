@@ -1,0 +1,7 @@
+{
+  "name": "FakeMG.GodCamera.Tests.EditMode",
+  "references": ["FakeMG.GodCamera"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false,
+  "optionalUnityReferences": ["TestAssemblies"]
+}

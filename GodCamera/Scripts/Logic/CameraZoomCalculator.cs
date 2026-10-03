@@ -12,13 +12,14 @@ namespace FakeMG.GodCamera
         public float CalculateTargetZoomMeters(
             float currentTargetZoomMeters,
             float zoomDeltaMeters,
-            CameraProfileSO profile)
+            float minimumZoomMeters,
+            float maximumZoomMeters)
         {
             // Positive input means zooming in, so it reduces orthographic size or camera distance.
             return Mathf.Clamp(
                 currentTargetZoomMeters - zoomDeltaMeters,
-                profile.MinimumZoomMeters,
-                profile.MaximumZoomMeters);
+                minimumZoomMeters,
+                maximumZoomMeters);
         }
 
         public Vector3 CalculateAnchorCorrectionMeters(

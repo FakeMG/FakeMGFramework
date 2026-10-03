@@ -178,6 +178,7 @@ namespace FakeMG.SaveLoad
             }
             catch (Exception exception)
             {
+                Echo.Error(exception.ToString());
                 return WorldCreationResult.Failure($"Could not stage current world state before creation: {exception.Message}");
             }
 
@@ -254,6 +255,7 @@ namespace FakeMG.SaveLoad
             }
             catch (Exception exception)
             {
+                Echo.Error(exception.ToString());
                 return await RollBackFailedCreationAsync(
                     worldId,
                     previousManifest,
@@ -268,13 +270,11 @@ namespace FakeMG.SaveLoad
             bool canUseSnapshotFallback,
             CancellationToken cancellationToken)
         {
-            try
+            if (!WorldId.TryParse(worldId, out _))
             {
-                WorldId.Parse(worldId);
-            }
-            catch (ArgumentException exception)
-            {
-                return WorldOperationResult.Rejected(exception.Message);
+                string failureReason = $"Invalid world ID '{worldId}'.";
+                Echo.Warning(failureReason);
+                return WorldOperationResult.Rejected(failureReason);
             }
 
             if (!CanStartWorldTransition(out string transitionFailureReason))
@@ -295,6 +295,7 @@ namespace FakeMG.SaveLoad
             }
             catch (Exception exception)
             {
+                Echo.Error(exception.ToString());
                 return WorldOperationResult.Failure($"Could not stage the active world before opening '{worldId}': {exception.Message}");
             }
 
@@ -334,7 +335,10 @@ namespace FakeMG.SaveLoad
 
                 WorldManifest activatedManifest = CloneManifest(manifest);
                 activatedManifest.LastPlayedTimestampUtc = _saveTimeProvider.GetUtcNow();
-                SaveFileWriteResult updateResult = await _worldSaveRepository.SaveManifestAsync(activatedManifest, activatedManifest.LastPlayedTimestampUtc, cancellationToken);
+                SaveFileWriteResult updateResult = await _worldSaveRepository.SaveManifestAsync(
+                    activatedManifest,
+                    activatedManifest.LastPlayedTimestampUtc,
+                    cancellationToken);
                 if (!updateResult.Succeeded)
                 {
                     await RollBackLoadedWorldAsync(
@@ -379,6 +383,7 @@ namespace FakeMG.SaveLoad
             }
             catch (Exception exception)
             {
+                Echo.Error(exception.ToString());
                 var captureFailure = new WorldSaveResult(
                     WorldSaveStatus.SnapshotFailed,
                     string.Empty,
@@ -440,13 +445,11 @@ namespace FakeMG.SaveLoad
 
         private async UniTask<WorldOperationResult> DeleteWorldInternalAsync(string worldId, CancellationToken cancellationToken)
         {
-            try
+            if (!WorldId.TryParse(worldId, out _))
             {
-                WorldId.Parse(worldId);
-            }
-            catch (ArgumentException exception)
-            {
-                return WorldOperationResult.Rejected(exception.Message);
+                string failureReason = $"Invalid world ID '{worldId}'.";
+                Echo.Warning(failureReason);
+                return WorldOperationResult.Rejected(failureReason);
             }
 
             if (!CanStartWorldTransition(out string transitionFailureReason))
@@ -486,6 +489,7 @@ namespace FakeMG.SaveLoad
             }
             catch (Exception exception)
             {
+                Echo.Error(exception.ToString());
                 await RollBackLoadedWorldAsync(
                     previousManifest,
                     rollbackStates,

@@ -25,12 +25,12 @@ namespace FakeMG.GodCamera
         public float TargetYawDegrees { get; set; }
         public float TargetZoomMeters { get; set; }
 
-        public CameraMotionState(CameraRigState initialRigState, CameraProfileSO profile)
+        public CameraMotionState(CameraRigState initialRigState, CameraProjectionType projectionType)
         {
             _currentRigState = initialRigState;
             TargetFocusPositionMeters = initialRigState.FocusPositionMeters;
             TargetYawDegrees = initialRigState.YawDegrees;
-            TargetZoomMeters = profile.GetZoomMeters(initialRigState);
+            TargetZoomMeters = GetCurrentZoomMeters(projectionType);
         }
 
         #region Public Methods
@@ -40,14 +40,14 @@ namespace FakeMG.GodCamera
             return _currentRigState;
         }
 
-        public float GetCurrentZoomMeters(CameraProfileSO profile)
+        public float GetCurrentZoomMeters(CameraProjectionType projectionType)
         {
-            return profile.GetZoomMeters(_currentRigState);
+            return _currentRigState.GetZoomMeters(projectionType);
         }
 
-        public void SetCurrentZoomMeters(CameraProfileSO profile, float zoomMeters)
+        public void SetCurrentZoomMeters(CameraProjectionType projectionType, float zoomMeters)
         {
-            profile.SetZoomMeters(ref _currentRigState, zoomMeters);
+            _currentRigState.SetZoomMeters(projectionType, zoomMeters);
         }
 
         public void MoveCurrentAndTargetFocusPositionMeters(Vector3 offsetMeters)

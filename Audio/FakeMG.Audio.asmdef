@@ -6,7 +6,8 @@
         "FakeMG.Settings",
         "FakeMG.SaveLoad",
         "VContainer",
-        "DOTween.Modules"
+        "DOTween.Modules",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

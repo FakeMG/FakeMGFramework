@@ -27,6 +27,8 @@ namespace FakeMG.Framework.UI.Popup
 
         private CancellationTokenSource _animationCts;
 
+        #region Unity Lifecycle
+
         private void Reset()
         {
             _canvasGroup = GetComponent<CanvasGroup>();
@@ -40,6 +42,8 @@ namespace FakeMG.Framework.UI.Popup
             _hideSequence?.Kill();
             _currentSequence?.Kill();
         }
+
+        #endregion
 
         private void KillCurrentAnimation()
         {
@@ -102,7 +106,7 @@ namespace FakeMG.Framework.UI.Popup
             if (_showSequence.IsActive()) return _showSequence;
 
             _showSequence = CreateShowSequence();
-            _showSequence.SetAutoKill(false);
+            _showSequence.SetAutoKill(false).SetUpdate(true);
             return _showSequence;
         }
 
@@ -159,7 +163,7 @@ namespace FakeMG.Framework.UI.Popup
             if (_hideSequence.IsActive()) return _hideSequence;
 
             _hideSequence = CreateHideSequence();
-            _hideSequence.SetAutoKill(false);
+            _hideSequence.SetAutoKill(false).SetUpdate(true);
             return _hideSequence;
         }
 

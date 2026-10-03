@@ -8,10 +8,14 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
     {
         private RectTransform _canvasRectTransform;
 
+        #region Unity Lifecycle
+
         private void Awake()
         {
             _canvasRectTransform = GetComponentInParent<Canvas>().GetComponent<RectTransform>();
         }
+
+        #endregion
 
         public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null)
         {
@@ -38,7 +42,9 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
                 newTab.TabContent.anchoredPosition = hiddenPosition;
 
                 // Animate new panel in
-                newTab.TabContent.DOAnchorPosX(0, _animationDuration)
+                newTab.TabContent
+                    .DOAnchorPosX(0, _animationDuration)
+                    .SetUpdate(true)
                     .SetEase(_animationEase)
                     .SetLink(newTab.TabContent.gameObject)
                     .OnComplete(() =>
@@ -51,7 +57,9 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
             {
                 // Animate current panel out
                 var tabPosition = currentTab.TabContent.anchoredPosition;
-                currentTab.TabContent.DOAnchorPosX(-direction * canvasWidth, _animationDuration)
+                currentTab.TabContent
+                    .DOAnchorPosX(-direction * canvasWidth, _animationDuration)
+                    .SetUpdate(true)
                     .SetEase(_animationEase)
                     .SetLink(currentTab.TabContent.gameObject)
                     .OnComplete(() =>

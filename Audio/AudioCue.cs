@@ -1,4 +1,7 @@
-﻿using System.Collections;
+using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -250,6 +253,67 @@ namespace FakeMG.Audio
         #endregion
 
         private AudioCueKey _controlKey = AudioCueKey.Invalid;
+        private CancellationTokenSource _delayedStartCancellationSource;
+
+        #region Unity Lifecycle
+
+        private void Start()
+        {
+            if (_playOnStart)
+            {
+                PlayDelayedAsync().Forget();
+            }
+        }
+
+        private void OnDisable()
+        {
+            // Disabling only this component did not stop the original coroutine; deactivating its GameObject did.
+            if (!gameObject.activeInHierarchy)
+            {
+                _delayedStartCancellationSource?.Cancel();
+            }
+
+            if (_stopOnDisable)
+            {
+                StopAudioCue();
+            }
+        }
+
+        private void OnDestroy() => _delayedStartCancellationSource?.Cancel();
+
+        private void OnDrawGizmosSelected()
+        {
+            float minDist = 0.1f;
+            float maxDist = 50f;
+
+            if (_configurationMode == ConfigurationMode.UsePredefined && _audioConfiguration != null)
+            {
+                minDist = _audioConfiguration.MinDistance;
+                maxDist = _audioConfiguration.MaxDistance;
+            }
+            else if (_configurationMode == ConfigurationMode.OverridePredefined)
+            {
+                if (_audioConfiguration != null)
+                {
+                    minDist = _overrideMinDistance ? _minDistance : _audioConfiguration.MinDistance;
+                    maxDist = _overrideMaxDistance ? _maxDistance : _audioConfiguration.MaxDistance;
+                }
+                else
+                {
+                    minDist = _minDistance;
+                    maxDist = _maxDistance;
+                }
+            }
+            else if (_configurationMode == ConfigurationMode.FullyCustom)
+            {
+                minDist = _minDistance;
+                maxDist = _maxDistance;
+            }
+
+            DrawAudioRangeGizmos(minDist, maxDist);
+        }
+
+        #endregion
 
         private enum ConfigurationMode
         {
@@ -264,26 +328,28 @@ namespace FakeMG.Audio
         private bool ShowOverrideSettings() =>
             _configurationMode == ConfigurationMode.OverridePredefined || _configurationMode == ConfigurationMode.FullyCustom;
 
-        private void Start()
+        private async UniTask PlayDelayedAsync()
         {
-            if (_playOnStart)
+            using var cancellationSource = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+            _delayedStartCancellationSource = cancellationSource;
+            CancellationToken cancellationToken = cancellationSource.Token;
+            try
             {
-                StartCoroutine(PlayDelayed());
+                await UniTask.Delay(TimeSpan.FromSeconds(_startDelay), DelayType.UnscaledDeltaTime, cancellationToken: cancellationToken);
+                PlayAudioCue();
             }
-        }
-
-        private void OnDisable()
-        {
-            if (_stopOnDisable)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                StopAudioCue();
+                Echo.Log("Delayed audio cue cancelled because its GameObject was deactivated or destroyed.");
             }
-        }
-
-        private IEnumerator PlayDelayed()
-        {
-            yield return new WaitForSeconds(_startDelay);
-            PlayAudioCue();
+            catch (Exception exception)
+            {
+                Echo.Error(exception.ToString());
+            }
+            finally
+            {
+                _delayedStartCancellationSource = null;
+            }
         }
 
         [Button]
@@ -423,38 +489,6 @@ namespace FakeMG.Audio
                     _controlKey = AudioCueKey.Invalid;
                 }
             }
-        }
-
-        private void OnDrawGizmosSelected()
-        {
-            float minDist = 0.1f;
-            float maxDist = 50f;
-
-            if (_configurationMode == ConfigurationMode.UsePredefined && _audioConfiguration != null)
-            {
-                minDist = _audioConfiguration.MinDistance;
-                maxDist = _audioConfiguration.MaxDistance;
-            }
-            else if (_configurationMode == ConfigurationMode.OverridePredefined)
-            {
-                if (_audioConfiguration != null)
-                {
-                    minDist = _overrideMinDistance ? _minDistance : _audioConfiguration.MinDistance;
-                    maxDist = _overrideMaxDistance ? _maxDistance : _audioConfiguration.MaxDistance;
-                }
-                else
-                {
-                    minDist = _minDistance;
-                    maxDist = _maxDistance;
-                }
-            }
-            else if (_configurationMode == ConfigurationMode.FullyCustom)
-            {
-                minDist = _minDistance;
-                maxDist = _maxDistance;
-            }
-
-            DrawAudioRangeGizmos(minDist, maxDist);
         }
 
         private void DrawAudioRangeGizmos(float minDist, float maxDist)

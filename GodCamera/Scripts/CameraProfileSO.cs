@@ -217,20 +217,12 @@ namespace FakeMG.GodCamera
 
         public float GetZoomMeters(CameraRigState cameraRigState)
         {
-            return _projectionType == CameraProjectionType.Perspective
-                ? cameraRigState.CameraDistanceMeters
-                : cameraRigState.OrthographicSizeMeters;
+            return cameraRigState.GetZoomMeters(_projectionType);
         }
 
         public void SetZoomMeters(ref CameraRigState cameraRigState, float zoomMeters)
         {
-            if (_projectionType == CameraProjectionType.Perspective)
-            {
-                cameraRigState.CameraDistanceMeters = zoomMeters;
-                return;
-            }
-
-            cameraRigState.OrthographicSizeMeters = zoomMeters;
+            cameraRigState.SetZoomMeters(_projectionType, zoomMeters);
         }
 
         public float GetCameraDistanceMeters(CameraRigState cameraRigState)

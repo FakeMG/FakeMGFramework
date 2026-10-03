@@ -16,7 +16,9 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
             StopTabContentAnimations(fromTab);
             StopTabContentAnimations(toTab);
 
-            fromTab.TabContent.DOScale(_scaleDownMultiplier, _animationDuration)
+            fromTab.TabContent
+                .DOScale(_scaleDownMultiplier, _animationDuration)
+                .SetUpdate(true)
                 .SetEase(Ease.InQuad)
                 .SetLink(fromTab.TabContent.gameObject)
                 .OnComplete(() =>
@@ -27,7 +29,9 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
 
             toTab.TabContent.gameObject.SetActive(true);
             toTab.TabContent.localScale = Vector3.zero;
-            toTab.TabContent.DOScale(Vector3.one, _animationDuration)
+            toTab.TabContent
+                .DOScale(Vector3.one, _animationDuration)
+                .SetUpdate(true)
                 .SetEase(Ease.OutBack, _overshootScale)
                 .SetLink(toTab.TabContent.gameObject)
                 .OnComplete(() =>

@@ -28,9 +28,7 @@ namespace FakeMG.SaveLoad
 
         private void Update()
         {
-            if (!_configuration.IsAutoSaveEnabled ||
-                !_autoSaveRequester.HasActiveWorld ||
-                !_autoSaveSchedule.Advance(Time.deltaTime))
+            if (!_configuration.IsAutoSaveEnabled || !_autoSaveRequester.HasActiveWorld || !_autoSaveSchedule.Advance(Time.unscaledDeltaTime))
             {
                 return;
             }
@@ -50,9 +48,7 @@ namespace FakeMG.SaveLoad
         #region Public Methods
 
         [Inject]
-        public void Construct(
-            IWorldAutoSaveRequester autoSaveRequester,
-            WorldSaveConfiguration configuration)
+        public void Construct(IWorldAutoSaveRequester autoSaveRequester, WorldSaveConfiguration configuration)
         {
             _autoSaveRequester = autoSaveRequester;
             _configuration = configuration;
@@ -62,8 +58,7 @@ namespace FakeMG.SaveLoad
 
         #region Private Methods
 
-        private async UniTaskVoid RequestIntervalAutoSaveSafelyAsync(
-            CancellationToken cancellationToken)
+        private async UniTaskVoid RequestIntervalAutoSaveSafelyAsync(CancellationToken cancellationToken)
         {
             try
             {

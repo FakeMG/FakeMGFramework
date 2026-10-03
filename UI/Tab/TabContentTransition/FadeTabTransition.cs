@@ -13,7 +13,9 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
 
             // Start fade out of current tab
             var fromCanvasGroup = GetOrAddCanvasGroup(fromTab.TabContent);
-            fromCanvasGroup.DOFade(0f, _animationDuration)
+            fromCanvasGroup
+                .DOFade(0f, _animationDuration)
+                .SetUpdate(true)
                 .SetEase(_animationEase)
                 .SetLink(fromTab.TabContent.gameObject)
                 .OnComplete(() =>
@@ -25,7 +27,9 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
             toTab.TabContent.gameObject.SetActive(true);
             var toCanvasGroup = GetOrAddCanvasGroup(toTab.TabContent);
             toCanvasGroup.alpha = 0f;
-            toCanvasGroup.DOFade(1f, _animationDuration)
+            toCanvasGroup
+                .DOFade(1f, _animationDuration)
+                .SetUpdate(true)
                 .SetEase(_animationEase)
                 .SetLink(toTab.TabContent.gameObject)
                 .OnComplete(() =>

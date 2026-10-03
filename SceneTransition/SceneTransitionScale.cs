@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using FakeMG.Audio;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace FakeMG.SceneTransition
@@ -47,11 +46,12 @@ namespace FakeMG.SceneTransition
         [SerializeField] private float _colorFadeDuration = 0.5f;
         [SerializeField] private float _transitionScreenFadeDuration = 0.25f;
 
-        [Header("Events")]
-        public UnityEvent OnShowAnimationStart;
-        public UnityEvent OnShowAnimationComplete;
-        public UnityEvent OnHideAnimationStart;
-        public UnityEvent OnHideAnimationComplete;
+        public event Action OnShowAnimationStart;
+        public event Action OnShowAnimationComplete;
+        public event Action OnHideAnimationStart;
+        public event Action OnHideAnimationComplete;
+
+        #region Unity Lifecycle
 
         private void Start()
         {
@@ -62,6 +62,8 @@ namespace FakeMG.SceneTransition
             _logo.localScale = Vector3.one * _hideScale;
             _logo.rotation = Quaternion.Euler(0, 0, _hideRotation);
         }
+
+        #endregion
 
 #if UNITY_EDITOR
         [Button]
@@ -104,21 +106,20 @@ namespace FakeMG.SceneTransition
             _transitionScreen.gameObject.SetActive(true);
             _transitionScreen.alpha = 1f;
 
-            _backgroundColor.color =
-                new Color(_backgroundColor.color.r, _backgroundColor.color.g, _backgroundColor.color.b, 0);
+            _backgroundColor.color = new Color(_backgroundColor.color.r, _backgroundColor.color.g, _backgroundColor.color.b, 0);
 
-            var positionUniTask =
-                ApplyEase(_logo.DOAnchorPos(_showPosition, _showDuration), _showEaseType, _showEase, _showEaseCurve);
-            var scaleUniTask =
-                ApplyEase(_logo.DOScale(Vector3.one * _showScale, _showDuration), _showEaseType, _showEase, _showEaseCurve);
-            var rotateUniTask =
-                ApplyEase(_logo.DORotate(new Vector3(0, 0, _showRotation), _showDuration, RotateMode.FastBeyond360),
-                    _showEaseType, _showEase, _showEaseCurve);
+            var positionUniTask = ApplyEase(_logo.DOAnchorPos(_showPosition, _showDuration), _showEaseType, _showEase, _showEaseCurve);
+            var scaleUniTask = ApplyEase(_logo.DOScale(Vector3.one * _showScale, _showDuration), _showEaseType, _showEase, _showEaseCurve);
+            var rotateUniTask = ApplyEase(
+                _logo.DORotate(new Vector3(0, 0, _showRotation), _showDuration, RotateMode.FastBeyond360),
+                _showEaseType,
+                _showEase,
+                _showEaseCurve);
 
             _whooshCue.PlayAudioCue();
 
             await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
-            await _backgroundColor.DOFade(1f, _colorFadeDuration).ToUniTask();
+            await _backgroundColor.DOFade(1f, _colorFadeDuration).SetUpdate(true).ToUniTask();
 
             OnShowAnimationComplete?.Invoke();
         }
@@ -127,20 +128,20 @@ namespace FakeMG.SceneTransition
         {
             OnHideAnimationStart?.Invoke();
 
-            await _backgroundColor.DOFade(0f, _colorFadeDuration).ToUniTask();
+            await _backgroundColor.DOFade(0f, _colorFadeDuration).SetUpdate(true).ToUniTask();
 
-            var positionUniTask =
-                ApplyEase(_logo.DOAnchorPos(_hidePosition, _hideDuration), _hideEaseType, _hideEase, _hideEaseCurve);
-            var scaleUniTask =
-                ApplyEase(_logo.DOScale(Vector3.one * _hideScale, _hideDuration), _hideEaseType, _hideEase, _hideEaseCurve);
-            var rotateUniTask =
-                ApplyEase(_logo.DORotate(new Vector3(0, 0, _hideRotation), _hideDuration, RotateMode.FastBeyond360),
-                    _hideEaseType, _hideEase, _hideEaseCurve);
+            var positionUniTask = ApplyEase(_logo.DOAnchorPos(_hidePosition, _hideDuration), _hideEaseType, _hideEase, _hideEaseCurve);
+            var scaleUniTask = ApplyEase(_logo.DOScale(Vector3.one * _hideScale, _hideDuration), _hideEaseType, _hideEase, _hideEaseCurve);
+            var rotateUniTask = ApplyEase(
+                _logo.DORotate(new Vector3(0, 0, _hideRotation), _hideDuration, RotateMode.FastBeyond360),
+                _hideEaseType,
+                _hideEase,
+                _hideEaseCurve);
 
             _whoose2Cue.PlayAudioCue();
 
             await UniTask.WhenAll(positionUniTask, scaleUniTask, rotateUniTask);
-            await _transitionScreen.DOFade(0f, _transitionScreenFadeDuration).ToUniTask();
+            await _transitionScreen.DOFade(0f, _transitionScreenFadeDuration).SetUpdate(true).ToUniTask();
 
             _transitionScreen.gameObject.SetActive(false);
             OnHideAnimationComplete?.Invoke();
@@ -157,7 +158,7 @@ namespace FakeMG.SceneTransition
                 tween.SetEase(customCurve);
             }
 
-            return tween.ToUniTask();
+            return tween.SetUpdate(true).ToUniTask();
         }
     }
 }

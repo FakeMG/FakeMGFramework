@@ -8,41 +8,39 @@ namespace FakeMG.GodCamera
     /// </summary>
     public sealed class CameraMotionBounds
     {
-        private readonly CameraRigView _cameraRigView;
         private readonly CameraBoundsClamp _boundsClamp;
 
         private bool _hasReportedGroundProjectionFailure;
 
-        public CameraMotionBounds(CameraRigView cameraRigView, CameraBoundsClamp boundsClamp)
+        public CameraMotionBounds(CameraBoundsClamp boundsClamp)
         {
-            _cameraRigView = cameraRigView;
             _boundsClamp = boundsClamp;
         }
 
         #region Public Methods
 
-        public void ClampInitialState(CameraMotionState motionState)
+        public void ClampInitialState(
+            CameraMotionState motionState, CameraProfileSO profileSO, Bounds allowedBoundsMeters, float aspect)
         {
-            CameraProfileSO profile = _cameraRigView.CameraProfileSO;
-            Bounds allowedBoundsMeters = _cameraRigView.BoundsProvider.GetBoundsMeters();
-
             if (TryClampZoomMeters(
                     motionState,
-                    profile,
-                    motionState.GetCurrentZoomMeters(profile),
+                    profileSO,
+                    motionState.GetCurrentZoomMeters(profileSO.ProjectionType),
                     allowedBoundsMeters,
+                    aspect,
                     out float clampedZoomMeters))
             {
-                motionState.SetCurrentZoomMeters(profile, clampedZoomMeters);
+                motionState.SetCurrentZoomMeters(profileSO.ProjectionType, clampedZoomMeters);
             }
 
-            motionState.TargetZoomMeters = motionState.GetCurrentZoomMeters(profile);
+            motionState.TargetZoomMeters = motionState.GetCurrentZoomMeters(profileSO.ProjectionType);
             if (TryClampFocusPositionMeters(
                     motionState.CurrentFocusPositionMeters,
                     motionState.CurrentYawDegrees,
-                    profile,
+                    profileSO,
                     motionState.TargetZoomMeters,
                     allowedBoundsMeters,
+                    aspect,
                     out Vector3 clampedFocusPositionMeters))
             {
                 motionState.SetCurrentAndTargetFocusPositionMeters(clampedFocusPositionMeters);
@@ -51,36 +49,39 @@ namespace FakeMG.GodCamera
 
         public void ClampFocusPositions(
             CameraMotionState motionState,
-            CameraProfileSO profile,
-            Bounds allowedBoundsMeters)
+            CameraProfileSO profileSO,
+            Bounds allowedBoundsMeters,
+            float aspect)
         {
             if (TryClampFocusPositionMeters(
                     motionState.CurrentFocusPositionMeters,
                     motionState.CurrentYawDegrees,
-                    profile,
-                    motionState.GetCurrentZoomMeters(profile),
+                    profileSO,
+                    motionState.GetCurrentZoomMeters(profileSO.ProjectionType),
                     allowedBoundsMeters,
+                    aspect,
                     out Vector3 clampedCurrentFocusPositionMeters))
             {
                 motionState.CurrentFocusPositionMeters = clampedCurrentFocusPositionMeters;
             }
 
-            ClampTargetFocusPosition(motionState, profile, allowedBoundsMeters);
+            ClampTargetFocusPosition(motionState, profileSO, allowedBoundsMeters, aspect);
         }
 
         public bool TryClampZoomMeters(
             CameraMotionState motionState,
-            CameraProfileSO profile,
+            CameraProfileSO profileSO,
             float desiredZoomMeters,
             Bounds allowedBoundsMeters,
+            float aspect,
             out float clampedZoomMeters)
         {
             bool hasProjectedGroundBounds = _boundsClamp.TryClampZoomMeters(
                 motionState.CurrentFocusPositionMeters,
                 motionState.CurrentYawDegrees,
-                profile,
+                profileSO,
                 desiredZoomMeters,
-                _cameraRigView.Aspect,
+                aspect,
                 allowedBoundsMeters,
                 out clampedZoomMeters);
             UpdateProjectionFailureState(hasProjectedGroundBounds);
@@ -89,15 +90,17 @@ namespace FakeMG.GodCamera
 
         public void ClampTargetFocusPosition(
             CameraMotionState motionState,
-            CameraProfileSO profile,
-            Bounds allowedBoundsMeters)
+            CameraProfileSO profileSO,
+            Bounds allowedBoundsMeters,
+            float aspect)
         {
             if (TryClampFocusPositionMeters(
                     motionState.TargetFocusPositionMeters,
                     motionState.CurrentYawDegrees,
-                    profile,
+                    profileSO,
                     motionState.TargetZoomMeters,
                     allowedBoundsMeters,
+                    aspect,
                     out Vector3 clampedTargetFocusPositionMeters))
             {
                 motionState.TargetFocusPositionMeters = clampedTargetFocusPositionMeters;
@@ -111,17 +114,18 @@ namespace FakeMG.GodCamera
         private bool TryClampFocusPositionMeters(
             Vector3 desiredFocusPositionMeters,
             float yawDegrees,
-            CameraProfileSO profile,
+            CameraProfileSO profileSO,
             float zoomMeters,
             Bounds allowedBoundsMeters,
+            float aspect,
             out Vector3 clampedFocusPositionMeters)
         {
             bool hasProjectedGroundBounds = _boundsClamp.TryClampFocusPositionMeters(
                 desiredFocusPositionMeters,
                 yawDegrees,
-                profile,
+                profileSO,
                 zoomMeters,
-                _cameraRigView.Aspect,
+                aspect,
                 allowedBoundsMeters,
                 out clampedFocusPositionMeters);
             UpdateProjectionFailureState(hasProjectedGroundBounds);

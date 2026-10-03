@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.ActionMapManagement
 {
-    public class ActionMapManager : MonoBehaviour
+    public class ActionMapManager : MonoBehaviour, IActionMapManager
     {
         [SerializeField] private InputActionAsset _inputActions;
         [SerializeField] private ActionMapConflictsPairsSO _conflictPairsSO;
@@ -19,16 +19,17 @@ namespace FakeMG.ActionMapManagement
         // Track suppressors for suppressed maps
         private readonly Dictionary<string, HashSet<string>> _suppressedBy = new();
 
+        #region Unity Lifecycle
+
         private void Start()
         {
             foreach (ActionMapSO actionMapSO in _initialActionMaps)
             {
-                if (actionMapSO)
-                {
-                    EnableActionMap(actionMapSO.ActionMapName);
-                }
+                EnableActionMap(actionMapSO.ActionMapName);
             }
         }
+
+        #endregion
 
         public void EnableActionMap(string mapName)
         {

@@ -1,7 +1,6 @@
 using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
-using FakeMG.Audio;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -122,21 +121,19 @@ namespace FakeMG.SceneTransition
             _transitionCanvasGroup.alpha = 0f;
             _loadingProgressSlider.normalizedValue = 0f;
 
-            Tween fadeTween = _transitionCanvasGroup
-                .DOFade(1f, _fadeInDurationSeconds)
-                .SetEase(_fadeInEase);
+            Tween fadeTween = _transitionCanvasGroup.DOFade(1f, _fadeInDurationSeconds).SetUpdate(true).SetEase(_fadeInEase);
 
             Tween logoMoveTween = _logoRectTransform
                 .DOAnchorPos(_logoShownAnchoredPositionPixels, _moveDurationSeconds)
+                .SetUpdate(true)
                 .SetEase(_moveEase);
 
             Tween sliderMoveTween = _loadingSliderRectTransform
                 .DOAnchorPos(_loadingSliderShownAnchoredPositionPixels, _moveDurationSeconds)
+                .SetUpdate(true)
                 .SetEase(_moveEase);
 
-            Tween fakeLoadingTween = _loadingProgressSlider
-                .DOValue(1f, _fakeLoadingDurationSeconds)
-                .SetEase(_fakeLoadingEase);
+            Tween fakeLoadingTween = _loadingProgressSlider.DOValue(1f, _fakeLoadingDurationSeconds).SetUpdate(true).SetEase(_fakeLoadingEase);
 
             await UniTask.WhenAll(
                 fadeTween.ToUniTask(),
@@ -149,10 +146,7 @@ namespace FakeMG.SceneTransition
         {
             KillActiveTweens();
 
-            await _transitionCanvasGroup
-                .DOFade(0f, _fadeOutDurationSeconds)
-                .SetEase(_fadeOutEase)
-                .ToUniTask();
+            await _transitionCanvasGroup.DOFade(0f, _fadeOutDurationSeconds).SetUpdate(true).SetEase(_fadeOutEase).ToUniTask();
 
             ApplyHiddenLayout();
             _loadingProgressSlider.normalizedValue = 0f;
@@ -168,8 +162,7 @@ namespace FakeMG.SceneTransition
         private void ApplyHiddenLayout()
         {
             _logoRectTransform.anchoredPosition = _logoShownAnchoredPositionPixels + _logoHiddenOffsetPixels;
-            _loadingSliderRectTransform.anchoredPosition =
-                _loadingSliderShownAnchoredPositionPixels + _loadingSliderHiddenOffsetPixels;
+            _loadingSliderRectTransform.anchoredPosition = _loadingSliderShownAnchoredPositionPixels + _loadingSliderHiddenOffsetPixels;
         }
 
         private void KillActiveTweens()
