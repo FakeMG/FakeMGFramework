@@ -66,7 +66,6 @@ namespace FakeMG.TimeCycle
                 return false;
             }
 
-            periods.Sort(ComparePeriodsByStartProgress);
             List<CycleOutputDefinition> outputDefinitions = outputByKey.Values.ToList();
             if (!TryValidate(
                     cycleDurationSeconds,
@@ -81,8 +80,23 @@ namespace FakeMG.TimeCycle
                 return false;
             }
 
+            // OrderBy is stable: authored order decides which tied phase owns the following interval.
+            periods = periods.OrderBy(period => period.StartProgress01).ToList();
             double defaultStartingTimeSeconds = CycleProgressConversion.ResolveTimeSeconds(defaultStartingProgress01, cycleDurationSeconds);
             List<ResolvedCyclePeriod> resolvedPeriods = ResolvePeriods(periods, cycleDurationSeconds);
+            var activePeriodIds = new HashSet<CyclePeriodId>();
+            foreach (ResolvedCyclePeriod period in resolvedPeriods)
+            {
+                if (period.DurationSeconds > 0d) activePeriodIds.Add(period.PeriodId);
+            }
+            foreach (CycleOutputDefinition definition in outputDefinitions)
+            {
+                if (!definition.TryValidateActivePeriods(activePeriodIds, out errorMessage))
+                {
+                    errorMessage = $"Output '{definition.OutputKeySO.name}' is invalid: {errorMessage}";
+                    return false;
+                }
+            }
             configuration = new ResolvedTimeOfCycleConfiguration(
                 cycleDurationSeconds,
                 defaultStartingTimeSeconds,
@@ -243,7 +257,6 @@ namespace FakeMG.TimeCycle
             }
 
             HashSet<CyclePeriodId> periodIds = new();
-            HashSet<double> periodStartProgressPositions01 = new();
             for (int periodIndex = 0; periodIndex < periods.Count; periodIndex++)
             {
                 CyclePeriodDefinition period = periods[periodIndex];
@@ -262,12 +275,6 @@ namespace FakeMG.TimeCycle
                 if (!CycleProgressConversion.IsValid(period.StartProgress01))
                 {
                     errorMessage = $"Period '{period.PeriodId}' starts outside [0, 1).";
-                    return false;
-                }
-
-                if (!periodStartProgressPositions01.Add(period.StartProgress01))
-                {
-                    errorMessage = $"More than one period starts at progress {period.StartProgress01}.";
                     return false;
                 }
             }
@@ -293,17 +300,16 @@ namespace FakeMG.TimeCycle
             for (int periodIndex = 0; periodIndex < periods.Count; periodIndex++)
             {
                 CyclePeriodDefinition period = periods[periodIndex];
+                double nextProgress01 = periodIndex + 1 < periods.Count
+                    ? periods[periodIndex + 1].StartProgress01
+                    : periods[0].StartProgress01 + 1d;
                 resolvedPeriods.Add(new ResolvedCyclePeriod(
                     period.PeriodId,
-                    period.ResolveStartTimeSeconds(cycleDurationSeconds)));
+                    period.ResolveStartTimeSeconds(cycleDurationSeconds),
+                    (nextProgress01 - period.StartProgress01) * cycleDurationSeconds));
             }
 
             return resolvedPeriods;
-        }
-
-        private static int ComparePeriodsByStartProgress(CyclePeriodDefinition left, CyclePeriodDefinition right)
-        {
-            return left.StartProgress01.CompareTo(right.StartProgress01);
         }
 
         #endregion

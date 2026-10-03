@@ -45,6 +45,7 @@ namespace FakeMG.TimeCycle
             bool isServiceInitialized,
             bool areCommandsAllowed,
             CancellationToken cancellationToken,
+            Action commitImmediateState,
             out bool hasChangedPresentationImmediately)
         {
             hasChangedPresentationImmediately = false;
@@ -58,8 +59,13 @@ namespace FakeMG.TimeCycle
             double targetTimeSeconds = _clock.NormalizeTime(command.TargetTimeSeconds);
             if (command.Mode == TimeCommandMode.Immediate)
             {
-                SetDestination(targetTimeSeconds, true);
-                hasChangedPresentationImmediately = true;
+                bool hasPeriodChange = _clock.SetAuthoritativeDestination(targetTimeSeconds, out CyclePeriodChange periodChange);
+                _clock.PresentationTimeSeconds = targetTimeSeconds;
+                commitImmediateState();
+                if (hasPeriodChange)
+                {
+                    _publishClockNotifications(new[] { CycleClockNotification.PeriodChanged(periodChange) });
+                }
                 return CompleteImmediate(commandId, TimeCommandStatus.Completed);
             }
 
@@ -216,15 +222,6 @@ namespace FakeMG.TimeCycle
             return false;
         }
 
-        private void SetDestination(double destinationTimeSeconds, bool doesPresentationFollow)
-        {
-            SetAuthoritativeDestination(destinationTimeSeconds);
-            if (doesPresentationFollow)
-            {
-                _clock.PresentationTimeSeconds = destinationTimeSeconds;
-            }
-        }
-
         private void SetAuthoritativeDestination(double destinationTimeSeconds)
         {
             if (_clock.SetAuthoritativeDestination(destinationTimeSeconds, out CyclePeriodChange periodChange))
@@ -258,7 +255,8 @@ namespace FakeMG.TimeCycle
 
         private static bool IsValidTransition(TimeCommandTransition transition)
         {
-            return transition.UsesProfileDefault || CycleNumericValidation.IsFiniteNonNegative(transition.DurationSeconds);
+            return CycleNumericValidation.IsFinite(transition.DurationSeconds)
+                && (transition.UsesProfileDefault || transition.DurationSeconds >= 0f);
         }
 
         #endregion

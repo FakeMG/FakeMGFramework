@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace FakeMG.TimeCycle
 {
     /// <summary>
@@ -14,6 +16,7 @@ namespace FakeMG.TimeCycle
         private TimeOfCycleOverrideSO _runtimeOverrideSO;
 
         public ResolvedTimeOfCycleConfiguration CurrentConfiguration { get; private set; }
+        public TimeOfCycleLayout CurrentLayout { get; private set; }
 
         public TimeOfCycleConfigurationSession(
             TimeOfCycleProfileSO sharedProfileSO,
@@ -31,12 +34,13 @@ namespace FakeMG.TimeCycle
 
         public bool TryInitialize(out string errorMessage)
         {
-            if (!TryResolve(null, null, out ResolvedTimeOfCycleConfiguration configuration, out errorMessage))
+            if (!TryResolve(null, null, out ResolvedTimeOfCycleConfiguration configuration, out TimeOfCycleLayout layout, out errorMessage))
             {
                 return false;
             }
 
             CurrentConfiguration = configuration;
+            CurrentLayout = layout;
             _clock.Configure(configuration, configuration.DefaultStartingTimeSeconds, configuration.DefaultStartingTimeSeconds);
             _commandCoordinator.Configure(configuration);
             _outputCoordinator.Configure(configuration, _clock.PresentationTimeSeconds, true);
@@ -76,7 +80,8 @@ namespace FakeMG.TimeCycle
             out string errorMessage)
         {
             periodChange = null;
-            if (!TryResolve(contextOverrideSO, runtimeOverrideSO, out ResolvedTimeOfCycleConfiguration replacementConfiguration, out errorMessage))
+            if (!TryResolve(contextOverrideSO, runtimeOverrideSO,
+                out ResolvedTimeOfCycleConfiguration replacementConfiguration, out TimeOfCycleLayout replacementLayout, out errorMessage))
             {
                 return false;
             }
@@ -87,6 +92,7 @@ namespace FakeMG.TimeCycle
             double presentationProgress01 = _clock.PresentationTimeSeconds / CurrentConfiguration.CycleDurationSeconds;
 
             CurrentConfiguration = replacementConfiguration;
+            CurrentLayout = replacementLayout;
             _clock.Configure(
                 replacementConfiguration,
                 authoritativeProgress01 * replacementConfiguration.CycleDurationSeconds,
@@ -106,14 +112,24 @@ namespace FakeMG.TimeCycle
             TimeOfCycleOverrideSO contextOverrideSO,
             TimeOfCycleOverrideSO runtimeOverrideSO,
             out ResolvedTimeOfCycleConfiguration configuration,
+            out TimeOfCycleLayout layout,
             out string errorMessage)
         {
+            layout = null;
             if (!TimeOfCycleConfigurationResolver.TryResolve(_sharedProfileSO, contextOverrideSO, runtimeOverrideSO, out configuration, out errorMessage))
             {
                 return false;
             }
 
-            return _outputCoordinator.TryValidateContracts(configuration, out errorMessage);
+            if (!_outputCoordinator.TryValidateContracts(configuration, out errorMessage)) return false;
+
+            var ranges = new List<CyclePeriodRange>(configuration.Periods.Count);
+            foreach (ResolvedCyclePeriod period in configuration.Periods)
+            {
+                ranges.Add(new CyclePeriodRange(period.PeriodId,
+                    period.StartTimeSeconds / configuration.CycleDurationSeconds, period.DurationSeconds / configuration.CycleDurationSeconds));
+            }
+            return TimeOfCycleLayout.TryCreate(configuration.CycleDurationSeconds, ranges, out layout, out errorMessage);
         }
 
         #endregion

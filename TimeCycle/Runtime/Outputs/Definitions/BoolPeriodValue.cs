@@ -9,15 +9,16 @@ namespace FakeMG.TimeCycle
     [Serializable]
     public sealed class BoolPeriodValue : IPeriodCycleValue<bool>
     {
-        [SerializeField] private string _periodId;
+        [Tooltip("Use the same shared period asset as the time profile and UI styles.")]
+        [SerializeField] private CyclePeriodSO _periodSO;
         [SerializeField] private bool _value;
 
-        public CyclePeriodId PeriodId => new(_periodId);
+        public CyclePeriodId PeriodId => _periodSO.PeriodId;
         public bool Value => _value;
 
-        public BoolPeriodValue(string periodId, bool value)
+        public BoolPeriodValue(CyclePeriodSO periodSO, bool value)
         {
-            _periodId = periodId;
+            _periodSO = periodSO;
             _value = value;
         }
     }

@@ -24,6 +24,8 @@ namespace FakeMG.TimeCycle
         private bool _isInitialized;
 
         public TimeOfCycleState CurrentState { get; private set; }
+        public bool IsInitialized => _isInitialized;
+        public TimeOfCycleLayout ActiveLayout { get; private set; }
 
         public event Action<CyclePeriodChange> OnPeriodChanged;
         public event Action OnCycleCompleted;
@@ -53,6 +55,7 @@ namespace FakeMG.TimeCycle
             ApplyOutputs(0f);
             _isInitialized = true;
             UpdatePublicState();
+            ActiveLayout = _configurationSession.CurrentLayout;
         }
 
         public void Tick()
@@ -109,20 +112,13 @@ namespace FakeMG.TimeCycle
 
         public UniTask<TimeCommandResult> ExecuteTimeCommandAsync(TimeCommand command, CancellationToken cancellationToken = default)
         {
-            bool areCommandsAllowed = _controlArbiter.ActiveRequest == null || _controlArbiter.ActiveRequest.AllowsTimeCommands;
-            UniTask<TimeCommandResult> completionTask = _commandCoordinator.ExecuteAsync(
-                command,
-                _isInitialized,
-                areCommandsAllowed,
-                cancellationToken,
-                out bool hasChangedPresentationImmediately);
-            if (hasChangedPresentationImmediately)
-            {
-                ApplyOutputs(0f);
-            }
+            return ExecuteTimeCommand(command, cancellationToken, null);
+        }
 
-            UpdatePublicState();
-            return completionTask;
+        public TimeCommandResult ExecuteImmediateTimeCommand(
+            double targetTimeSeconds, Action commitWorldState, CancellationToken cancellationToken = default)
+        {
+            return ExecuteTimeCommand(TimeCommand.Immediate(targetTimeSeconds), cancellationToken, commitWorldState).GetAwaiter().GetResult();
         }
 
         public IDisposable RegisterControl(TimeControlRequest request)
@@ -152,6 +148,29 @@ namespace FakeMG.TimeCycle
         #endregion
 
         #region Private Methods
+
+        private UniTask<TimeCommandResult> ExecuteTimeCommand(
+            TimeCommand command, CancellationToken cancellationToken, Action commitWorldState)
+        {
+            bool areCommandsAllowed = _controlArbiter.ActiveRequest == null || _controlArbiter.ActiveRequest.AllowsTimeCommands;
+            UniTask<TimeCommandResult> completionTask = _commandCoordinator.ExecuteAsync(
+                command, _isInitialized, areCommandsAllowed, cancellationToken, CommitImmediateState,
+                out bool hasChangedPresentationImmediately);
+            if (hasChangedPresentationImmediately)
+            {
+                ApplyOutputs(0f);
+            }
+
+            UpdatePublicState();
+            return completionTask;
+
+            void CommitImmediateState()
+            {
+                UpdatePublicState();
+                commitWorldState?.Invoke();
+                ApplyOutputs(0f);
+            }
+        }
 
         private void TickPersistentControlOrAutomaticAdvancement(float deltaTimeSeconds)
         {
@@ -229,13 +248,13 @@ namespace FakeMG.TimeCycle
                 return false;
             }
 
+            ApplyOutputs(0f);
+            UpdatePublicState();
+            ActiveLayout = _configurationSession.CurrentLayout;
             if (periodChange.HasValue)
             {
                 OnPeriodChanged?.Invoke(periodChange.Value);
             }
-
-            ApplyOutputs(0f);
-            UpdatePublicState();
             return true;
         }
 

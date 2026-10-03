@@ -43,6 +43,12 @@ namespace FakeMG.TimeCycle
 
         #region Public Methods
 
+        public override bool TryValidateActivePeriods(ISet<CyclePeriodId> activePeriodIds, out string errorMessage)
+        {
+            return CycleOutputValidation.TryValidateActivePeriodValues<BoolPeriodValue, bool>(
+                _timelinePoints.Count, _periodValues, activePeriodIds, out errorMessage);
+        }
+
         internal override ICycleOutputEvaluator CreateEvaluator(double cycleDurationSeconds, IReadOnlyList<ResolvedCyclePeriod> periods)
         {
             return CycleOutputDefinitionBuilder.CreateDiscrete<BoolCyclePoint, BoolPeriodValue, bool>(

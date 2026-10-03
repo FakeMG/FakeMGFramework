@@ -17,6 +17,7 @@ namespace FakeMG.TimeCycle.Editor
         private const string MATERIAL_FOLDER_PATH = FEATURE_ROOT_PATH + "/Materials";
         private const string PREFAB_FOLDER_PATH = FEATURE_ROOT_PATH + "/Prefabs";
         private const string OUTPUT_KEY_FOLDER_PATH = FEATURE_ROOT_PATH + "/Output Keys";
+        private const string PERIOD_FOLDER_PATH = FEATURE_ROOT_PATH + "/ScriptableObjects/Periods";
         private const string PROFILE_PATH = PROFILE_FOLDER_PATH + "/Default Day Night Cycle Profile.asset";
         private const string OUTPUT_SCHEMA_PATH = OUTPUT_KEY_FOLDER_PATH + "/Default Environment Output Schema.asset";
         private const string MATERIAL_PATH = MATERIAL_FOLDER_PATH + "/Default Procedural Sky.mat";
@@ -61,6 +62,8 @@ namespace FakeMG.TimeCycle.Editor
             CreateFolderIfMissing(FEATURE_ROOT_PATH, "Materials");
             CreateFolderIfMissing(FEATURE_ROOT_PATH, "Prefabs");
             CreateFolderIfMissing(FEATURE_ROOT_PATH, "Output Keys");
+            CreateFolderIfMissing(FEATURE_ROOT_PATH, "ScriptableObjects");
+            CreateFolderIfMissing(FEATURE_ROOT_PATH + "/ScriptableObjects", "Periods");
         }
 
         private static void CreateFolderIfMissing(string parentPath, string folderName)
@@ -252,11 +255,16 @@ namespace FakeMG.TimeCycle.Editor
         {
             return new List<CyclePeriodDefinition>
             {
-                new("dawn", DAWN_START_PROGRESS_01),
-                new("day", DAY_START_PROGRESS_01),
-                new("dusk", DUSK_START_PROGRESS_01),
-                new("night", NIGHT_START_PROGRESS_01),
+                new(CreateOrUpdatePeriodSO("dawn", "Dawn"), DAWN_START_PROGRESS_01),
+                new(CreateOrUpdatePeriodSO("day", "Day"), DAY_START_PROGRESS_01),
+                new(CreateOrUpdatePeriodSO("dusk", "Dusk"), DUSK_START_PROGRESS_01),
+                new(CreateOrUpdatePeriodSO("night", "Night"), NIGHT_START_PROGRESS_01),
             };
+        }
+
+        private static CyclePeriodSO CreateOrUpdatePeriodSO(string periodId, string displayName)
+        {
+            return CyclePeriodAssetAuthoring.CreateOrUpdatePeriodSO(PERIOD_FOLDER_PATH, periodId, displayName);
         }
 
         private static IReadOnlyList<CycleOutputDefinition> CreateOutputs(DayNightEnvironmentOutputSchemaSO outputSchemaSO)
@@ -431,9 +439,9 @@ namespace FakeMG.TimeCycle.Editor
             return new FloatCycleOutputDefinition(outputKeySO, PROFILE_TRANSITION_DURATION_SECONDS, AnimationCurve.EaseInOut(0f, 0f, 1f, 1f), points);
         }
 
-        private static CycleOutputDefinition CreateAmbientColorOutput(ColorCycleOutputKeySO outputKeySO, float brightness)
+        private static CycleOutputDefinition CreateAmbientColorOutput(ColorCycleOutputKeySO outputKeySO, float brightness01)
         {
-            return CreateColorOutput(outputKeySO, new ColorCyclePoint(0d, Color.white * brightness));
+            return CreateColorOutput(outputKeySO, new ColorCyclePoint(0d, Color.white * brightness01));
         }
 
         private static CycleOutputDefinition CreateColorOutput(ColorCycleOutputKeySO outputKeySO, params ColorCyclePoint[] points)

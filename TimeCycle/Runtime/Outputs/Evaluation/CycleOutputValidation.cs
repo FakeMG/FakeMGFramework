@@ -10,6 +10,24 @@ namespace FakeMG.TimeCycle
     {
         #region Public Methods
 
+        public static bool TryValidateActivePeriodValues<TPeriodValue, TValue>(
+            int timelinePointCount,
+            IReadOnlyList<TPeriodValue> periodValues,
+            ISet<CyclePeriodId> activePeriodIds,
+            out string errorMessage)
+            where TPeriodValue : IPeriodCycleValue<TValue>
+        {
+            errorMessage = null;
+            if (timelinePointCount > 0) return true;
+            foreach (TPeriodValue value in periodValues)
+            {
+                if (activePeriodIds.Contains(value.PeriodId)) return true;
+            }
+
+            errorMessage = "A discrete output requires a timeline point or a positive-duration period value.";
+            return false;
+        }
+
         public static bool TryValidateContinuousPoints<TPoint, TValue>(
             IReadOnlyList<TPoint> points,
             double cycleDurationSeconds,

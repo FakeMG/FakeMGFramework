@@ -42,6 +42,12 @@ namespace FakeMG.TimeCycle
 
         public abstract object InterpolateProfileValue(object previousValue, object destinationValue, float progress01);
 
+        public virtual bool TryValidateActivePeriods(ISet<CyclePeriodId> activePeriodIds, out string errorMessage)
+        {
+            errorMessage = null;
+            return true;
+        }
+
         public virtual bool TryValidate(double cycleDurationSeconds, ISet<CyclePeriodId> periodIds, out string errorMessage)
         {
             if (_outputKeySO == null)

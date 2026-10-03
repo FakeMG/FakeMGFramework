@@ -11,7 +11,10 @@ namespace FakeMG.TimeCycle.Tests.EditMode
         private const double DAWN_PROGRESS_01 = 5d / 24d;
 
         private FloatCycleOutputKeySO _floatOutputKeySO;
+        private readonly List<CyclePeriodSO> _periodsSO = new();
         private TimeOfCycleProfileSO _profileSO;
+
+        #region Public Methods
 
         [SetUp]
         public void SetUp()
@@ -23,6 +26,8 @@ namespace FakeMG.TimeCycle.Tests.EditMode
         [TearDown]
         public void TearDown()
         {
+            foreach (CyclePeriodSO periodSO in _periodsSO) UnityEngine.Object.DestroyImmediate(periodSO);
+            _periodsSO.Clear();
             Object.DestroyImmediate(_floatOutputKeySO);
             Object.DestroyImmediate(_profileSO);
         }
@@ -30,7 +35,7 @@ namespace FakeMG.TimeCycle.Tests.EditMode
         [Test]
         public void ResolveStartTimeSeconds_WhenDurationChanges_ScalesPeriodStart()
         {
-            CyclePeriodDefinition period = new("dawn", DAWN_PROGRESS_01);
+            CyclePeriodDefinition period = new(CreatePeriodSO("dawn"), DAWN_PROGRESS_01);
 
             double resolvedTimeSeconds = period.ResolveStartTimeSeconds(SHORTENED_DURATION_SECONDS);
 
@@ -88,22 +93,25 @@ namespace FakeMG.TimeCycle.Tests.EditMode
         }
 
         [Test]
-        public void CreateEvaluator_WhenDurationChanges_PreservesNormalizedCurveShape()
+        public void ServiceOutputs_WhenDurationChanges_PreserveNormalizedCurveShape()
         {
             FloatCycleOutputDefinition definition = CreateFloatDefinition(
                 new FloatCyclePoint(0d, 0f),
                 new FloatCyclePoint(0.5d, 1f));
-            ICycleOutputEvaluator evaluator = definition.CreateEvaluator(
-                SHORTENED_DURATION_SECONDS,
-                new List<ResolvedCyclePeriod>());
+            _profileSO.ConfigureForEditor(SHORTENED_DURATION_SECONDS, 0.25d, 0d, false, 0f,
+                AnimationCurve.Linear(0f, 0f, 1f, 1f),
+                new[] { new CyclePeriodDefinition(CreatePeriodSO("day"), 0d) }, new[] { definition });
+            var outputRecorder = new FloatOutputRecorder(_floatOutputKeySO);
+            using var time = new TimeOfCycleService(_profileSO, new[] { outputRecorder });
 
-            float evaluatedValue = (float)evaluator.Evaluate(SHORTENED_DURATION_SECONDS * 0.25d);
+            time.Initialize();
 
-            Assert.That(evaluatedValue, Is.EqualTo(0.5f).Within(0.000001f));
+            Assert.That(time.IsInitialized, Is.True);
+            Assert.That(outputRecorder.LastValue, Is.EqualTo(0.5f).Within(0.000001f));
         }
 
         [Test]
-        public void TryResolve_WhenDurationChanges_ResolvesDefaultAndPeriodsAtRuntimeBoundary()
+        public void ServiceInitialization_WhenDurationChanges_ResolvesStartingTimeAndPeriodLayout()
         {
             _profileSO.ConfigureForEditor(
                 SHORTENED_DURATION_SECONDS,
@@ -112,21 +120,54 @@ namespace FakeMG.TimeCycle.Tests.EditMode
                 true,
                 1f,
                 AnimationCurve.Linear(0f, 0f, 1f, 1f),
-                new[] { new CyclePeriodDefinition("dawn", DAWN_PROGRESS_01) },
+                new[] { new CyclePeriodDefinition(CreatePeriodSO("dawn"), DAWN_PROGRESS_01) },
                 new List<CycleOutputDefinition>());
 
-            bool isResolved = TimeOfCycleConfigurationResolver.TryResolve(
-                _profileSO,
-                null,
-                null,
-                out ResolvedTimeOfCycleConfiguration configuration,
-                out string errorMessage);
+            using var time = new TimeOfCycleService(_profileSO, System.Array.Empty<ITimeOfCycleOutputApplicator>());
 
-            Assert.That(isResolved, Is.True, errorMessage);
-            Assert.That(configuration.DefaultStartingTimeSeconds, Is.EqualTo(14400d).Within(0.000001d));
-            Assert.That(configuration.Periods[0].StartTimeSeconds, Is.EqualTo(9000d).Within(0.000001d));
+            time.Initialize();
+
+            Assert.That(time.IsInitialized, Is.True);
+            Assert.That(time.CurrentState.CycleTimeSeconds, Is.EqualTo(14400d).Within(0.000001d));
+            Assert.That(time.CurrentState.CurrentPeriodId, Is.EqualTo(new CyclePeriodId("dawn")));
+            Assert.That(time.ActiveLayout.Periods[0].StartProgress01, Is.EqualTo(DAWN_PROGRESS_01));
+            Assert.That(time.ActiveLayout.CycleDurationSeconds, Is.EqualTo(SHORTENED_DURATION_SECONDS));
         }
 
+        [Test]
+        public void ProgressImmediatelyBelowOneRemainsValidAndResolvesNearCycleEnd()
+        {
+            const double PROGRESS_01 = 1d - 1e-10;
+            var definition = CreateFloatDefinition(new FloatCyclePoint(PROGRESS_01, 1f));
+            var period = new CyclePeriodDefinition(CreatePeriodSO("last"), PROGRESS_01);
+
+            Assert.That(definition.TryValidate(ORIGINAL_DURATION_SECONDS, new HashSet<CyclePeriodId>(), out string errorMessage),
+                Is.True, errorMessage);
+            Assert.That(period.ResolveStartTimeSeconds(ORIGINAL_DURATION_SECONDS), Is.LessThan(ORIGINAL_DURATION_SECONDS));
+            Assert.That(period.ResolveStartTimeSeconds(ORIGINAL_DURATION_SECONDS),
+                Is.EqualTo(ORIGINAL_DURATION_SECONDS * PROGRESS_01).Within(1e-9));
+            Assert.That(new FloatCyclePoint(PROGRESS_01, 1f).ResolveTimeSeconds(ORIGINAL_DURATION_SECONDS),
+                Is.EqualTo(ORIGINAL_DURATION_SECONDS * PROGRESS_01).Within(1e-9));
+        }
+
+        [Test]
+        public void AuthoringPeriodWithoutSharedAssetThrowsClearArgumentError()
+        {
+            var exception = Assert.Throws<System.ArgumentNullException>(() => new CyclePeriodDefinition(null, 0d));
+            Assert.That(exception.ParamName, Is.EqualTo("periodSO"));
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private CyclePeriodSO CreatePeriodSO(string periodId)
+        {
+            var periodSO = ScriptableObject.CreateInstance<CyclePeriodSO>();
+            periodSO.ConfigureForEditor(periodId, periodId);
+            _periodsSO.Add(periodSO);
+            return periodSO;
+        }
         private FloatCycleOutputDefinition CreateFloatDefinition(params FloatCyclePoint[] points)
         {
             return new FloatCycleOutputDefinition(
@@ -134,6 +175,31 @@ namespace FakeMG.TimeCycle.Tests.EditMode
                 0f,
                 AnimationCurve.Linear(0f, 0f, 1f, 1f),
                 points);
+        }
+
+        #endregion
+
+        private sealed class FloatOutputRecorder : ITimeOfCycleOutputApplicator
+        {
+            private readonly FloatCycleOutputKeySO _keySO;
+            public IReadOnlyList<CycleOutputKeySO> RequiredOutputKeys { get; }
+            public float LastValue { get; private set; }
+
+            public FloatOutputRecorder(FloatCycleOutputKeySO keySO)
+            {
+                _keySO = keySO;
+                RequiredOutputKeys = new[] { keySO };
+            }
+
+            #region Public Methods
+
+            public void Apply(IReadOnlyCycleOutputState state)
+            {
+                Assert.That(state.TryGetValue(_keySO, out float value), Is.True);
+                LastValue = value;
+            }
+
+            #endregion
         }
     }
 }

@@ -46,5 +46,19 @@ namespace FakeMG.TimeCycle
         public bool DoesOverridePeriods => _doesOverridePeriods;
         public IReadOnlyList<CyclePeriodDefinition> Periods => _periods;
         public IReadOnlyList<CycleOutputDefinition> OutputDefinitions => _outputDefinitions;
+
+#if UNITY_EDITOR
+        #region Public Methods
+
+        public void ConfigureCycleForEditor(double cycleDurationSeconds, IEnumerable<CyclePeriodDefinition> periods)
+        {
+            _doesOverrideCycleDuration = true;
+            _cycleDurationSeconds = cycleDurationSeconds;
+            _doesOverridePeriods = true;
+            _periods = new List<CyclePeriodDefinition>(periods);
+        }
+
+        #endregion
+#endif
     }
 }

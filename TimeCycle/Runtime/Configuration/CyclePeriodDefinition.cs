@@ -9,15 +9,17 @@ namespace FakeMG.TimeCycle
     [Serializable]
     public sealed class CyclePeriodDefinition
     {
-        [SerializeField] private string _periodId;
+        [Tooltip("Shared period identity, also referenced by outputs and UI styles.")]
+        [SerializeField, Sirenix.OdinInspector.Required] private CyclePeriodSO _periodSO;
         [SerializeField, CycleProgress] private double _startProgress01;
 
-        public CyclePeriodId PeriodId => new(_periodId);
+        public CyclePeriodId PeriodId => _periodSO.PeriodId;
         public double StartProgress01 => _startProgress01;
 
-        public CyclePeriodDefinition(string periodId, double startProgress01)
+        public CyclePeriodDefinition(CyclePeriodSO periodSO, double startProgress01)
         {
-            _periodId = periodId;
+            if (periodSO == null) throw new ArgumentNullException(nameof(periodSO), "Period authoring requires a shared period asset.");
+            _periodSO = periodSO;
             _startProgress01 = startProgress01;
         }
 

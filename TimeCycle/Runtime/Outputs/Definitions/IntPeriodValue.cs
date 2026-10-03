@@ -9,15 +9,16 @@ namespace FakeMG.TimeCycle
     [Serializable]
     public sealed class IntPeriodValue : IPeriodCycleValue<int>
     {
-        [SerializeField] private string _periodId;
+        [Tooltip("Use the same shared period asset as the time profile and UI styles.")]
+        [SerializeField] private CyclePeriodSO _periodSO;
         [SerializeField] private int _value;
 
-        public CyclePeriodId PeriodId => new(_periodId);
+        public CyclePeriodId PeriodId => _periodSO.PeriodId;
         public int Value => _value;
 
-        public IntPeriodValue(string periodId, int value)
+        public IntPeriodValue(CyclePeriodSO periodSO, int value)
         {
-            _periodId = periodId;
+            _periodSO = periodSO;
             _value = value;
         }
     }

@@ -43,7 +43,7 @@ namespace FakeMG.TimeCycle
                 for (int periodIndex = 0; periodIndex < periods.Count; periodIndex++)
                 {
                     ResolvedCyclePeriod period = periods[periodIndex];
-                    if (period.PeriodId.Equals(periodValue.PeriodId))
+                    if (period.DurationSeconds > 0d && period.PeriodId.Equals(periodValue.PeriodId))
                     {
                         changes.Add(new DiscreteCycleChange<TValue>(period.StartTimeSeconds, 0, periodValue.Value));
                         break;

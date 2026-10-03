@@ -25,11 +25,14 @@ namespace FakeMG.TimeCycle
                 builder.RegisterInstance(outputApplicators[applicatorIndex]);
             }
 
-            builder.RegisterEntryPoint<TimeOfCycleService>().AsSelf().As<ITimeOfCycle>();
+            builder.RegisterEntryPoint<TimeOfCycleService>().AsSelf().As<ITimeOfCycle>().As<IReadOnlyTimeOfCycle>();
             builder.RegisterEntryPoint<WorldTimelineService>()
                 .AsSelf()
                 .As<IWorldTimeline>()
+                .As<IWorldTimelineCycleRecorder>()
+                .As<IWorldTimeCommands>()
                 .As<ILoadedSceneDataApplier>();
+            builder.RegisterEntryPoint<WorldTimelineCycleSubscriber>();
         }
 
         public static void InstallPersistence(IContainerBuilder builder, TimeOfCycleProfileSO profileSO)

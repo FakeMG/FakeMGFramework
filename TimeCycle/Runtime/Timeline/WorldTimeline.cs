@@ -6,6 +6,7 @@ namespace FakeMG.TimeCycle
     {
         private readonly double _cycleDurationSeconds;
         private double _completedCycleSeconds;
+        public long CurrentDay => (long)Math.Round(_completedCycleSeconds / _cycleDurationSeconds) + 1;
 
         #region Public Methods
 
@@ -24,7 +25,18 @@ namespace FakeMG.TimeCycle
 
         public double GetAuthoritativeTimeSeconds(double cycleTimeSeconds) => _completedCycleSeconds + cycleTimeSeconds;
 
+        public double GetNormalizedAuthoritativeTimeSeconds(double progress01) => _completedCycleSeconds + progress01 * _cycleDurationSeconds;
+
+        public double GetWorldTimeSeconds(long dayNumber, double progress01) => ((dayNumber - 1d) + progress01) * _cycleDurationSeconds;
+
+        public void SetCurrentDay(long dayNumber) => _completedCycleSeconds = (dayNumber - 1d) * _cycleDurationSeconds;
+
         public void RecordCompletedCycle() => _completedCycleSeconds += _cycleDurationSeconds;
+
+        public double RestoreProgress01(double authoritativeTimeSeconds)
+        {
+            return RestoreAuthoritativeTime(authoritativeTimeSeconds) / _cycleDurationSeconds;
+        }
 
         public double RestoreAuthoritativeTime(double authoritativeTimeSeconds)
         {

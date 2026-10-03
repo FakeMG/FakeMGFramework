@@ -42,13 +42,13 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _periods:
-  - _periodId: dawn
+  - _periodSO: {fileID: 11400000, guid: 6c14ae4713f627440815e7b4bfcb9c91, type: 2}
     _startProgress01: 0.20833333333333334
-  - _periodId: day
+  - _periodSO: {fileID: 11400000, guid: 01ea5d16f9cee224e8607f3618e11a05, type: 2}
     _startProgress01: 0.2916666666666667
-  - _periodId: dusk
+  - _periodSO: {fileID: 11400000, guid: 5755a2fbe42308240ac12e9016e28a2d, type: 2}
     _startProgress01: 0.75
-  - _periodId: night
+  - _periodSO: {fileID: 11400000, guid: 38a4f5765bfb6f74b81ac5b625c1325e, type: 2}
     _startProgress01: 0.8333333333333334
   _outputDefinitions:
   - rid: 7463804154534690920

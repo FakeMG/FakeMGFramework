@@ -10,6 +10,8 @@ namespace FakeMG.TimeCycle
 {
     public sealed class WorldTimelineService :
         IWorldTimeline,
+        IWorldTimelineCycleRecorder,
+        IWorldTimeCommands,
         IWorldTimelineCaptureSource,
         ILoadedSceneDataApplier,
         IInitializable,
@@ -23,7 +25,8 @@ namespace FakeMG.TimeCycle
         private bool _isApplying;
         private int _appliedRevision = -1;
 
-        public double AuthoritativeTimeSeconds => _timeline.GetAuthoritativeTimeSeconds(_time.CurrentState.CycleTimeSeconds);
+        public double AuthoritativeTimeSeconds => _timeline.GetNormalizedAuthoritativeTimeSeconds(_time.CurrentState.NormalizedCycleProgress01);
+        public long CurrentDay => _timeline.CurrentDay;
 
         public string DataApplierId => DATA_APPLIER_ID;
 
@@ -41,14 +44,63 @@ namespace FakeMG.TimeCycle
 
         public void Initialize()
         {
-            _time.OnCycleCompleted += RecordCompletedCycle;
             _persistence.Attach(this);
         }
 
         public void Dispose()
         {
-            _time.OnCycleCompleted -= RecordCompletedCycle;
             _persistence.Detach(this);
+        }
+
+        public void RecordCompletedCycle() => _timeline.RecordCompletedCycle();
+
+        public UniTask<TimeCommandResult> JumpToDayAsync(
+            long dayNumber, double cycleProgress01, CancellationToken cancellationToken = default)
+        {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                Echo.Log("World time jump cancelled before execution.");
+                return UniTask.FromResult(new TimeCommandResult(0, TimeCommandStatus.Cancelled));
+            }
+
+            if (!_time.IsInitialized || _isApplying || dayNumber < 1 || !CycleProgressConversion.IsValid(cycleProgress01))
+            {
+                return RejectJump("Clock must be initialized and idle, day must be positive, and progress must be in [0, 1).");
+            }
+
+            double destinationSeconds = _timeline.GetWorldTimeSeconds(dayNumber, cycleProgress01);
+            double distanceCycles = dayNumber - (double)CurrentDay
+                + cycleProgress01 - _time.CurrentState.NormalizedCycleProgress01;
+            if (!CycleNumericValidation.IsFinite(destinationSeconds) || distanceCycles < 0d)
+            {
+                return RejectJump("Destination must be finite and cannot precede current world time.");
+            }
+
+            if (distanceCycles > _time.ActiveLayout.MaximumCycleCrossingsPerUpdate)
+            {
+                return RejectJump("Destination exceeds the clock boundary-processing budget.");
+            }
+
+            if (distanceCycles == 0d) return UniTask.FromResult(new TimeCommandResult(0, TimeCommandStatus.Completed));
+
+            _isApplying = true;
+            try
+            {
+                TimeCommandResult result = _time.ExecuteImmediateTimeCommand(
+                    cycleProgress01 * _time.ActiveLayout.CycleDurationSeconds, CommitDestinationDay, cancellationToken);
+                if (result.Status != TimeCommandStatus.Completed)
+                {
+                    Echo.Warning($"World time jump did not apply: {result.Status}.");
+                }
+
+                return UniTask.FromResult(result);
+            }
+            finally
+            {
+                _isApplying = false;
+            }
+
+            void CommitDestinationDay() => _timeline.SetCurrentDay(dayNumber);
         }
 
         public bool TryCapture(out WorldTimelineSaveData state, out string failureReason)
@@ -88,7 +140,8 @@ namespace FakeMG.TimeCycle
             try
             {
                 WorldTimelineSaveData saveData = _persistence.SaveData;
-                double targetCycleTimeSeconds = _timeline.RestoreAuthoritativeTime(saveData.AuthoritativeTimeSeconds);
+                double progress01 = _timeline.RestoreProgress01(saveData.AuthoritativeTimeSeconds);
+                double targetCycleTimeSeconds = progress01 * _time.ActiveLayout.CycleDurationSeconds;
 
                 TimeCommandResult result = await _time.ExecuteTimeCommandAsync(TimeCommand.Immediate(targetCycleTimeSeconds), cancellationToken);
                 if (result.Status != TimeCommandStatus.Completed)
@@ -118,7 +171,11 @@ namespace FakeMG.TimeCycle
 
         #region Private Methods
 
-        private void RecordCompletedCycle() => _timeline.RecordCompletedCycle();
+        private static UniTask<TimeCommandResult> RejectJump(string reason)
+        {
+            Echo.Warning($"World time jump rejected. {reason}");
+            return UniTask.FromResult(new TimeCommandResult(0, TimeCommandStatus.Rejected));
+        }
 
         private bool IsFinishedApplying() => !_isApplying;
 

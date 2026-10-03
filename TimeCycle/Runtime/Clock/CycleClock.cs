@@ -12,6 +12,7 @@ namespace FakeMG.TimeCycle
         private const int MAX_BOUNDARY_NOTIFICATION_COUNT = 4096;
 
         private ResolvedTimeOfCycleConfiguration _configuration;
+        private readonly List<ResolvedCyclePeriod> _activePeriods = new();
 
         public double AuthoritativeTimeSeconds { get; set; }
         public double PresentationTimeSeconds { get; set; }
@@ -22,6 +23,11 @@ namespace FakeMG.TimeCycle
         public void Configure(ResolvedTimeOfCycleConfiguration configuration, double authoritativeTimeSeconds, double presentationTimeSeconds)
         {
             _configuration = configuration;
+            _activePeriods.Clear();
+            foreach (ResolvedCyclePeriod period in configuration.Periods)
+            {
+                if (period.DurationSeconds > 0d) _activePeriods.Add(period);
+            }
             AuthoritativeTimeSeconds = authoritativeTimeSeconds;
             PresentationTimeSeconds = presentationTimeSeconds;
             CurrentPeriodId = ResolvePeriodId(authoritativeTimeSeconds);
@@ -43,8 +49,7 @@ namespace FakeMG.TimeCycle
                 return true;
             }
 
-            int boundariesPerCycle = _configuration.Periods.Count + 1;
-            int maximumCycleCrossings = Math.Max(1, MAX_BOUNDARY_NOTIFICATION_COUNT / boundariesPerCycle);
+            int maximumCycleCrossings = GetMaximumCycleCrossings(_activePeriods.Count);
             double maximumTravelDistanceSeconds = _configuration.CycleDurationSeconds * maximumCycleCrossings;
             if (Math.Abs(signedDeltaSeconds) > maximumTravelDistanceSeconds)
             {
@@ -105,6 +110,11 @@ namespace FakeMG.TimeCycle
             return normalizedTimeSeconds < 0d ? normalizedTimeSeconds + _configuration.CycleDurationSeconds : normalizedTimeSeconds;
         }
 
+        public static int GetMaximumCycleCrossings(int activePeriodCount)
+        {
+            return Math.Max(1, MAX_BOUNDARY_NOTIFICATION_COUNT / (activePeriodCount + 1));
+        }
+
         #endregion
 
         #region Private Methods
@@ -124,9 +134,9 @@ namespace FakeMG.TimeCycle
 
             AddRepeatedBoundaries(boundaries, firstWrapDistanceSeconds, travelDistanceSeconds, cycleDurationSeconds, CycleBoundary.CycleCompletion);
 
-            for (int periodIndex = 0; periodIndex < _configuration.Periods.Count; periodIndex++)
+            for (int periodIndex = 0; periodIndex < _activePeriods.Count; periodIndex++)
             {
-                ResolvedCyclePeriod period = _configuration.Periods[periodIndex];
+                ResolvedCyclePeriod period = _activePeriods[periodIndex];
                 double firstBoundaryDistanceSeconds;
                 CyclePeriodId destinationPeriodId;
                 if (isForward)
@@ -151,8 +161,8 @@ namespace FakeMG.TimeCycle
                         firstBoundaryDistanceSeconds = 0d;
                     }
 
-                    int previousPeriodIndex = periodIndex == 0 ? _configuration.Periods.Count - 1 : periodIndex - 1;
-                    destinationPeriodId = _configuration.Periods[previousPeriodIndex].PeriodId;
+                    int previousPeriodIndex = periodIndex == 0 ? _activePeriods.Count - 1 : periodIndex - 1;
+                    destinationPeriodId = _activePeriods[previousPeriodIndex].PeriodId;
                 }
 
                 AddRepeatedBoundaries(
@@ -202,10 +212,10 @@ namespace FakeMG.TimeCycle
 
         private CyclePeriodId ResolvePeriodId(double timeSeconds)
         {
-            CyclePeriodId selectedPeriodId = _configuration.Periods[_configuration.Periods.Count - 1].PeriodId;
-            for (int periodIndex = 0; periodIndex < _configuration.Periods.Count; periodIndex++)
+            CyclePeriodId selectedPeriodId = _activePeriods[_activePeriods.Count - 1].PeriodId;
+            for (int periodIndex = 0; periodIndex < _activePeriods.Count; periodIndex++)
             {
-                ResolvedCyclePeriod period = _configuration.Periods[periodIndex];
+                ResolvedCyclePeriod period = _activePeriods[periodIndex];
                 if (period.StartTimeSeconds > timeSeconds)
                 {
                     break;
