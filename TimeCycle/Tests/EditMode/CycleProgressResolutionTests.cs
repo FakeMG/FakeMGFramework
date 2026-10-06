@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
+using System.Text.RegularExpressions;
 
 namespace FakeMG.TimeCycle.Tests.EditMode
 {
@@ -30,6 +32,24 @@ namespace FakeMG.TimeCycle.Tests.EditMode
             _periodsSO.Clear();
             Object.DestroyImmediate(_floatOutputKeySO);
             Object.DestroyImmediate(_profileSO);
+        }
+
+        [Test]
+        public void TryResolve_MissingSharedPeriodAsset_ReportsValidationError()
+        {
+            CyclePeriodSO periodSO = CreatePeriodSO("dawn");
+            _profileSO.ConfigureForEditor(ORIGINAL_DURATION_SECONDS, 0.25d, 0d, false, 0f,
+                AnimationCurve.Linear(0f, 0f, 1f, 1f),
+                new[] { new CyclePeriodDefinition(periodSO, DAWN_PROGRESS_01) },
+                System.Array.Empty<CycleOutputDefinition>());
+            Object.DestroyImmediate(periodSO);
+            _periodsSO.Remove(periodSO);
+
+            using var time = new TimeOfCycleService(_profileSO, System.Array.Empty<ITimeOfCycleOutputApplicator>());
+            LogAssert.Expect(LogType.Error, new Regex(".*Period at index 0.*no shared period asset.*"));
+
+            Assert.DoesNotThrow(time.Initialize);
+            Assert.That(time.IsInitialized, Is.False);
         }
 
         [Test]

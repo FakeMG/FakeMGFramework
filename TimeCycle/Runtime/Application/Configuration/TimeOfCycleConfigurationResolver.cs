@@ -260,9 +260,9 @@ namespace FakeMG.TimeCycle
             for (int periodIndex = 0; periodIndex < periods.Count; periodIndex++)
             {
                 CyclePeriodDefinition period = periods[periodIndex];
-                if (period == null || !period.PeriodId.IsValid)
+                if (period == null || period.PeriodSO == null || !period.PeriodId.IsValid)
                 {
-                    errorMessage = $"Period at index {periodIndex} is null or has an empty identifier.";
+                    errorMessage = $"Period at index {periodIndex} is null, has no shared period asset, or has an empty identifier.";
                     return false;
                 }
 

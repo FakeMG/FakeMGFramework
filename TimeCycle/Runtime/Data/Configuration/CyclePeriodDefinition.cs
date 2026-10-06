@@ -13,6 +13,7 @@ namespace FakeMG.TimeCycle
         [SerializeField, Sirenix.OdinInspector.Required] private CyclePeriodSO _periodSO;
         [SerializeField, CycleProgress] private double _startProgress01;
 
+        public CyclePeriodSO PeriodSO => _periodSO;
         public CyclePeriodId PeriodId => _periodSO.PeriodId;
         public double StartProgress01 => _startProgress01;
 
