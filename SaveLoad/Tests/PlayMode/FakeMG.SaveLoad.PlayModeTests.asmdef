@@ -6,8 +6,7 @@
         "UniTask",
         "VContainer",
         "VContainer.Unity",
-        "Unity.Addressables",
-        "Unity.ResourceManager"
+        "FakeMG.Settings.SaveLoad"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -16,7 +15,8 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
+        "UNITY_INCLUDE_TESTS",
+        "UNITY_EDITOR"
     ],
     "versionDefines": [],
     "noEngineReferences": false,

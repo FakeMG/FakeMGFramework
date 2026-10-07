@@ -2,26 +2,24 @@ using System.Collections;
 using System.IO;
 using Cysharp.Threading.Tasks;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.TestTools;
 using VContainer;
 using VContainer.Unity;
 
 namespace FakeMG.SaveLoad.Tests.PlayMode
 {
-    public sealed class ProductionSaveCompositionTests
+    public sealed class FrameworkSaveCompositionTests
     {
-        private const string CONFIG_RESOURCE_NAME = "SaveLoadTestAssetConfig";
+        private const string FRAMEWORK_PREFAB_GUID = "a66cf0cfc2964994198eea0bdfa71227";
         private const string SETTINGS_FILE_NAME = "settings.json";
         private const string WORLD_ROOT_DIRECTORY_NAME = "Saves";
         private const string BACKUP_DIRECTORY_NAME = "SaveLoadPlayModeTestBackup";
         private const int STARTUP_FRAME_LIMIT = 300;
 
-        private AsyncOperationHandle<GameObject> _coreManagersPrefabHandle;
-        private GameObject _coreManagersInstance;
-        private LifetimeScope _lifetimeScope;
+        private GameObject _saveLoadInstance;
+        private SaveLoadTestLifetimeScope _lifetimeScope;
         private IObjectResolver _testContainer;
         private string _backupDirectoryPath;
         private bool _hasIsolatedPersistentSaveFiles;
@@ -32,22 +30,16 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
         public IEnumerator SetUp()
         {
             IsolatePersistentSaveFiles();
-            SaveLoadTestAssetConfigSO testAssetConfigSO =
-                Resources.Load<SaveLoadTestAssetConfigSO>(CONFIG_RESOURCE_NAME);
-            Assert.IsNotNull(testAssetConfigSO, $"Missing Resources/{CONFIG_RESOURCE_NAME} asset.");
-
-            _coreManagersPrefabHandle = Addressables.LoadAssetAsync<GameObject>(testAssetConfigSO.CoreManagersPrefab);
-            yield return _coreManagersPrefabHandle;
-            Assert.AreEqual(AsyncOperationStatus.Succeeded, _coreManagersPrefabHandle.Status);
-
-            LifetimeScope lifetimeScopePrefab =
-                _coreManagersPrefabHandle.Result.GetComponent<LifetimeScope>();
-            Assert.IsNotNull(lifetimeScopePrefab);
+            string prefabPath = AssetDatabase.GUIDToAssetPath(FRAMEWORK_PREFAB_GUID);
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            Assert.IsNotNull(prefab, $"Missing framework SaveLoad fixture with GUID {FRAMEWORK_PREFAB_GUID}.");
+            SaveLoadTestLifetimeScope lifetimeScopePrefab = prefab.GetComponent<SaveLoadTestLifetimeScope>();
+            Assert.IsNotNull(lifetimeScopePrefab, "Framework SaveLoad fixture requires its test lifetime scope.");
             var containerBuilder = new ContainerBuilder();
             containerBuilder.RegisterComponentInNewPrefab(lifetimeScopePrefab, Lifetime.Singleton);
             _testContainer = containerBuilder.Build();
-            _lifetimeScope = _testContainer.Resolve<LifetimeScope>();
-            _coreManagersInstance = _lifetimeScope.gameObject;
+            _lifetimeScope = _testContainer.Resolve<SaveLoadTestLifetimeScope>();
+            _saveLoadInstance = _lifetimeScope.gameObject;
             Assert.IsNotNull(_lifetimeScope);
             yield return null;
         }
@@ -57,14 +49,9 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
         {
             (_testContainer as System.IDisposable)?.Dispose();
             _testContainer = null;
-            if (_coreManagersInstance)
+            if (_saveLoadInstance)
             {
-                Object.Destroy(_coreManagersInstance);
-            }
-
-            if (_coreManagersPrefabHandle.IsValid())
-            {
-                Addressables.Release(_coreManagersPrefabHandle);
+                Object.Destroy(_saveLoadInstance);
             }
 
             yield return null;
@@ -76,7 +63,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
         #region Public Methods
 
         [UnityTest]
-        public IEnumerator ProductionPrefab_OnStartup_InitializesGlobalAndSingleWorldPersistence()
+        public IEnumerator FrameworkPrefab_OnStartup_InitializesGlobalAndSingleWorldPersistence()
         {
             IWorldSaveManager worldSaveManager = _lifetimeScope.Container.Resolve<IWorldSaveManager>();
             IGlobalSaveManager globalSaveManager = _lifetimeScope.Container.Resolve<IGlobalSaveManager>();
@@ -89,7 +76,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             Assert.IsTrue(worldSaveManager.HasActiveWorld, "Resume-or-create did not activate a world.");
             Assert.AreEqual(1, worldSaveManager.GetWorlds().Count);
             string worldId = worldSaveManager.ActiveWorldId;
-            string worldDirectoryPath = Path.Combine(Application.persistentDataPath, "Saves", worldId);
+            string worldDirectoryPath = Path.Combine(Application.persistentDataPath, WORLD_ROOT_DIRECTORY_NAME, worldId);
             string manifestFilePath = Path.Combine(worldDirectoryPath, SaveFileCatalog.WORLD_MANIFEST_FILE_NAME);
             Assert.IsTrue(File.Exists(manifestFilePath));
             Assert.AreEqual(0, Directory.GetFiles(worldDirectoryPath, "manual_*.sav").Length);
@@ -102,7 +89,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             Assert.That(File.ReadAllText(settingsFilePath), Does.Contain(SaveFileCatalog.METADATA_KEY));
 
             WorldLifecycleAutoSaveSubscriber lifecycleAutoSaveSubscriber =
-                _coreManagersInstance.GetComponentInChildren<WorldLifecycleAutoSaveSubscriber>(true);
+                _saveLoadInstance.GetComponentInChildren<WorldLifecycleAutoSaveSubscriber>(true);
             Assert.IsNotNull(lifecycleAutoSaveSubscriber);
             lifecycleAutoSaveSubscriber.SendMessage(
                 "OnApplicationFocus",
