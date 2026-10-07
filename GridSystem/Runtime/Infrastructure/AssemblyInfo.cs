@@ -1,4 +1,4 @@
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("GridSystemEditMode")]
-[assembly: InternalsVisibleTo("GridSystemPlayMode")]
+[assembly: InternalsVisibleTo("FakeMG.GridSystem.Tests.EditMode")]
+[assembly: InternalsVisibleTo("FakeMG.GridSystem.Tests.PlayMode")]

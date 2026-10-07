@@ -1,7 +1,8 @@
 {
-    "name": "GridSystemPlayMode",
-    "rootNamespace": "",
+    "name": "FakeMG.GridSystem.Tests.PlayMode",
+    "rootNamespace": "FakeMG.GridSystem.Tests.PlayMode",
     "references": [
+        "FakeMG.Framework",
         "FakeMG.SceneLoading.Contracts",
         "GUID:56d800eec60a190498f47d1d35ac80cf",
         "GUID:9e24947de15b9834991c9d8411ea37cf",
@@ -16,11 +17,13 @@
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll"
+        "nunit.framework.dll",
+        "Sirenix.Serialization.dll"
     ],
     "autoReferenced": false,
     "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
+        "UNITY_INCLUDE_TESTS",
+        "UNITY_EDITOR"
     ],
     "versionDefines": [],
     "noEngineReferences": false

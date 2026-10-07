@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.TestTools;
 using VContainer;
 using VContainer.Unity;
@@ -19,8 +17,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         private const string SECOND_INSTANCE_ID = "structure-b";
 
         private IObjectResolver _container;
-        private AsyncOperationHandle<GameObject> _gridManagerPrefabHandle;
-        private AsyncOperationHandle<GameObject> _structureFootprintPrefabHandle;
         private GridManager _gridManager;
         private GridFootprint _structureFootprint;
 
@@ -29,23 +25,10 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            GridSystemTestAssetConfigSO testAssetConfig = GridSystemPlayModeTestAssets.LoadConfig();
-
-            _gridManagerPrefabHandle = Addressables.LoadAssetAsync<GameObject>(testAssetConfig.GridManagerPrefab);
-            _structureFootprintPrefabHandle =
-                Addressables.LoadAssetAsync<GameObject>(testAssetConfig.GridFootprintPrefab);
-
-            yield return _gridManagerPrefabHandle;
-            yield return _structureFootprintPrefabHandle;
-
-            Assert.AreEqual(AsyncOperationStatus.Succeeded, _gridManagerPrefabHandle.Status);
-            Assert.AreEqual(AsyncOperationStatus.Succeeded, _structureFootprintPrefabHandle.Status);
-
-            GridManager gridManagerPrefab = _gridManagerPrefabHandle.Result.GetComponent<GridManager>();
+            GridManager gridManagerPrefab = GridSystemPlayModeTestAssets.LoadPrefabComponent<GridManager>(
+                GridSystemPlayModeTestAssets.GRID_MANAGER_PREFAB_GUID);
             GridFootprint structureFootprintPrefab =
-                _structureFootprintPrefabHandle.Result.GetComponent<GridFootprint>();
-            Assert.IsNotNull(gridManagerPrefab);
-            Assert.IsNotNull(structureFootprintPrefab);
+                GridSystemPlayModeTestAssets.LoadPrefabComponent<GridFootprint>(GridSystemPlayModeTestAssets.GRID_FOOTPRINT_PREFAB_GUID);
 
             ContainerBuilder builder = new();
             builder.RegisterComponentInNewPrefab(gridManagerPrefab, Lifetime.Scoped);
@@ -54,6 +37,7 @@ namespace FakeMG.GridSystem.Tests.PlayMode
 
             _gridManager = _container.Resolve<GridManager>();
             _structureFootprint = _container.Resolve<GridFootprint>();
+            yield return null;
         }
 
         [UnityTearDown]
@@ -69,16 +53,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             if (_structureFootprint)
             {
                 Object.Destroy(_structureFootprint.gameObject);
-            }
-
-            if (_gridManagerPrefabHandle.IsValid())
-            {
-                Addressables.Release(_gridManagerPrefabHandle);
-            }
-
-            if (_structureFootprintPrefabHandle.IsValid())
-            {
-                Addressables.Release(_structureFootprintPrefabHandle);
             }
 
             yield return null;

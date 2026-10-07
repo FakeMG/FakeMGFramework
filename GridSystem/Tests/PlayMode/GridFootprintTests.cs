@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.TestTools;
 using VContainer;
 using VContainer.Unity;
@@ -15,7 +13,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         private const float CELL_SIZE_METERS = 1f;
 
         private IObjectResolver _container;
-        private AsyncOperationHandle<GameObject> _structureFootprintPrefabHandle;
         private GridFootprint _structureFootprint;
 
         #region Unity Lifecycle
@@ -23,21 +20,14 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            GridSystemTestAssetConfigSO testAssetConfig = GridSystemPlayModeTestAssets.LoadConfig();
-
-            _structureFootprintPrefabHandle =
-                Addressables.LoadAssetAsync<GameObject>(testAssetConfig.GridFootprintPrefab);
-            yield return _structureFootprintPrefabHandle;
-
-            Assert.AreEqual(AsyncOperationStatus.Succeeded, _structureFootprintPrefabHandle.Status);
             GridFootprint structureFootprintPrefab =
-                _structureFootprintPrefabHandle.Result.GetComponent<GridFootprint>();
-            Assert.IsNotNull(structureFootprintPrefab);
+                GridSystemPlayModeTestAssets.LoadPrefabComponent<GridFootprint>(GridSystemPlayModeTestAssets.GRID_FOOTPRINT_PREFAB_GUID);
 
             ContainerBuilder builder = new();
             builder.RegisterComponentInNewPrefab(structureFootprintPrefab, Lifetime.Scoped);
             _container = builder.Build();
             _structureFootprint = _container.Resolve<GridFootprint>();
+            yield return null;
         }
 
         [UnityTearDown]
@@ -48,11 +38,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             if (_structureFootprint)
             {
                 Object.Destroy(_structureFootprint.gameObject);
-            }
-
-            if (_structureFootprintPrefabHandle.IsValid())
-            {
-                Addressables.Release(_structureFootprintPrefabHandle);
             }
 
             yield return null;

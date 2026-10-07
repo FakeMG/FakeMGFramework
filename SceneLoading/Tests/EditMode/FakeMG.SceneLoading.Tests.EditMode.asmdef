@@ -1,22 +1,21 @@
 {
-    "name": "FakeMG.SaveLoad.PlayModeTests",
-    "rootNamespace": "FakeMG.SaveLoad.Tests.PlayMode",
+    "name": "FakeMG.SceneLoading.Tests.EditMode",
+    "rootNamespace": "FakeMG.SceneLoading.Tests.EditMode",
     "references": [
-        "FakeMG.SaveLoad",
-        "UniTask",
-        "VContainer",
-        "VContainer.Unity",
-        "FakeMG.Settings.SaveLoad"
+        "FakeMG.SceneLoading",
+        "FakeMG.SceneLoading.Contracts",
+        "UniTask"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [
-        "UNITY_INCLUDE_TESTS",
-        "UNITY_EDITOR"
+        "UNITY_INCLUDE_TESTS"
     ],
     "versionDefines": [],
     "noEngineReferences": false,

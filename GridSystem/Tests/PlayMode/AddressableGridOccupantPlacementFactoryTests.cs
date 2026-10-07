@@ -1,11 +1,18 @@
 using System;
+using System.Collections;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using NSubstitute;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
+using UnityEngine.TestTools;
 using VContainer;
 
 namespace FakeMG.GridSystem.Tests.PlayMode
@@ -19,23 +26,41 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         private AddressableGridOccupantPlacementFactory _factory;
         private GridOccupantPlacement _createdPlacement;
         private StructureSO _structureSO;
+        private AsyncOperationHandle<IResourceLocator> _addressablesInitializationHandle;
+        private ResourceLocationMap _fixtureLocator;
+        private AssetDatabaseProvider _fixtureProvider;
 
-        #region Public Methods
+        #region Unity Lifecycle
 
-        [SetUp]
-        public void SetUp()
+        [UnitySetUp]
+        public IEnumerator SetUp()
         {
-            GridSystemTestAssetConfigSO testAssetConfig = GridSystemPlayModeTestAssets.LoadConfig();
-            Assert.IsNotNull(testAssetConfig.FactoryStructureSO);
+            _structureSO = GridSystemPlayModeTestAssets.LoadAsset<StructureSO>(GridSystemPlayModeTestAssets.FACTORY_STRUCTURE_SO_GUID);
+            GameObject prefab = GridSystemPlayModeTestAssets.LoadAsset<GameObject>(_structureSO.StructureAsset.AssetGUID);
+            _addressablesInitializationHandle = Addressables.InitializeAsync(false);
+            yield return _addressablesInitializationHandle;
+            Assert.AreEqual(AsyncOperationStatus.Succeeded, _addressablesInitializationHandle.Status);
 
-            _structureSO = testAssetConfig.FactoryStructureSO;
+            // Exercise real Addressables handles while the fixture remains Editor-only and outside production catalogs.
+            string providerId = $"FakeMG.GridSystem.Tests.{Guid.NewGuid():N}";
+            _fixtureProvider = new AssetDatabaseProvider(0f);
+            Assert.IsTrue(_fixtureProvider.Initialize(providerId, null));
+            Addressables.ResourceManager.ResourceProviders.Add(_fixtureProvider);
+            _fixtureLocator = new ResourceLocationMap(providerId);
+            _fixtureLocator.Add(_structureSO.StructureAsset.RuntimeKey, new ResourceLocationBase(
+                _structureSO.StructureAsset.AssetGUID,
+                AssetDatabase.GetAssetPath(prefab),
+                providerId,
+                typeof(GameObject)));
+            Addressables.AddResourceLocator(_fixtureLocator);
+
             ContainerBuilder builder = new();
             _container = builder.Build();
             _factory = new AddressableGridOccupantPlacementFactory(false, null, _container);
         }
 
-        [TearDown]
-        public void TearDown()
+        [UnityTearDown]
+        public IEnumerator TearDown()
         {
             if (_createdPlacement != null)
             {
@@ -44,7 +69,27 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             }
 
             _container?.Dispose();
+            yield return null;
+
+            if (_fixtureLocator != null)
+            {
+                Addressables.RemoveResourceLocator(_fixtureLocator);
+            }
+
+            if (_fixtureProvider != null)
+            {
+                Addressables.ResourceManager.ResourceProviders.Remove(_fixtureProvider);
+            }
+
+            if (_addressablesInitializationHandle.IsValid())
+            {
+                Addressables.Release(_addressablesInitializationHandle);
+            }
         }
+
+        #endregion
+
+        #region Public Methods
 
         [Test]
         public async Task CreateStructureAsync_FrameworkTestPrefab_CreatesValidInitializedPlacement()
@@ -100,6 +145,9 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             _factory.DestroyStructure(_createdPlacement);
             _createdPlacement = null;
             await UniTask.NextFrame();
+            // Addressables retains a reference until its deferred completion callbacks finish.
+            await UniTask.WaitUntil(() => !structurePrefabHandle.IsValid(), PlayerLoopTiming.LastPostLateUpdate)
+                .Timeout(TimeSpan.FromSeconds(1));
 
             Assert.IsFalse(runtimeInstance);
             Assert.IsFalse(structurePrefabHandle.IsValid());

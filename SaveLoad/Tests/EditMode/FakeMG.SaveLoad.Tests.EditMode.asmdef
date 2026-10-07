@@ -1,10 +1,14 @@
 {
-    "name": "FakeMG.SceneLoading.EditModeTests",
-    "rootNamespace": "FakeMG.SceneLoading.Tests.EditMode",
+    "name": "FakeMG.SaveLoad.Tests.EditMode",
+    "rootNamespace": "FakeMG.SaveLoad.Tests",
     "references": [
+        "FakeMG.SaveLoad",
         "FakeMG.SceneLoading",
         "FakeMG.SceneLoading.Contracts",
-        "UniTask"
+        "FakeMG.Framework",
+        "UniTask",
+        "TNRD.NSubstitute",
+        "EasySave3"
     ],
     "includePlatforms": [
         "Editor"
@@ -14,9 +18,7 @@
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": false,
-    "defineConstraints": [
-        "UNITY_INCLUDE_TESTS"
-    ],
+    "defineConstraints": [],
     "versionDefines": [],
     "noEngineReferences": false,
     "optionalUnityReferences": [
