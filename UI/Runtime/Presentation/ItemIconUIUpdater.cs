@@ -79,6 +79,7 @@ namespace FakeMG.Framework.UI
             int requestVersion = InvalidatePendingRequests();
             UnloadHandle();
             ApplyCountPresentation(countText, isCountVisible);
+            ApplyIconPresentation(null);
 
             if (item.IconSpriteAsset != null && item.IconSpriteAsset.RuntimeKeyIsValid())
             {
@@ -107,7 +108,7 @@ namespace FakeMG.Framework.UI
                         return;
                     }
 
-                    _icon.sprite = sprite;
+                    ApplyIconPresentation(sprite);
                     _loadedSpriteHandle = spriteHandle;
                 }
                 catch (OperationCanceledException)
@@ -131,7 +132,7 @@ namespace FakeMG.Framework.UI
         {
             InvalidatePendingRequests();
             UnloadHandle();
-            _icon.sprite = null;
+            ApplyIconPresentation(null);
             ApplyCountPresentation(string.Empty, false);
         }
 
@@ -143,7 +144,13 @@ namespace FakeMG.Framework.UI
         {
             InvalidatePendingRequests();
             UnloadHandle();
+            ApplyIconPresentation(newIcon);
+        }
+
+        private void ApplyIconPresentation(Sprite newIcon)
+        {
             _icon.sprite = newIcon;
+            _icon.enabled = newIcon != null;
         }
 
         private void ApplyCountPresentation(string countText, bool isCountVisible)
