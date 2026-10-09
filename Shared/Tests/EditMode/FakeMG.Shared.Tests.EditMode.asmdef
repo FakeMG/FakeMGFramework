@@ -1,0 +1,7 @@
+{
+  "name": "FakeMG.Shared.Tests.EditMode",
+  "references": ["FakeMG.Framework"],
+  "includePlatforms": ["Editor"],
+  "autoReferenced": false,
+  "optionalUnityReferences": ["TestAssemblies"]
+}
