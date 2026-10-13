@@ -1,11 +1,8 @@
-using System;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework.ExtensionMethods;
 using FakeMG.Numbers;
 using TMPro;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.UI;
 
 namespace FakeMG.Framework.UI
@@ -15,15 +12,18 @@ namespace FakeMG.Framework.UI
         [SerializeField] private Image _icon;
         [SerializeField] private TMP_Text _countText;
         [SerializeField] private bool _showCountWhenZero;
+        [Tooltip("Keep loaded icons until this view is destroyed. Useful for previews with repeated selections.")]
+        [SerializeField] private bool _shouldCacheIcons;
 
-        private AsyncOperationHandle<Sprite>? _loadedSpriteHandle;
+        private readonly AddressableIconCache _iconCache = new();
         private int _updateRequestVersion;
 
         #region Unity Lifecycle
 
         private void OnDestroy()
         {
-            UnloadHandle();
+            InvalidatePendingRequests();
+            _iconCache.Dispose();
         }
 
         #endregion
@@ -77,61 +77,28 @@ namespace FakeMG.Framework.UI
         public async UniTask UpdateUIAsync(IdentitySO item, string countText, bool isCountVisible)
         {
             int requestVersion = InvalidatePendingRequests();
-            UnloadHandle();
+            if (!_shouldCacheIcons)
+            {
+                _iconCache.Clear();
+            }
+
             ApplyCountPresentation(countText, isCountVisible);
             ApplyIconPresentation(null);
-
-            if (item.IconSpriteAsset != null && item.IconSpriteAsset.RuntimeKeyIsValid())
+            Sprite sprite = await _iconCache.LoadIconAsync(item, this.GetCancellationTokenOnDestroy());
+            if (requestVersion == _updateRequestVersion)
             {
-                AsyncOperationHandle<Sprite> spriteHandle = Addressables.LoadAssetAsync<Sprite>(item.IconSpriteAsset);
-
-                try
-                {
-                    Sprite sprite = await spriteHandle.ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
-
-                    if (spriteHandle.Status != AsyncOperationStatus.Succeeded)
-                    {
-                        Echo.Error($"Failed to load sprite for item '{item.name}'.");
-                        Addressables.Release(spriteHandle);
-                        return;
-                    }
-
-                    if (!_icon || !_countText)
-                    {
-                        Addressables.Release(spriteHandle);
-                        return;
-                    }
-
-                    if (requestVersion != _updateRequestVersion)
-                    {
-                        Addressables.Release(spriteHandle);
-                        return;
-                    }
-
-                    ApplyIconPresentation(sprite);
-                    _loadedSpriteHandle = spriteHandle;
-                }
-                catch (OperationCanceledException)
-                {
-                    if (spriteHandle.IsValid())
-                    {
-                        Addressables.Release(spriteHandle);
-                    }
-
-                    return;
-                }
+                ApplyIconPresentation(sprite);
             }
-            else
-            {
-                Echo.Error($"Invalid icon sprite reference for item '{item.name}'.");
-            }
-
         }
 
         public void ClearUI()
         {
             InvalidatePendingRequests();
-            UnloadHandle();
+            if (!_shouldCacheIcons)
+            {
+                _iconCache.Clear();
+            }
+
             ApplyIconPresentation(null);
             ApplyCountPresentation(string.Empty, false);
         }
@@ -143,7 +110,11 @@ namespace FakeMG.Framework.UI
         private void SetIcon(Sprite newIcon)
         {
             InvalidatePendingRequests();
-            UnloadHandle();
+            if (!_shouldCacheIcons)
+            {
+                _iconCache.Clear();
+            }
+
             ApplyIconPresentation(newIcon);
         }
 
@@ -163,15 +134,6 @@ namespace FakeMG.Framework.UI
         {
             _updateRequestVersion++;
             return _updateRequestVersion;
-        }
-
-        private void UnloadHandle()
-        {
-            if (_loadedSpriteHandle.HasValue && _loadedSpriteHandle.Value.IsValid())
-            {
-                Addressables.Release(_loadedSpriteHandle.Value);
-                _loadedSpriteHandle = null;
-            }
         }
 
         #endregion
