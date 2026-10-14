@@ -13,7 +13,7 @@ namespace FakeMG.Toast
     /// Globally accessible toast service. Shows short, non-blocking, auto-hiding text messages
     /// stacked at the configured container anchor. Registered in ManagerLifetimeScope.
     /// </summary>
-    public class ToastManager : MonoBehaviour
+    public class ToastManager : MonoBehaviour, IToastService
     {
         [Required]
         [SerializeField] private ToastConfigSO _configSO;
