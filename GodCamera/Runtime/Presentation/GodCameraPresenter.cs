@@ -4,8 +4,13 @@ using VContainer.Unity;
 
 namespace FakeMG.GodCamera
 {
+    public interface ICameraFocusRequests
+    {
+        void RequestFocus(Vector3 focusPositionMeters);
+    }
+
     /// <summary>Reads engine input/projections and coordinates camera motion and rig presentation.</summary>
-    public sealed class GodCameraPresenter : IInitializable, ITickable, System.IDisposable
+    public sealed class GodCameraPresenter : IInitializable, ITickable, System.IDisposable, ICameraFocusRequests
     {
         private readonly CameraInputSubscriber _cameraInputSubscriber;
         private readonly CameraRigView _cameraRigView;
@@ -15,6 +20,8 @@ namespace FakeMG.GodCamera
         private readonly CameraMotionBounds _motionBounds;
         private readonly CameraZoomCalculator _zoomCalculator;
         private CameraMotionState _motionState;
+        private bool _hasRequestedFocus;
+        private Vector3 _requestedFocusMeters;
 
         #region Public Methods
 
@@ -54,6 +61,13 @@ namespace FakeMG.GodCamera
             CameraProfileSO profileSO = _cameraRigView.CameraProfileSO;
             Bounds allowedBoundsMeters = _cameraRigView.BoundsProvider.GetBoundsMeters();
             float aspect = _cameraRigView.Aspect;
+            if (_cameraInputSubscriber.ReadMoveInput().sqrMagnitude > 0.001f
+                || _panMotion.IsPointerDragPanActive
+                || Mathf.Abs(_cameraInputSubscriber.ReadControllerZoomInput()) > 0.001f)
+            {
+                _hasRequestedFocus = false;
+            }
+
             _panMotion.ApplyDirectionalPan(
                 _motionState,
                 _cameraInputSubscriber.ReadMoveInput(),
@@ -63,6 +77,18 @@ namespace FakeMG.GodCamera
             ApplyPointerDragPan(profileSO.DragPanSmoothingSeconds, deltaTimeSeconds);
             ApplyZoom(profileSO, allowedBoundsMeters, aspect, deltaTimeSeconds);
             _rotationMotion.ApplyRotation(_motionState, profileSO, deltaTimeSeconds);
+
+            if (_hasRequestedFocus)
+            {
+                _motionState.TargetFocusPositionMeters = _requestedFocusMeters;
+                _motionBounds.ClampTargetFocusPosition(_motionState, profileSO, allowedBoundsMeters, aspect);
+                _motionState.CurrentFocusPositionMeters = Vector3.Lerp(_motionState.CurrentFocusPositionMeters,
+                    _motionState.TargetFocusPositionMeters, 1f - Mathf.Exp(-deltaTimeSeconds / 0.25f));
+                if ((_motionState.CurrentFocusPositionMeters - _motionState.TargetFocusPositionMeters).sqrMagnitude < 0.0025f)
+                {
+                    _hasRequestedFocus = false;
+                }
+            }
             _motionBounds.ClampFocusPositions(_motionState, profileSO, allowedBoundsMeters, aspect);
             _cameraRigView.ApplyState(_motionState.CreateRigState());
         }
@@ -72,6 +98,12 @@ namespace FakeMG.GodCamera
             _cameraInputSubscriber.OnPointerDragPanStarted -= StartPointerDragPan;
             _cameraInputSubscriber.OnPointerDragPanStopped -= StopPointerDragPan;
             _cameraInputSubscriber.OnRotationStepRequested -= QueueRotationStep;
+        }
+
+        public void RequestFocus(Vector3 focusPositionMeters)
+        {
+            _requestedFocusMeters = focusPositionMeters;
+            _hasRequestedFocus = true;
         }
 
         #endregion
@@ -101,8 +133,10 @@ namespace FakeMG.GodCamera
                 * profileSO.ZoomSpeedMetersPerSecond * deltaTimeSeconds;
             float pointerZoomDeltaMeters = _cameraInputSubscriber.ConsumePointerZoomSteps() * profileSO.PointerZoomSizeStepMeters;
             float zoomDeltaMeters = controllerZoomDeltaMeters + pointerZoomDeltaMeters;
+
             if (!Mathf.Approximately(zoomDeltaMeters, 0f))
             {
+                _hasRequestedFocus = false;
                 float desiredZoomMeters = _zoomMotion.CalculateTargetZoomMeters(
                     _motionState, zoomDeltaMeters, profileSO.MinimumZoomMeters, profileSO.MaximumZoomMeters);
                 if (_motionBounds.TryClampZoomMeters(
@@ -155,6 +189,7 @@ namespace FakeMG.GodCamera
 
         private void StartPointerDragPan()
         {
+            _hasRequestedFocus = false;
             _zoomMotion.StopFocusSmoothing(_motionState);
             if (!_cameraRigView.TryProjectScreenPointToGround(
                     _cameraInputSubscriber.ReadPointerPositionPixels(), out Vector3 groundPointMeters))
@@ -174,6 +209,7 @@ namespace FakeMG.GodCamera
 
         private void QueueRotationStep(int direction)
         {
+            _hasRequestedFocus = false;
             _rotationMotion.QueueRotationStep(_motionState, _cameraRigView.CameraProfileSO, direction);
         }
 
