@@ -1,4 +1,5 @@
 using System;
+using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -19,74 +20,130 @@ namespace FakeMG.Outline
         private uint[] _originalMasks = Array.Empty<uint>();
         private bool _isSelected;
 
+        #region Unity Lifecycle
+
         private void Awake()
         {
             _targetRenderers = GetComponentsInChildren<Renderer>(true);
             _originalMasks = new uint[_targetRenderers.Length];
 
-            for (int i = 0; i < _targetRenderers.Length; i++)
+            for (int rendererIndex = 0; rendererIndex < _targetRenderers.Length; rendererIndex++)
             {
-                _originalMasks[i] = _targetRenderers[i].renderingLayerMask;
+                _originalMasks[rendererIndex] = _targetRenderers[rendererIndex].renderingLayerMask;
             }
+        }
+
+        private void OnEnable()
+        {
+            RefreshSelectionRegistration();
         }
 
         private void OnDisable()
         {
-            Restore();
+            RestoreAndUnregisterSelection();
         }
 
         private void OnDestroy()
         {
-            Restore();
+            RestoreAndUnregisterSelection();
         }
 
+        #endregion
+
+        #region Public Methods
+
         [Button]
-        public void SetSelected(bool selected)
+        public void SetSelected(bool isSelected)
         {
-            if (_isSelected == selected) return;
+            if (_isSelected == isSelected)
+            {
+                RefreshSelectionRegistration();
+                return;
+            }
 
-            _isSelected = selected;
+            _isSelected = isSelected;
+            ApplyRenderingLayers(isSelected);
+            RefreshSelectionRegistration();
+        }
 
+        #endregion
+
+        #region Private Methods
+
+        private void ApplyRenderingLayers(bool isSelected)
+        {
             uint outlineMaskValue = _outlineMask.value;
             uint selectedOutlineMaskValue = _selectedOutlineMask.value;
 
-            for (int i = 0; i < _targetRenderers.Length; i++)
+            for (int rendererIndex = 0; rendererIndex < _targetRenderers.Length; rendererIndex++)
             {
-                Renderer targetRenderer = _targetRenderers[i];
+                Renderer targetRenderer = _targetRenderers[rendererIndex];
 
-                if (targetRenderer == null) continue;
-
-                uint original = _originalMasks[i];
-
-                if (selected)
+                if (targetRenderer == null)
                 {
-                    uint result = _keepOtherRenderingLayers ? original : 0u;
+                    continue;
+                }
 
-                    result &= ~outlineMaskValue;
-                    result |= selectedOutlineMaskValue;
+                uint originalMask = _originalMasks[rendererIndex];
 
-                    targetRenderer.renderingLayerMask = result;
+                if (isSelected)
+                {
+                    uint selectedMask = _keepOtherRenderingLayers ? originalMask : 0u;
+
+                    selectedMask &= ~outlineMaskValue;
+                    selectedMask |= selectedOutlineMaskValue;
+
+                    targetRenderer.renderingLayerMask = selectedMask;
                 }
                 else
                 {
-                    targetRenderer.renderingLayerMask = original;
+                    targetRenderer.renderingLayerMask = originalMask;
                 }
             }
         }
 
-        private void Restore()
+        private void RefreshSelectionRegistration()
         {
-            if (!_isSelected) return;
-
-            for (int i = 0; i < _targetRenderers.Length; i++)
+            if (_isSelected && isActiveAndEnabled && _targetRenderers.Length > 0)
             {
-                if (_targetRenderers[i] != null)
-                {
-                    _targetRenderers[i].renderingLayerMask = _originalMasks[i];
-                }
+                RenderingLayerOutlineSelectionRegistry.Shared.RegisterSelection(this, _selectedOutlineMask.value);
+                return;
+            }
+
+            RenderingLayerOutlineSelectionRegistry.Shared.UnregisterSelection(this);
+        }
+
+        private void RestoreAndUnregisterSelection()
+        {
+            RenderingLayerOutlineSelectionRegistry.Shared.UnregisterSelection(this);
+            if (!_isSelected)
+            {
+                return;
             }
 
             _isSelected = false;
+            ApplyRenderingLayers(false);
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearSelectionsForPlayMode()
+        {
+            RenderingLayerOutlineSelectionRegistry.Shared.ClearSelections();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void RestoreSurvivingSelectionRegistrations()
+        {
+            // With scene and domain reload disabled, already-enabled controllers retain their selection state.
+            // Rebuild once at startup; the rendering feature never scans the scene or its renderers.
+            RenderingLayerOutlineController[] controllers = UnityEngine.Object.FindObjectsByType<RenderingLayerOutlineController>(
+                FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int controllerIndex = 0; controllerIndex < controllers.Length; controllerIndex++)
+            {
+                controllers[controllerIndex].RefreshSelectionRegistration();
+            }
+        }
+
+        #endregion
     }
 }

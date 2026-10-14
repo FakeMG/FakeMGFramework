@@ -1,0 +1,8 @@
+{
+    "name": "FakeMG.Outline.Tests.Editor",
+    "rootNamespace": "FakeMG.Outline.Tests",
+    "references": ["FakeMG.Outline"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false,
+    "optionalUnityReferences": ["TestAssemblies"]
+}

@@ -1,0 +1,8 @@
+{
+    "name": "FakeMG.Outline.Tests.PlayMode",
+    "rootNamespace": "FakeMG.Outline.Tests",
+    "references": ["FakeMG.Outline", "VContainer"],
+    "includePlatforms": [],
+    "autoReferenced": false,
+    "optionalUnityReferences": ["TestAssemblies"]
+}
