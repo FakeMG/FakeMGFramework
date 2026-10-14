@@ -1,17 +1,14 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using FakeMG.Framework;
 using UnityEngine;
 using VContainer;
 
 namespace FakeMG.SaveLoad
 {
-    public sealed class WorldIntervalAutoSaveSubscriber : MonoBehaviour
+    public sealed class WorldIntervalAutoSaveSubscriber : MonoBehaviour, IIntervalAutoSaveControl
     {
-        private IWorldAutoSaveRequester _autoSaveRequester;
-        private WorldSaveConfiguration _configuration;
-        private AutoSaveSchedule _autoSaveSchedule;
+        private IntervalAutoSaveService _autoSave;
         private CancellationTokenSource _lifetimeCancellationSource;
 
         #region Unity Lifecycle
@@ -21,19 +18,9 @@ namespace FakeMG.SaveLoad
             _lifetimeCancellationSource = new CancellationTokenSource();
         }
 
-        private void Start()
-        {
-            _autoSaveSchedule = new AutoSaveSchedule(_configuration.AutoSaveIntervalSeconds);
-        }
-
         private void Update()
         {
-            if (!_configuration.IsAutoSaveEnabled || !_autoSaveRequester.HasActiveWorld || !_autoSaveSchedule.Advance(Time.unscaledDeltaTime))
-            {
-                return;
-            }
-
-            RequestIntervalAutoSaveSafelyAsync(_lifetimeCancellationSource.Token).Forget();
+            _autoSave.AdvanceAsync(Time.unscaledDeltaTime, _lifetimeCancellationSource.Token).Forget();
         }
 
         private void OnDestroy()
@@ -47,37 +34,16 @@ namespace FakeMG.SaveLoad
 
         #region Public Methods
 
+        public IDisposable SuspendIntervalAutoSave(string reason) => _autoSave.SuspendIntervalAutoSave(reason);
+
         [Inject]
         public void Construct(IWorldAutoSaveRequester autoSaveRequester, WorldSaveConfiguration configuration)
         {
-            _autoSaveRequester = autoSaveRequester;
-            _configuration = configuration;
+            _autoSave = new IntervalAutoSaveService(autoSaveRequester, configuration);
         }
 
         #endregion
 
-        #region Private Methods
 
-        private async UniTaskVoid RequestIntervalAutoSaveSafelyAsync(CancellationToken cancellationToken)
-        {
-            try
-            {
-                WorldSaveResult result = await _autoSaveRequester.TriggerAutoSaveAsync(cancellationToken);
-                if (!result.Succeeded)
-                {
-                    Echo.Error($"Interval autosave failed: {result.FailureReason}", context: this);
-                }
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                Echo.Log("Interval autosave wait was cancelled during teardown.");
-            }
-            catch (Exception exception)
-            {
-                Echo.Error($"Interval autosave failed: {exception}", context: this);
-            }
-        }
-
-        #endregion
     }
 }

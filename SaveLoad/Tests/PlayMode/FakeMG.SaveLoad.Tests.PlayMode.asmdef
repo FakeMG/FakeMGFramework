@@ -3,6 +3,7 @@
     "rootNamespace": "FakeMG.SaveLoad.Tests.PlayMode",
     "references": [
         "FakeMG.SaveLoad",
+        "TNRD.NSubstitute",
         "UniTask",
         "VContainer",
         "VContainer.Unity",
