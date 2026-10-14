@@ -7,7 +7,17 @@ using FakeMG.Framework;
 
 namespace FakeMG.SaveLoad
 {
-    public sealed class WorldSaveRepository
+    public interface IWorldSnapshotReader
+    {
+        UniTask<SaveFileLoadResult> LoadSnapshotAsync(
+            string worldId,
+            WorldSnapshotSummary snapshot,
+            IReadOnlyDictionary<string, ISaveable> saveables,
+            IReadOnlyList<IAsyncSaveParticipant> participants,
+            CancellationToken cancellationToken);
+    }
+
+    public sealed class WorldSaveRepository : IWorldSnapshotReader
     {
         private static readonly IAsyncSaveParticipant[] _noParticipants =
             Array.Empty<IAsyncSaveParticipant>();

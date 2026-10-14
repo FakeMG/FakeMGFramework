@@ -53,7 +53,7 @@ namespace FakeMG.SaveLoad
             builder.Register<WorldSaveCatalog>(Lifetime.Singleton);
             builder.Register<WorldSnapshotRetentionPolicy>(Lifetime.Singleton);
             builder.Register<SaveFileService>(Lifetime.Singleton);
-            builder.Register<WorldSaveRepository>(Lifetime.Singleton);
+            builder.Register<WorldSaveRepository>(Lifetime.Singleton).AsSelf().As<IWorldSnapshotReader>();
             builder.Register<GlobalSaveManager>(Lifetime.Singleton)
                 .AsSelf()
                 .As<IGlobalSaveManager>()
