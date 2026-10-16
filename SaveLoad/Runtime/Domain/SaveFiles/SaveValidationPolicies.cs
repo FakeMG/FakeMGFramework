@@ -30,12 +30,7 @@ namespace FakeMG.SaveLoad
             switch (descriptor.SaveKind)
             {
                 case SaveFileKind.GlobalDocument:
-                    if (SaveFileCatalog.GetSaveDirectoryPath(filePath).Length != 0 ||
-                        !filePath.EndsWith(SaveFileCatalog.GLOBAL_FILE_EXTENSION, StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new ArgumentException("Global documents must be root-level .json files.");
-                    }
-
+                    SaveFileCatalog.CreateGlobalSaveFilePath(filePath);
                     return;
                 case SaveFileKind.WorldManifest:
                     if (!string.Equals(

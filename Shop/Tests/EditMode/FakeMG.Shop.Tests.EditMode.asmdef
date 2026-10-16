@@ -1,0 +1,24 @@
+{
+    "name": "FakeMG.Shop.Tests.EditMode",
+    "references": [
+        "FakeMG.Shop",
+        "FakeMG.Framework",
+        "FakeMG.Database",
+        "FakeMG.Inventory",
+        "UniTask",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "TNRD.NSubstitute",
+        "Sirenix.Serialization"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "precompiledReferences": [
+        "Sirenix.Serialization.dll"
+    ],
+    "autoReferenced": false
+}

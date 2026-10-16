@@ -5,12 +5,22 @@ namespace FakeMG.SaveLoad.Tests
 {
     public sealed class SavePathPolicyTests
     {
-        [Test]
-        public void CreateGlobalSaveFilePath_RootJson_ReturnsUnchangedPath()
+        [TestCase("settings.json")]
+        [TestCase("runtime-state.json")]
+        public void SaveFileDescriptor_GlobalDocument_AcceptsSupportedRootFiles(string fileName)
         {
-            string saveFilePath = SaveFileCatalog.CreateGlobalSaveFilePath("settings.json");
+            var descriptor = new SaveFileDescriptor(fileName, "document", SaveFileKind.GlobalDocument, SaveFileProtectionSettings.Plain);
+            Assert.That(descriptor.FilePath, Is.EqualTo(fileName));
+        }
 
-            Assert.That(saveFilePath, Is.EqualTo("settings.json"));
+        [TestCase("Saves/runtime-state.json")]
+        [TestCase("../runtime-state.json")]
+        [TestCase("runtime-state.txt")]
+        [TestCase("runtime-state.dat")]
+        public void SaveFileDescriptor_GlobalDocument_RejectsInvalidPaths(string fileName)
+        {
+            Assert.Throws<ArgumentException>(() =>
+                new SaveFileDescriptor(fileName, "document", SaveFileKind.GlobalDocument, SaveFileProtectionSettings.Plain));
         }
 
         [Test]

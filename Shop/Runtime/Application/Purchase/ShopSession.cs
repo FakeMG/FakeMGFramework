@@ -18,12 +18,15 @@ namespace FakeMG.Shop.Services.Purchase
 #endif
         private readonly ShopOwnedNonConsumableVisibilityFilter _ownedNonConsumableVisibilityFilter;
         private readonly ShopPurchaseOrchestrator _shopPurchaseOrchestrator;
-        private readonly ShopPurchaseFinalizationService _shopPurchaseFinalizationService;
+        private readonly IShopPurchaseFinalizer _shopPurchaseFinalizationService;
         private readonly CancellationTokenSource _disposeCancellationTokenSource = new();
 
         public event Action<IReadOnlyList<ShopListingSO>> OnCatalogLoaded;
         public event Action<ShopPurchaseResult> OnPurchaseCompleted;
         public event Action<string> OnListingHidden;
+        public event Action OnPurchaseStateChanged;
+
+        public bool IsPurchaseInProgress { get; private set; }
 
         public IReadOnlyList<ShopListingSO> CurrentVisibleListingSOs { get; private set; }
 
@@ -34,7 +37,7 @@ namespace FakeMG.Shop.Services.Purchase
 #endif
             ShopOwnedNonConsumableVisibilityFilter ownedNonConsumableVisibilityFilter,
             ShopPurchaseOrchestrator shopPurchaseOrchestrator,
-            ShopPurchaseFinalizationService shopPurchaseFinalizationService)
+            IShopPurchaseFinalizer shopPurchaseFinalizationService)
         {
             _shopListingDatabaseSo = shopListingDatabaseSo;
 #if UNITY_PURCHASING
@@ -67,29 +70,46 @@ namespace FakeMG.Shop.Services.Purchase
 
         public async UniTask TryPurchaseAsync(ShopListingSO shopListingSO, CancellationToken cancellationToken)
         {
-            if (shopListingSO.PurchaseType == ShopPurchaseType.IAP && string.IsNullOrWhiteSpace(shopListingSO.Id))
+            if (IsPurchaseInProgress)
             {
-                Echo.Warning("Purchase skipped for an IAP listing without a product id.");
+                Echo.Warning("Shop purchase ignored because another purchase is in progress.");
                 return;
             }
-
-            ShopPurchaseResult shopPurchaseResult =
-                await _shopPurchaseOrchestrator.TryPurchaseAsync(shopListingSO, cancellationToken);
-            if (!shopPurchaseResult.IsSuccess)
+            IsPurchaseInProgress = true;
+            OnPurchaseStateChanged?.Invoke();
+            try
             {
-                OnPurchaseCompleted?.Invoke(shopPurchaseResult);
-                return;
+                if (!await _shopPurchaseFinalizationService.PreparePurchaseAsync(shopListingSO, cancellationToken))
+                {
+                    OnPurchaseCompleted?.Invoke(ShopPurchaseResult.Failed("Purchase unavailable. A reward is awaiting delivery."));
+                    return;
+                }
+                ShopPurchaseResult result = await _shopPurchaseOrchestrator.TryPurchaseAsync(shopListingSO, cancellationToken);
+                if (result.IsSuccess && !result.IsFinalized)
+                {
+                    result = await _shopPurchaseFinalizationService.FinalizePurchaseAsync(shopListingSO, result, cancellationToken);
+                }
+
+                if (result.IsSuccess && shopListingSO.IsNonConsumable)
+                {
+                    await RefreshVisibleCatalogAsync(cancellationToken);
+                    OnListingHidden?.Invoke(shopListingSO.Id);
+                }
+                OnPurchaseCompleted?.Invoke(result);
             }
-
-            _shopPurchaseFinalizationService.FinalizeSuccessfulPurchase(shopListingSO, shopPurchaseResult);
-
-            if (shopListingSO.IsNonConsumable)
+            catch (OperationCanceledException)
             {
-                await RefreshVisibleCatalogAsync(cancellationToken);
-                OnListingHidden?.Invoke(shopListingSO.Id);
+                Echo.Warning("Shop purchase was cancelled before completion.");
+                OnPurchaseCompleted?.Invoke(ShopPurchaseResult.Failed("Purchase cancelled."));
             }
-
-            OnPurchaseCompleted?.Invoke(shopPurchaseResult);
+            finally
+            {
+                // Store dialogs can complete inside their own click handler. Keep that click away from the shop,
+                // including the next input update, until the dialog's deferred destruction has finished.
+                await UniTask.NextFrame(PlayerLoopTiming.LastPostLateUpdate);
+                IsPurchaseInProgress = false;
+                OnPurchaseStateChanged?.Invoke();
+            }
         }
 
         #endregion
@@ -99,8 +119,25 @@ namespace FakeMG.Shop.Services.Purchase
         private async UniTask RefreshVisibleCatalogAsync(CancellationToken cancellationToken)
         {
             IReadOnlyList<ShopListingSO> listings = _shopListingDatabaseSo.GetAllAssets();
+            foreach (ShopListingSO listingSO in listings)
+            {
+                if (listingSO.PurchaseType == ShopPurchaseType.IAP)
+                {
+                    listingSO.IsIapAvailable = false;
+                    listingSO.LocalizedIapPriceText = string.Empty;
+                }
+            }
+            CurrentVisibleListingSOs = _ownedNonConsumableVisibilityFilter.Filter(listings);
+            OnCatalogLoaded?.Invoke(CurrentVisibleListingSOs);
 #if UNITY_PURCHASING
-            listings = await _unavailableIapProductsVisibilityFilter.FilterAsync(listings, cancellationToken);
+            try
+            {
+                listings = await _unavailableIapProductsVisibilityFilter.FilterAsync(listings, cancellationToken);
+            }
+            catch (Exception exception) when (exception is not OperationCanceledException)
+            {
+                Echo.Warning($"Store catalog unavailable; currency and rewarded listings remain usable: {exception}");
+            }
 #endif
             CurrentVisibleListingSOs = _ownedNonConsumableVisibilityFilter.Filter(listings);
             OnCatalogLoaded?.Invoke(CurrentVisibleListingSOs);

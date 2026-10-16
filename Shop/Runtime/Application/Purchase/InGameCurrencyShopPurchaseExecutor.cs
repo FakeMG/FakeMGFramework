@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using FakeMG.Framework;
 using FakeMG.Inventory;
 using FakeMG.Numbers;
 using FakeMG.Shop.Config;
@@ -33,15 +34,12 @@ namespace FakeMG.Shop.Services.Purchase
             IReadOnlyList<ItemAmountEntry> priceEntries = shopListingSO.GetPrice();
             if (!CanAffordAllPriceEntries(priceEntries))
             {
+                Echo.Warning($"Purchase '{shopListingSO.Id}' rejected: not enough currency.");
                 return UniTask.FromResult(ShopPurchaseResult.Failed("Not enough currency."));
             }
 
-            if (!_inventoryBalanceRepository.TrySpend(priceEntries))
-            {
-                return UniTask.FromResult(ShopPurchaseResult.Failed("Purchase failed. Please try again."));
-            }
-
-            return UniTask.FromResult(ShopPurchaseResult.Succeeded(shopListingSO.GetAllItemsGranted()));
+            // The finalizer charges and grants together, after any durable delivery journal has been saved.
+            return UniTask.FromResult(ShopPurchaseResult.Succeeded(shopListingSO.GetAllItemsGranted(), isPaymentPending: true));
         }
 
         #endregion

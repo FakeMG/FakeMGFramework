@@ -36,22 +36,22 @@ namespace FakeMG.Shop.Services.Purchase
             if (string.IsNullOrWhiteSpace(shopListingSO.Id))
             {
                 PurchaseFailed?.Invoke(shopListingSO.Id);
-                return ShopPurchaseResult.Failed("Purchase failed. Please try again.");
+                return ShopPurchaseResult.Failed("Purchase unavailable: missing product ID.");
             }
 
-            bool wasPurchased = await _unityIapPurchaseService.TryPurchaseProductAsync(
+            ShopPurchaseResult result = await _unityIapPurchaseService.TryPurchaseProductAsync(
                 shopListingSO.Id,
                 ResolveProductType(shopListingSO),
                 cancellationToken);
 
-            if (!wasPurchased)
+            if (!result.IsSuccess)
             {
                 PurchaseFailed?.Invoke(shopListingSO.Id);
-                return ShopPurchaseResult.Failed("Purchase failed. Please try again.");
+                return result;
             }
 
             PurchaseSucceeded?.Invoke(shopListingSO.Id);
-            return ShopPurchaseResult.Succeeded(shopListingSO.GetAllItemsGranted());
+            return result;
         }
 
         private static ProductType ResolveProductType(ShopListingSO shopListingSO)

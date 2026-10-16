@@ -9,8 +9,7 @@ namespace FakeMG.Shop
 {
     /// <summary>
     /// Registers the shop purchase backend (catalog filters, purchase executors, orchestrator, finalization
-    /// and the shop session) into a container. Shared by <see cref="ShopLifetimeScope"/> and by game-side
-    /// scopes that need the shop services visible to the same resolver that injects the shop UI.
+    /// and the shop session) into a container. Games supply IShopFulfillmentPersistence to define their save boundaries.
     /// </summary>
     public static class ShopInstaller
     {
@@ -38,6 +37,7 @@ namespace FakeMG.Shop
             builder.Register<ShopPurchaseOrchestrator>(Lifetime.Singleton);
 
             builder.Register<ShopPurchaseFinalizationService>(Lifetime.Singleton);
+            builder.Register<ShopPurchaseFulfillmentService>(Lifetime.Singleton).AsSelf().As<IShopPurchaseFinalizer>();
 
             builder.Register<ShopSession>(Lifetime.Singleton)
                 .AsSelf()
@@ -46,5 +46,6 @@ namespace FakeMG.Shop
         }
 
         #endregion
+
     }
 }

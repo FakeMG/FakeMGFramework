@@ -49,7 +49,7 @@ namespace FakeMG.Shop.Services.Purchase
                 return await TryPurchaseWithExecutorAsync(shopPurchaseExecutor, shopListingSO, cancellationToken);
             }
 
-            Echo.Error($"No executor registered for purchase type: {shopListingSO.PurchaseType}");
+            Echo.Error($"No executor registered for purchase key: {shopListingSO.PurchaseType}");
             return ShopPurchaseResult.Failed(PURCHASE_UNAVAILABLE_MESSAGE);
         }
 

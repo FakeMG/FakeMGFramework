@@ -22,6 +22,7 @@ namespace FakeMG.Shop.Config
         public Sprite ListingSprite => _listingSprite;
         public bool IsNonConsumable => _isNonConsumable;
         public ShopPurchaseType PurchaseType => _purchaseType;
+        public bool IsIapAvailable { get; set; }
         public string LocalizedIapPriceText { get; set; }
 
         #endregion
@@ -37,6 +38,19 @@ namespace FakeMG.Shop.Config
         {
             return _itemsGranted;
         }
+
+#if UNITY_EDITOR
+        public void ConfigureForEditor(string id, Sprite listingSprite, List<ItemAmountEntry> price,
+            List<ItemAmountEntry> itemsGranted, ShopPurchaseType purchaseType)
+        {
+            ConfigureIdentityForEditor(id, id, null);
+            _listingSprite = listingSprite;
+            _price = price;
+            _itemsGranted = itemsGranted;
+            _purchaseType = purchaseType;
+            _isNonConsumable = false;
+        }
+#endif
 
         #endregion
     }

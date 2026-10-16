@@ -1,12 +1,12 @@
 #if UNITY_PURCHASING
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
-using UnityEngine;
+using FakeMG.Shop.Config;
+using FakeMG.Shop.RuntimeData;
 using UnityEngine.Purchasing;
 
 namespace FakeMG.Shop.Services.Purchase
@@ -23,208 +23,260 @@ namespace FakeMG.Shop.Services.Purchase
         }
     }
 
-    public class UnityIapPurchaseService : IDisposable
+    public sealed class UnityIapPurchaseService : IDisposable, IShopPurchaseConfirmation
     {
-        private readonly SemaphoreSlim _storeConnectionSemaphore = new(1, 1);
-        private readonly Dictionary<string, UniTaskCompletionSource<bool>> _pendingPurchaseCompletionByProductId =
-            new(StringComparer.Ordinal);
-        private readonly object _pendingPurchaseLock = new();
-
+        private const int STORE_TIMEOUT_SECONDS = 20;
+        private readonly ShopListingDatabaseSO _catalogSO;
+        private readonly ShopPurchaseFulfillmentService _finalizer;
+        private readonly SemaphoreSlim _storeLock = new(1, 1);
+        private readonly CancellationTokenSource _lifetimeCancellation = new();
+        private readonly Dictionary<string, UniTaskCompletionSource<ShopPurchaseResult>> _purchaseCompletions = new();
+        private readonly Dictionary<string, PendingOrder> _pendingOrders = new();
+        private readonly HashSet<string> _processingTransactionIds = new();
         private StoreController _storeController;
+        private UnityIapStoreSubscriber _subscriber;
+        private UniTaskCompletionSource<bool> _productsCompletion;
+        private UniTaskCompletionSource<bool> _purchasesCompletion;
         private bool _isStoreConnected;
 
         public event Action<ConfirmedOrder> PurchaseConfirmed;
 
-        #region VContainer Lifecycle
-
-        public void Dispose()
+        public UnityIapPurchaseService(ShopListingDatabaseSO catalogSO, ShopPurchaseFulfillmentService finalizer)
         {
-            if (_storeController != null)
-            {
-                _storeController.OnStoreConnected -= MarkStoreConnectedWhenStoreConnected;
-                _storeController.OnStoreDisconnected -= MarkStoreDisconnectedWhenStoreDisconnected;
-                _storeController.OnPurchasePending -= ConfirmOrderWhenPurchaseIsPending;
-                _storeController.OnPurchaseConfirmed -= CompletePendingPurchaseWhenOrderIsConfirmed;
-                _storeController.OnPurchaseFailed -= FailPendingPurchaseWhenOrderFails;
-            }
-
-            _storeConnectionSemaphore.Dispose();
+            _catalogSO = catalogSO;
+            _finalizer = finalizer;
         }
-
-        #endregion
 
         #region Public Methods
 
-        public async UniTask<bool> TryPurchaseProductAsync(string productId, ProductType productType, CancellationToken cancellationToken)
+        public async UniTask<ShopPurchaseResult> TryPurchaseProductAsync(string productId, ProductType productType,
+            CancellationToken cancellationToken)
         {
-            if (string.IsNullOrWhiteSpace(productId))
+            if (_purchaseCompletions.ContainsKey(productId) || _pendingOrders.Values.Any(order => GetProductId(order) == productId))
             {
-                Echo.Warning($"{nameof(TryPurchaseProductAsync)} received an empty product id.");
-                return false;
+                Echo.Warning($"Product '{productId}' already has an unfinished purchase.");
+                return ShopPurchaseResult.Failed("A purchase is already pending.");
             }
-
-            await EnsureStoreConnectedAsync(cancellationToken);
-
-            bool wasProductFetched = await EnsureProductFetchedAsync(productId, productType, cancellationToken);
-            if (!wasProductFetched)
-            {
-                Echo.Warning($"Product with id '{productId}' is not available for purchase.");
-                return false;
-            }
-
-            if (!TryBeginPendingPurchase(productId, out UniTaskCompletionSource<bool> completionSource))
-            {
-                Echo.Warning($"Purchase is already in progress for product '{productId}'.");
-                return false;
-            }
-
-            await using CancellationTokenRegistration cancellationRegistration =
-                cancellationToken.RegisterWithoutCaptureExecutionContext(() => CancelPendingPurchase(productId, cancellationToken));
-
-            _storeController.PurchaseProduct(productId);
-
+            bool hasIssuedPurchase = false;
             try
             {
-                return await completionSource.Task;
+                await EnsureStoreConnectedAsync(cancellationToken);
+                Product product = _storeController.GetProductById(productId);
+                if (product == null || !product.availableToPurchase)
+                {
+                    Echo.Warning($"Store product '{productId}' is unavailable.");
+                    await _finalizer.RemovePurchaseAttemptsAsync(new[] { productId }, CancellationToken.None);
+                    return ShopPurchaseResult.Failed("Product unavailable.");
+                }
+                var completion = new UniTaskCompletionSource<ShopPurchaseResult>();
+                _purchaseCompletions.Add(productId, completion);
+                hasIssuedPurchase = true;
+                _storeController.PurchaseProduct(productId);
+                // Once a purchase starts, only the service lifetime cancels waiting. Closing UI must not cancel fulfillment.
+                return await completion.Task.AttachExternalCancellation(_lifetimeCancellation.Token);
+            }
+            catch (Exception exception)
+            {
+                Echo.Warning($"Store purchase '{productId}' interrupted: {exception}");
+                if (!hasIssuedPurchase)
+                {
+                    await _finalizer.RemovePurchaseAttemptsAsync(new[] { productId }, CancellationToken.None);
+                }
+                throw;
             }
             finally
             {
-                RemovePendingPurchase(productId);
+                _purchaseCompletions.Remove(productId);
             }
         }
 
         public async UniTask<IReadOnlyCollection<string>> FetchAvailableProductIdsAsync(
-            IReadOnlyList<IapProductFetchRequest> productFetchRequests,
-            CancellationToken cancellationToken)
+            IReadOnlyList<IapProductFetchRequest> requests, CancellationToken cancellationToken)
         {
-            Echo.Log($"Fetching product info for {productFetchRequests?.Count ?? 0} products...");
-            var availableProductIds = new HashSet<string>(StringComparer.Ordinal);
-            if (productFetchRequests == null || productFetchRequests.Count == 0)
-            {
-                return availableProductIds;
-            }
-
-            await EnsureStoreConnectedAsync(cancellationToken);
-
-            var productDefinitionsToFetch = new List<ProductDefinition>();
-            foreach (var request in productFetchRequests)
-            {
-                if (string.IsNullOrWhiteSpace(request.ListingId))
-                {
-                    continue;
-                }
-
-                if (availableProductIds.Contains(request.ListingId))
-                {
-                    continue;
-                }
-
-                Product cachedProduct = _storeController.GetProductById(request.ListingId);
-                if (cachedProduct != null)
-                {
-                    availableProductIds.Add(request.ListingId);
-                    continue;
-                }
-
-                ProductType productType = request.IsNonConsumable
-                    ? ProductType.NonConsumable
-                    : ProductType.Consumable;
-
-                productDefinitionsToFetch.Add(new ProductDefinition(request.ListingId, productType));
-            }
-
-            if (productDefinitionsToFetch.Count == 0)
-            {
-                Echo.Log("All products are already cached. No need to fetch from the store.");
-                return availableProductIds;
-            }
-
-            var completionSource = new UniTaskCompletionSource<bool>();
-
-            _storeController.OnProductsFetched += MarkFetchCompletedWhenProductsFetched;
-            _storeController.OnProductsFetchFailed += MarkFetchCompletedWhenProductsFetchFails;
-
+            await _storeLock.WaitAsync(cancellationToken);
             try
             {
-                _storeController.FetchProducts(productDefinitionsToFetch);
-
-                await using CancellationTokenRegistration cancellationRegistration =
-                    cancellationToken.RegisterWithoutCaptureExecutionContext(() => completionSource.TrySetCanceled(cancellationToken));
-
-                await completionSource.Task;
+                await EnsureStoreConnectedAsync(cancellationToken);
+                _productsCompletion = new UniTaskCompletionSource<bool>();
+                var definitions = requests.Select(request => new ProductDefinition(request.ListingId,
+                    request.IsNonConsumable ? ProductType.NonConsumable : ProductType.Consumable)).ToList();
+                if (definitions.Count == 0)
+                {
+                    return Array.Empty<string>();
+                }
+                _storeController.FetchProductsWithNoRetries(definitions);
+                await _productsCompletion.Task.AttachExternalCancellation(cancellationToken)
+                    .Timeout(TimeSpan.FromSeconds(STORE_TIMEOUT_SECONDS));
+                _purchasesCompletion = new UniTaskCompletionSource<bool>();
+                _storeController.FetchPurchases();
+                bool didRecoverPurchases = await _purchasesCompletion.Task.AttachExternalCancellation(cancellationToken)
+                    .Timeout(TimeSpan.FromSeconds(STORE_TIMEOUT_SECONDS));
+                if (!didRecoverPurchases)
+                {
+                    return Array.Empty<string>();
+                }
+                return requests.Where(request => _storeController.GetProductById(request.ListingId)?.availableToPurchase == true)
+                    .Select(request => request.ListingId).ToArray();
             }
             finally
             {
-                _storeController.OnProductsFetched -= MarkFetchCompletedWhenProductsFetched;
-                _storeController.OnProductsFetchFailed -= MarkFetchCompletedWhenProductsFetchFails;
-            }
-
-            foreach (var request in productFetchRequests)
-            {
-                if (string.IsNullOrWhiteSpace(request.ListingId))
-                {
-                    continue;
-                }
-
-                Product fetchedProduct = _storeController.GetProductById(request.ListingId);
-                if (fetchedProduct == null)
-                {
-                    continue;
-                }
-
-                Echo.Log($"Product with id '{fetchedProduct.definition.id}' '{fetchedProduct.metadata.localizedPriceString}' is available for purchase.");
-                availableProductIds.Add(request.ListingId);
-            }
-
-            return availableProductIds;
-
-            void MarkFetchCompletedWhenProductsFetchFails(ProductFetchFailed failure)
-            {
-                completionSource.TrySetResult(false);
-            }
-
-            void MarkFetchCompletedWhenProductsFetched(List<Product> products)
-            {
-                _storeController.FetchPurchases();
-                completionSource.TrySetResult(true);
+                _productsCompletion = null;
+                _purchasesCompletion = null;
+                _storeLock.Release();
             }
         }
 
         public bool TryGetCachedLocalizedPriceString(string productId, out string localizedPriceString)
         {
-            localizedPriceString = string.Empty;
-            if (string.IsNullOrWhiteSpace(productId))
-            {
-                Echo.Warning($"{nameof(TryGetCachedLocalizedPriceString)} received an empty product id.");
-                return false;
-            }
+            localizedPriceString = _storeController?.GetProductById(productId)?.metadata.localizedPriceString ?? string.Empty;
+            return !string.IsNullOrWhiteSpace(localizedPriceString);
+        }
 
-            if (_storeController == null)
+        public async UniTask RetryPendingPurchasesAsync()
+        {
+            foreach (PendingOrder order in _pendingOrders.Values.ToArray())
             {
-                Echo.Warning($"{nameof(TryGetCachedLocalizedPriceString)} was called before the store controller was created.");
-                return false;
+                await FulfillPendingOrderAsync(order);
             }
+        }
 
-            Product cachedProduct = _storeController.GetProductById(productId);
-            if (cachedProduct == null)
+        public void MarkConnected()
+        {
+            _isStoreConnected = true;
+        }
+
+        public void MarkDisconnected(StoreConnectionFailureDescription description)
+        {
+            _isStoreConnected = false;
+            Echo.Warning($"Store disconnected: {description.message}");
+            foreach (var completion in _purchaseCompletions.Values.ToArray())
             {
-                Echo.Warning($"Product with id '{productId}' was not cached when reading localized price.");
-                return false;
+                completion.TrySetResult(ShopPurchaseResult.Failed("Store disconnected. Pending rewards will be recovered."));
             }
+        }
 
-            localizedPriceString = cachedProduct.metadata.localizedPriceString;
-            if (!string.IsNullOrWhiteSpace(localizedPriceString))
+        public void CompleteProductFetch(List<Product> products)
+        {
+            _productsCompletion?.TrySetResult(true);
+        }
+
+        public void FailProductFetch(ProductFetchFailed failure)
+        {
+            Echo.Warning($"Store product fetch failed: {failure.FailureReason}");
+            _productsCompletion?.TrySetResult(false);
+        }
+
+        public void RecoverFetchedPurchases(Orders orders)
+        {
+            ReconcileFetchedPurchasesAsync(orders).Forget();
+        }
+
+        public void ReportPurchaseFetchFailure(PurchasesFetchFailureDescription failure)
+        {
+            Echo.Warning($"Store purchase recovery failed: {failure.Message}");
+            _purchasesCompletion?.TrySetResult(false);
+        }
+
+        public void BeginFulfillment(PendingOrder order)
+        {
+            FulfillPendingOrderAsync(order).Forget();
+        }
+
+        public void ConfirmPurchase(string transactionId)
+        {
+            _storeController.ConfirmPurchase(_pendingOrders[transactionId]);
+        }
+
+        public void CompleteConfirmation(Order order)
+        {
+            string productId = GetProductId(order);
+            if (order is ConfirmedOrder confirmedOrder)
             {
-                return true;
+                _pendingOrders.Remove(order.Info.TransactionID);
+                ShopListingSO listingSO = _catalogSO.GetAssetByID(productId);
+                if (listingSO == null)
+                {
+                    Echo.Warning($"Confirmed store product '{productId}' belongs to another catalog.");
+                    return;
+                }
+                PurchaseConfirmed?.Invoke(confirmedOrder);
+                CompleteSettledPurchaseAsync(productId, ShopPurchaseResult.Succeeded(
+                    listingSO.GetAllItemsGranted(), order.Info.TransactionID, true)).Forget();
             }
+            else
+            {
+                Echo.Warning($"Store confirmation failed for '{productId}'. Reward retained; confirmation will be retried.");
+                CompletePurchase(productId, ShopPurchaseResult.Failed("Reward delivered. Store confirmation pending."));
+            }
+        }
 
-            Echo.Warning($"Product with id '{productId}' does not have a localized price string.");
-            return false;
+        public void FailPurchase(FailedOrder order)
+        {
+            Echo.Warning($"Store purchase failed: {order.FailureReason} - {order.Details}");
+            ResolveFailedPurchaseAsync(GetProductId(order), order.FailureReason).Forget();
+        }
+
+        public async UniTask ResolveFailedPurchaseAsync(string productId, PurchaseFailureReason failureReason)
+        {
+            ShopPurchaseResult result = ShopPurchaseResult.Failed("Purchase cancelled or failed.");
+            if (IsTerminalFailure(failureReason))
+            {
+                await CompleteSettledPurchaseAsync(productId, result);
+            }
+            else
+            {
+                Echo.Warning($"Retaining purchase attempt '{productId}' after '{failureReason}' until the store resolves its order state.");
+                CompletePurchase(productId, result);
+            }
+        }
+
+        public void DeferPurchase(DeferredOrder order)
+        {
+            Echo.Warning($"Store purchase '{GetProductId(order)}' requires approval.");
+            CompletePurchase(GetProductId(order), ShopPurchaseResult.Failed("Purchase awaiting approval."));
+        }
+
+        public void Dispose()
+        {
+            _subscriber?.Dispose();
+            _lifetimeCancellation.Cancel();
+            _lifetimeCancellation.Dispose();
+            foreach (var completion in _purchaseCompletions.Values.ToArray())
+            {
+                completion.TrySetResult(ShopPurchaseResult.Failed("Shop session ended. Pending purchases will be recovered."));
+            }
         }
 
         #endregion
 
         #region Private Methods
+
+        private async UniTask ReconcileFetchedPurchasesAsync(Orders orders)
+        {
+            var retainedProductIds = new HashSet<string>(orders.PendingOrders.Select(GetProductId));
+            retainedProductIds.UnionWith(orders.DeferredOrders.Select(GetProductId));
+            retainedProductIds.UnionWith(_pendingOrders.Values.Select(GetProductId));
+            retainedProductIds.UnionWith(_purchaseCompletions.Keys);
+            string[] settledProductIds = _catalogSO.GetAllAssets().Where(listing => listing.PurchaseType == ShopPurchaseType.IAP &&
+                !retainedProductIds.Contains(listing.Id)).Select(listing => listing.Id).ToArray();
+            await _finalizer.RemovePurchaseAttemptsAsync(settledProductIds, CancellationToken.None);
+            foreach (PendingOrder order in orders.PendingOrders)
+            {
+                BeginFulfillment(order);
+            }
+            _purchasesCompletion?.TrySetResult(true);
+        }
+
+        private async UniTask CompleteSettledPurchaseAsync(string productId, ShopPurchaseResult result)
+        {
+            await _finalizer.RemovePurchaseAttemptsAsync(new[] { productId }, CancellationToken.None);
+            CompletePurchase(productId, result);
+        }
+
+        private static bool IsTerminalFailure(PurchaseFailureReason reason) => reason is
+            PurchaseFailureReason.UserCancelled or PurchaseFailureReason.OrderCancelled or PurchaseFailureReason.PaymentDeclined or
+            PurchaseFailureReason.ProductUnavailable or PurchaseFailureReason.PurchasingUnavailable or
+            PurchaseFailureReason.StoreNotConnected or PurchaseFailureReason.UserNotAuthenticated or PurchaseFailureReason.NotSupported;
 
         private async UniTask EnsureStoreConnectedAsync(CancellationToken cancellationToken)
         {
@@ -232,179 +284,70 @@ namespace FakeMG.Shop.Services.Purchase
             {
                 return;
             }
+            if (_storeController == null)
+            {
+                _storeController = UnityIAPServices.StoreController();
+                _storeController.ProcessPendingOrdersOnPurchasesFetched(false);
+                _subscriber = new UnityIapStoreSubscriber(_storeController, this);
+            }
+            await _storeController.Connect().AsUniTask().AttachExternalCancellation(cancellationToken)
+                .Timeout(TimeSpan.FromSeconds(STORE_TIMEOUT_SECONDS));
+        }
 
-            await _storeConnectionSemaphore.WaitAsync(cancellationToken);
+        private async UniTask FulfillPendingOrderAsync(PendingOrder order)
+        {
+            string transactionId = order.Info.TransactionID;
+            string productId = GetProductId(order);
+            if (string.IsNullOrWhiteSpace(transactionId) || string.IsNullOrWhiteSpace(productId))
+            {
+                Echo.Error("Cannot fulfill a store order without product and transaction IDs.");
+                return;
+            }
+            _pendingOrders[transactionId] = order;
+            if (!_processingTransactionIds.Add(transactionId))
+            {
+                Echo.Warning($"Store transaction '{transactionId}' is already being fulfilled.");
+                return;
+            }
             try
             {
-                if (_isStoreConnected)
+                ShopListingSO listingSO = _catalogSO.GetAssetByID(productId);
+                if (listingSO == null)
                 {
+                    Echo.Error($"Pending store product '{productId}' is absent from the shop catalog. Order remains unconfirmed.");
                     return;
                 }
-
-                if (_storeController == null)
-                {
-                    _storeController = UnityIAPServices.StoreController();
-
-                    _storeController.OnStoreConnected += MarkStoreConnectedWhenStoreConnected;
-                    _storeController.OnStoreDisconnected += MarkStoreDisconnectedWhenStoreDisconnected;
-                    _storeController.OnPurchasePending += ConfirmOrderWhenPurchaseIsPending;
-                    _storeController.OnPurchaseConfirmed += CompletePendingPurchaseWhenOrderIsConfirmed;
-                    _storeController.OnPurchaseFailed += FailPendingPurchaseWhenOrderFails;
-                }
-
-                await _storeController.Connect();
-                _isStoreConnected = true;
+                ShopPurchaseResult result = await _finalizer.FulfillAndConfirmAsync(listingSO,
+                    ShopPurchaseResult.Succeeded(listingSO.GetAllItemsGranted(), transactionId), this, _lifetimeCancellation.Token);
+                // Presentation can finish once rewards are durable. A delayed confirmation callback must not lock the shop.
+                // The unconfirmed order stays in _pendingOrders for confirmation retries, without granting again.
+                CompletePurchase(productId, result);
+            }
+            catch (Exception exception)
+            {
+                Echo.Error($"Pending purchase '{transactionId}' remains unconfirmed: {exception}");
+                CompletePurchase(productId, ShopPurchaseResult.Failed("Reward pending. Reopen the shop to retry."));
             }
             finally
             {
-                _storeConnectionSemaphore.Release();
+                _processingTransactionIds.Remove(transactionId);
             }
         }
 
-        private async UniTask<bool> EnsureProductFetchedAsync(string productId, ProductType productType, CancellationToken cancellationToken)
+        private void CompletePurchase(string productId, ShopPurchaseResult result)
         {
-            Product cachedProduct = _storeController.GetProductById(productId);
-            if (cachedProduct != null)
+            if (_purchaseCompletions.TryGetValue(productId, out var completion))
             {
-                return true;
-            }
-
-            var completionSource = new UniTaskCompletionSource<bool>();
-
-            void CompleteFetchWhenProductsAreFetched(List<Product> products)
-            {
-                bool foundProduct = products.Any(product => product != null && product.definition.id == productId);
-                completionSource.TrySetResult(foundProduct);
-            }
-
-            void CompleteFetchWhenProductsFetchFails(ProductFetchFailed failure)
-            {
-                completionSource.TrySetResult(false);
-            }
-
-            _storeController.OnProductsFetched += CompleteFetchWhenProductsAreFetched;
-            _storeController.OnProductsFetchFailed += CompleteFetchWhenProductsFetchFails;
-
-            try
-            {
-                _storeController.FetchProducts(new List<ProductDefinition>
-                {
-                    new(productId, productType),
-                });
-
-                using CancellationTokenRegistration cancellationRegistration =
-                    cancellationToken.RegisterWithoutCaptureExecutionContext(() => completionSource.TrySetCanceled(cancellationToken));
-
-                return await completionSource.Task;
-            }
-            finally
-            {
-                _storeController.OnProductsFetched -= CompleteFetchWhenProductsAreFetched;
-                _storeController.OnProductsFetchFailed -= CompleteFetchWhenProductsFetchFails;
+                completion.TrySetResult(result);
             }
         }
 
-        private bool TryBeginPendingPurchase(string productId, out UniTaskCompletionSource<bool> completionSource)
+        private static string GetProductId(Order order)
         {
-            lock (_pendingPurchaseLock)
-            {
-                if (_pendingPurchaseCompletionByProductId.ContainsKey(productId))
-                {
-                    completionSource = null;
-                    return false;
-                }
-
-                completionSource = new UniTaskCompletionSource<bool>();
-                _pendingPurchaseCompletionByProductId[productId] = completionSource;
-                return true;
-            }
-        }
-
-        private void MarkStoreConnectedWhenStoreConnected()
-        {
-            _isStoreConnected = true;
-        }
-
-        private void MarkStoreDisconnectedWhenStoreDisconnected(StoreConnectionFailureDescription description)
-        {
-            _isStoreConnected = false;
-            Echo.Warning($"Store disconnected: {description.message}");
-        }
-
-        private void ConfirmOrderWhenPurchaseIsPending(PendingOrder order)
-        {
-            _storeController.ConfirmPurchase(order);
-        }
-
-        private void CompletePendingPurchaseWhenOrderIsConfirmed(Order order)
-        {
-            string productId = ExtractFirstProductId(order);
-            if (string.IsNullOrWhiteSpace(productId))
-            {
-                return;
-            }
-
-            switch (order)
-            {
-                case ConfirmedOrder confirmedOrder:
-                    CompletePendingPurchase(productId, true);
-                    PurchaseConfirmed?.Invoke(confirmedOrder);
-                    return;
-                case FailedOrder:
-                    CompletePendingPurchase(productId, false);
-                    break;
-            }
-        }
-
-        private void FailPendingPurchaseWhenOrderFails(FailedOrder order)
-        {
-            string productId = ExtractFirstProductId(order);
-            if (string.IsNullOrWhiteSpace(productId))
-            {
-                return;
-            }
-
-            CompletePendingPurchase(productId, false);
-        }
-
-        private void CompletePendingPurchase(string productId, bool isSuccess)
-        {
-            lock (_pendingPurchaseLock)
-            {
-                if (_pendingPurchaseCompletionByProductId.TryGetValue(productId, out UniTaskCompletionSource<bool> completionSource))
-                {
-                    completionSource.TrySetResult(isSuccess);
-                }
-            }
-        }
-
-        private void CancelPendingPurchase(string productId, CancellationToken cancellationToken)
-        {
-            lock (_pendingPurchaseLock)
-            {
-                if (_pendingPurchaseCompletionByProductId.TryGetValue(productId, out UniTaskCompletionSource<bool> completionSource))
-                {
-                    completionSource.TrySetCanceled(cancellationToken);
-                }
-            }
-        }
-
-        private void RemovePendingPurchase(string productId)
-        {
-            lock (_pendingPurchaseLock)
-            {
-                _pendingPurchaseCompletionByProductId.Remove(productId);
-            }
-        }
-
-        private static string ExtractFirstProductId(Order order)
-        {
-            return order.CartOrdered.Items().FirstOrDefault()?.Product?.definition?.id;
+            return order.CartOrdered.Items().FirstOrDefault()?.Product?.definition?.id ?? string.Empty;
         }
 
         #endregion
-
     }
 }
-
 #endif

@@ -12,8 +12,6 @@ namespace FakeMG.Shop.Filters
 {
     public class ShopUnavailableIapProductsVisibilityFilter
     {
-        private const string UNAVAILABLE_IAP_PRICE_TEXT = "???";
-
         private readonly UnityIapPurchaseService _unityIapPurchaseService;
 
         public ShopUnavailableIapProductsVisibilityFilter(UnityIapPurchaseService unityIapPurchaseService)
@@ -54,11 +52,15 @@ namespace FakeMG.Shop.Filters
 
                 if (string.IsNullOrWhiteSpace(listingSO.Id) || !availableIapListingIdSet.Contains(listingSO.Id))
                 {
-                    SetupListingWithLocalizedIapPrice(listingSO, UNAVAILABLE_IAP_PRICE_TEXT);
+                    listingSO.IsIapAvailable = false;
+                    listingSO.LocalizedIapPriceText = "???";
+                    filteredListings.Add(listingSO);
                     continue;
                 }
 
-                SetupListingWithLocalizedIapPrice(listingSO, listingSO.LocalizedIapPriceText);
+                listingSO.IsIapAvailable = _unityIapPurchaseService.TryGetCachedLocalizedPriceString(
+                    listingSO.Id, out string localizedPriceText);
+                listingSO.LocalizedIapPriceText = listingSO.IsIapAvailable ? localizedPriceText : "???";
 
                 filteredListings.Add(listingSO);
             }
@@ -98,23 +100,6 @@ namespace FakeMG.Shop.Filters
             }
 
             return requests;
-        }
-
-        private void SetupListingWithLocalizedIapPrice(
-            ShopListingSO shopListingSO,
-            string fallbackLocalizedIapPriceText)
-        {
-            if (!_unityIapPurchaseService.TryGetCachedLocalizedPriceString(shopListingSO.Id, out string localizedIapPriceText))
-            {
-                if (!string.IsNullOrWhiteSpace(fallbackLocalizedIapPriceText))
-                {
-                    shopListingSO.LocalizedIapPriceText = fallbackLocalizedIapPriceText;
-                }
-            }
-            else
-            {
-                shopListingSO.LocalizedIapPriceText = localizedIapPriceText;
-            }
         }
 
         #endregion

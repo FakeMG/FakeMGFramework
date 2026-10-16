@@ -43,8 +43,10 @@ namespace FakeMG.SaveLoad.Tests
             saveDataStore.DidNotReceive().GetDirectories(Arg.Any<string>());
         }
 
-        [Test]
-        public async System.Threading.Tasks.Task SaveAsync_TwoDocuments_UsesEachDocumentProtectionProfile()
+        [TestCase("keybindings", "keybindings.json")]
+        [TestCase("runtime-state", "runtime-state.json")]
+        public async System.Threading.Tasks.Task SaveAsync_TwoDocuments_UsesEachDocumentProtectionProfile(
+            string protectedDocumentId, string protectedFileName)
         {
             ISaveDataStore saveDataStore = Substitute.For<ISaveDataStore>();
             IAtomicFileTransaction atomicFileTransaction = Substitute.For<IAtomicFileTransaction>();
@@ -66,12 +68,13 @@ namespace FakeMG.SaveLoad.Tests
                 new IGlobalSaveDocument[]
                 {
                     new TestGlobalSaveDocument("settings", "settings.json", SaveFileProtectionSettings.Plain),
-                    new TestGlobalSaveDocument("keybindings", "keybindings.json", protectedSettings),
+                    new TestGlobalSaveDocument(protectedDocumentId, protectedFileName, protectedSettings),
                 });
 
             await globalSaveManager.SaveAsync("settings", CancellationToken.None);
-            await globalSaveManager.SaveAsync("keybindings", CancellationToken.None);
+            GlobalDocumentSaveResult protectedResult = await globalSaveManager.SaveAsync(protectedDocumentId, CancellationToken.None);
 
+            Assert.That(protectedResult.Succeeded, Is.True);
             Assert.That(saveDataStoreFactory.CreatedProtectionSettings, Has.Count.EqualTo(2));
             Assert.That(saveDataStoreFactory.CreatedProtectionSettings[0], Is.SameAs(SaveFileProtectionSettings.Plain));
             Assert.That(saveDataStoreFactory.CreatedProtectionSettings[1], Is.SameAs(protectedSettings));

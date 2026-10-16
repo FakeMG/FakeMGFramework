@@ -4,5 +4,6 @@ namespace FakeMG.Shop.RuntimeData
     {
         IAP = 0,
         InGameCurrency = 1,
+        RewardedAd = 2,
     }
 }
