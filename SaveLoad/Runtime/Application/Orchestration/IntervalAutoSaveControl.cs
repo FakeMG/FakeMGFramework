@@ -8,7 +8,7 @@ namespace FakeMG.SaveLoad
         IDisposable SuspendIntervalAutoSave(string reason);
     }
 
-    public sealed class IntervalAutoSaveGate : IIntervalAutoSaveControl
+    internal sealed class IntervalAutoSaveGate
     {
         private readonly HashSet<Suspension> _suspensions = new();
         public bool IsSuspended => _suspensions.Count > 0;

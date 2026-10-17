@@ -171,7 +171,7 @@ namespace FakeMG.Framework.UI.Popup
             }
         }
 
-        public async UniTask ShowPopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
+        public async UniTask ShowPopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool shouldAnimate = true)
         {
             if (!TryGetLoadedPopup(popupPrefabAsset, out _, out PopupAnimator popupAnimator))
             {
@@ -179,10 +179,10 @@ namespace FakeMG.Framework.UI.Popup
                 return;
             }
 
-            await popupAnimator.Show(animate);
+            await popupAnimator.Show(shouldAnimate);
         }
 
-        public async UniTask HidePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool animate = true)
+        public async UniTask HidePopupAsync(AssetReferenceT<GameObject> popupPrefabAsset, bool shouldAnimate = true)
         {
             if (!TryGetLoadedPopup(popupPrefabAsset, out _, out PopupAnimator popupAnimator))
             {
@@ -190,10 +190,10 @@ namespace FakeMG.Framework.UI.Popup
                 return;
             }
 
-            await popupAnimator.Hide(animate);
+            await popupAnimator.Hide(shouldAnimate);
         }
 
-        public async UniTask HideAllPopupsAsync(bool animate = true)
+        public async UniTask HideAllPopupsAsync(bool shouldAnimate = true)
         {
             if (_openPopups.Count == 0)
                 return;
@@ -214,7 +214,7 @@ namespace FakeMG.Framework.UI.Popup
             });
 
             foreach (PopupAnimator popupAnimator in _hideAllBuffer)
-                await popupAnimator.Hide(animate);
+                await popupAnimator.Hide(shouldAnimate);
 
             _hideAllBuffer.Clear();
         }

@@ -33,9 +33,9 @@ namespace FakeMG.TimeCycle
             float defaultCommandTransitionDurationSeconds = sharedProfileSO.DefaultCommandTransitionDurationSeconds;
             AnimationCurve defaultCommandTransitionCurve = sharedProfileSO.DefaultCommandTransitionCurve;
             List<CyclePeriodDefinition> periods = new(sharedProfileSO.Periods);
-            Dictionary<CycleOutputKeySO, CycleOutputDefinition> outputByKey = new();
+            Dictionary<CycleOutputKeySO, CycleOutputDefinition> outputByKeySO = new();
 
-            if (!TryMergeOutputs(sharedProfileSO.OutputDefinitions, outputByKey, out errorMessage))
+            if (!TryMergeOutputs(sharedProfileSO.OutputDefinitions, outputByKeySO, out errorMessage))
             {
                 return false;
             }
@@ -49,7 +49,7 @@ namespace FakeMG.TimeCycle
                     ref defaultCommandTransitionDurationSeconds,
                     ref defaultCommandTransitionCurve,
                     ref periods,
-                    outputByKey,
+                    outputByKeySO,
                     out errorMessage)
                 || !TryApplyOverride(
                     runtimeOverrideSO,
@@ -60,13 +60,13 @@ namespace FakeMG.TimeCycle
                     ref defaultCommandTransitionDurationSeconds,
                     ref defaultCommandTransitionCurve,
                     ref periods,
-                    outputByKey,
+                    outputByKeySO,
                     out errorMessage))
             {
                 return false;
             }
 
-            List<CycleOutputDefinition> outputDefinitions = outputByKey.Values.ToList();
+            List<CycleOutputDefinition> outputDefinitions = outputByKeySO.Values.ToList();
             if (!TryValidate(
                     cycleDurationSeconds,
                     defaultStartingProgress01,
@@ -123,7 +123,7 @@ namespace FakeMG.TimeCycle
             ref float defaultCommandTransitionDurationSeconds,
             ref AnimationCurve defaultCommandTransitionCurve,
             ref List<CyclePeriodDefinition> periods,
-            Dictionary<CycleOutputKeySO, CycleOutputDefinition> outputByKey,
+            Dictionary<CycleOutputKeySO, CycleOutputDefinition> outputByKeySO,
             out string errorMessage)
         {
             errorMessage = null;
@@ -163,15 +163,15 @@ namespace FakeMG.TimeCycle
                 periods = new List<CyclePeriodDefinition>(overrideSO.Periods);
             }
 
-            return TryMergeOutputs(overrideSO.OutputDefinitions, outputByKey, out errorMessage);
+            return TryMergeOutputs(overrideSO.OutputDefinitions, outputByKeySO, out errorMessage);
         }
 
         private static bool TryMergeOutputs(
             IReadOnlyList<CycleOutputDefinition> definitions,
-            Dictionary<CycleOutputKeySO, CycleOutputDefinition> outputByKey,
+            Dictionary<CycleOutputKeySO, CycleOutputDefinition> outputByKeySO,
             out string errorMessage)
         {
-            HashSet<CycleOutputKeySO> layerOutputKeys = new();
+            HashSet<CycleOutputKeySO> layerOutputKeysSO = new();
             for (int outputIndex = 0; outputIndex < definitions.Count; outputIndex++)
             {
                 CycleOutputDefinition definition = definitions[outputIndex];
@@ -188,13 +188,13 @@ namespace FakeMG.TimeCycle
                     return false;
                 }
 
-                if (!layerOutputKeys.Add(outputKeySO))
+                if (!layerOutputKeysSO.Add(outputKeySO))
                 {
                     errorMessage = $"Output key '{outputKeySO.name}' occurs more than once in one profile layer.";
                     return false;
                 }
 
-                if (outputByKey.TryGetValue(outputKeySO, out CycleOutputDefinition inheritedDefinition)
+                if (outputByKeySO.TryGetValue(outputKeySO, out CycleOutputDefinition inheritedDefinition)
                     && inheritedDefinition.ValueType != definition.ValueType)
                 {
                     errorMessage =
@@ -203,7 +203,7 @@ namespace FakeMG.TimeCycle
                     return false;
                 }
 
-                outputByKey[outputKeySO] = definition;
+                outputByKeySO[outputKeySO] = definition;
             }
 
             errorMessage = null;
@@ -260,9 +260,9 @@ namespace FakeMG.TimeCycle
             for (int periodIndex = 0; periodIndex < periods.Count; periodIndex++)
             {
                 CyclePeriodDefinition period = periods[periodIndex];
-                if (period == null || period.PeriodSO == null || !period.PeriodId.IsValid)
+                if (period == null || !period.PeriodId.IsValid)
                 {
-                    errorMessage = $"Period at index {periodIndex} is null, has no shared period asset, or has an empty identifier.";
+                    errorMessage = $"Period at index {periodIndex} is null or has an empty identifier.";
                     return false;
                 }
 

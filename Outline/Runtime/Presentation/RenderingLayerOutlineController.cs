@@ -48,6 +48,25 @@ namespace FakeMG.Outline
             RestoreAndUnregisterSelection();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ClearSelectionsForPlayMode()
+        {
+            RenderingLayerOutlineSelectionRegistry.Shared.ClearSelections();
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+        private static void RestoreSurvivingSelectionRegistrations()
+        {
+            // With scene and domain reload disabled, already-enabled controllers retain their selection state.
+            // Rebuild once at startup; the rendering feature never scans the scene or its renderers.
+            RenderingLayerOutlineController[] controllers = UnityEngine.Object.FindObjectsByType<RenderingLayerOutlineController>(
+                FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int controllerIndex = 0; controllerIndex < controllers.Length; controllerIndex++)
+            {
+                controllers[controllerIndex].RefreshSelectionRegistration();
+            }
+        }
+
         #endregion
 
         #region Public Methods
@@ -69,6 +88,18 @@ namespace FakeMG.Outline
         #endregion
 
         #region Private Methods
+
+        private void RestoreAndUnregisterSelection()
+        {
+            RenderingLayerOutlineSelectionRegistry.Shared.UnregisterSelection(this);
+            if (!_isSelected)
+            {
+                return;
+            }
+
+            _isSelected = false;
+            ApplyRenderingLayers(false);
+        }
 
         private void ApplyRenderingLayers(bool isSelected)
         {
@@ -111,37 +142,6 @@ namespace FakeMG.Outline
             }
 
             RenderingLayerOutlineSelectionRegistry.Shared.UnregisterSelection(this);
-        }
-
-        private void RestoreAndUnregisterSelection()
-        {
-            RenderingLayerOutlineSelectionRegistry.Shared.UnregisterSelection(this);
-            if (!_isSelected)
-            {
-                return;
-            }
-
-            _isSelected = false;
-            ApplyRenderingLayers(false);
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ClearSelectionsForPlayMode()
-        {
-            RenderingLayerOutlineSelectionRegistry.Shared.ClearSelections();
-        }
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-        private static void RestoreSurvivingSelectionRegistrations()
-        {
-            // With scene and domain reload disabled, already-enabled controllers retain their selection state.
-            // Rebuild once at startup; the rendering feature never scans the scene or its renderers.
-            RenderingLayerOutlineController[] controllers = UnityEngine.Object.FindObjectsByType<RenderingLayerOutlineController>(
-                FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            for (int controllerIndex = 0; controllerIndex < controllers.Length; controllerIndex++)
-            {
-                controllers[controllerIndex].RefreshSelectionRegistration();
-            }
         }
 
         #endregion

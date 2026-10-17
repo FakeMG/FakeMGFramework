@@ -149,12 +149,6 @@ namespace FakeMG.Outline.Tests
 
         #region Private Methods
 
-        private T TrackObject<T>(T temporaryObject) where T : Object
-        {
-            _temporaryObjects.Add(temporaryObject);
-            return temporaryObject;
-        }
-
         private Texture2D CreateMaskTexture(bool hasDepthVariation)
         {
             Texture2D mask = TrackObject(new Texture2D(TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS, TextureFormat.RGFloat, false, true));
@@ -228,26 +222,26 @@ namespace FakeMG.Outline.Tests
             }
         }
 
-        private static bool IsYellow(Color color)
-        {
-            return color.r > 0.9f && color.g > 0.9f && color.b < 0.1f;
-        }
-
         private static int CountYellowPixels(Texture2D texture, RectInt rectanglePixels)
         {
-            int count = 0;
+            int yellowPixelCount = 0;
             for (int yPixels = rectanglePixels.yMin; yPixels < rectanglePixels.yMax; yPixels++)
             {
                 for (int xPixels = rectanglePixels.xMin; xPixels < rectanglePixels.xMax; xPixels++)
                 {
                     if (IsYellow(texture.GetPixel(xPixels, yPixels)))
                     {
-                        count++;
+                        yellowPixelCount++;
                     }
                 }
             }
 
-            return count;
+            return yellowPixelCount;
+        }
+
+        private static bool IsYellow(Color color)
+        {
+            return color.r > 0.9f && color.g > 0.9f && color.b < 0.1f;
         }
 
         private Mesh CreateBodyMesh()
@@ -278,6 +272,12 @@ namespace FakeMG.Outline.Tests
             };
             quad.triangles = new[] { 0, 1, 2, 0, 2, 3 };
             return quad;
+        }
+
+        private T TrackObject<T>(T temporaryObject) where T : Object
+        {
+            _temporaryObjects.Add(temporaryObject);
+            return temporaryObject;
         }
 
         #endregion

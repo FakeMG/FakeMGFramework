@@ -20,9 +20,9 @@ namespace FakeMG.Framework
         [SerializeField] private AssetReferenceSprite _iconSpriteAsset;
 
         public string Id => _id;
-        public string ItemName => _itemName;
-        public string Description => _description;
-        public AssetReferenceSprite IconSpriteAsset => _iconSpriteAsset;
+        public virtual string ItemName => _itemName;
+        public virtual string Description => _description;
+        public virtual AssetReferenceSprite IconSpriteAsset => _iconSpriteAsset;
 
 #if UNITY_EDITOR
         public void ConfigureIdentityForEditor(string id, string itemName, AssetReferenceSprite iconSpriteAsset)

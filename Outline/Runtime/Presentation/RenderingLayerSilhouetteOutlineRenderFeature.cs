@@ -192,27 +192,11 @@ namespace FakeMG.Outline
                 builder.SetRenderFunc<FullscreenPassData>(DrawHorizontalDilation);
             }
 
-            private void ConfigureFullscreenPass(FullscreenPassData passData, TextureHandle mask, TextureHandle horizontalMask)
-            {
-                passData.selectionMask = mask;
-                passData.horizontallyDilatedMask = horizontalMask;
-                passData.material = _material;
-                passData.properties = _fullscreenProperties;
-            }
-
             private static void DrawHorizontalDilation(FullscreenPassData data, RasterGraphContext context)
             {
                 ConfigureFullscreenProperties(data);
                 context.cmd.DrawProcedural(Matrix4x4.identity, data.material, HORIZONTAL_DILATION_PASS_INDEX,
                     MeshTopology.Triangles, 3, 1, data.properties);
-            }
-
-            private static void ConfigureFullscreenProperties(FullscreenPassData data)
-            {
-                RenderTexture mask = data.selectionMask;
-                data.properties.Clear();
-                data.properties.SetTexture(SELECTION_MASK_ID, mask);
-                data.properties.SetVector(MASK_SIZE_PIXELS_ID, new Vector4(mask.width, mask.height, 0f, 0f));
             }
 
             private void RecordComposite(RenderGraph renderGraph, UniversalResourceData resources,
@@ -234,6 +218,22 @@ namespace FakeMG.Outline
                 data.properties.SetTexture(DILATED_MASK_ID, data.horizontallyDilatedMask);
                 context.cmd.DrawProcedural(Matrix4x4.identity, data.material, COMPOSITE_PASS_INDEX,
                     MeshTopology.Triangles, 3, 1, data.properties);
+            }
+
+            private void ConfigureFullscreenPass(FullscreenPassData passData, TextureHandle mask, TextureHandle horizontalMask)
+            {
+                passData.selectionMask = mask;
+                passData.horizontallyDilatedMask = horizontalMask;
+                passData.material = _material;
+                passData.properties = _fullscreenProperties;
+            }
+
+            private static void ConfigureFullscreenProperties(FullscreenPassData data)
+            {
+                RenderTexture mask = data.selectionMask;
+                data.properties.Clear();
+                data.properties.SetTexture(SELECTION_MASK_ID, mask);
+                data.properties.SetVector(MASK_SIZE_PIXELS_ID, new Vector4(mask.width, mask.height, 0f, 0f));
             }
 
             #endregion

@@ -58,23 +58,23 @@ namespace FakeMG.Framework.UI
                 _showCountWhenZero || count > GameNumber.Zero);
         }
 
-        public async UniTask UpdateUIAsync(IdentitySO item, GameNumber count)
+        public async UniTask UpdateUIAsync(IdentitySO identitySO, GameNumber count)
         {
             await UpdateUIAsync(
-                item,
+                identitySO,
                 count > GameNumber.Zero ? count.ToShorthand(3) : "0",
                 _showCountWhenZero || count > GameNumber.Zero);
         }
 
-        public async UniTask UpdateUIAsync(IdentitySO item, int count)
+        public async UniTask UpdateUIAsync(IdentitySO identitySO, int count)
         {
             await UpdateUIAsync(
-                item,
+                identitySO,
                 count.SeparateNumberWithComma(),
                 _showCountWhenZero || count > 0);
         }
 
-        public async UniTask UpdateUIAsync(IdentitySO item, string countText, bool isCountVisible)
+        public async UniTask UpdateUIAsync(IdentitySO identitySO, string countText, bool isCountVisible)
         {
             int requestVersion = InvalidatePendingRequests();
             if (!_shouldCacheIcons)
@@ -84,7 +84,7 @@ namespace FakeMG.Framework.UI
 
             ApplyCountPresentation(countText, isCountVisible);
             ApplyIconPresentation(null);
-            Sprite sprite = await _iconCache.LoadIconAsync(item, this.GetCancellationTokenOnDestroy());
+            Sprite sprite = await _iconCache.LoadIconAsync(identitySO, this.GetCancellationTokenOnDestroy());
             if (requestVersion == _updateRequestVersion)
             {
                 ApplyIconPresentation(sprite);
