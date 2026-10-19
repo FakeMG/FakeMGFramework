@@ -3,6 +3,7 @@
     "rootNamespace": "FakeMG.Audio",
     "references": [
         "FakeMG.Framework",
+        "UnityEngine.UI",
         "FakeMG.Settings",
         "FakeMG.SaveLoad",
         "VContainer",

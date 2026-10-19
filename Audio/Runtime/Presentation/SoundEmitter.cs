@@ -13,6 +13,8 @@ namespace FakeMG.Audio
     {
         private AudioSource _audioSource;
         private CancellationTokenSource _completionCancellationSource;
+        private float _baseVolume01;
+        private float _basePitch;
 
         public event Action<SoundEmitter> OnSoundFinishedPlaying;
         public event Action<SoundEmitter> OnSoundDestroyed;
@@ -50,6 +52,8 @@ namespace FakeMG.Audio
             _audioSource.clip = clip;
             _audioSource.outputAudioMixerGroup = outputAudioMixerGroup;
             audioConfigSO.ApplyToWithVariations(_audioSource, audioCueSO);
+            _baseVolume01 = _audioSource.volume;
+            _basePitch = _audioSource.pitch;
             _audioSource.transform.position = position;
             _audioSource.loop = audioCueSO.Looping;
             _audioSource.time = audioCueSO.RandomStartTime ? UnityEngine.Random.Range(0f, clip.length) : 0f;
@@ -58,6 +62,12 @@ namespace FakeMG.Audio
             {
                 StartCompletionWait();
             }
+        }
+
+        public void ApplyPlaybackMultipliers(float volumeMultiplier01, float pitchMultiplier)
+        {
+            _audioSource.volume = _baseVolume01 * Mathf.Clamp01(volumeMultiplier01);
+            _audioSource.pitch = Mathf.Clamp(_basePitch * pitchMultiplier, -3f, 3f);
         }
 
         public void Stop()
@@ -81,9 +91,10 @@ namespace FakeMG.Audio
             AudioClip musicClip,
             AudioConfigurationSO audioConfigSO,
             AudioCueSO audioCueSO,
-            AudioMixerGroup outputAudioMixerGroup)
+            AudioMixerGroup outputAudioMixerGroup,
+            Vector3 positionMeters = default)
         {
-            Play(musicClip, audioConfigSO, audioCueSO, outputAudioMixerGroup);
+            Play(musicClip, audioConfigSO, audioCueSO, outputAudioMixerGroup, positionMeters);
             float targetVolume = _audioSource.volume;
             _audioSource.volume = 0f;
             _audioSource.DOFade(targetVolume, audioCueSO.FadeInDuration).SetUpdate(true);

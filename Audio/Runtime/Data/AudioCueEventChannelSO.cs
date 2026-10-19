@@ -20,6 +20,9 @@ namespace FakeMG.Audio
         public event AudioCuePlayAction OnAudioCuePlayRequested;
         public event AudioCueStopAction OnAudioCueStopRequested;
         public event AudioCueFinishAction OnAudioCueFinishRequested;
+        public event AudioCuePlaybackUpdateAction OnAudioCuePlaybackUpdateRequested;
+
+        public bool HasPlaybackListener => OnAudioCuePlayRequested != null;
 
         public SliderSettingSO VolumeSliderSetting => _volumeSliderSetting;
         public AudioMixer AudioMixer => _audioMixer;
@@ -52,6 +55,15 @@ namespace FakeMG.Audio
             }
 
             return audioCueKey;
+        }
+
+        public bool RaisePlaybackUpdateEvent(AudioCueKey audioCueKey, float volumeMultiplier01, float pitchMultiplier)
+        {
+            if (OnAudioCuePlaybackUpdateRequested != null)
+                return OnAudioCuePlaybackUpdateRequested.Invoke(audioCueKey, volumeMultiplier01, pitchMultiplier);
+
+            Echo.Warning($"Audio playback update on '{name}' has no AudioManager listener.");
+            return false;
         }
 
         public bool RaiseStopEvent(AudioCueKey audioCueKey, AudioCueSO audioCue)
@@ -101,4 +113,6 @@ namespace FakeMG.Audio
     public delegate bool AudioCueStopAction(AudioCueKey emitterKey, AudioCueSO audioCue);
 
     public delegate bool AudioCueFinishAction(AudioCueKey emitterKey);
+
+    public delegate bool AudioCuePlaybackUpdateAction(AudioCueKey emitterKey, float volumeMultiplier01, float pitchMultiplier);
 }

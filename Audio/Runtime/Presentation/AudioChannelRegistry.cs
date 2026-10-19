@@ -19,6 +19,7 @@ namespace FakeMG.Audio
         private AudioCuePlayAction _pooledPlayHandler;
         private AudioCueStopAction _pooledStopHandler;
         private AudioCueFinishAction _pooledFinishHandler;
+        private AudioCuePlaybackUpdateAction _pooledPlaybackUpdateHandler;
         private AudioCuePlayAction _musicPlayHandler;
         private AudioCueStopAction _musicStopHandler;
 
@@ -32,11 +33,13 @@ namespace FakeMG.Audio
         public void RegisterPooledChannels(
             AudioCuePlayAction playHandler,
             AudioCueStopAction stopHandler,
-            AudioCueFinishAction finishHandler)
+            AudioCueFinishAction finishHandler,
+            AudioCuePlaybackUpdateAction playbackUpdateHandler = null)
         {
             _pooledPlayHandler = playHandler;
             _pooledStopHandler = stopHandler;
             _pooledFinishHandler = finishHandler;
+            _pooledPlaybackUpdateHandler = playbackUpdateHandler;
 
             _registeredPooledChannels.Clear();
             if (_pooledChannels == null)
@@ -54,6 +57,7 @@ namespace FakeMG.Audio
                 channel.OnAudioCuePlayRequested += playHandler;
                 channel.OnAudioCueStopRequested += stopHandler;
                 channel.OnAudioCueFinishRequested += finishHandler;
+                channel.OnAudioCuePlaybackUpdateRequested += playbackUpdateHandler;
                 _registeredPooledChannels.Add(channel);
             }
         }
@@ -65,6 +69,7 @@ namespace FakeMG.Audio
                 channel.OnAudioCuePlayRequested -= _pooledPlayHandler;
                 channel.OnAudioCueStopRequested -= _pooledStopHandler;
                 channel.OnAudioCueFinishRequested -= _pooledFinishHandler;
+                channel.OnAudioCuePlaybackUpdateRequested -= _pooledPlaybackUpdateHandler;
             }
 
             _registeredPooledChannels.Clear();

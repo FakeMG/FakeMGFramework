@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using FakeMG.Framework;
 using FakeMG.Settings;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -36,7 +37,7 @@ namespace FakeMG.Audio
 
         private void OnEnable()
         {
-            _channelRegistry.RegisterPooledChannels(PlayAudioCue, StopAudioCue, FinishAudioCue);
+            _channelRegistry.RegisterPooledChannels(PlayAudioCue, StopAudioCue, FinishAudioCue, UpdateAudioCuePlayback);
             _channelRegistry.RegisterMusicChannel(PlayMusicTrack, StopMusicTrack);
         }
 
@@ -158,7 +159,7 @@ namespace FakeMG.Audio
 
             if (audioCueSO.FadeIn)
             {
-                soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO, outputAudioMixerGroup);
+                soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO, outputAudioMixerGroup, position);
             }
             else
             {
@@ -167,6 +168,29 @@ namespace FakeMG.Audio
 
             soundEmitter.OnSoundFinishedPlaying += CleanEmitter;
             soundEmitter.OnSoundDestroyed += RemoveEmitter;
+        }
+
+        private bool UpdateAudioCuePlayback(AudioCueKey audioCueKey, float volumeMultiplier01, float pitchMultiplier)
+        {
+            if (!float.IsFinite(volumeMultiplier01) || !float.IsFinite(pitchMultiplier))
+            {
+                Echo.Warning("Audio playback update rejected because volume or pitch is not finite.");
+                return false;
+            }
+
+            lock (_vaultLock)
+            {
+                if (!_soundEmitterVault.Get(audioCueKey, out List<SoundEmitter> emitters))
+                {
+                    Echo.Warning("Audio playback update rejected because its playback key is no longer active.");
+                    return false;
+                }
+
+                foreach (SoundEmitter emitter in emitters)
+                    emitter.ApplyPlaybackMultipliers(volumeMultiplier01, pitchMultiplier);
+            }
+
+            return true;
         }
 
         private bool StopAudioCue(AudioCueKey audioCueKey, AudioCueSO audioCue)
