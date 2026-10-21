@@ -28,6 +28,7 @@ namespace FakeMG.Framework.UI.RewardFly
             Vector3 scatterTargetLocalPositionPixels = flyTransform.localPosition + ComputeCanvasScatterOffsetPixels();
             Tween scatterTween = flyTransform.DOLocalMove(scatterTargetLocalPositionPixels, _scatterDurationSeconds)
                 .SetEase(Ease.OutQuad)
+                .SetUpdate(true)
                 .SetLink(rewardFlyTokenView.gameObject);
 
             return scatterTween.ToUniTask(cancellationToken: rewardFlyTokenView.GetCancellationTokenOnDestroy());

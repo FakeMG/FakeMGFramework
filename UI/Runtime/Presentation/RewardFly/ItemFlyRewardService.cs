@@ -58,7 +58,8 @@ namespace FakeMG.Framework.UI.RewardFly
                 speedCurve,
                 arcHeightPixels,
                 localArcDirection,
-                cancellationToken);
+                cancellationToken,
+                usesUnscaledTime: true);
         }
 
         public UniTask PlayWorldTransformToWorldAsync(
@@ -231,7 +232,8 @@ namespace FakeMG.Framework.UI.RewardFly
             AnimationCurve speedCurve,
             float arcHeight,
             Vector3 arcDirection,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool usesUnscaledTime = false)
         {
             return PlayFlightAsync(
                 flyingTransform,
@@ -244,7 +246,8 @@ namespace FakeMG.Framework.UI.RewardFly
                     arcDirection),
                 applyPosition,
                 durationSeconds,
-                cancellationToken);
+                cancellationToken,
+                usesUnscaledTime);
         }
 
         private static UniTask PlayFlightAsync(
@@ -252,7 +255,8 @@ namespace FakeMG.Framework.UI.RewardFly
             Func<float, Vector3> evaluatePosition,
             Action<Vector3> applyPosition,
             float durationSeconds,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            bool usesUnscaledTime = false)
         {
             Tween flightTween = DOTween.To(
                     () => 0f,
@@ -260,6 +264,7 @@ namespace FakeMG.Framework.UI.RewardFly
                     1f,
                     durationSeconds)
                 .SetEase(Ease.InQuad)
+                .SetUpdate(usesUnscaledTime)
                 .SetLink(flyingComponent.gameObject);
 
             return flightTween.ToUniTask(cancellationToken: cancellationToken);

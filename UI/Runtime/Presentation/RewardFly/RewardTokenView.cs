@@ -56,6 +56,7 @@ namespace FakeMG.Framework.UI.RewardFly
             FlyTransform.localScale = Vector3.zero;
             Tween scaleTween = FlyTransform.DOScale(Vector3.one, scaleDurationSeconds)
                 .SetEase(Ease.OutBack)
+                .SetUpdate(true)
                 .SetLink(gameObject);
 
             return scaleTween.ToUniTask(cancellationToken: this.GetCancellationTokenOnDestroy());
@@ -63,6 +64,12 @@ namespace FakeMG.Framework.UI.RewardFly
 
         public void Dispose()
         {
+            if (!this)
+            {
+                Echo.Log("Reward token cleanup skipped because its canvas already destroyed the token.");
+                return;
+            }
+
             FlyTransform.DOKill();
             Destroy(gameObject);
         }
