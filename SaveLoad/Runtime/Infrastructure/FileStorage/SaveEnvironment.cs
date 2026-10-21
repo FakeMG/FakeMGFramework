@@ -10,7 +10,8 @@ namespace FakeMG.SaveLoad
 
     public sealed class UnitySaveEnvironment : ISaveEnvironment
     {
-        public string StorageRootPath => Application.persistentDataPath;
-        public string ApplicationVersion => Application.version;
+        // Capture Unity properties at startup so storage workers never call Unity's main-thread-only getters.
+        public string StorageRootPath { get; } = Application.persistentDataPath;
+        public string ApplicationVersion { get; } = Application.version;
     }
 }

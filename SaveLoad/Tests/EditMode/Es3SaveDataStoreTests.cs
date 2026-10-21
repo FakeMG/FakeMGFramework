@@ -57,5 +57,31 @@ namespace FakeMG.SaveLoad.Tests
                 File.Exists(AtomicFileTransactionPaths.GetBackupPath(_temporaryFilePath)),
                 Is.False);
         }
+
+        [Test]
+        public void WriteSaveFile_ReplacesCompletePayloadWithoutKeepingRemovedKeys()
+        {
+            var saveDataStore = new Es3SaveDataStore(SaveFileProtectionSettings.Plain, Path.GetTempPath());
+            var metadata = new SaveMetadata
+            {
+                TimestampUtc = DateTime.UtcNow,
+                ApplicationVersion = "1.0.0",
+                SaveKind = SaveFileKind.GlobalDocument,
+                OwnerId = "settings",
+            };
+            saveDataStore.WriteSaveFile(_temporaryFilePath, metadata, new Dictionary<string, object> { ["Removed"] = 1 });
+
+            saveDataStore.WriteSaveFile(_temporaryFilePath, metadata, new Dictionary<string, object>
+            {
+                ["Score"] = 42,
+                ["Mission"] = "claimed",
+                ["Rewards"] = new[] { 100, 25 },
+            });
+
+            Assert.That(saveDataStore.KeyExists("Removed", _temporaryFilePath), Is.False);
+            Assert.That(saveDataStore.LoadState("Score", _temporaryFilePath), Is.EqualTo(42));
+            Assert.That(saveDataStore.LoadState("Mission", _temporaryFilePath), Is.EqualTo("claimed"));
+            Assert.That(saveDataStore.LoadState("Rewards", _temporaryFilePath), Is.EqualTo(new[] { 100, 25 }));
+        }
     }
 }

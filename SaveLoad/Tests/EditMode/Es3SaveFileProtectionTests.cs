@@ -38,9 +38,11 @@ namespace FakeMG.SaveLoad.Tests
             saveDataStore.WriteSaveFile(
                 temporaryFilePath,
                 CreateMetadata(),
-                new Dictionary<string, object> { ["Score"] = 42 });
+                new Dictionary<string, object> { ["Score"] = 42, ["Mission"] = "claimed", ["Rewards"] = new[] { 100, 25 } });
 
             Assert.That(saveDataStore.LoadState("Score", temporaryFilePath), Is.EqualTo(42));
+            Assert.That(saveDataStore.LoadState("Mission", temporaryFilePath), Is.EqualTo("claimed"));
+            Assert.That(saveDataStore.LoadState("Rewards", temporaryFilePath), Is.EqualTo(new[] { 100, 25 }));
             string fileText = File.ReadAllText(temporaryFilePath);
             Assert.That(
                 fileText.Contains("Score"),

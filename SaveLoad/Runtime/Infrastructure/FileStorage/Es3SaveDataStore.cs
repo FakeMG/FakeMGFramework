@@ -9,13 +9,17 @@ namespace FakeMG.SaveLoad
     /// </summary>
     public sealed class Es3SaveDataStore : ISaveDataStore
     {
-        private readonly SaveFileProtectionSettings _protectionSettings;
+        private readonly ES3Settings _settingsTemplate;
         private readonly string _storageRootPath;
 
         public Es3SaveDataStore(SaveFileProtectionSettings protectionSettings, string storageRootPath)
         {
-            _protectionSettings = protectionSettings ?? throw new System.ArgumentNullException(nameof(protectionSettings));
+            if (protectionSettings == null)
+            {
+                throw new System.ArgumentNullException(nameof(protectionSettings));
+            }
             _storageRootPath = storageRootPath ?? throw new System.ArgumentNullException(nameof(storageRootPath));
+            _settingsTemplate = Es3FileSettingsFactory.Create(storageRootPath, protectionSettings);
         }
 
         #region Public Methods
@@ -122,11 +126,14 @@ namespace FakeMG.SaveLoad
             SaveMetadata metadata,
             IReadOnlyDictionary<string, object> capturedStates)
         {
-            SaveMetadata(saveFilePath, metadata);
+            // One writer preserves ES3's runtime type headers while encrypting/compressing the complete payload once.
+            using var writer = ES3Writer.Create(CreateSettings(saveFilePath));
+            writer.Write<SaveMetadata>(SaveFileCatalog.METADATA_KEY, metadata);
             foreach (KeyValuePair<string, object> capturedState in capturedStates)
             {
-                SaveState(capturedState.Key, capturedState.Value, saveFilePath);
+                writer.Write<object>(capturedState.Key, capturedState.Value);
             }
+            writer.Save(overwriteKeys: false);
         }
 
         #endregion
@@ -138,7 +145,9 @@ namespace FakeMG.SaveLoad
             string resolvedFilePath = Path.IsPathRooted(saveFilePath)
                 ? saveFilePath
                 : Path.Combine(_storageRootPath, saveFilePath);
-            return Es3FileSettingsFactory.Create(resolvedFilePath, _protectionSettings);
+            ES3Settings settings = (ES3Settings)_settingsTemplate.Clone();
+            settings.path = resolvedFilePath;
+            return settings;
         }
 
         #endregion
