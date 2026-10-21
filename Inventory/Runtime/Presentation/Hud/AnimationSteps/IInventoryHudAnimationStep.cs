@@ -1,6 +1,5 @@
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using FakeMG.Inventory;
 using UnityEngine;
 
 namespace FakeMG.Inventory.Hud

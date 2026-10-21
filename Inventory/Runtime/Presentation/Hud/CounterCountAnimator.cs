@@ -51,6 +51,7 @@ namespace FakeMG.Inventory.Hud
                     targetCount.ToDouble(),
                     _countTweenDurationSeconds)
                 .SetEase(Ease.OutQuad)
+                .SetUpdate(true)
                 .SetLink(gameObject)
                 .OnComplete(() =>
                 {

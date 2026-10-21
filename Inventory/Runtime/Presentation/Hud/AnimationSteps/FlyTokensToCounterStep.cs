@@ -16,55 +16,66 @@ namespace FakeMG.Inventory.Hud
     {
         private const int MAX_FLY_TOKEN_COUNT = 12;
         private const float TOKEN_STAGGER_DELAY_SECONDS = 0.05f;
-        private const float SCREEN_SCATTER_RADIUS_PIXELS = 80f;
+        private const float SCREEN_SCATTER_RADIUS_PIXELS = 160f;
         private const float SPAWN_SCATTER_DURATION_SECONDS = 0.18f;
         private const float SPAWN_SCALE_DURATION_SECONDS = 0.16f;
-        private const float TRAVEL_DURATION_SECONDS = 0.45f;
+        private const float TRAVEL_DURATION_SECONDS = 0.7f;
         private static readonly AnimationCurve TRAVEL_SPEED_CURVE = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
         private readonly ItemFlyRewardService _itemFlyRewardService;
         private readonly RewardFlyScatterAnimator _scatterAnimator;
+        private readonly int _maxFlyTokenCount;
 
-        private InventoryChange _currentChange;
+        private GameNumber _rewardAmount;
         private ItemCounterView _currentCounter;
         private int _arrivedTokenCount;
         private int _expectedTokenCount;
+        private GameNumber _appliedRewardAmount;
 
-        public FlyTokensToCounterStep(ItemFlyRewardService itemFlyRewardService)
+        public FlyTokensToCounterStep(ItemFlyRewardService itemFlyRewardService, float feedbackIntensity01 = 1f)
         {
             _itemFlyRewardService = itemFlyRewardService;
+            float intensity01 = Mathf.Clamp01(feedbackIntensity01);
+            _maxFlyTokenCount = Mathf.Max(1, Mathf.CeilToInt(MAX_FLY_TOKEN_COUNT * intensity01));
             _scatterAnimator = new RewardFlyScatterAnimator(
-                SCREEN_SCATTER_RADIUS_PIXELS,
+                SCREEN_SCATTER_RADIUS_PIXELS * intensity01,
                 0f,
                 SPAWN_SCATTER_DURATION_SECONDS);
         }
 
         #region Public Methods
 
-        public async UniTask PlayAsync(
+        public UniTask PlayAsync(
             InventoryChange change,
             ItemCounterView counter,
             Transform rewardStartTransform,
             CancellationToken cancellationToken)
         {
-            GameNumber countIncrease = change.NewCount - change.OldCount;
-            if (countIncrease <= GameNumber.Zero)
+            Vector3 sourceCanvasPositionPixels = _itemFlyRewardService.ConvertTransformToCanvasLocalPosition(rewardStartTransform);
+            return PlayAsync(change.IdentitySO, change.NewCount - change.OldCount, counter, sourceCanvasPositionPixels, cancellationToken);
+        }
+
+        public async UniTask PlayAsync(IdentitySO identitySO, GameNumber amount, ItemCounterView counter,
+            Vector3 sourceCanvasPositionPixels, CancellationToken cancellationToken)
+        {
+            if (amount <= GameNumber.Zero)
             {
-                string itemName = change.IdentitySO ? change.IdentitySO.name : "<null>";
+                string itemName = identitySO ? identitySO.name : "<null>";
                 Debug.LogWarning($"{nameof(FlyTokensToCounterStep)} received a non-positive inventory increase for item '{itemName}'.");
                 return;
             }
 
-            _currentChange = change;
+            _rewardAmount = amount;
             _currentCounter = counter;
             _arrivedTokenCount = 0;
-            _expectedTokenCount = GetFlyTokenCount(countIncrease);
+            _expectedTokenCount = GetFlyTokenCount(amount);
+            _appliedRewardAmount = GameNumber.Zero;
 
             await PlayRewardTokensAsync(
-                change.IdentitySO,
+                identitySO,
                 counter,
-                countIncrease,
-                rewardStartTransform,
+                amount,
+                sourceCanvasPositionPixels,
                 cancellationToken);
         }
 
@@ -76,10 +87,10 @@ namespace FakeMG.Inventory.Hud
             IdentitySO identitySO,
             ItemCounterView counter,
             GameNumber amount,
-            Transform rewardStartTransform,
+            Vector3 sourceCanvasPositionPixels,
             CancellationToken cancellationToken)
         {
-            if (!IsValidRequest(identitySO, counter, rewardStartTransform))
+            if (!IsValidRequest(identitySO, counter))
             {
                 return;
             }
@@ -104,7 +115,7 @@ namespace FakeMG.Inventory.Hud
                     tokenTasks.Add(PlayRewardTokenAsync(
                         identitySO,
                         counter,
-                        rewardStartTransform,
+                        sourceCanvasPositionPixels,
                         rewardTokenSprite,
                         startDelaySeconds,
                         cancellationToken));
@@ -124,7 +135,7 @@ namespace FakeMG.Inventory.Hud
         private async UniTask PlayRewardTokenAsync(
             IdentitySO identitySO,
             ItemCounterView counter,
-            Transform rewardStartTransform,
+            Vector3 sourceCanvasPositionPixels,
             Sprite rewardTokenSprite,
             float startDelaySeconds,
             CancellationToken cancellationToken)
@@ -132,18 +143,23 @@ namespace FakeMG.Inventory.Hud
             if (startDelaySeconds > 0f)
             {
                 TimeSpan startDelay = TimeSpan.FromSeconds(startDelaySeconds);
-                await UniTask.Delay(startDelay, cancellationToken: cancellationToken);
+                await UniTask.Delay(startDelay, ignoreTimeScale: true, cancellationToken: cancellationToken);
             }
 
             RewardTokenView rewardFlyTokenView = SpawnRewardFlyToken(
                 counter,
-                rewardStartTransform,
+                sourceCanvasPositionPixels,
                 rewardTokenSprite);
 
             try
             {
-                await PlaySpawnAndScatterAsync(rewardFlyTokenView);
+                await PlaySpawnAndScatterAsync(rewardFlyTokenView).AttachExternalCancellation(cancellationToken);
                 await PlayFlyToCounterAsync(identitySO, counter, rewardFlyTokenView, cancellationToken);
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    Echo.Log($"Reward token for '{identitySO.Id}' was canceled before arrival; its counter will use the granted balance.");
+                    return;
+                }
                 IncreaseCounterWhenTokenArrives();
             }
             finally
@@ -154,7 +170,7 @@ namespace FakeMG.Inventory.Hud
 
         private RewardTokenView SpawnRewardFlyToken(
             ItemCounterView counter,
-            Transform rewardStartTransform,
+            Vector3 sourceCanvasPositionPixels,
             Sprite rewardTokenSprite)
         {
             RewardTokenView rewardFlyTokenView = UnityEngine.Object.Instantiate(
@@ -162,8 +178,7 @@ namespace FakeMG.Inventory.Hud
                 _itemFlyRewardService.ScreenSpaceCanvasRectTransform);
 
             rewardFlyTokenView.SetRewardSprite(rewardTokenSprite);
-            rewardFlyTokenView.SetCanvasLocalPosition(
-                _itemFlyRewardService.ConvertTransformToCanvasLocalPosition(rewardStartTransform));
+            rewardFlyTokenView.SetCanvasLocalPosition(sourceCanvasPositionPixels);
 
             return rewardFlyTokenView;
         }
@@ -205,9 +220,9 @@ namespace FakeMG.Inventory.Hud
 
         private int GetFlyTokenCount(GameNumber rewardAmount)
         {
-            if (rewardAmount >= MAX_FLY_TOKEN_COUNT)
+            if (rewardAmount >= _maxFlyTokenCount)
             {
-                return MAX_FLY_TOKEN_COUNT;
+                return _maxFlyTokenCount;
             }
 
             return rewardAmount <= GameNumber.One ? 1 : (int)rewardAmount;
@@ -215,8 +230,7 @@ namespace FakeMG.Inventory.Hud
 
         private bool IsValidRequest(
             IdentitySO identitySO,
-            ItemCounterView counter,
-            Transform rewardStartTransform)
+            ItemCounterView counter)
         {
             if (!identitySO)
             {
@@ -230,7 +244,7 @@ namespace FakeMG.Inventory.Hud
                 return false;
             }
 
-            if (!rewardStartTransform || !counter.FlyTargetTransform)
+            if (!counter.FlyTargetTransform)
             {
                 Debug.LogError($"{nameof(FlyTokensToCounterStep)} requires both source and target transforms for item '{identitySO.name}'.");
                 return false;
@@ -262,18 +276,13 @@ namespace FakeMG.Inventory.Hud
             _arrivedTokenCount++;
 
             double arrivalProgress01 = Mathf.Clamp01((float)_arrivedTokenCount / _expectedTokenCount);
-            GameNumber countIncrease = _currentChange.NewCount - _currentChange.OldCount;
-            GameNumber nextDisplayedCount = _currentChange.OldCount + GameNumber.FromDouble(countIncrease.ToDouble() * arrivalProgress01);
-
-            if (nextDisplayedCount <= _currentCounter.DisplayedCount && _currentCounter.DisplayedCount < _currentChange.NewCount)
-            {
-                nextDisplayedCount = _currentCounter.DisplayedCount + GameNumber.One;
-            }
-
-            if (nextDisplayedCount > _currentChange.NewCount)
-            {
-                nextDisplayedCount = _currentChange.NewCount;
-            }
+            GameNumber countIncrease = _rewardAmount;
+            GameNumber arrivedRewardAmount = _arrivedTokenCount == _expectedTokenCount
+                ? countIncrease
+                : GameNumber.FromDouble(Math.Floor(countIncrease.ToDouble() * arrivalProgress01));
+            GameNumber arrivedTokenAmount = arrivedRewardAmount - _appliedRewardAmount;
+            _appliedRewardAmount = arrivedRewardAmount;
+            GameNumber nextDisplayedCount = _currentCounter.DisplayedCount + arrivedTokenAmount;
             _currentCounter.PlayPop();
             _currentCounter.AnimateDisplayedCountToAsync(nextDisplayedCount).Forget();
         }
