@@ -12,7 +12,6 @@ namespace FakeMG.Framework.UI
 
         private Sequence _activePulseSequence;
         private Vector3 _baseScale;
-        private int _pendingPulseCount;
 
         #region Unity Lifecycle
 
@@ -38,11 +37,8 @@ namespace FakeMG.Framework.UI
 
         public void PlayAdditivePulse()
         {
-            _pendingPulseCount++;
-            if (_activePulseSequence == null || !_activePulseSequence.IsActive())
-            {
-                StartPulseSequenceWhenIdle();
-            }
+            KillActivePulse();
+            StartPulseFromCurrentScale();
         }
 
         public void ResetToBaseScale()
@@ -54,43 +50,42 @@ namespace FakeMG.Framework.UI
 
         #region Private Methods
 
-        private void StartPulseSequenceWhenIdle()
+        private void StartPulseFromCurrentScale()
         {
             Vector3 pulseScaleDelta = Vector3.one * _pulseScaleDelta01;
+            Vector3 remainingGrowScaleDelta = _baseScale + pulseScaleDelta - _targetTransform.localScale;
 
             _activePulseSequence = DOTween.Sequence();
             _activePulseSequence
                 .SetId(this)
+                .SetUpdate(true)
                 .SetLink(_targetTransform.gameObject)
                 .Append(_targetTransform
-                    .DOBlendableScaleBy(pulseScaleDelta, _growDurationSeconds)
+                    .DOBlendableScaleBy(remainingGrowScaleDelta, _growDurationSeconds)
                     .SetEase(Ease.OutQuad)
                     .SetLink(_targetTransform.gameObject))
                 .Append(_targetTransform
                     .DOBlendableScaleBy(-pulseScaleDelta, _shrinkDurationSeconds)
                     .SetEase(Ease.InQuad)
                     .SetLink(_targetTransform.gameObject))
-                .OnComplete(HandlePulseSequenceCompleted)
+                .OnComplete(RestoreScaleWhenPulseCompletes)
                 .OnKill(ClearActivePulseSequenceReferenceWhenKilled);
         }
 
-        private void HandlePulseSequenceCompleted()
+        private void RestoreScaleWhenPulseCompletes()
         {
-            _pendingPulseCount = Mathf.Max(0, _pendingPulseCount - 1);
-            if (_pendingPulseCount > 0)
-            {
-                StartPulseSequenceWhenIdle();
-                return;
-            }
-
             _activePulseSequence = null;
             ResetToBaseScale();
         }
 
         private void ResetScaleImmediatelyAndKillTweens()
         {
-            _pendingPulseCount = 0;
+            KillActivePulse();
+            ResetToBaseScale();
+        }
 
+        private void KillActivePulse()
+        {
             if (_activePulseSequence != null && _activePulseSequence.IsActive())
             {
                 _activePulseSequence.Kill();
@@ -98,7 +93,6 @@ namespace FakeMG.Framework.UI
 
             DOTween.Kill(this);
             _activePulseSequence = null;
-            ResetToBaseScale();
         }
 
         private void ClearActivePulseSequenceReferenceWhenKilled()
