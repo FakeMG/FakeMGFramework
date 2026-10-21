@@ -26,11 +26,13 @@ namespace FakeMG.Framework.UI
 
         #region Public Methods
 
-        public async UniTask SetIdentityAsync(IdentitySO identitySO, CancellationToken cancellationToken)
+        public async UniTask SetIdentityAsync(IdentitySO identitySO, CancellationToken cancellationToken,
+            AddressableIconCache sharedIconCache = null)
         {
             int requestVersion = ++_requestVersion;
             _iconImage.sprite = null;
-            Sprite sprite = await _iconCache.LoadIconAsync(identitySO, cancellationToken);
+            AddressableIconCache iconCache = sharedIconCache ?? _iconCache;
+            Sprite sprite = await iconCache.LoadIconAsync(identitySO, cancellationToken);
             if (requestVersion == _requestVersion)
             {
                 _iconImage.sprite = sprite;
