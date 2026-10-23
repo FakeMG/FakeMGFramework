@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using FakeMG.Framework;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -240,17 +241,7 @@ namespace FakeMG.SceneLoading
                 {
                     AsyncOperationHandle<SceneInstance> loadedHandle = state.LoadedSceneHandle.Value;
                     state.LoadedSceneHandle = null;
-                    if (loadedHandle.IsValid())
-                    {
-                        if (Application.isPlaying)
-                        {
-                            Addressables.UnloadSceneAsync(loadedHandle, true);
-                        }
-                        else
-                        {
-                            Addressables.Release(loadedHandle);
-                        }
-                    }
+                    UnloadOwnedHandleAsync(loadedHandle).Forget(LogSceneCleanupFailure);
                 }
             }
         }
@@ -287,14 +278,43 @@ namespace FakeMG.SceneLoading
             return handle.HasValue &&
                    handle.Value.IsValid() &&
                    handle.Value.Status == AsyncOperationStatus.Succeeded &&
-                   handle.Value.Result.Scene.IsValid();
+                   handle.Value.Result.Scene.IsValid() &&
+                   handle.Value.Result.Scene.isLoaded;
         }
 
-        private static async UniTask UnloadOwnedHandleAsync(
-            AsyncOperationHandle<SceneInstance> loadedHandle)
+        private static async UniTask UnloadOwnedHandleAsync(AsyncOperationHandle<SceneInstance> loadedHandle)
         {
-            AsyncOperationHandle<SceneInstance> unloadHandle = Addressables.UnloadSceneAsync(loadedHandle, true);
-            await unloadHandle.ToUniTask();
+            if (!loadedHandle.IsValid())
+            {
+                Echo.Warning("Scene cleanup skipped because Addressables already released its load handle.");
+                return;
+            }
+
+            // Unity owns scene destruction after Play mode exits; its Addressables scene provider may already be gone.
+            if (!Application.isPlaying || !loadedHandle.Result.Scene.IsValid() || !loadedHandle.Result.Scene.isLoaded)
+            {
+                Echo.Warning("Releasing the scene load handle without unloading because Unity has already begun scene teardown.");
+                Addressables.Release(loadedHandle);
+                return;
+            }
+
+            AsyncOperationHandle<SceneInstance> unloadHandle = Addressables.UnloadSceneAsync(loadedHandle, false);
+            try
+            {
+                await unloadHandle.ToUniTask();
+            }
+            finally
+            {
+                if (unloadHandle.IsValid())
+                {
+                    Addressables.Release(unloadHandle);
+                }
+            }
+        }
+
+        private static void LogSceneCleanupFailure(Exception exception)
+        {
+            Echo.Error($"Disposing the scene gateway could not clean up an owned scene: {exception}");
         }
 
         private static void ReleaseFailedLoadHandle(AsyncOperationHandle<SceneInstance> loadHandle)

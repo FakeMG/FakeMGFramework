@@ -15,6 +15,8 @@ namespace FakeMG.Audio
         private CancellationTokenSource _completionCancellationSource;
         private float _baseVolume01;
         private float _basePitch;
+        private Transform _followTarget;
+        private Vector3 _followOffsetLocalMeters;
 
         public event Action<SoundEmitter> OnSoundFinishedPlaying;
         public event Action<SoundEmitter> OnSoundDestroyed;
@@ -29,6 +31,22 @@ namespace FakeMG.Audio
             _audioSource.ignoreListenerPause = false;
         }
 
+        private void LateUpdate()
+        {
+            if (_followTarget != null)
+            {
+                transform.position = _followTarget.TransformPoint(_followOffsetLocalMeters);
+            }
+        }
+
+        private void OnDisable()
+        {
+            _followTarget = null;
+            CancelCompletionWait();
+            _audioSource.DOKill();
+            _audioSource.Stop();
+        }
+
         private void OnDestroy()
         {
             CancelCompletionWait();
@@ -39,6 +57,12 @@ namespace FakeMG.Audio
         #endregion
 
         #region Public Methods
+
+        public void FollowTarget(Transform target)
+        {
+            _followTarget = target;
+            _followOffsetLocalMeters = target.InverseTransformPoint(transform.position);
+        }
 
         public void Play(
             AudioClip clip,

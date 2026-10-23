@@ -27,6 +27,9 @@ namespace FakeMG.Audio
         private SoundEmitterVault _soundEmitterVault;
         private AudioChannelRegistry _channelRegistry;
         private readonly object _vaultLock = new();
+        private readonly HashSet<SoundEmitter> _ownedSoundEmitters = new();
+
+        #region Unity Lifecycle
 
         private void Awake()
         {
@@ -65,6 +68,32 @@ namespace FakeMG.Audio
         {
             AudioChannelRegistry.ValidatePooledChannelConfiguration(_pooledEventChannels, _musicEventChannel);
         }
+
+        #endregion
+
+        #region Public Methods
+
+        public void CleanPool()
+        {
+            foreach (SoundEmitter soundEmitter in _ownedSoundEmitters)
+            {
+                soundEmitter.OnSoundFinishedPlaying -= CleanEmitter;
+                soundEmitter.OnSoundDestroyed -= RemoveEmitter;
+                soundEmitter.gameObject.SetActive(false);
+                Destroy(soundEmitter.gameObject);
+            }
+
+            _ownedSoundEmitters.Clear();
+            _soundEmitterQueue.Clear();
+            lock (_vaultLock)
+            {
+                _soundEmitterVault = new SoundEmitterVault();
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private AudioCueKey PlayMusicTrack(
             AudioCueSO audioCue,
@@ -152,11 +181,6 @@ namespace FakeMG.Audio
                 soundEmitterList.Add(soundEmitter);
             }
 
-            if (parent)
-            {
-                soundEmitter.transform.SetParent(parent);
-            }
-
             if (audioCueSO.FadeIn)
             {
                 soundEmitter.FadeInAudioClip(audioClip, settings, audioCueSO, outputAudioMixerGroup, position);
@@ -166,8 +190,13 @@ namespace FakeMG.Audio
                 soundEmitter.Play(audioClip, settings, audioCueSO, outputAudioMixerGroup, position);
             }
 
+            // Pool ownership stays with the manager even when the playback target is disabled or destroyed.
+            if (parent)
+            {
+                soundEmitter.FollowTarget(parent);
+            }
+
             soundEmitter.OnSoundFinishedPlaying += CleanEmitter;
-            soundEmitter.OnSoundDestroyed += RemoveEmitter;
         }
 
         private bool UpdateAudioCuePlayback(AudioCueKey audioCueKey, float volumeMultiplier01, float pitchMultiplier)
@@ -250,14 +279,15 @@ namespace FakeMG.Audio
             }
 
             soundEmitter.OnSoundFinishedPlaying -= CleanEmitter;
-            soundEmitter.OnSoundDestroyed -= RemoveEmitter;
-            soundEmitter.transform.SetParent(transform);
 
             ReleaseSoundEmitter(soundEmitter);
         }
 
         private void RemoveEmitter(SoundEmitter soundEmitter)
         {
+            soundEmitter.OnSoundFinishedPlaying -= CleanEmitter;
+            soundEmitter.OnSoundDestroyed -= RemoveEmitter;
+            _ownedSoundEmitters.Remove(soundEmitter);
             lock (_vaultLock)
             {
                 TryRemoveEmitterFromVault(soundEmitter);
@@ -306,6 +336,8 @@ namespace FakeMG.Audio
             }
 
             soundEmitter = Instantiate(_soundEmitterPrefab, transform, true);
+            _ownedSoundEmitters.Add(soundEmitter);
+            soundEmitter.OnSoundDestroyed += RemoveEmitter;
             soundEmitter.gameObject.SetActive(true);
             return soundEmitter;
         }
@@ -329,22 +361,6 @@ namespace FakeMG.Audio
             }
         }
 
-        public void CleanPool()
-        {
-            if (_soundEmitterQueue == null)
-            {
-                return;
-            }
-
-            foreach (var soundEmitter in _soundEmitterQueue)
-            {
-                Destroy(soundEmitter.gameObject);
-            }
-
-            lock (_vaultLock)
-            {
-                _soundEmitterVault = new SoundEmitterVault();
-            }
-        }
+        #endregion
     }
 }
