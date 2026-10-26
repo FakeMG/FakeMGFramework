@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    [CreateAssetMenu(menuName = "FakeMG/Time Cycle/Period SO")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.TIME_CYCLE + "/Period SO")]
     public sealed class CyclePeriodSO : IdentitySO
     {
         public CyclePeriodId PeriodId => new(Id);
