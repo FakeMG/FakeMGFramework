@@ -39,7 +39,7 @@ namespace FakeMG.TimeCycle
         {
             builder.RegisterInstance(profileSO);
             builder.Register<WorldTimelinePersistence>(Lifetime.Singleton);
-            builder.RegisterComponentInHierarchy<WorldTimelineSaveable>().As<ISaveable>();
+            builder.Register<WorldTimelineSaveable>(Lifetime.Singleton).As<ISaveable>();
         }
 
         #endregion

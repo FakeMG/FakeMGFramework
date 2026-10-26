@@ -1,21 +1,18 @@
 using FakeMG.SaveLoad;
-using UnityEngine;
-using VContainer;
 
 namespace FakeMG.TimeCycle
 {
-    public sealed class WorldTimelineSaveable : MonoBehaviour, ISaveable
+    public sealed class WorldTimelineSaveable : ISaveable
     {
         public const string SAVE_ID = "WorldTimeline";
 
-        private WorldTimelinePersistence _persistence;
+        private readonly WorldTimelinePersistence _persistence;
 
         public string SaveId => SAVE_ID;
 
-        #region Public Methods
+        public WorldTimelineSaveable(WorldTimelinePersistence persistence) => _persistence = persistence;
 
-        [Inject]
-        public void Construct(WorldTimelinePersistence persistence) => _persistence = persistence;
+        #region Public Methods
 
         public object CaptureState() => _persistence.CaptureForStorage();
 
