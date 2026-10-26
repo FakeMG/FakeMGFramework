@@ -12,6 +12,7 @@ namespace FakeMG.GridSystem
         {
             builder.Register(resolver => CreateStructurePlacementService(resolver), Lifetime.Scoped)
                 .AsSelf()
+                .As<IGridOccupantDestroyer>()
                 .As<ILoadedSceneDataApplier>();
 
             builder.Register(resolver => new GridPointerProjector(

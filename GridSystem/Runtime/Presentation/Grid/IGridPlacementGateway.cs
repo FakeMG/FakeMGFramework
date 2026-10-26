@@ -26,6 +26,8 @@ namespace FakeMG.GridSystem
             int rotationDegrees,
             string ignoredInstanceId = null);
 
+        IReadOnlyList<Vector3Int> GetOccupiedCells(GridFootprint footprint, Vector3 worldPosition, int rotationDegrees);
+
         #endregion
     }
 }

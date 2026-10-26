@@ -134,6 +134,66 @@ namespace FakeMG.GridSystem.Tests.EditMode
         }
 
         [Test]
+        public async Task PlaceStructuresIfEmptyAsync_FreeFootprints_CommitsAllWithOneRebuildAndOneEvent()
+        {
+            Vector3 firstPosition = new(0.5f, 0f, 0.5f);
+            Vector3 secondPosition = new(4.5f, 0f, 0.5f);
+            SetFactoryCreatedPlacements(
+                CreateRuntimePlacement("first", firstPosition, 0),
+                CreateRuntimePlacement("second", secondPosition, 0));
+            SetOccupiedCells(firstPosition, new Vector3Int(0, 0, 0));
+            SetOccupiedCells(secondPosition, new Vector3Int(4, 0, 0));
+
+            int placedCount = await _service.PlaceStructuresIfEmptyAsync(
+                new[]
+                {
+                    new GridOccupantPlacementRequest(_structureSO, firstPosition, 0),
+                    new GridOccupantPlacementRequest(_structureSO, secondPosition, 0),
+                },
+                CancellationToken.None);
+
+            Assert.AreEqual(2, placedCount);
+            Assert.AreEqual(2, _placementState.Structures.Count);
+            Assert.AreEqual(2, _service.GetPlacedStructures().Count);
+            Assert.AreEqual(1, _placementChanges.Count);
+            Assert.AreEqual(PlacementChangeKind.BatchCreated, _placementChanges[0].Kind);
+            _gridPlacementGateway.Received(1).RebuildOccupancyIndex(Arg.Any<IReadOnlyCollection<GridOccupantPlacement>>());
+        }
+
+        [Test]
+        public async Task PlaceStructuresIfEmptyAsync_RequestOverlapsEarlierRequest_SkipsAndDestroysIt()
+        {
+            Vector3 firstPosition = new(0.5f, 0f, 0.5f);
+            Vector3 overlappingPosition = new(1.5f, 0f, 0.5f);
+            GridOccupantPlacement overlappingPlacement = CreateRuntimePlacement("overlapping", overlappingPosition, 0);
+            SetFactoryCreatedPlacements(CreateRuntimePlacement("first", firstPosition, 0), overlappingPlacement);
+            SetOccupiedCells(firstPosition, new Vector3Int(0, 0, 0), new Vector3Int(1, 0, 0));
+            SetOccupiedCells(overlappingPosition, new Vector3Int(1, 0, 0));
+
+            int placedCount = await _service.PlaceStructuresIfEmptyAsync(
+                new[]
+                {
+                    new GridOccupantPlacementRequest(_structureSO, firstPosition, 0),
+                    new GridOccupantPlacementRequest(_structureSO, overlappingPosition, 0),
+                },
+                CancellationToken.None);
+
+            Assert.AreEqual(1, placedCount);
+            Assert.IsFalse(_service.TryGetPlacement("overlapping", out _));
+            _structurePlacementFactory.Received(1).DestroyStructure(overlappingPlacement);
+        }
+
+        [Test]
+        public async Task PlaceStructuresIfEmptyAsync_NothingPlaced_RaisesNoEvent()
+        {
+            int placedCount = await _service.PlaceStructuresIfEmptyAsync(Array.Empty<GridOccupantPlacementRequest>(), CancellationToken.None);
+
+            Assert.AreEqual(0, placedCount);
+            Assert.IsEmpty(_placementChanges);
+            _gridPlacementGateway.DidNotReceive().RebuildOccupancyIndex(Arg.Any<IReadOnlyCollection<GridOccupantPlacement>>());
+        }
+
+        [Test]
         public async Task PlaceStructureIfEmptyAsync_FactoryReturnsNull_DoesNotCommit()
         {
             SetFactoryCreatedPlacement(null);
@@ -1015,6 +1075,24 @@ namespace FakeMG.GridSystem.Tests.EditMode
                     Arg.Any<string>(),
                     Arg.Any<IGridOccupantPlacementProcessor>())
                 .Returns(UniTask.FromResult(structurePlacement));
+        }
+
+        private void SetFactoryCreatedPlacements(GridOccupantPlacement first, params GridOccupantPlacement[] rest)
+        {
+            _structurePlacementFactory.CreateStructureAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<StructureSO>(),
+                    Arg.Any<Vector3>(),
+                    Arg.Any<int>(),
+                    Arg.Any<CancellationToken>(),
+                    Arg.Any<string>(),
+                    Arg.Any<IGridOccupantPlacementProcessor>())
+                .Returns(UniTask.FromResult(first), rest.Select(UniTask.FromResult).ToArray());
+        }
+
+        private void SetOccupiedCells(Vector3 gridWorldPosition, params Vector3Int[] cells)
+        {
+            _gridPlacementGateway.GetOccupiedCells(Arg.Any<GridFootprint>(), gridWorldPosition, Arg.Any<int>()).Returns(cells);
         }
 
         private void SetInstanceLookup(Vector3 worldPosition, string instanceId)

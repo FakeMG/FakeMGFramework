@@ -77,7 +77,7 @@ namespace FakeMG.GridSystem
                     return null;
                 }
 
-                structureInstanceIdentity.Initialize(instanceId);
+                structureInstanceIdentity.Initialize(instanceId, structureSO);
                 NotifyIdentityReceivers(structureInstance, structureInstanceIdentity);
 
                 return new GridOccupantPlacement(

@@ -14,7 +14,7 @@ namespace FakeMG.GridSystem
     /// the saved placement state, runtime structure registry, and grid occupancy data synchronized.
     /// It also notifies other systems whenever the committed placement state changes.
     /// </summary>
-    public sealed class GridOccupantPlacementService : ILoadedSceneDataApplier, IDisposable
+    public sealed class GridOccupantPlacementService : ILoadedSceneDataApplier, IGridOccupantDestroyer, IDisposable
     {
         public const string DATA_APPLIER_ID = "grid.occupant-placement";
         private const int DEFAULT_ROTATION_DEGREES = 0;
@@ -104,6 +104,65 @@ namespace FakeMG.GridSystem
             CommitRuntimeStructure(structurePlacement, gridWorldPosition, rotationDegrees);
             RaisePlacementChanged(PlacementChangeKind.Created, structurePlacement, structurePlacement.InstanceId);
             return true;
+        }
+
+        /// <summary>
+        /// Places many structures with one occupancy rebuild and one <see cref="PlacementChangeKind.BatchCreated"/> event.
+        /// Requests whose footprint is blocked (by existing occupants or earlier requests in the batch) are skipped.
+        /// </summary>
+        /// <returns>The number of structures placed.</returns>
+        public async UniTask<int> PlaceStructuresIfEmptyAsync(
+            IReadOnlyList<GridOccupantPlacementRequest> requests,
+            CancellationToken cancellationToken)
+        {
+            var batchOccupiedCells = new HashSet<Vector3Int>();
+            int placedCount = 0;
+
+            foreach (GridOccupantPlacementRequest request in requests)
+            {
+                if (!request.StructureSO)
+                {
+                    Echo.Warning("Skipped a batch placement request because its structure is missing.");
+                    continue;
+                }
+
+                Vector3 gridWorldPosition = _gridPlacementGateway.WorldToGridWorld(request.WorldPosition);
+                GridOccupantPlacement structurePlacement =
+                    await _structurePlacementFactory.CreateStructureAsync(
+                        Guid.NewGuid().ToString(),
+                        request.StructureSO,
+                        gridWorldPosition,
+                        request.RotationDegrees,
+                        cancellationToken,
+                        $"Failed to load structure prefab for '{request.StructureSO.Id}'.");
+
+                if (structurePlacement == null)
+                {
+                    continue;
+                }
+
+                IReadOnlyList<Vector3Int> occupiedCells =
+                    _gridPlacementGateway.GetOccupiedCells(structurePlacement.Footprint, gridWorldPosition, request.RotationDegrees);
+                if (!_gridPlacementGateway.CanOccupy(structurePlacement.Footprint, gridWorldPosition, request.RotationDegrees) ||
+                    !AreCellsFree(occupiedCells, batchOccupiedCells))
+                {
+                    Echo.Log($"Batch placement of '{request.StructureSO.Id}' was skipped because its grid footprint is occupied or outside the grid.");
+                    _structurePlacementFactory.DestroyStructure(structurePlacement);
+                    continue;
+                }
+
+                batchOccupiedCells.UnionWith(occupiedCells);
+                RecordRuntimeStructure(structurePlacement, gridWorldPosition, request.RotationDegrees);
+                placedCount++;
+            }
+
+            if (placedCount > 0)
+            {
+                RebuildOccupancyIndex();
+                RaisePlacementChanged(PlacementChangeKind.BatchCreated, null, null);
+            }
+
+            return placedCount;
         }
 
         public async UniTask<bool> ReplaceStructureAsync(string instanceId, StructureSO replacementStructureSO, CancellationToken cancellationToken)
@@ -396,6 +455,13 @@ namespace FakeMG.GridSystem
 
         private void CommitRuntimeStructure(GridOccupantPlacement structurePlacement, Vector3 gridWorldPosition, int rotationDegrees)
         {
+            RecordRuntimeStructure(structurePlacement, gridWorldPosition, rotationDegrees);
+            RebuildOccupancyIndex();
+        }
+
+        // Caller must rebuild the occupancy index afterwards; split out so batches rebuild once.
+        private void RecordRuntimeStructure(GridOccupantPlacement structurePlacement, Vector3 gridWorldPosition, int rotationDegrees)
+        {
             IReadOnlyList<Vector3Int> occupiedCellOffsets = _gridPlacementGateway.GetCanonicalOccupiedCellOffsets(structurePlacement.Footprint);
             _placedStructureRegistry.Upsert(structurePlacement);
             _placementState.UpsertStructure(
@@ -404,7 +470,19 @@ namespace FakeMG.GridSystem
                 gridWorldPosition,
                 rotationDegrees,
                 occupiedCellOffsets);
-            RebuildOccupancyIndex();
+        }
+
+        private static bool AreCellsFree(IReadOnlyList<Vector3Int> cells, HashSet<Vector3Int> occupiedCells)
+        {
+            foreach (Vector3Int cell in cells)
+            {
+                if (occupiedCells.Contains(cell))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private void RebuildOccupancyIndex()

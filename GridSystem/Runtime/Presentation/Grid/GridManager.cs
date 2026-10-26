@@ -93,7 +93,12 @@ namespace FakeMG.GridSystem
         public Vector3 CellToWorld(Vector3Int cellPosition)
         {
             Vector3 bottomCenterOffsetMeters = new(_cellSizeMeters * 0.5f, 0f, _cellSizeMeters * 0.5f);
-            return _grid.CellToWorld(cellPosition) + bottomCenterOffsetMeters;
+            return CellToWorldCorner(cellPosition) + bottomCenterOffsetMeters;
+        }
+
+        public Vector3 CellToWorldCorner(Vector3Int cellPosition)
+        {
+            return _grid.CellToWorld(cellPosition);
         }
 
         public Vector3Int WorldToCell(Vector3 worldPosition)

@@ -14,11 +14,18 @@ namespace FakeMG.Outline
         [SerializeField] private RenderingLayerMask _outlineMask;
         [SerializeField] private RenderingLayerMask _selectedOutlineMask;
 
+        [Tooltip("Replaces the selected outline while the selection is hovered. Leave empty to keep the selected outline.")]
+        [SerializeField] private RenderingLayerMask _hoveredOutlineMask;
+
         [SerializeField] private bool _keepOtherRenderingLayers = true;
 
         private Renderer[] _targetRenderers = Array.Empty<Renderer>();
         private uint[] _originalMasks = Array.Empty<uint>();
         private bool _isSelected;
+        private bool _isHovered;
+
+        private uint ActiveOutlineMask =>
+            _isHovered && _hoveredOutlineMask.value != 0 ? _hoveredOutlineMask.value : _selectedOutlineMask.value;
 
         #region Unity Lifecycle
 
@@ -85,6 +92,22 @@ namespace FakeMG.Outline
             RefreshSelectionRegistration();
         }
 
+        /// <summary>Swaps the selected outline for the hovered one; has no visible effect while not selected.</summary>
+        public void SetHovered(bool isHovered)
+        {
+            if (_isHovered == isHovered)
+            {
+                return;
+            }
+
+            _isHovered = isHovered;
+            if (_isSelected)
+            {
+                ApplyRenderingLayers(true);
+                RefreshSelectionRegistration();
+            }
+        }
+
         #endregion
 
         #region Private Methods
@@ -104,7 +127,7 @@ namespace FakeMG.Outline
         private void ApplyRenderingLayers(bool isSelected)
         {
             uint outlineMaskValue = _outlineMask.value;
-            uint selectedOutlineMaskValue = _selectedOutlineMask.value;
+            uint selectedOutlineMaskValue = ActiveOutlineMask;
 
             for (int rendererIndex = 0; rendererIndex < _targetRenderers.Length; rendererIndex++)
             {
@@ -137,7 +160,7 @@ namespace FakeMG.Outline
         {
             if (_isSelected && isActiveAndEnabled && _targetRenderers.Length > 0)
             {
-                RenderingLayerOutlineSelectionRegistry.Shared.RegisterSelection(this, _selectedOutlineMask.value);
+                RenderingLayerOutlineSelectionRegistry.Shared.RegisterSelection(this, ActiveOutlineMask);
                 return;
             }
 
