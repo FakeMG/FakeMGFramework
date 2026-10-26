@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using FakeMG.SaveLoad;
-using UnityEngine;
-using VContainer;
 
 namespace FakeMG.Inventory
 {
@@ -19,23 +17,22 @@ namespace FakeMG.Inventory
     /// injected so other systems can resolve it directly (or via IInventoryBalanceRepository) without going
     /// through this Saveable.
     /// </summary>
-    public sealed class InventoryStateSaveable : MonoBehaviour, ISaveable
+    public sealed class InventoryStateSaveable : ISaveable
     {
         public const string SAVE_ID = nameof(InventoryStateSaveable);
 
-        [SerializeField] private List<ItemAmountEntry> _initialBalances = new();
-
-        private InventoryBalanceState _state;
+        private readonly IReadOnlyList<ItemAmountEntry> _initialBalances;
+        private readonly InventoryBalanceState _state;
 
         public string SaveId => SAVE_ID;
 
-        #region Public Methods
-
-        [Inject]
-        public void Construct(InventoryBalanceState state)
+        public InventoryStateSaveable(InventoryBalanceState state, IReadOnlyList<ItemAmountEntry> initialBalances)
         {
             _state = state;
+            _initialBalances = initialBalances;
         }
+
+        #region Public Methods
 
         public object CaptureState()
         {

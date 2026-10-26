@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using FakeMG.SaveLoad;
-using UnityEngine;
 
 namespace FakeMG.Shop
 {
@@ -11,16 +10,21 @@ namespace FakeMG.Shop
         public List<string> OwnedListingIds = new();
     }
 
-    public sealed class ShopOwnershipStateSaveable : MonoBehaviour, ISaveable
+    public sealed class ShopOwnershipStateSaveable : ISaveable
     {
         public const string SAVE_ID = nameof(ShopOwnershipStateSaveable);
 
-        [SerializeField] private List<string> _defaultOwnedListingIds = new();
+        private readonly IReadOnlyList<string> _defaultOwnedListingIds;
 
         private readonly HashSet<string> _ownedListingIds = new();
 
         public string SaveId => SAVE_ID;
         public event Action<string> OnOwnershipChanged;
+
+        public ShopOwnershipStateSaveable(IReadOnlyList<string> defaultOwnedListingIds)
+        {
+            _defaultOwnedListingIds = defaultOwnedListingIds;
+        }
 
         #region Public Methods
 

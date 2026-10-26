@@ -45,9 +45,7 @@ namespace FakeMG.Shop.Tests
             _catalogSO = Create<FulfillmentTestCatalogSO>();
             _catalogSO.AddListing(_listingSO);
             _inventory = new InventoryBalanceState();
-            var ownership = new GameObject("Ownership");
-            _objects.Add(ownership);
-            _granter = new ShopPurchaseFinalizationService(_inventory, ownership.AddComponent<ShopOwnershipStateSaveable>());
+            _granter = new ShopPurchaseFinalizationService(_inventory, new ShopOwnershipStateSaveable(Array.Empty<string>()));
             _persistence = Substitute.For<IShopFulfillmentPersistence>();
             _persistence.AcquireTransactionAsync(Arg.Any<CancellationToken>())
                 .Returns(UniTask.FromResult(Substitute.For<IDisposable>()));
