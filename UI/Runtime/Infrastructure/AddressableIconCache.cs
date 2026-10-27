@@ -15,7 +15,18 @@ namespace FakeMG.Framework.UI
 
         #region Public Methods
 
-        public async UniTask<Sprite> LoadIconAsync(IdentitySO identitySO, CancellationToken cancellationToken)
+        public UniTask<Sprite> LoadIconAsync(IdentitySO identitySO, CancellationToken cancellationToken)
+        {
+            if (identitySO == null || identitySO.IconSpriteAsset == null || !identitySO.IconSpriteAsset.RuntimeKeyIsValid())
+            {
+                Echo.Warning($"Icon cannot load because identity '{identitySO?.name ?? "<missing>"}' has no valid icon reference.");
+                return UniTask.FromResult<Sprite>(null);
+            }
+
+            return LoadSpriteAsync(identitySO.IconSpriteAsset, cancellationToken);
+        }
+
+        public async UniTask<Sprite> LoadSpriteAsync(AssetReferenceSprite spriteReference, CancellationToken cancellationToken)
         {
             if (_isDisposed)
             {
@@ -29,16 +40,16 @@ namespace FakeMG.Framework.UI
                 return null;
             }
 
-            if (identitySO == null || identitySO.IconSpriteAsset == null || !identitySO.IconSpriteAsset.RuntimeKeyIsValid())
+            if (spriteReference == null || !spriteReference.RuntimeKeyIsValid())
             {
-                Echo.Warning($"Icon cannot load because identity '{identitySO?.name ?? "<missing>"}' has no valid icon reference.");
+                Echo.Warning("Sprite cannot load because its addressable reference is invalid.");
                 return null;
             }
 
-            string iconKey = identitySO.IconSpriteAsset.RuntimeKey.ToString();
+            string iconKey = spriteReference.RuntimeKey.ToString();
             if (!_spriteHandles.TryGetValue(iconKey, out AsyncOperationHandle<Sprite> spriteHandle))
             {
-                spriteHandle = Addressables.LoadAssetAsync<Sprite>(identitySO.IconSpriteAsset);
+                spriteHandle = Addressables.LoadAssetAsync<Sprite>(spriteReference);
                 _spriteHandles.Add(iconKey, spriteHandle);
             }
 
@@ -49,13 +60,13 @@ namespace FakeMG.Framework.UI
                 if (_isDisposed || !_spriteHandles.TryGetValue(iconKey, out AsyncOperationHandle<Sprite> cachedHandle) ||
                     !cachedHandle.Equals(spriteHandle))
                 {
-                    Echo.Log($"Icon load for '{identitySO.name}' completed after its cache entry was released.");
+                    Echo.Log($"Sprite load for '{spriteReference.AssetGUID}' completed after its cache entry was released.");
                     return null;
                 }
 
                 if (spriteHandle.Status != AsyncOperationStatus.Succeeded || sprite == null)
                 {
-                    Echo.Error($"Icon failed to load for identity '{identitySO.name}'.");
+                    Echo.Error($"Sprite failed to load for reference '{spriteReference.AssetGUID}'.");
                     RemoveAndReleaseHandle(iconKey, spriteHandle);
                     return null;
                 }
@@ -64,12 +75,12 @@ namespace FakeMG.Framework.UI
             }
             catch (OperationCanceledException)
             {
-                Echo.Log($"Icon request for '{identitySO.name}' was canceled; its cached load is retained.");
+                Echo.Log($"Sprite request for '{spriteReference.AssetGUID}' was canceled; its cached load is retained.");
                 return null;
             }
             catch (Exception exception)
             {
-                Echo.Error($"Icon load for '{identitySO.name}' failed with {exception.GetType().Name}: {exception.Message}");
+                Echo.Error($"Sprite load for '{spriteReference.AssetGUID}' failed with {exception.GetType().Name}: {exception.Message}");
                 RemoveAndReleaseHandle(iconKey, spriteHandle);
                 return null;
             }
