@@ -1,4 +1,4 @@
-Shader "Custom/URPCelShading"
+Shader "FakeMGFramework/CommonShaders/URPCelShading"
 {
     Properties
     {

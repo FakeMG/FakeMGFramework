@@ -1,4 +1,4 @@
-Shader "Custom/URPDepthOutline"
+Shader "FakeMGFramework/Outline/URPDepthOutline"
 {
     Properties
     {

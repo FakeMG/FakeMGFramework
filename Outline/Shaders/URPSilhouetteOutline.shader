@@ -1,4 +1,4 @@
-Shader "FakeMG/Outline/Rendering Layer Silhouette"
+Shader "FakeMGFramework/Outline/URPSilhouetteOutline"
 {
     Properties
     {
