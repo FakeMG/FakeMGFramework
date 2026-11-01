@@ -14,7 +14,7 @@ namespace FakeMG.GridSystem
     /// the saved placement state, runtime structure registry, and grid occupancy data synchronized.
     /// It also notifies other systems whenever the committed placement state changes.
     /// </summary>
-    public sealed class GridOccupantPlacementService : ILoadedSceneDataApplier, IGridOccupantDestroyer, IDisposable
+    public sealed class GridOccupantPlacementService : ILoadedSceneDataApplier, IGridOccupantDestroyer, IGridOccupantReplacer, IDisposable
     {
         public const string DATA_APPLIER_ID = "grid.occupant-placement";
         private const int DEFAULT_ROTATION_DEGREES = 0;
