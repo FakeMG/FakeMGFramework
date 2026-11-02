@@ -80,10 +80,9 @@ namespace FakeMG.SaveLoad
                 return worldResult;
             }
 
-            if (string.IsNullOrWhiteSpace(_worldStartupContext.ActiveWorldId))
+            if (_configuration.StartupPolicySO.OpensWorldOnStartup && string.IsNullOrWhiteSpace(_worldStartupContext.ActiveWorldId))
             {
-                return StartupReadinessResult.Failed(
-                    "World startup completed without an active world. Gameplay was not loaded.");
+                return StartupReadinessResult.Failed("World startup completed without an active world. Gameplay was not loaded.");
             }
 
             return StartupReadinessResult.Ready();

@@ -151,13 +151,39 @@ namespace FakeMG.SaveLoad.Tests
             await _sceneLoader.DidNotReceiveWithAnyArgs().LoadSceneAsync(default, default, default);
         }
 
+        [Test]
+        public async Task ExplicitWorldSelectionIsReadyWithoutOpeningOrCreatingAWorld()
+        {
+            var explicitPolicySO = ScriptableObject.CreateInstance<ExplicitWorldSelectionStartupPolicySO>();
+            try
+            {
+                PersistenceStartupCoordinator startup = CreateStartup(explicitPolicySO);
+
+                StartupReadinessResult initialization = await startup.InitializeAsync(CancellationToken.None);
+
+                Assert.That(initialization.Succeeded, Is.True);
+                Assert.That(_activeWorldId, Is.Null);
+                await _worldContext.DidNotReceiveWithAnyArgs().CreateWorldAsync(default, default);
+                await _worldContext.DidNotReceiveWithAnyArgs().OpenWorldAsync(default, default);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(explicitPolicySO);
+            }
+        }
+
         #endregion
 
         #region Private Methods
 
         private PersistenceStartupCoordinator CreateStartup()
         {
-            var configuration = new WorldSaveConfiguration(5, 300f, 10f, true, "World", _policySO);
+            return CreateStartup(_policySO);
+        }
+
+        private PersistenceStartupCoordinator CreateStartup(WorldStartupPolicySO policySO)
+        {
+            var configuration = new WorldSaveConfiguration(5, 300f, 10f, true, "World", policySO);
             return new PersistenceStartupCoordinator(_globalInitializer, _worldContext, configuration);
         }
 
