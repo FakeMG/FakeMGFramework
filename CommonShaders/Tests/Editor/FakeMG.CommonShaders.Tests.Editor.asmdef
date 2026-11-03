@@ -1,0 +1,7 @@
+{
+    "name": "FakeMG.CommonShaders.Tests.Editor",
+    "rootNamespace": "FakeMG.CommonShaders.Tests",
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false,
+    "optionalUnityReferences": ["TestAssemblies"]
+}

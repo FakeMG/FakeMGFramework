@@ -23,6 +23,11 @@ Shader "FakeMGFramework/CommonShaders/URPCelShading"
             "Queue" = "Geometry"
         }
 
+        HLSLINCLUDE
+        #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+        #include "Includes/CelShadingInput.hlsl"
+        ENDHLSL
+
         Pass
         {
             Name "ForwardLit"
@@ -42,10 +47,8 @@ Shader "FakeMGFramework/CommonShaders/URPCelShading"
             #pragma vertex Vert
             #pragma fragment Frag
 
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_CASCADE
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS_SCREEN
-            #pragma multi_compile_fragment _ _SHADOWS_SOFT
+            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
+            #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
 
             #pragma multi_compile_fog
             #pragma multi_compile_instancing
@@ -67,25 +70,12 @@ Shader "FakeMGFramework/CommonShaders/URPCelShading"
                 float4 positionCS  : SV_POSITION;
                 float2 uv          : TEXCOORD0;
                 half3 normalWS     : TEXCOORD1;
-                float4 shadowCoord : TEXCOORD2;
+                float3 positionWS  : TEXCOORD2;
                 half fogFactor     : TEXCOORD3;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
                 UNITY_VERTEX_OUTPUT_STEREO
             };
-
-            TEXTURE2D(_BaseMap);
-            SAMPLER(sampler_BaseMap);
-
-            CBUFFER_START(UnityPerMaterial)
-                float4 _BaseMap_ST;
-                half4 _BaseColor;
-                half4 _ShadowColor;
-                half _StepThreshold;
-                half _StepSmoothing;
-                half _Cutoff;
-                half _Surface;
-            CBUFFER_END
 
             Varyings Vert(Attributes input)
             {
@@ -103,7 +93,7 @@ Shader "FakeMGFramework/CommonShaders/URPCelShading"
                 output.normalWS = normalInputs.normalWS;
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
 
-                output.shadowCoord = TransformWorldToShadowCoord(positionInputs.positionWS);
+                output.positionWS = positionInputs.positionWS;
 
                 output.fogFactor = ComputeFogFactor(positionInputs.positionCS.z);
 
@@ -121,29 +111,16 @@ Shader "FakeMGFramework/CommonShaders/URPCelShading"
 
                 half3 normalWS = normalize(input.normalWS);
 
-                Light mainLight = GetMainLight(input.shadowCoord);
+                // Select the cascade per fragment; triangles can span more than one cascade.
+                float4 shadowCoord = TransformWorldToShadowCoord(input.positionWS);
+                Light mainLight = GetMainLight(shadowCoord);
 
-                half NdotL =
-                    saturate(dot(normalWS, mainLight.direction));
-
-                half lightAttenuation =
-                    mainLight.shadowAttenuation *
-                    mainLight.distanceAttenuation;
-
-                half lightingValue = NdotL * lightAttenuation;
-                half smoothing = max(_StepSmoothing, 0.0001h);
-
-                half celBand = smoothstep(
-                    _StepThreshold,
-                    _StepThreshold + smoothing,
-                    lightingValue
-                );
-
-                half3 celLighting = lerp(
-                    _ShadowColor.rgb,
-                    half3(1.0h, 1.0h, 1.0h),
-                    celBand
-                );
+                half normalDotLight01 = saturate(dot(normalWS, mainLight.direction));
+                half lightAttenuation01 = mainLight.shadowAttenuation * mainLight.distanceAttenuation;
+                half lightingValue01 = normalDotLight01 * lightAttenuation01;
+                half smoothing01 = max(_StepSmoothing, 0.0001h);
+                half celBand01 = smoothstep(_StepThreshold, _StepThreshold + smoothing01, lightingValue01);
+                half3 celLighting = lerp(_ShadowColor.rgb, half3(1.0h, 1.0h, 1.0h), celBand01);
 
                 half3 finalColor = baseColor.rgb * celLighting * mainLight.color;
 
@@ -155,8 +132,42 @@ Shader "FakeMGFramework/CommonShaders/URPCelShading"
             ENDHLSL
         }
 
-        UsePass "Universal Render Pipeline/Lit/ShadowCaster"
-        UsePass "Universal Render Pipeline/Lit/DepthOnly"
+        Pass
+        {
+            Name "ShadowCaster"
+            Tags { "LightMode" = "ShadowCaster" }
+            Cull Back
+            ZWrite On
+            ZTest LEqual
+            ColorMask 0
+
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex ShadowPassVertex
+            #pragma fragment ShadowPassFragment
+            #pragma multi_compile_instancing
+            #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/ShadowCasterPass.hlsl"
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "DepthOnly"
+            Tags { "LightMode" = "DepthOnly" }
+            Cull Back
+            ZWrite On
+            ZTest LEqual
+            ColorMask R
+
+            HLSLPROGRAM
+            #pragma target 3.0
+            #pragma vertex DepthOnlyVertex
+            #pragma fragment DepthOnlyFragment
+            #pragma multi_compile_instancing
+            #include "Packages/com.unity.render-pipelines.universal/Shaders/DepthOnlyPass.hlsl"
+            ENDHLSL
+        }
     }
 
     FallBack "Hidden/Universal Render Pipeline/FallbackError"

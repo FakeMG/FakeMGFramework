@@ -1,7 +1,7 @@
 {
     "name": "FakeMG.Outline.Tests.Editor",
     "rootNamespace": "FakeMG.Outline.Tests",
-    "references": ["FakeMG.Outline"],
+    "references": ["FakeMG.Outline", "FakeMG.Outline.Editor", "TNRD.NSubstitute"],
     "includePlatforms": ["Editor"],
     "autoReferenced": false,
     "optionalUnityReferences": ["TestAssemblies"]

@@ -9,7 +9,7 @@ namespace FakeMG.Outline
     /// Enables or disables an outline by changing the rendering layers of child renderers.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class RenderingLayerOutlineController : MonoBehaviour
+    public sealed class RenderingLayerOutlineController : MonoBehaviour, IOutlineSelectionBounds
     {
         [SerializeField] private RenderingLayerMask _outlineMask;
         [SerializeField] private RenderingLayerMask _selectedOutlineMask;
@@ -77,6 +77,32 @@ namespace FakeMG.Outline
         #endregion
 
         #region Public Methods
+
+        public bool TryGetWorldBounds(out Bounds boundsMeters)
+        {
+            boundsMeters = default;
+            bool hasBounds = false;
+            for (int rendererIndex = 0; rendererIndex < _targetRenderers.Length; rendererIndex++)
+            {
+                Renderer targetRenderer = _targetRenderers[rendererIndex];
+                if (targetRenderer == null || !targetRenderer.enabled || !targetRenderer.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                if (hasBounds)
+                {
+                    boundsMeters.Encapsulate(targetRenderer.bounds);
+                }
+                else
+                {
+                    boundsMeters = targetRenderer.bounds;
+                    hasBounds = true;
+                }
+            }
+
+            return hasBounds;
+        }
 
         [Button]
         public void SetSelected(bool isSelected)

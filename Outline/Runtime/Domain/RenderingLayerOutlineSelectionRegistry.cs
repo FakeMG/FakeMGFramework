@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using FakeMG.Framework;
+using UnityEngine;
 
 namespace FakeMG.Outline
 {
@@ -62,6 +63,37 @@ namespace FakeMG.Outline
         public bool HasSelection(uint renderingLayerMask)
         {
             return (_activeRenderingLayerMask & renderingLayerMask) != 0;
+        }
+
+        public bool TryGetSelectionBounds(uint renderingLayerMask, out Bounds boundsMeters)
+        {
+            boundsMeters = default;
+            bool hasBounds = false;
+            foreach (KeyValuePair<object, uint> selection in _masksByOwner)
+            {
+                if ((selection.Value & renderingLayerMask) == 0)
+                {
+                    continue;
+                }
+
+                // Custom owners without bounds remain supported through full-viewport rendering.
+                if (selection.Key is not IOutlineSelectionBounds boundsProvider || !boundsProvider.TryGetWorldBounds(out Bounds ownerBoundsMeters))
+                {
+                    return false;
+                }
+
+                if (hasBounds)
+                {
+                    boundsMeters.Encapsulate(ownerBoundsMeters);
+                }
+                else
+                {
+                    boundsMeters = ownerBoundsMeters;
+                    hasBounds = true;
+                }
+            }
+
+            return hasBounds;
         }
 
         public void ClearSelections()

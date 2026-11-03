@@ -44,6 +44,21 @@ namespace FakeMG.Outline.Tests
         }
 
         [Test]
+        public void MovingSelection_ReportsCurrentWorldBounds()
+        {
+            RenderingLayerOutlineController controller = InstantiateController();
+            Assert.That(controller.TryGetWorldBounds(out Bounds originalBoundsMeters), Is.True);
+            Vector3 offsetMeters = new(10f, 3f, -2f);
+
+            controller.transform.position += offsetMeters;
+            bool hasBounds = controller.TryGetWorldBounds(out Bounds movedBoundsMeters);
+
+            Assert.That(hasBounds, Is.True);
+            Assert.That(movedBoundsMeters.center, Is.EqualTo(originalBoundsMeters.center + offsetMeters));
+            Assert.That(movedBoundsMeters.size, Is.EqualTo(originalBoundsMeters.size));
+        }
+
+        [Test]
         public void Selection_RegistersTheMaskAndPreservesOtherRenderingLayers()
         {
             RenderingLayerOutlineController controller = InstantiateController();

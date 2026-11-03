@@ -27,6 +27,7 @@ namespace FakeMG.Outline.Tests
             _material = TrackObject(new Material(shader));
             _material.SetColor("_OutlineColor", Color.yellow);
             _material.SetFloat("_OutlineThicknessPixels", 3f);
+            Shader.SetGlobalVector("_OutlineMaskClipScaleOffset", new Vector4(1f, 1f, 0f, 0f));
         }
 
         [TearDown]
@@ -86,12 +87,54 @@ namespace FakeMG.Outline.Tests
         public void EmptySelection_DoesNotProduceOutlinePixels()
         {
             Texture2D mask = TrackObject(new Texture2D(TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS, TextureFormat.RGFloat, false, true));
-            mask.SetPixels(new Color[TEXTURE_SIZE_PIXELS * TEXTURE_SIZE_PIXELS]);
+            var pixels = new Color[TEXTURE_SIZE_PIXELS * TEXTURE_SIZE_PIXELS];
+            System.Array.Fill(pixels, new Color(-1f, 0f, 0f, 0f));
+            mask.SetPixels(pixels);
             mask.Apply();
 
             Texture2D result = RenderOutline(mask);
 
             Assert.That(CountYellowPixels(result, new RectInt(0, 0, TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS)), Is.Zero);
+        }
+
+        [TestCase(16, 16, 32, 32)]
+        [TestCase(12, 18, 36, 28)]
+        public void CroppedMask_MatchesFullResolutionContourAtItsScreenOrigin(int originXPixels, int originYPixels,
+            int widthPixels, int heightPixels)
+        {
+            Texture2D fullMask = CreateMaskTexture(false);
+            Texture2D croppedMask = TrackObject(new Texture2D(widthPixels, heightPixels, TextureFormat.RFloat, false, true));
+            croppedMask.SetPixels(fullMask.GetPixels(originXPixels, originYPixels, widthPixels, heightPixels));
+            croppedMask.Apply();
+
+            Texture2D fullResult = RenderOutline(fullMask);
+            Texture2D croppedResult = RenderOutline(croppedMask,
+                rectanglePixels: new RectInt(originXPixels, originYPixels, widthPixels, heightPixels));
+
+            Assert.That(croppedResult.GetPixels(), Is.EqualTo(fullResult.GetPixels()));
+        }
+
+        [TestCase(0f)]
+        [TestCase(1f)]
+        public void DepthEndpoints_AreCoverageRatherThanEmptyPixels(float depth01)
+        {
+            Texture2D mask = CreateMaskTexture(false, depth01);
+
+            Texture2D result = RenderOutline(mask);
+
+            Assert.That(IsYellow(result.GetPixel(23, 32)), Is.True);
+            Assert.That(IsYellow(result.GetPixel(24, 32)), Is.False);
+        }
+
+        [TestCase(-5, 0)]
+        [TestCase(100, 16)]
+        public void OutOfRangeThickness_IsClamped(int requestedThicknessPixels, int expectedThicknessPixels)
+        {
+            _material.SetFloat("_OutlineThicknessPixels", requestedThicknessPixels);
+
+            Texture2D result = RenderOutline(CreateMaskTexture(false));
+
+            Assert.That(CountYellowPixels(result, new RectInt(0, 32, MASK_RECT_PIXELS.xMin, 1)), Is.EqualTo(expectedThicknessPixels));
         }
 
         [Test]
@@ -102,7 +145,7 @@ namespace FakeMG.Outline.Tests
             Texture2D result = RenderOutline(mask, sceneClearDepth01: 0f);
 
             Assert.That(CountYellowPixels(result, new RectInt(0, 0, TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS)), Is.Zero);
-            Assert.That(mask.GetPixel(32, 32).r, Is.EqualTo(1f));
+            Assert.That(mask.GetPixel(32, 32).r, Is.EqualTo(0.5f));
         }
 
         [Test]
@@ -114,7 +157,7 @@ namespace FakeMG.Outline.Tests
             using (var commands = new CommandBuffer())
             {
                 commands.SetRenderTarget(mask);
-                commands.ClearRenderTarget(true, true, Color.clear);
+                commands.ClearRenderTarget(true, true, new Color(-1f, -1f, -1f, -1f));
                 commands.SetViewProjectionMatrices(Matrix4x4.identity,
                     GL.GetGPUProjectionMatrix(Matrix4x4.Ortho(-1f, 1f, -1f, 1f, 0.1f, 10f), true));
                 commands.DrawMesh(body, Matrix4x4.identity, _material, 0, GetPassIndex("SolidSelectionMask"));
@@ -127,14 +170,14 @@ namespace FakeMG.Outline.Tests
             Texture2D coverage = ReadTexture(mask);
             Texture2D result = RenderOutline(mask);
 
-            Assert.That(coverage.GetPixel(20, 32).r, Is.EqualTo(1f), "First body submesh must contribute.");
-            Assert.That(coverage.GetPixel(44, 32).r, Is.EqualTo(1f), "Second body submesh must contribute.");
+            Assert.That(coverage.GetPixel(20, 32).r, Is.GreaterThanOrEqualTo(0f), "First body submesh must contribute.");
+            Assert.That(coverage.GetPixel(44, 32).r, Is.GreaterThanOrEqualTo(0f), "Second body submesh must contribute.");
             int coveragePixelCount = 0;
             for (int yPixels = 0; yPixels < TEXTURE_SIZE_PIXELS; yPixels++)
             {
                 for (int xPixels = 0; xPixels < TEXTURE_SIZE_PIXELS; xPixels++)
                 {
-                    if (coverage.GetPixel(xPixels, yPixels).r > 0.5f)
+                    if (coverage.GetPixel(xPixels, yPixels).r >= 0f)
                     {
                         coveragePixelCount++;
                         Assert.That(IsYellow(result.GetPixel(xPixels, yPixels)), Is.False, "Covered geometry must never become an internal contour.");
@@ -149,16 +192,17 @@ namespace FakeMG.Outline.Tests
 
         #region Private Methods
 
-        private Texture2D CreateMaskTexture(bool hasDepthVariation)
+        private Texture2D CreateMaskTexture(bool hasDepthVariation, float defaultDepth01 = 0.5f)
         {
             Texture2D mask = TrackObject(new Texture2D(TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS, TextureFormat.RGFloat, false, true));
             var pixels = new Color[TEXTURE_SIZE_PIXELS * TEXTURE_SIZE_PIXELS];
+            System.Array.Fill(pixels, new Color(-1f, 0f, 0f, 0f));
             for (int yPixels = MASK_RECT_PIXELS.yMin; yPixels < MASK_RECT_PIXELS.yMax; yPixels++)
             {
                 for (int xPixels = MASK_RECT_PIXELS.xMin; xPixels < MASK_RECT_PIXELS.xMax; xPixels++)
                 {
-                    float depth01 = hasDepthVariation && xPixels % 2 == 0 ? 0.75f : 0.5f;
-                    pixels[yPixels * TEXTURE_SIZE_PIXELS + xPixels] = new Color(1f, depth01, 0f, 0f);
+                    float depth01 = hasDepthVariation && xPixels % 2 == 0 ? 0.75f : defaultDepth01;
+                    pixels[yPixels * TEXTURE_SIZE_PIXELS + xPixels] = new Color(depth01, 0f, 0f, 0f);
                 }
             }
 
@@ -167,14 +211,20 @@ namespace FakeMG.Outline.Tests
             return mask;
         }
 
-        private Texture2D RenderOutline(Texture mask, float sceneClearDepth01 = 1f)
+        private Texture2D RenderOutline(Texture mask, float sceneClearDepth01 = 1f, RectInt? rectanglePixels = null)
         {
-            RenderTexture horizontalMask = CreateRenderTexture(RenderTextureFormat.RGFloat, 0);
+            RenderTexture horizontalMask = TrackObject(new RenderTexture(mask.width, mask.height, 0, RenderTextureFormat.RFloat));
+            Assert.That(horizontalMask.Create(), Is.True);
+            _renderTextures.Add(horizontalMask);
             RenderTexture result = CreateRenderTexture(RenderTextureFormat.ARGB32, 24);
             var properties = new MaterialPropertyBlock();
             properties.SetTexture("_SelectionMask", mask);
             properties.SetTexture("_HorizontallyDilatedMask", horizontalMask);
-            properties.SetVector("_MaskSizePixels", new Vector4(TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS, 0f, 0f));
+            RectInt targetRectanglePixels = rectanglePixels ?? new RectInt(0, 0, TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS);
+            properties.SetVector("_MaskSizePixels", new Vector4(mask.width, mask.height, 0f, 0f));
+            properties.SetVector("_MaskOriginPixels", new Vector4(targetRectanglePixels.x, targetRectanglePixels.y, 0f, 0f));
+            properties.SetVector("_OutlineMaskClipScaleOffset", OutlineScreenBounds.CalculateClipScaleOffset(targetRectanglePixels,
+                TEXTURE_SIZE_PIXELS, TEXTURE_SIZE_PIXELS, SystemInfo.graphicsUVStartsAtTop));
             using (var commands = new CommandBuffer())
             {
                 commands.SetRenderTarget(horizontalMask);
@@ -183,7 +233,7 @@ namespace FakeMG.Outline.Tests
                 commands.SetRenderTarget(result);
                 commands.ClearRenderTarget(true, true, Color.black, sceneClearDepth01);
                 commands.DrawProcedural(Matrix4x4.identity, _material, GetPassIndex("CompositeExteriorOutline"),
-                    MeshTopology.Triangles, 3, 1, properties);
+                    MeshTopology.Triangles, 6, 1, properties);
                 Graphics.ExecuteCommandBuffer(commands);
             }
 

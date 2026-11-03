@@ -1,9 +1,10 @@
-Shader "FakeMGFramework/Outline/URPDepthOutline"
+Shader "FakeMGFramework/Outline/URPInvertedHullOutline"
 {
     Properties
     {
         _OutlineColor("Outline Color", Color) = (0, 0, 0, 1)
-        _OutlineWidth("Outline Width", Range(0.0, 0.05)) = 0.01
+        _OutlineWidthMeters("Outline Width (Meters)", Range(0.0, 0.05)) = 0.01
+        [Toggle(_SMOOTH_OUTLINE_NORMALS)] _UseSmoothOutlineNormals("Use Baked Smooth Normals (UV4)", Float) = 0
     }
 
     SubShader
@@ -24,7 +25,7 @@ Shader "FakeMGFramework/Outline/URPDepthOutline"
             }
 
             Cull Front
-            ZWrite On
+            ZWrite Off
             ZTest LEqual
 
             HLSLPROGRAM
@@ -33,6 +34,7 @@ Shader "FakeMGFramework/Outline/URPDepthOutline"
             #pragma vertex Vert
             #pragma fragment Frag
             #pragma multi_compile_instancing
+            #pragma shader_feature_local_vertex _SMOOTH_OUTLINE_NORMALS
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
@@ -40,6 +42,7 @@ Shader "FakeMGFramework/Outline/URPDepthOutline"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
+                float3 smoothNormalOS : TEXCOORD3;
 
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -53,7 +56,8 @@ Shader "FakeMGFramework/Outline/URPDepthOutline"
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _OutlineColor;
-                float _OutlineWidth;
+                float _OutlineWidthMeters;
+                float _UseSmoothOutlineNormals;
             CBUFFER_END
 
             Varyings Vert(Attributes input)
@@ -65,9 +69,13 @@ Shader "FakeMGFramework/Outline/URPDepthOutline"
 
                 float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
 
-                float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+                #if defined(_SMOOTH_OUTLINE_NORMALS)
+                    float3 normalWS = TransformObjectToWorldNormal(input.smoothNormalOS);
+                #else
+                    float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
+                #endif
 
-                positionWS += normalize(normalWS) * _OutlineWidth;
+                positionWS += normalize(normalWS) * _OutlineWidthMeters;
                 output.positionCS = TransformWorldToHClip(positionWS);
 
                 return output;

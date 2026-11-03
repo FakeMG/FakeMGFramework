@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using NSubstitute;
+using NSubstitute.Core;
 using UnityEngine;
 using UnityEngine.TestTools;
 
@@ -21,6 +23,37 @@ namespace FakeMG.Outline.Tests
         {
             Assert.That(_registry.HasSelection(uint.MaxValue), Is.False);
             Assert.That(_registry.ActiveSelectionCount, Is.Zero);
+        }
+
+        [Test]
+        public void SelectionBounds_AreReadOnlyFromMatchingOwners()
+        {
+            IOutlineSelectionBounds matchingOwner = Substitute.For<IOutlineSelectionBounds>();
+            IOutlineSelectionBounds otherOwner = Substitute.For<IOutlineSelectionBounds>();
+            matchingOwner.TryGetWorldBounds(out Arg.Any<Bounds>()).Returns(SupplyBounds);
+            _registry.RegisterSelection(matchingOwner, 2u);
+            _registry.RegisterSelection(otherOwner, 4u);
+
+            bool hasBounds = _registry.TryGetSelectionBounds(2u, out Bounds boundsMeters);
+
+            Assert.That(hasBounds, Is.True);
+            Assert.That(boundsMeters, Is.EqualTo(new Bounds(Vector3.one, Vector3.one)));
+            matchingOwner.Received(1).TryGetWorldBounds(out Arg.Any<Bounds>());
+            otherOwner.DidNotReceive().TryGetWorldBounds(out Arg.Any<Bounds>());
+        }
+
+        [Test]
+        public void OwnerWithoutBounds_RequestsFullViewportFallback()
+        {
+            _registry.RegisterSelection(new object(), 2u);
+
+            Assert.That(_registry.TryGetSelectionBounds(2u, out _), Is.False);
+        }
+
+        [Test]
+        public void EmptyRegistry_HasNoSelectionBounds()
+        {
+            Assert.That(_registry.TryGetSelectionBounds(uint.MaxValue, out _), Is.False);
         }
 
         [Test]
@@ -134,6 +167,16 @@ namespace FakeMG.Outline.Tests
 
             Assert.That(_registry.ActiveSelectionCount, Is.EqualTo(1));
             Assert.That(_registry.HasSelection(2u), Is.True);
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private static bool SupplyBounds(CallInfo call)
+        {
+            call[0] = new Bounds(Vector3.one, Vector3.one);
+            return true;
         }
 
         #endregion

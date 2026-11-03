@@ -1,0 +1,6 @@
+{
+    "name": "FakeMG.Outline.Editor",
+    "rootNamespace": "FakeMG.Outline.Editor",
+    "references": ["FakeMG.Outline", "FakeMG.Framework"],
+    "includePlatforms": ["Editor"]
+}

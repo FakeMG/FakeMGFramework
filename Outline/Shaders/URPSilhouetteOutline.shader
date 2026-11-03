@@ -16,6 +16,8 @@ Shader "FakeMGFramework/Outline/URPSilhouetteOutline"
         TEXTURE2D_X_FLOAT(_SelectionMask);
         TEXTURE2D_X_FLOAT(_HorizontallyDilatedMask);
         float4 _MaskSizePixels;
+        float4 _MaskOriginPixels;
+        float4 _OutlineMaskClipScaleOffset;
 
         CBUFFER_START(UnityPerMaterial)
             half4 _OutlineColor;
@@ -46,12 +48,14 @@ Shader "FakeMGFramework/Outline/URPSilhouetteOutline"
             UNITY_SETUP_INSTANCE_ID(input);
             UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
             output.positionCS = TransformObjectToHClip(input.positionOS);
+            output.positionCS.xy = (output.positionCS.xy - _OutlineMaskClipScaleOffset.zw * output.positionCS.w) /
+                _OutlineMaskClipScaleOffset.xy;
             return output;
         }
 
-        float2 MaskFragment(OutlineVaryings input) : SV_Target
+        float MaskFragment(OutlineVaryings input) : SV_Target
         {
-            return float2(1.0, input.positionCS.z);
+            return input.positionCS.z;
         }
 
         OutlineVaryings FullscreenVertex(FullscreenAttributes input)
@@ -63,26 +67,40 @@ Shader "FakeMGFramework/Outline/URPSilhouetteOutline"
             return output;
         }
 
-        float2 MergeMaskDepth(float2 mask, float2 candidate)
+        OutlineVaryings CompositeVertex(FullscreenAttributes input)
         {
-            if (candidate.x == 0.0)
-                return mask;
-            if (mask.x == 0.0)
-                return candidate;
+            const float2 cornersNdc[6] = {
+                float2(-1, -1), float2(-1, 1), float2(1, 1),
+                float2(-1, -1), float2(1, 1), float2(1, -1)
+            };
+            OutlineVaryings output;
+            UNITY_SETUP_INSTANCE_ID(input);
+            UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+            output.positionCS = float4(cornersNdc[input.vertexID], UNITY_NEAR_CLIP_VALUE, 1.0);
+            output.positionCS.xy = output.positionCS.xy * _OutlineMaskClipScaleOffset.xy +
+                _OutlineMaskClipScaleOffset.zw * output.positionCS.w;
+            return output;
+        }
+
+        float MergeMaskDepth(float maskDepth01, float candidateDepth01)
+        {
+            if (candidateDepth01 < 0.0)
+                return maskDepth01;
+            if (maskDepth01 < 0.0)
+                return candidateDepth01;
 
             // Keep the nearest selected surface; coverage never depends on a depth or normal edge.
             #if UNITY_REVERSED_Z
-                mask.y = max(mask.y, candidate.y);
+                return max(maskDepth01, candidateDepth01);
             #else
-                mask.y = min(mask.y, candidate.y);
+                return min(maskDepth01, candidateDepth01);
             #endif
-            return mask;
         }
 
-        float2 DilateMask(int2 pixelPosition, int2 axis, bool isHorizontal)
+        float DilateMask(int2 pixelPosition, int2 axis, bool isHorizontal)
         {
-            float2 dilatedMask = 0.0;
-            int thicknessPixels = (int)round(_OutlineThicknessPixels);
+            float dilatedDepth01 = -1.0;
+            int thicknessPixels = clamp((int)round(_OutlineThicknessPixels), 0, 16);
             [loop]
             for (int offsetPixels = -thicknessPixels; offsetPixels <= thicknessPixels; offsetPixels++)
             {
@@ -90,15 +108,15 @@ Shader "FakeMGFramework/Outline/URPSilhouetteOutline"
                 if (any(samplePosition < 0) || any(samplePosition >= (int2)_MaskSizePixels.xy))
                     continue;
 
-                float2 candidate = isHorizontal
-                    ? LOAD_TEXTURE2D_X(_SelectionMask, samplePosition).rg
-                    : LOAD_TEXTURE2D_X(_HorizontallyDilatedMask, samplePosition).rg;
-                dilatedMask = MergeMaskDepth(dilatedMask, candidate);
+                float candidateDepth01 = isHorizontal
+                    ? LOAD_TEXTURE2D_X(_SelectionMask, samplePosition).r
+                    : LOAD_TEXTURE2D_X(_HorizontallyDilatedMask, samplePosition).r;
+                dilatedDepth01 = MergeMaskDepth(dilatedDepth01, candidateDepth01);
             }
-            return dilatedMask;
+            return dilatedDepth01;
         }
 
-        float2 HorizontalDilationFragment(OutlineVaryings input) : SV_Target
+        float HorizontalDilationFragment(OutlineVaryings input) : SV_Target
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
             return DilateMask(int2(input.positionCS.xy), int2(1, 0), true);
@@ -113,15 +131,16 @@ Shader "FakeMGFramework/Outline/URPSilhouetteOutline"
         CompositeOutput CompositeFragment(OutlineVaryings input)
         {
             UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
-            int2 pixelPosition = int2(input.positionCS.xy);
-            float originalMask = LOAD_TEXTURE2D_X(_SelectionMask, pixelPosition).r;
-            float2 dilatedMask = DilateMask(pixelPosition, int2(0, 1), false);
-            clip(dilatedMask.x - originalMask - 0.5);
+            int2 pixelPosition = int2(input.positionCS.xy) - (int2)_MaskOriginPixels.xy;
+            float originalDepth01 = LOAD_TEXTURE2D_X(_SelectionMask, pixelPosition).r;
+            clip(-originalDepth01 - 0.000001);
+            float dilatedDepth01 = DilateMask(pixelPosition, int2(0, 1), false);
+            clip(dilatedDepth01);
 
             CompositeOutput output;
             output.color = _OutlineColor;
             // Test the expanded exterior against scene depth without cutting holes into the solid mask.
-            output.depth = dilatedMask.y;
+            output.depth = dilatedDepth01;
             return output;
         }
         ENDHLSL
@@ -168,7 +187,7 @@ Shader "FakeMGFramework/Outline/URPSilhouetteOutline"
 
             HLSLPROGRAM
             #pragma target 3.5
-            #pragma vertex FullscreenVertex
+            #pragma vertex CompositeVertex
             #pragma fragment CompositeFragment
             ENDHLSL
         }
