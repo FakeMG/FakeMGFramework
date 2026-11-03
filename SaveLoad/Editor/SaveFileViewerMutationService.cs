@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using FakeMG.SaveLoad;
 
 namespace FakeMG.SaveLoad.Editor
@@ -114,6 +116,31 @@ namespace FakeMG.SaveLoad.Editor
             ISaveDataStore saveDataStore = CreateStore(
                 (SaveFileProtectionSettings)manifestFileInfo.StorageProfile);
             saveDataStore.DeleteDirectory(SaveFileCatalog.CreateWorldDirectoryPath(manifestFileInfo.OwnerId));
+        }
+
+        /// <summary>
+        /// Deletes every given file. Worlds with a manifest are deleted as a whole, which also removes their snapshots;
+        /// snapshots without a manifest and global documents are deleted individually with their transaction companions.
+        /// </summary>
+        public void DeleteAll(IReadOnlyCollection<ValidatedSaveFileInfo> saveFileInfos)
+        {
+            HashSet<string> deletedWorldIds = new(StringComparer.Ordinal);
+
+            foreach (ValidatedSaveFileInfo manifestFileInfo in saveFileInfos.Where(info => info.SaveKind == SaveFileKind.WorldManifest))
+            {
+                DeleteWorld(manifestFileInfo);
+                deletedWorldIds.Add(manifestFileInfo.OwnerId);
+            }
+
+            foreach (ValidatedSaveFileInfo saveFileInfo in saveFileInfos)
+            {
+                bool isDeletedWithWorld = saveFileInfo.SaveKind != SaveFileKind.GlobalDocument
+                                          && deletedWorldIds.Contains(saveFileInfo.OwnerId);
+                if (saveFileInfo.SaveKind != SaveFileKind.WorldManifest && !isDeletedWithWorld)
+                {
+                    DeleteFileAndCompanions(saveFileInfo);
+                }
+            }
         }
 
         #endregion

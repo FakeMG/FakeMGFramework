@@ -20,16 +20,27 @@ namespace FakeMG.SaveLoad.Editor
         private readonly SaveFileViewerDataSession _dataSession = new();
         private readonly SaveFileViewerMutationService _mutationService = new();
         private readonly SaveFileProtectionProfileResolver _protectionProfileResolver = new();
+        private readonly SaveFileViewerPanelSplitter _fileListSplitter = new(SaveFileViewerSplitterAxis.Horizontal);
+        private readonly SaveFileViewerPanelSplitter _keyListSplitter = new(SaveFileViewerSplitterAxis.Vertical);
+        private readonly SaveFileViewerJsonTextArea _jsonTextArea = new();
+        private readonly SaveFileViewerExternalJsonEditor _externalJsonEditor = new();
         private static GUIStyle _selectedButtonStyle;
         private static Texture2D _selectedBackgroundTexture;
         private static bool? _isProSkin;
 
-        private const float LEFT_PANEL_MIN_WIDTH = 220f;
-        private const float LEFT_PANEL_MAX_WIDTH = 500f;
-        private const float SPLITTER_WIDTH = 4f;
+        private const float LEFT_PANEL_MIN_WIDTH_PIXELS = 220f;
+        private const float RIGHT_PANEL_MIN_WIDTH_PIXELS = 320f;
+        private const float KEY_LIST_MIN_HEIGHT_PIXELS = 40f;
+        // Space kept below the key list for the file label, headers, data editor toolbar and a usable editor area.
+        private const float DATA_EDITOR_RESERVED_HEIGHT_PIXELS = 200f;
+        private const float SPLITTER_THICKNESS_PIXELS = 6f;
+        private const double EXTERNAL_EDIT_POLL_INTERVAL_SECONDS = 0.5;
+        private const string EDIT_EXTERNALLY_TOOLTIP =
+            "Opens this JSON in the external script editor (Preferences > External Tools). "
+            + "Each save there is validated and written straight to the save file.";
 
-        private float _leftPanelWidth = 280f;
-        private bool _isResizingSplitter;
+        [SerializeField] private float _leftPanelWidthPixels = 280f;
+        [SerializeField] private float _keyListHeightPixels = 150f;
         private TreeViewState<int> _fileTreeState;
         private SaveFileViewerFileTreeView _fileTree;
 
@@ -50,6 +61,7 @@ namespace FakeMG.SaveLoad.Editor
 
         private Vector2 _keyListScroll;
         private Vector2 _dataEditorScroll;
+        private double _nextExternalEditPollTimeSeconds;
 
         #region Unity Lifecycle
 
@@ -60,6 +72,8 @@ namespace FakeMG.SaveLoad.Editor
             _fileTree ??= new SaveFileViewerFileTreeView(_fileTreeState);
             _fileTree.FileSelected -= SelectRequestedFile;
             _fileTree.FileSelected += SelectRequestedFile;
+            EditorApplication.update -= SaveExternalJsonEdits;
+            EditorApplication.update += SaveExternalJsonEdits;
             RefreshFileList();
         }
 
@@ -69,17 +83,18 @@ namespace FakeMG.SaveLoad.Editor
             {
                 _fileTree.FileSelected -= SelectRequestedFile;
             }
+
+            EditorApplication.update -= SaveExternalJsonEdits;
+            _externalJsonEditor.Close();
         }
 
         private void OnGUI()
         {
             EditorGUILayout.BeginHorizontal();
             DrawLeftPanel();
-            DrawSplitter();
+            DrawFileListSplitter();
             DrawRightPanel();
             EditorGUILayout.EndHorizontal();
-
-            HandleSplitterDrag();
         }
 
         #endregion
@@ -98,7 +113,7 @@ namespace FakeMG.SaveLoad.Editor
 
         private void DrawLeftPanel()
         {
-            EditorGUILayout.BeginVertical(GUILayout.Width(_leftPanelWidth));
+            EditorGUILayout.BeginVertical(GUILayout.Width(_leftPanelWidthPixels));
 
             DrawFileListToolbar();
             DrawProfileDiagnostics();
@@ -116,12 +131,23 @@ namespace FakeMG.SaveLoad.Editor
                 RefreshFileList();
             }
 
+            GUILayout.FlexibleSpace();
+
             ValidatedSaveFileInfo selectedEntry = GetSelectedFileEntry();
             EditorGUI.BeginDisabledGroup(selectedEntry == null);
 
             if (GUILayout.Button("Delete Selected", EditorStyles.toolbarButton))
             {
                 DeleteFile(selectedEntry);
+            }
+
+            EditorGUI.EndDisabledGroup();
+
+            EditorGUI.BeginDisabledGroup(_fileEntries.Count == 0);
+
+            if (GUILayout.Button("Delete All", EditorStyles.toolbarButton))
+            {
+                DeleteAllFiles();
             }
 
             EditorGUI.EndDisabledGroup();
@@ -151,42 +177,40 @@ namespace FakeMG.SaveLoad.Editor
 
         #endregion
 
-        #region Splitter
+        #region Splitters
 
-        private void DrawSplitter()
+        private void DrawFileListSplitter()
         {
-            Rect splitterRect = EditorGUILayout.BeginVertical(GUILayout.Width(SPLITTER_WIDTH));
-            GUILayout.Box(string.Empty,
-                GUILayout.Width(SPLITTER_WIDTH),
+            Rect splitterRect = GUILayoutUtility.GetRect(
+                SPLITTER_THICKNESS_PIXELS,
+                SPLITTER_THICKNESS_PIXELS,
+                0f,
+                100000f,
+                GUILayout.Width(SPLITTER_THICKNESS_PIXELS),
                 GUILayout.ExpandHeight(true));
-            EditorGUILayout.EndVertical();
+            float maxLeftPanelWidthPixels = position.width - RIGHT_PANEL_MIN_WIDTH_PIXELS - SPLITTER_THICKNESS_PIXELS;
 
-            EditorGUIUtility.AddCursorRect(splitterRect, MouseCursor.ResizeHorizontal);
-
-            if (Event.current.type == EventType.MouseDown && splitterRect.Contains(Event.current.mousePosition))
-            {
-                _isResizingSplitter = true;
-                Event.current.Use();
-            }
+            _leftPanelWidthPixels = _fileListSplitter.DrawAndResize(
+                splitterRect,
+                _leftPanelWidthPixels,
+                LEFT_PANEL_MIN_WIDTH_PIXELS,
+                maxLeftPanelWidthPixels);
         }
 
-        private void HandleSplitterDrag()
+        private void DrawKeyListSplitter()
         {
-            if (!_isResizingSplitter) return;
+            Rect splitterRect = GUILayoutUtility.GetRect(
+                0f,
+                SPLITTER_THICKNESS_PIXELS,
+                GUILayout.ExpandWidth(true),
+                GUILayout.Height(SPLITTER_THICKNESS_PIXELS));
+            float maxKeyListHeightPixels = position.height - DATA_EDITOR_RESERVED_HEIGHT_PIXELS;
 
-            if (Event.current.type == EventType.MouseDrag)
-            {
-                _leftPanelWidth = Mathf.Clamp(
-                    Event.current.mousePosition.x,
-                    LEFT_PANEL_MIN_WIDTH,
-                    LEFT_PANEL_MAX_WIDTH);
-                Repaint();
-            }
-
-            if (Event.current.type == EventType.MouseUp)
-            {
-                _isResizingSplitter = false;
-            }
+            _keyListHeightPixels = _keyListSplitter.DrawAndResize(
+                splitterRect,
+                _keyListHeightPixels,
+                KEY_LIST_MIN_HEIGHT_PIXELS,
+                maxKeyListHeightPixels);
         }
 
         #endregion
@@ -208,6 +232,8 @@ namespace FakeMG.SaveLoad.Editor
             EditorGUILayout.Space(4);
 
             DrawKeyList();
+            DrawAddKeyRow();
+            DrawKeyListSplitter();
             DrawDataEditor();
 
             EditorGUILayout.EndVertical();
@@ -215,10 +241,9 @@ namespace FakeMG.SaveLoad.Editor
 
         private void DrawKeyList()
         {
-            EditorGUILayout.LabelField("Keys", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField($"Keys ({_keys.Length})", EditorStyles.boldLabel);
 
-            _keyListScroll = EditorGUILayout.BeginScrollView(
-                _keyListScroll, GUILayout.MaxHeight(150));
+            _keyListScroll = EditorGUILayout.BeginScrollView(_keyListScroll, GUILayout.Height(_keyListHeightPixels));
 
             foreach (string key in _keys)
             {
@@ -226,9 +251,6 @@ namespace FakeMG.SaveLoad.Editor
             }
 
             EditorGUILayout.EndScrollView();
-
-            DrawAddKeyRow();
-            EditorGUILayout.Space(4);
         }
 
         private void DrawKeyRow(string key)
@@ -364,9 +386,8 @@ namespace FakeMG.SaveLoad.Editor
                 return;
             }
 
-            GUI.SetNextControlName(controlName);
             EditorGUI.BeginChangeCheck();
-            string editedJson = EditorGUILayout.TextArea(rawJson, GUILayout.ExpandHeight(true));
+            string editedJson = _jsonTextArea.Draw(rawJson, controlName);
             if (EditorGUI.EndChangeCheck())
             {
                 applyEditedJson(editedJson);
@@ -389,6 +410,8 @@ namespace FakeMG.SaveLoad.Editor
             EditorGUI.BeginDisabledGroup(!CanReloadCurrentView());
             if (GUILayout.Button("Revert", EditorStyles.toolbarButton))
             {
+                _externalJsonEditor.Close();
+                ResetRawJsonEditorFocus();
                 ReloadCurrentDataView();
             }
             EditorGUI.EndDisabledGroup();
@@ -398,7 +421,20 @@ namespace FakeMG.SaveLoad.Editor
             DrawDataViewButton("Key Raw", DataViewMode.KeyRaw, !string.IsNullOrEmpty(_selectedKey));
             DrawDataViewButton("File Raw", DataViewMode.FileRaw, !string.IsNullOrEmpty(_selectedFilePath));
 
+            GUILayout.Space(8f);
+            EditorGUI.BeginDisabledGroup(GetCurrentRawJson() == null);
+            if (GUILayout.Button(new GUIContent("Edit Externally", EDIT_EXTERNALLY_TOOLTIP), EditorStyles.toolbarButton))
+            {
+                OpenCurrentRawJsonExternally();
+            }
+            EditorGUI.EndDisabledGroup();
+
             GUILayout.FlexibleSpace();
+
+            if (_externalJsonEditor.IsEditing)
+            {
+                GUILayout.Label("Syncing external edits", EditorStyles.miniLabel);
+            }
 
             if (_isDirty)
             {
@@ -574,6 +610,33 @@ namespace FakeMG.SaveLoad.Editor
             RefreshFileList();
         }
 
+        private void DeleteAllFiles()
+        {
+            bool confirmed = EditorUtility.DisplayDialog(
+                "Delete All Save Files",
+                $"Are you sure you want to delete all {_fileEntries.Count} save files, including every world and its snapshots?\n"
+                + "This cannot be undone.",
+                "Delete All",
+                "Cancel");
+
+            if (!confirmed)
+            {
+                return;
+            }
+
+            try
+            {
+                _mutationService.DeleteAll(_fileEntries);
+                Echo.Log("[SaveFileViewer] Deleted all save files.");
+            }
+            catch (Exception exception)
+            {
+                Echo.Error($"[SaveFileViewer] Failed to delete all save files: {exception}");
+            }
+
+            RefreshFileList();
+        }
+
         private void DeleteKey(string key)
         {
             if (key == SaveFileCatalog.METADATA_KEY)
@@ -658,6 +721,55 @@ namespace FakeMG.SaveLoad.Editor
             SelectKey(keyName);
         }
 
+        private void OpenCurrentRawJsonExternally()
+        {
+            string fileName = Path.GetFileNameWithoutExtension(_selectedFilePath);
+            string documentName = _currentDataViewMode == DataViewMode.KeyRaw ? $"{fileName}.{_selectedKey}" : fileName;
+
+            try
+            {
+                _externalJsonEditor.Open(GetCurrentRawJson(), documentName);
+            }
+            catch (Exception exception)
+            {
+                Echo.Error($"[SaveFileViewer] Failed to open JSON in the external editor: {exception}");
+            }
+        }
+
+        private void SaveExternalJsonEdits()
+        {
+            if (EditorApplication.timeSinceStartup < _nextExternalEditPollTimeSeconds)
+            {
+                return;
+            }
+
+            _nextExternalEditPollTimeSeconds = EditorApplication.timeSinceStartup + EXTERNAL_EDIT_POLL_INTERVAL_SECONDS;
+
+            if (!_externalJsonEditor.TryReadSavedJson(out string editedJson))
+            {
+                return;
+            }
+
+            if (_currentDataViewMode == DataViewMode.KeyRaw)
+            {
+                _cachedKeyRawJson = editedJson;
+            }
+            else if (_currentDataViewMode == DataViewMode.FileRaw)
+            {
+                _cachedFullFileRawJson = editedJson;
+            }
+            else
+            {
+                return;
+            }
+
+            // A focused text area keeps its own copy of the text and would overwrite the external edit.
+            ResetRawJsonEditorFocus();
+            _isDirty = true;
+            SaveCurrentKeyData();
+            Repaint();
+        }
+
         private bool ConfirmDiscardChanges()
         {
             return EditorUtility.DisplayDialog(
@@ -689,6 +801,16 @@ namespace FakeMG.SaveLoad.Editor
             }
 
             return $"Editing: {_selectedKey}";
+        }
+
+        private string GetCurrentRawJson()
+        {
+            return _currentDataViewMode switch
+            {
+                DataViewMode.KeyRaw => _cachedKeyRawJson,
+                DataViewMode.FileRaw => _cachedFullFileRawJson,
+                _ => null
+            };
         }
 
         private bool CanRenderCurrentDataView()
@@ -748,6 +870,7 @@ namespace FakeMG.SaveLoad.Editor
             _keyLookup.Clear();
             _currentDataViewMode = DataViewMode.Typed;
             _fileTree?.ClearFileSelection();
+            _externalJsonEditor.Close();
             ResetLoadedDataState();
             ReflectionDataDrawer.ClearExpandedState();
         }
@@ -769,6 +892,7 @@ namespace FakeMG.SaveLoad.Editor
                 return false;
             }
 
+            _externalJsonEditor.Close();
             ResetRawJsonEditorFocus();
             ReflectionDataDrawer.ClearExpandedState();
             return true;

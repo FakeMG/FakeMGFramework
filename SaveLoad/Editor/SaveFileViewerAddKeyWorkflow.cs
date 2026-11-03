@@ -24,6 +24,7 @@ namespace FakeMG.SaveLoad.Editor
     {
         private const int MAX_TYPE_MATCHES = 200;
         private const string NEW_KEY_PREVIEW_PATH = "new-key-preview";
+        private const string IS_PANEL_EXPANDED_PREFS_KEY = "FakeMG.SaveFileViewer.IsAddKeyPanelExpanded";
 
         private static readonly SaveFileViewerTypeCatalog _typeCatalog = SaveFileViewerTypeCatalog.Default;
 
@@ -54,7 +55,12 @@ namespace FakeMG.SaveLoad.Editor
             addKeyRequest = default;
 
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
-            EditorGUILayout.LabelField("Add Key", EditorStyles.boldLabel);
+            bool isPanelExpanded = DrawPanelFoldout();
+            if (!isPanelExpanded)
+            {
+                EditorGUILayout.EndVertical();
+                return false;
+            }
 
             _newKeyName = EditorGUILayout.TextField("Key", _newKeyName);
             DrawTypeSelector();
@@ -85,6 +91,18 @@ namespace FakeMG.SaveLoad.Editor
 
             addKeyRequest = new SaveFileViewerAddKeyRequest(trimmedKeyName, _newKeyInitialValue);
             return true;
+        }
+
+        private static bool DrawPanelFoldout()
+        {
+            bool isExpanded = EditorPrefs.GetBool(IS_PANEL_EXPANDED_PREFS_KEY, false);
+            bool nextIsExpanded = EditorGUILayout.Foldout(isExpanded, "Add Key", true, EditorStyles.foldoutHeader);
+            if (nextIsExpanded != isExpanded)
+            {
+                EditorPrefs.SetBool(IS_PANEL_EXPANDED_PREFS_KEY, nextIsExpanded);
+            }
+
+            return nextIsExpanded;
         }
 
         private void DrawTypeSelector()
