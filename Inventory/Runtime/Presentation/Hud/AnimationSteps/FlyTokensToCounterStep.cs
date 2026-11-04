@@ -55,8 +55,12 @@ namespace FakeMG.Inventory.Hud
             return PlayAsync(change.IdentitySO, change.NewCount - change.OldCount, counter, sourceCanvasPositionPixels, cancellationToken);
         }
 
-        public async UniTask PlayAsync(IdentitySO identitySO, GameNumber amount, ItemCounterView counter,
-            Vector3 sourceCanvasPositionPixels, CancellationToken cancellationToken)
+        public async UniTask PlayAsync(
+            IdentitySO identitySO,
+            GameNumber amount,
+            ItemCounterView counter,
+            Vector3 sourceCanvasPositionPixels,
+            CancellationToken cancellationToken)
         {
             if (amount <= GameNumber.Zero)
             {
@@ -161,6 +165,7 @@ namespace FakeMG.Inventory.Hud
                     return;
                 }
                 IncreaseCounterWhenTokenArrives();
+                counter.NotifyRewardTokenArrived();
             }
             finally
             {

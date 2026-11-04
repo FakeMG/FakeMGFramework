@@ -1,3 +1,4 @@
+using System;
 using Cysharp.Threading.Tasks;
 using FakeMG.Framework;
 using FakeMG.Framework.UI;
@@ -25,7 +26,14 @@ namespace FakeMG.Inventory.Hud
         public GameNumber DisplayedCount => _displayedCount;
         public CounterUpdateDelayGroupSO DelayGroupSO => _delayGroupSO;
 
+        public event Action OnRewardTokenArrived;
+
         #region Public Methods
+
+        public void NotifyRewardTokenArrived()
+        {
+            OnRewardTokenArrived?.Invoke();
+        }
 
         public async UniTask InitializeAsync(IInventoryBalanceRepository inventoryRepository)
         {

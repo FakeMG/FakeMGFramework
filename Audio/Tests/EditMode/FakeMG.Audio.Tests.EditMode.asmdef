@@ -1,0 +1,7 @@
+{
+    "name": "FakeMG.Audio.Tests.EditMode",
+    "references": ["FakeMG.Audio"],
+    "includePlatforms": ["Editor"],
+    "autoReferenced": false,
+    "optionalUnityReferences": ["TestAssemblies"]
+}

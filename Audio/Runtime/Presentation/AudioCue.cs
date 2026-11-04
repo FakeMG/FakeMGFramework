@@ -355,6 +355,11 @@ namespace FakeMG.Audio
         [Button]
         public void PlayAudioCue()
         {
+            TryPlayAudioCue(1f);
+        }
+
+        public bool TryPlayAudioCue(float pitchMultiplier)
+        {
             if (_audioCue.CanPlaySound())
             {
                 var transformToUse = _followParent ? transform : null;
@@ -362,7 +367,20 @@ namespace FakeMG.Audio
                 _controlKey =
                     _audioCueEventChannel.RaisePlayEvent(_audioCue, audioConfigToUse, transform.position, transformToUse);
                 _audioCue.UpdateLastPlayTime();
+                if (_controlKey == AudioCueKey.Invalid)
+                {
+                    return false;
+                }
+
+                if (pitchMultiplier != 1f)
+                {
+                    _audioCueEventChannel.RaisePlaybackUpdateEvent(_controlKey, 1f, pitchMultiplier);
+                }
+
+                return true;
             }
+
+            return false;
         }
 
         // Plays an external SO through this AudioCue's configured channel and audio settings.
