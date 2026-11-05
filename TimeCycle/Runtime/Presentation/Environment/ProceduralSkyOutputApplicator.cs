@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace FakeMG.TimeCycle
 {
@@ -30,19 +31,22 @@ namespace FakeMG.TimeCycle
 
         private void Awake()
         {
-            _previousSkyboxMaterial = RenderSettings.skybox;
             _runtimeSkyMaterial = new Material(_proceduralSkyMaterialTemplate)
             {
                 name = $"{_proceduralSkyMaterialTemplate.name} Runtime",
             };
-            RenderSettings.skybox = _runtimeSkyMaterial;
-            _cubemapRefreshController.RequestRefresh();
+            SceneManager.activeSceneChanged += InstallSkyboxForActiveScene;
+            InstallSkyboxForActiveScene(default, SceneManager.GetActiveScene());
         }
 
         private void OnDestroy()
         {
-            RenderSettings.skybox = _previousSkyboxMaterial;
-            _cubemapRefreshController.RequestRefresh();
+            SceneManager.activeSceneChanged -= InstallSkyboxForActiveScene;
+            if (RenderSettings.skybox == _runtimeSkyMaterial)
+            {
+                RenderSettings.skybox = _previousSkyboxMaterial;
+                _cubemapRefreshController.RequestRefresh();
+            }
 
             if (Application.isPlaying)
             {
@@ -94,6 +98,14 @@ namespace FakeMG.TimeCycle
         #endregion
 
         #region Private Methods
+
+        private void InstallSkyboxForActiveScene(Scene previousScene, Scene activeScene)
+        {
+            if (activeScene != gameObject.scene || RenderSettings.skybox == _runtimeSkyMaterial) return;
+            _previousSkyboxMaterial = RenderSettings.skybox;
+            RenderSettings.skybox = _runtimeSkyMaterial;
+            _cubemapRefreshController.RequestRefresh();
+        }
 
         private void ApplyFloat(
             IReadOnlyCycleOutputState outputState,
