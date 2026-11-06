@@ -1,7 +1,4 @@
-using FakeMG.Framework;
 using FakeMG.SaveLoad;
-using UnityEngine;
-using VContainer;
 
 namespace FakeMG.Tutorial
 {
@@ -9,21 +6,20 @@ namespace FakeMG.Tutorial
     /// Bridges tutorial progress into the save system. Captures and restores the
     /// canonical progress held by <see cref="TutorialProgressStore"/>.
     /// </summary>
-    public sealed class TutorialProgressSaveable : MonoBehaviour, ISaveable
+    public sealed class TutorialProgressSaveable : ISaveable
     {
         public const string SAVE_ID = nameof(TutorialProgressSaveable);
 
-        private TutorialProgressStore _store;
+        private readonly TutorialProgressStore _store;
 
         public string SaveId => SAVE_ID;
 
-        #region Public Methods
-
-        [Inject]
-        public void Construct(TutorialProgressStore store)
+        public TutorialProgressSaveable(TutorialProgressStore store)
         {
             _store = store;
         }
+
+        #region Public Methods
 
         public object CaptureState()
         {

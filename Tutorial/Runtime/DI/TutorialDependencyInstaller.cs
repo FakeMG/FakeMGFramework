@@ -1,3 +1,4 @@
+using FakeMG.SaveLoad;
 using VContainer;
 using VContainer.Unity;
 
@@ -19,8 +20,7 @@ namespace FakeMG.Tutorial
         {
             builder.Register<TutorialProgressStore>(Lifetime.Singleton);
             builder.Register<TutorialInteractionGate>(Lifetime.Singleton);
-            builder.RegisterComponentInHierarchy<TutorialProgressSaveable>();
-            builder.RegisterComponentInHierarchy<TutorialRaycasterFilter>();
+            builder.Register<TutorialProgressSaveable>(Lifetime.Singleton).AsSelf().As<ISaveable>();
         }
 
         public static void RegisterGameplay(IContainerBuilder builder)
