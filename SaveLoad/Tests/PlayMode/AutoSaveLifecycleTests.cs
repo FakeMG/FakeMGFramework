@@ -19,6 +19,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
         private IWorldAutoSaveRequester _requester;
         private WorldLifecycleAutoSave _lifecycle;
         private IntervalAutoSaveService _interval;
+        private AutoSaveGate _gate;
         private WorldStartupPolicySO _startupPolicySO;
         private UniTaskCompletionSource<WorldSaveResult> _pendingSave;
         private CancellationToken _saveToken;
@@ -36,11 +37,13 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             var builder = new ContainerBuilder();
             builder.RegisterInstance(_requester);
             builder.RegisterInstance(configuration);
+            builder.Register<AutoSaveGate>(Lifetime.Singleton);
             builder.Register<WorldLifecycleAutoSave>(Lifetime.Singleton);
             builder.Register<IntervalAutoSaveService>(Lifetime.Singleton);
             _container = builder.Build();
             _lifecycle = _container.Resolve<WorldLifecycleAutoSave>();
             _interval = _container.Resolve<IntervalAutoSaveService>();
+            _gate = _container.Resolve<AutoSaveGate>();
         }
 
         [TearDown]
@@ -60,6 +63,40 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
                 await _lifecycle.FocusChangedAsync(false, CancellationToken.None);
                 _requester.DidNotReceive().TriggerAutoSaveAsync(Arg.Any<CancellationToken>()).Forget();
             });
+        }
+
+        [UnityTest]
+        public IEnumerator FocusLossWhileSuspendedDoesNotRequestSaveUntilReleased()
+        {
+            return UniTask.ToCoroutine(async () =>
+            {
+                IDisposable suspension = _gate.SuspendAutoSave("Scene change");
+                Assert.That(_lifecycle.CanFlush, Is.False);
+                await _lifecycle.FocusChangedAsync(false, CancellationToken.None);
+                _requester.DidNotReceive().TriggerAutoSaveAsync(Arg.Any<CancellationToken>()).Forget();
+
+                suspension.Dispose();
+                Assert.That(_lifecycle.CanFlush, Is.True);
+                await _lifecycle.FocusChangedAsync(false, CancellationToken.None);
+                _requester.Received(1).TriggerAutoSaveAsync(Arg.Any<CancellationToken>()).Forget();
+            });
+        }
+
+        [Test]
+        public void CannotFlushWhenAutoSaveIsTurnedOff()
+        {
+            var configuration = new WorldSaveConfiguration(5, 30f, 0.1f, false, "Test", _startupPolicySO);
+            var lifecycle = new WorldLifecycleAutoSave(_requester, configuration, new AutoSaveGate());
+
+            Assert.That(lifecycle.CanFlush, Is.False);
+        }
+
+        [Test]
+        public void CannotFlushWithoutActiveWorld()
+        {
+            _requester.HasActiveWorld.Returns(false);
+
+            Assert.That(_lifecycle.CanFlush, Is.False);
         }
 
         [UnityTest]
@@ -140,7 +177,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             return UniTask.ToCoroutine(async () =>
             {
                 await _interval.AdvanceAsync(29f, CancellationToken.None);
-                using (var suspension = _interval.SuspendIntervalAutoSave("Defeat"))
+                using (var suspension = _gate.SuspendAutoSave("Defeat"))
                 {
                     await _interval.AdvanceAsync(300f, CancellationToken.None);
                     _requester.DidNotReceive().TriggerAutoSaveAsync(Arg.Any<CancellationToken>()).Forget();
@@ -164,6 +201,24 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
                 _requester.HasActiveWorld.Returns(true);
                 await _interval.AdvanceAsync(29f, CancellationToken.None);
                 _requester.DidNotReceive().TriggerAutoSaveAsync(Arg.Any<CancellationToken>()).Forget();
+                await _interval.AdvanceAsync(1f, CancellationToken.None);
+                _requester.Received(1).TriggerAutoSaveAsync(CancellationToken.None).Forget();
+            });
+        }
+
+        /// <remarks>Regression: time spent in one world counted toward the first autosave of the next world opened.</remarks>
+        [UnityTest]
+        public IEnumerator IntervalCountdownRestartsWhileNoWorldIsOpen()
+        {
+            return UniTask.ToCoroutine(async () =>
+            {
+                await _interval.AdvanceAsync(29f, CancellationToken.None);
+                _requester.HasActiveWorld.Returns(false);
+                await _interval.AdvanceAsync(0f, CancellationToken.None);
+                _requester.HasActiveWorld.Returns(true);
+                await _interval.AdvanceAsync(29f, CancellationToken.None);
+                _requester.DidNotReceive().TriggerAutoSaveAsync(Arg.Any<CancellationToken>()).Forget();
+
                 await _interval.AdvanceAsync(1f, CancellationToken.None);
                 _requester.Received(1).TriggerAutoSaveAsync(CancellationToken.None).Forget();
             });

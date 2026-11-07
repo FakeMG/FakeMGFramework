@@ -109,6 +109,31 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             AssertProtectedFileIsNotReadableJson(autoSaveFilePaths[0]);
         }
 
+        [UnityTest]
+        public IEnumerator RenamingTheActiveWorld_KeepsTheNewNameThroughItsNextSave()
+        {
+            IWorldSaveManager worldSaveManager = _lifetimeScope.Container.Resolve<IWorldSaveManager>();
+            for (int frameCount = 0; frameCount < STARTUP_FRAME_LIMIT && !worldSaveManager.HasActiveWorld; frameCount++)
+            {
+                yield return null;
+            }
+
+            Assert.IsTrue(worldSaveManager.HasActiveWorld, "Resume-or-create did not activate a world.");
+            string worldId = worldSaveManager.ActiveWorldId;
+            System.DateTime lastPlayedBeforeRenameUtc = worldSaveManager.GetWorlds()[0].LastPlayedTimestampUtc;
+
+            WorldOperationResult renaming = default;
+            yield return RenameAsync().ToCoroutine();
+            async UniTask RenameAsync() => renaming = await worldSaveManager.RenameWorldAsync(worldId, "  Riverside  ");
+
+            Assert.IsTrue(renaming.Succeeded, renaming.FailureReason);
+            Assert.AreEqual("Riverside", worldSaveManager.GetWorlds()[0].DisplayName);
+            Assert.AreEqual(lastPlayedBeforeRenameUtc, worldSaveManager.GetWorlds()[0].LastPlayedTimestampUtc);
+
+            yield return worldSaveManager.SaveManualAsync().ToCoroutine();
+            Assert.AreEqual("Riverside", worldSaveManager.GetWorlds()[0].DisplayName);
+        }
+
         #endregion
 
         #region Private Methods

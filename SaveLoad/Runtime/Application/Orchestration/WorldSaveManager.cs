@@ -99,6 +99,32 @@ namespace FakeMG.SaveLoad
                 cancellationToken);
         }
 
+        public UniTask<WorldOperationResult> DeleteSnapshotAsync(
+            string worldId,
+            string snapshotFileName,
+            CancellationToken cancellationToken = default)
+        {
+            return _operationQueue.EnqueueOperationAsync(
+                _ => UniTask.FromResult(DeleteSnapshotInternal(worldId, snapshotFileName)),
+                cancellationToken);
+        }
+
+        public UniTask<WorldOperationResult> RenameWorldAsync(
+            string worldId,
+            string displayName,
+            CancellationToken cancellationToken = default)
+        {
+            return _operationQueue.EnqueueOperationAsync(
+                operationCancellationToken => RenameWorldInternalAsync(worldId, displayName, operationCancellationToken),
+                cancellationToken);
+        }
+
+        /// <remarks>Not gated by a failed previous save: the player may leave a world whose last save failed.</remarks>
+        public UniTask<WorldOperationResult> CloseActiveWorldAsync(CancellationToken cancellationToken = default)
+        {
+            return _operationQueue.EnqueueOperationAsync(_ => UniTask.FromResult(CloseActiveWorldInternal()), cancellationToken);
+        }
+
         public bool RegisterAsyncSaveParticipant(IAsyncSaveParticipant participant)
         {
             if (participant == null)
@@ -270,11 +296,9 @@ namespace FakeMG.SaveLoad
             bool canUseSnapshotFallback,
             CancellationToken cancellationToken)
         {
-            if (!WorldId.TryParse(worldId, out _))
+            if (!IsValidWorldId(worldId, out WorldOperationResult rejection))
             {
-                string failureReason = $"Invalid world ID '{worldId}'.";
-                Echo.Warning(failureReason);
-                return WorldOperationResult.Rejected(failureReason);
+                return rejection;
             }
 
             if (!CanStartWorldTransition(out string transitionFailureReason))
@@ -361,11 +385,10 @@ namespace FakeMG.SaveLoad
 
         private async UniTask<WorldSaveResult> SaveWorldInternalAsync(WorldSnapshotKind snapshotKind, CancellationToken cancellationToken)
         {
+            // Not recorded as the last save result: nothing was written, so it must not block opening a world later.
             if (!HasActiveWorld)
             {
-                var noWorldResult = new WorldSaveResult(WorldSaveStatus.NoActiveWorld, string.Empty, "No world is active.", false);
-                _lastWorldSaveResult = noWorldResult;
-                return noWorldResult;
+                return new WorldSaveResult(WorldSaveStatus.NoActiveWorld, string.Empty, "No world is active.", false);
             }
 
             WorldManifest manifest = CloneManifest(_activeWorldManifest);
@@ -443,13 +466,18 @@ namespace FakeMG.SaveLoad
             return successResult;
         }
 
+        private WorldOperationResult CloseActiveWorldInternal()
+        {
+            _activeWorldManifest = null;
+            _lastWorldSaveResult = null;
+            return WorldOperationResult.Success();
+        }
+
         private async UniTask<WorldOperationResult> DeleteWorldInternalAsync(string worldId, CancellationToken cancellationToken)
         {
-            if (!WorldId.TryParse(worldId, out _))
+            if (!IsValidWorldId(worldId, out WorldOperationResult rejection))
             {
-                string failureReason = $"Invalid world ID '{worldId}'.";
-                Echo.Warning(failureReason);
-                return WorldOperationResult.Rejected(failureReason);
+                return rejection;
             }
 
             if (!CanStartWorldTransition(out string transitionFailureReason))
@@ -496,6 +524,70 @@ namespace FakeMG.SaveLoad
                     SaveFileCatalog.CreateWorldManifestFilePath(worldId));
                 return WorldOperationResult.Failure($"Deleting world '{worldId}' failed: {exception}");
             }
+        }
+
+        private WorldOperationResult DeleteSnapshotInternal(string worldId, string snapshotFileName)
+        {
+            if (!IsValidWorldId(worldId, out WorldOperationResult rejection))
+            {
+                return rejection;
+            }
+
+            if (!_worldSaveRepository.TryGetSnapshot(worldId, snapshotFileName, out WorldSnapshotSummary snapshot, out string missingReason))
+            {
+                return WorldOperationResult.Rejected(missingReason);
+            }
+
+            try
+            {
+                _worldSaveRepository.DeleteSnapshots(new[] { snapshot });
+                return WorldOperationResult.Success();
+            }
+            catch (Exception exception)
+            {
+                Echo.Error(exception.ToString());
+                return WorldOperationResult.Failure($"Deleting snapshot '{snapshotFileName}' of world '{worldId}' failed: {exception.Message}");
+            }
+        }
+
+        /// <remarks>
+        /// The active world's in-memory manifest is renamed too; otherwise its next save would write the old name back.
+        /// </remarks>
+        private async UniTask<WorldOperationResult> RenameWorldInternalAsync(
+            string worldId,
+            string displayName,
+            CancellationToken cancellationToken)
+        {
+            if (!IsValidWorldId(worldId, out WorldOperationResult rejection))
+            {
+                return rejection;
+            }
+
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                return WorldOperationResult.Rejected("World display name is required.");
+            }
+
+            (WorldManifest manifest, SaveFileLoadResult loading) = await _worldSaveRepository.LoadManifestAsync(worldId, cancellationToken);
+            if (manifest == null)
+            {
+                return WorldOperationResult.Rejected($"World '{worldId}' could not be read: {loading.FailureReason}");
+            }
+
+            WorldManifest renamed = CloneManifest(manifest);
+            renamed.DisplayName = displayName.Trim();
+            SaveFileWriteResult writing = await _worldSaveRepository.SaveManifestAsync(renamed, _saveTimeProvider.GetUtcNow(), cancellationToken);
+            if (!writing.Succeeded)
+            {
+                return WorldOperationResult.Failure($"Renaming world '{worldId}' failed: {writing.FailureReason}");
+            }
+
+            if (string.Equals(ActiveWorldId, worldId, StringComparison.Ordinal))
+            {
+                _activeWorldManifest.DisplayName = renamed.DisplayName;
+            }
+
+            return WorldOperationResult.Success();
         }
 
         private bool CanStartWorldTransition(out string failureReason)
@@ -588,6 +680,20 @@ namespace FakeMG.SaveLoad
                     CreatedTimestampUtc = manifest.CreatedTimestampUtc,
                     LastPlayedTimestampUtc = manifest.LastPlayedTimestampUtc,
                 };
+        }
+
+        private static bool IsValidWorldId(string worldId, out WorldOperationResult rejection)
+        {
+            if (WorldId.TryParse(worldId, out _))
+            {
+                rejection = default;
+                return true;
+            }
+
+            string failureReason = $"Invalid world ID '{worldId}'.";
+            Echo.Warning(failureReason);
+            rejection = WorldOperationResult.Rejected(failureReason);
+            return false;
         }
 
         #endregion

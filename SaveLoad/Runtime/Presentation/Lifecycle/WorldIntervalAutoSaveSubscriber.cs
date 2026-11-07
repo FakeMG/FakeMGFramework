@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
@@ -6,7 +5,7 @@ using VContainer;
 
 namespace FakeMG.SaveLoad
 {
-    public sealed class WorldIntervalAutoSaveSubscriber : MonoBehaviour, IIntervalAutoSaveControl
+    public sealed class WorldIntervalAutoSaveSubscriber : MonoBehaviour
     {
         private IntervalAutoSaveService _autoSave;
         private CancellationTokenSource _lifetimeCancellationSource;
@@ -34,16 +33,12 @@ namespace FakeMG.SaveLoad
 
         #region Public Methods
 
-        public IDisposable SuspendIntervalAutoSave(string reason) => _autoSave.SuspendIntervalAutoSave(reason);
-
         [Inject]
-        public void Construct(IWorldAutoSaveRequester autoSaveRequester, WorldSaveConfiguration configuration)
+        public void Construct(IWorldAutoSaveRequester autoSaveRequester, WorldSaveConfiguration configuration, AutoSaveGate gate)
         {
-            _autoSave = new IntervalAutoSaveService(autoSaveRequester, configuration);
+            _autoSave = new IntervalAutoSaveService(autoSaveRequester, configuration, gate);
         }
 
         #endregion
-
-
     }
 }

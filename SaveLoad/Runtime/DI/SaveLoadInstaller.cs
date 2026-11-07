@@ -72,7 +72,8 @@ namespace FakeMG.SaveLoad
                 .AsSelf()
                 .As<IStartupReadiness>();
             builder.RegisterComponentInHierarchy<PersistenceStartupSubscriber>();
-            builder.RegisterComponentInHierarchy<WorldIntervalAutoSaveSubscriber>().AsSelf().As<IIntervalAutoSaveControl>();
+            builder.Register<AutoSaveGate>(Lifetime.Singleton).AsSelf().As<IAutoSaveGate>();
+            builder.RegisterComponentInHierarchy<WorldIntervalAutoSaveSubscriber>();
             builder.RegisterComponentInHierarchy<WorldLifecycleAutoSaveSubscriber>();
         }
 

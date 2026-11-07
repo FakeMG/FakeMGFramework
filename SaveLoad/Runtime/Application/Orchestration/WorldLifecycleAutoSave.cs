@@ -9,19 +9,23 @@ namespace FakeMG.SaveLoad
     {
         private readonly IWorldAutoSaveRequester _requester;
         private readonly WorldSaveConfiguration _configuration;
+        private readonly AutoSaveGate _gate;
+
+        /// <summary>Whether focus loss or quit would save: only with autosave on, a world open, and autosave not suspended.</summary>
+        public bool CanFlush => _configuration.IsAutoSaveEnabled && _requester.HasActiveWorld && !_gate.IsSuspended;
 
         #region Public Methods
 
-        public WorldLifecycleAutoSave(IWorldAutoSaveRequester requester, WorldSaveConfiguration configuration)
+        public WorldLifecycleAutoSave(IWorldAutoSaveRequester requester, WorldSaveConfiguration configuration, AutoSaveGate gate)
         {
             _requester = requester;
             _configuration = configuration;
+            _gate = gate;
         }
 
         public UniTask FocusChangedAsync(bool isFocused, CancellationToken cancellationToken)
         {
-            return isFocused || !_requester.HasActiveWorld
-                ? UniTask.CompletedTask : FlushAsync("application focus loss", cancellationToken);
+            return isFocused || !CanFlush ? UniTask.CompletedTask : FlushAsync("application focus loss", cancellationToken);
         }
 
         public async UniTask FlushAsync(string lifecycleReason, CancellationToken cancellationToken)

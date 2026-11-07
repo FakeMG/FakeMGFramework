@@ -3,19 +3,16 @@ using System.Collections.Generic;
 
 namespace FakeMG.SaveLoad
 {
-    public interface IIntervalAutoSaveControl
-    {
-        IDisposable SuspendIntervalAutoSave(string reason);
-    }
-
-    internal sealed class IntervalAutoSaveGate
+    /// <summary>Shared by the interval and lifecycle autosaves, so one suspension silences both.</summary>
+    public sealed class AutoSaveGate : IAutoSaveGate
     {
         private readonly HashSet<Suspension> _suspensions = new();
+
         public bool IsSuspended => _suspensions.Count > 0;
 
         #region Public Methods
 
-        public IDisposable SuspendIntervalAutoSave(string reason)
+        public IDisposable SuspendAutoSave(string reason)
         {
             var suspension = new Suspension(this, reason);
             _suspensions.Add(suspension);
@@ -26,13 +23,13 @@ namespace FakeMG.SaveLoad
 
         private sealed class Suspension : IDisposable
         {
-            private readonly IntervalAutoSaveGate _owner;
+            private readonly AutoSaveGate _owner;
             private bool _hasReleased;
             public string Reason { get; }
 
             #region Public Methods
 
-            public Suspension(IntervalAutoSaveGate owner, string reason)
+            public Suspension(AutoSaveGate owner, string reason)
             {
                 _owner = owner;
                 Reason = reason;

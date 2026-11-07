@@ -5,30 +5,36 @@ using FakeMG.Framework;
 
 namespace FakeMG.SaveLoad
 {
-    public sealed class IntervalAutoSaveService : IIntervalAutoSaveControl
+    /// <summary>
+    /// Requests an autosave each time the configured interval passes while a world is open. A suspension freezes the
+    /// countdown; with no world open it restarts, so every play session waits a full interval before its first autosave.
+    /// </summary>
+    public sealed class IntervalAutoSaveService
     {
         private readonly IWorldAutoSaveRequester _requester;
         private readonly WorldSaveConfiguration _configuration;
+        private readonly AutoSaveGate _gate;
         private readonly AutoSaveSchedule _schedule;
-        private readonly IntervalAutoSaveGate _suspensions = new();
 
         #region Public Methods
 
-        public IntervalAutoSaveService(IWorldAutoSaveRequester requester, WorldSaveConfiguration configuration)
+        public IntervalAutoSaveService(IWorldAutoSaveRequester requester, WorldSaveConfiguration configuration, AutoSaveGate gate)
         {
             _requester = requester;
             _configuration = configuration;
+            _gate = gate;
             _schedule = new AutoSaveSchedule(configuration.AutoSaveIntervalSeconds);
         }
 
-        public IDisposable SuspendIntervalAutoSave(string reason) => _suspensions.SuspendIntervalAutoSave(reason);
-
         public async UniTask AdvanceAsync(float elapsedSeconds, CancellationToken cancellationToken)
         {
-            if (_suspensions.IsSuspended
-                || !_configuration.IsAutoSaveEnabled
-                || !_requester.HasActiveWorld
-                || !_schedule.Advance(elapsedSeconds))
+            if (!_requester.HasActiveWorld)
+            {
+                _schedule.Reset(_configuration.AutoSaveIntervalSeconds);
+                return;
+            }
+
+            if (_gate.IsSuspended || !_configuration.IsAutoSaveEnabled || !_schedule.Advance(elapsedSeconds))
             {
                 return;
             }

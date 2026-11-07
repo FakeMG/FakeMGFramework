@@ -9,7 +9,6 @@ namespace FakeMG.SaveLoad
 {
     public sealed class WorldLifecycleAutoSaveSubscriber : MonoBehaviour
     {
-        private IWorldAutoSaveRequester _autoSaveRequester;
         private WorldLifecycleAutoSave _autoSave;
         private CancellationTokenSource _lifetimeCancellationSource;
         private bool _canQuit;
@@ -51,12 +50,9 @@ namespace FakeMG.SaveLoad
         #region Public Methods
 
         [Inject]
-        public void Construct(
-            IWorldAutoSaveRequester autoSaveRequester,
-            WorldSaveConfiguration configuration)
+        public void Construct(IWorldAutoSaveRequester autoSaveRequester, WorldSaveConfiguration configuration, AutoSaveGate gate)
         {
-            _autoSaveRequester = autoSaveRequester;
-            _autoSave = new WorldLifecycleAutoSave(autoSaveRequester, configuration);
+            _autoSave = new WorldLifecycleAutoSave(autoSaveRequester, configuration, gate);
         }
 
         #endregion
@@ -65,7 +61,7 @@ namespace FakeMG.SaveLoad
 
         private bool DelayQuitUntilAutoSaveFinishes()
         {
-            if (_canQuit || !_autoSaveRequester.HasActiveWorld)
+            if (_canQuit || !_autoSave.CanFlush)
             {
                 return true;
             }

@@ -39,6 +39,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             var builder = new ContainerBuilder();
             builder.RegisterInstance(_requester);
             builder.RegisterInstance(configuration);
+            builder.Register<AutoSaveGate>(Lifetime.Singleton);
             _container = builder.Build();
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(FIXTURE_GUID));
             Assert.That(prefab, Is.Not.Null);
@@ -67,10 +68,10 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
                 try
                 {
                     Time.timeScale = 0f;
-                    var subscriber = _instance.GetComponent<WorldIntervalAutoSaveSubscriber>();
-                    using (IDisposable suspension = subscriber.SuspendIntervalAutoSave("Defeated colony"))
+                    var gate = _container.Resolve<AutoSaveGate>();
+                    using (IDisposable suspension = gate.SuspendAutoSave("Defeated colony"))
                     {
-                        IDisposable secondSuspension = subscriber.SuspendIntervalAutoSave("World transition");
+                        IDisposable secondSuspension = gate.SuspendAutoSave("World transition");
                         secondSuspension.Dispose();
                         await UniTask.Delay(TimeSpan.FromSeconds(31f), DelayType.UnscaledDeltaTime);
                         _requester.DidNotReceive().TriggerAutoSaveAsync(Arg.Any<CancellationToken>()).Forget();

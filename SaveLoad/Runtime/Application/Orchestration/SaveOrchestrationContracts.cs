@@ -58,6 +58,25 @@ namespace FakeMG.SaveLoad
             string snapshotFileName,
             CancellationToken cancellationToken = default);
         UniTask<WorldOperationResult> DeleteWorldAsync(string worldId, CancellationToken cancellationToken = default);
+
+        /// <summary>Deletes one snapshot file of a world. The world itself, and its other snapshots, are kept.</summary>
+        UniTask<WorldOperationResult> DeleteSnapshotAsync(
+            string worldId,
+            string snapshotFileName,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>Changes a world's display name. Its snapshots and last-played time are kept.</summary>
+        UniTask<WorldOperationResult> RenameWorldAsync(
+            string worldId,
+            string displayName,
+            CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Ends the play session of the active world, after any save already queued. Until a world is opened or created
+        /// again every save, autosaves included, is refused, so leaving gameplay can never save the torn-down scene.
+        /// The world's files are kept.
+        /// </summary>
+        UniTask<WorldOperationResult> CloseActiveWorldAsync(CancellationToken cancellationToken = default);
     }
 
     public interface IWorldSaveManager :

@@ -114,6 +114,91 @@ namespace FakeMG.SaveLoad.Tests
             Assert.That(store.ReceivedCalls(), Is.Empty);
         }
 
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("invalid-world")]
+        public async System.Threading.Tasks.Task DeleteSnapshotAsync_InvalidId_IsRejectedWithoutStorageAccess(string worldId)
+        {
+            ISaveDataStore store = Substitute.For<ISaveDataStore>();
+            using WorldSaveManager manager = CreateManager(
+                store, CreateCommittingTransaction(), Substitute.For<ISaveTimeProvider>(), new TestSaveable());
+            WorldOperationResult result = await manager.DeleteSnapshotAsync(worldId, "manual_1.sav");
+            Assert.That(result.Status, Is.EqualTo(WorldOperationStatus.Rejected));
+            Assert.That(result.FailureReason, Does.Contain("Invalid world ID"));
+            Assert.That(store.ReceivedCalls(), Is.Empty);
+        }
+
+        [Test]
+        public async System.Threading.Tasks.Task DeleteSnapshotAsync_UnknownSnapshot_IsRejectedWithoutDeletingFiles()
+        {
+            ISaveDataStore store = Substitute.For<ISaveDataStore>();
+            using WorldSaveManager manager = CreateManager(
+                store, CreateCommittingTransaction(), Substitute.For<ISaveTimeProvider>(), new TestSaveable());
+            WorldOperationResult result = await manager.DeleteSnapshotAsync(WorldId.CreateNew().Value, "manual_1.sav");
+            Assert.That(result.Status, Is.EqualTo(WorldOperationStatus.Rejected));
+            store.DidNotReceiveWithAnyArgs().DeleteFile(default);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("invalid-world")]
+        public async System.Threading.Tasks.Task RenameWorldAsync_InvalidId_IsRejectedWithoutStorageAccess(string worldId)
+        {
+            ISaveDataStore store = Substitute.For<ISaveDataStore>();
+            using WorldSaveManager manager = CreateManager(
+                store, CreateCommittingTransaction(), Substitute.For<ISaveTimeProvider>(), new TestSaveable());
+            WorldOperationResult result = await manager.RenameWorldAsync(worldId, "Riverside");
+            Assert.That(result.Status, Is.EqualTo(WorldOperationStatus.Rejected));
+            Assert.That(store.ReceivedCalls(), Is.Empty);
+        }
+
+        [TestCase(null)]
+        [TestCase("")]
+        [TestCase("   ")]
+        public async System.Threading.Tasks.Task RenameWorldAsync_BlankName_IsRejectedWithoutStorageAccess(string displayName)
+        {
+            ISaveDataStore store = Substitute.For<ISaveDataStore>();
+            using WorldSaveManager manager = CreateManager(
+                store, CreateCommittingTransaction(), Substitute.For<ISaveTimeProvider>(), new TestSaveable());
+            WorldOperationResult result = await manager.RenameWorldAsync(WorldId.CreateNew().Value, displayName);
+            Assert.That(result.Status, Is.EqualTo(WorldOperationStatus.Rejected));
+            Assert.That(store.ReceivedCalls(), Is.Empty);
+        }
+
+        /// <remarks>Regression: an autosave from the main menu overwrote the world with state that no longer reflected gameplay.</remarks>
+        [Test]
+        public async System.Threading.Tasks.Task CloseActiveWorldAsync_RefusesLaterAutoSavesWithoutWriting()
+        {
+            ISaveDataStore saveDataStore = Substitute.For<ISaveDataStore>();
+            using WorldSaveManager manager = CreateManager(
+                saveDataStore, CreateCommittingTransaction(), CreateFixedClock(), new TestSaveable());
+            await manager.CreateWorldAsync("World", CancellationToken.None);
+            saveDataStore.ClearReceivedCalls();
+
+            WorldOperationResult closing = await manager.CloseActiveWorldAsync(CancellationToken.None);
+            WorldSaveResult autoSave = await manager.TriggerAutoSaveAsync(CancellationToken.None);
+
+            Assert.That(closing.Succeeded, Is.True);
+            Assert.That(manager.HasActiveWorld, Is.False);
+            Assert.That(autoSave.Status, Is.EqualTo(WorldSaveStatus.NoActiveWorld));
+            saveDataStore.DidNotReceive().WriteSaveFile(
+                Arg.Any<string>(), Arg.Any<SaveMetadata>(), Arg.Any<IReadOnlyDictionary<string, object>>());
+        }
+
+        [Test]
+        public async System.Threading.Tasks.Task SaveRefusedWhileNoWorldIsActive_DoesNotBlockCreatingAWorld()
+        {
+            using WorldSaveManager manager = CreateManager(
+                Substitute.For<ISaveDataStore>(), CreateCommittingTransaction(), CreateFixedClock(), new TestSaveable());
+            await manager.CreateWorldAsync("World", CancellationToken.None);
+            await manager.CloseActiveWorldAsync(CancellationToken.None);
+            await manager.TriggerAutoSaveAsync(CancellationToken.None);
+
+            WorldCreationResult creation = await manager.CreateWorldAsync("Next world", CancellationToken.None);
+
+            Assert.That(creation.Succeeded, Is.True, creation.FailureReason);
+        }
+
         [Test]
         public async System.Threading.Tasks.Task CreateWorldAsync_CaptureFault_LogsExceptionAndPreservesFailureResult()
         {
@@ -165,6 +250,13 @@ namespace FakeMG.SaveLoad.Tests
                 configuration,
                 new AsyncSaveParticipantDependencyOrderResolver(),
                 new[] { saveable });
+        }
+
+        private static ISaveTimeProvider CreateFixedClock()
+        {
+            ISaveTimeProvider saveTimeProvider = Substitute.For<ISaveTimeProvider>();
+            saveTimeProvider.GetUtcNow().Returns(new DateTime(638900000000000000, DateTimeKind.Utc));
+            return saveTimeProvider;
         }
 
         private static IAtomicFileTransaction CreateCommittingTransaction()
