@@ -328,7 +328,7 @@ MonoBehaviour:
   _focusRoot: {fileID: 5385175975603760576}
   _gameplayCamera: {fileID: 7979431930938168798}
   _cinemachineCamera: {fileID: 410974601190236857}
-  _cameraProfileSO: {fileID: 11400000, guid: b386bd026b9133c47a3773bb300ff33f, type: 2}
+  _cameraProfileSO: {fileID: 0}
   _boundsProvider: {fileID: 0}
 --- !u!114 &8522622435589810831
 MonoBehaviour:
@@ -370,4 +370,4 @@ MonoBehaviour:
   _dragPanActionReference: {fileID: -5243680143024260352, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _rotateLeftActionReference: {fileID: 4340695208351462366, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   _rotateRightActionReference: {fileID: 8912894235041995638, guid: 052faaac586de48259a63d0c4782560b, type: 3}
-  _cameraActionMapSO: {fileID: 11400000, guid: d4be329aec9f7d1448745f45c8a08140, type: 2}
+  _cameraActionMapSO: {fileID: 0}
