@@ -3,11 +3,13 @@ using UnityEngine.EventSystems;
 
 namespace FakeMG.Framework.UI.ButtonSelection
 {
+    /// <summary>
+    /// Draws a frame behind the selected object. The frame is drawn where it sits in the hierarchy, so a popup that covers
+    /// the screen needs its own frame placed behind its buttons, e.g. as the first child of its panel.
+    /// </summary>
     public class SelectionFrame : MonoBehaviour
     {
-        // All canvases should use the same scale and settings to ensure proper frame positioning and sizing.
-        // If canvases have different scaling, the selection frame may appear misaligned or incorrectly sized relative to the selected object.
-        [SerializeField] private Canvas _canvas;
+        [Tooltip("Keep its pivot centred: the frame is centred on the selected object, whatever that object's pivot.")]
         [SerializeField] private RectTransform _frameRectTransform;
         [SerializeField] private Vector2 _padding = new(10f, 10f);
         [SerializeField] private float _scaleAnimationSpeed = 15f;
@@ -16,12 +18,12 @@ namespace FakeMG.Framework.UI.ButtonSelection
         private bool _isAppearing;
         private GameObject _lastSelected;
         private RectTransform _lastSelectedRect;
-        private Transform _canvasTransform;
         private float _appearThresholdSquared;
+
+        #region Unity Lifecycle
 
         private void Awake()
         {
-            _canvasTransform = _canvas.transform;
             _appearThresholdSquared = _appearThreshold * _appearThreshold;
         }
 
@@ -35,7 +37,8 @@ namespace FakeMG.Framework.UI.ButtonSelection
                 _lastSelectedRect = selected ? selected.GetComponent<RectTransform>() : null;
             }
 
-            if (!_lastSelectedRect)
+            // The EventSystem keeps a selection whose panel was hidden, e.g. the button that opened an empty panel.
+            if (!_lastSelectedRect || !_lastSelectedRect.gameObject.activeInHierarchy)
             {
                 _frameRectTransform.sizeDelta = Vector2.zero;
                 _frameRectTransform.localScale = Vector3.zero;
@@ -43,8 +46,9 @@ namespace FakeMG.Framework.UI.ButtonSelection
                 return;
             }
 
-            float canvasScale = _lastSelectedRect.lossyScale.x / _canvasTransform.lossyScale.x;
-            Vector2 targetSize = (_lastSelectedRect.sizeDelta + _padding) * canvasScale;
+            // Measured against the frame's parent rather than the frame, whose own scale animates while it appears.
+            float selectedToFrameScale = _lastSelectedRect.lossyScale.x / _frameRectTransform.parent.lossyScale.x;
+            Vector2 targetSizePixels = (_lastSelectedRect.rect.size + _padding) * selectedToFrameScale;
 
             bool isSizeNearZero = _frameRectTransform.sizeDelta.sqrMagnitude < _appearThresholdSquared;
             if (isSizeNearZero && !_isAppearing)
@@ -68,8 +72,10 @@ namespace FakeMG.Framework.UI.ButtonSelection
                 }
             }
 
-            _frameRectTransform.position = _lastSelectedRect.position;
-            _frameRectTransform.sizeDelta = targetSize;
+            _frameRectTransform.position = _lastSelectedRect.TransformPoint(_lastSelectedRect.rect.center);
+            _frameRectTransform.sizeDelta = targetSizePixels;
         }
+
+        #endregion
     }
 }
