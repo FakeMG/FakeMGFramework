@@ -1,0 +1,28 @@
+{
+    "name": "FakeMG.InputHints.Tests.EditMode",
+    "rootNamespace": "FakeMG.InputHints.Tests.EditMode",
+    "references": [
+        "FakeMG.InputHints",
+        "FakeMG.Framework",
+        "FakeMG.InputContexts",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

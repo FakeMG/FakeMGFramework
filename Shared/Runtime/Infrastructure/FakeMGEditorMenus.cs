@@ -24,6 +24,10 @@ namespace FakeMG.Framework
         // Action Map Management
         public const string ACTION_MAP_MANAGEMENT = ROOT + "/Action Map Management";
 
+        // Input Hints
+        public const string INPUT_HINTS = ROOT + "/Input Hints";
+        public const string INPUT_HINTS_BUILD_KENNEY_GLYPH_SETS = "Assets/" + INPUT_HINTS + "/Build Kenney Glyph Sets";
+
         // Localization
         public const string LOCALIZATION = ROOT + "/Localization";
         public const string LOCALIZATION_VALIDATE_ALL_KEYS = LOCALIZATION + "/Validate All Keys";

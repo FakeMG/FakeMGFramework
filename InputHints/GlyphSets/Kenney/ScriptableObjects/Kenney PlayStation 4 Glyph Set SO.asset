@@ -1,0 +1,83 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f01c590c966d5e498c16b3ddf1266d3, type: 3}
+  m_Name: Kenney PlayStation 4 Glyph Set SO
+  m_EditorClassIdentifier: FakeMG.InputHints::FakeMG.InputHints.InputGlyphSetSO
+  _deviceLayouts:
+  - DualShockGamepad
+  _glyphs:
+  - _controlPath: leftStick
+    _sprite: {fileID: 21300000, guid: c180184175cfdc34caf8fa7e2651fd82, type: 3}
+  - _controlPath: leftStick/up
+    _sprite: {fileID: 21300000, guid: cfe3f56769472234888c6d5306d533f6, type: 3}
+  - _controlPath: leftStick/down
+    _sprite: {fileID: 21300000, guid: e1d711420132ed7448f9708f5e94e307, type: 3}
+  - _controlPath: leftStick/left
+    _sprite: {fileID: 21300000, guid: 6ac5835560250fe4dbf9953c80ec0c0c, type: 3}
+  - _controlPath: leftStick/right
+    _sprite: {fileID: 21300000, guid: dfaae6b89d2600d4f8bce0a7d4e0030d, type: 3}
+  - _controlPath: leftStick/x
+    _sprite: {fileID: 21300000, guid: d9ea41faa58853249b7723300f5394c9, type: 3}
+  - _controlPath: leftStick/y
+    _sprite: {fileID: 21300000, guid: 999272a14b0ca0748ba38a4ed0d554da, type: 3}
+  - _controlPath: rightStick
+    _sprite: {fileID: 21300000, guid: 925b5e525dd411245a4d1b016cc2e028, type: 3}
+  - _controlPath: rightStick/up
+    _sprite: {fileID: 21300000, guid: fead8dc6625cf724587257466c968212, type: 3}
+  - _controlPath: rightStick/down
+    _sprite: {fileID: 21300000, guid: 5ee3dd9a22586d84892f8e671772a385, type: 3}
+  - _controlPath: rightStick/left
+    _sprite: {fileID: 21300000, guid: 09e6bd6beb051e14980eeaed866b6891, type: 3}
+  - _controlPath: rightStick/right
+    _sprite: {fileID: 21300000, guid: 0db2be6108a1aa04f9e0bab228b4301a, type: 3}
+  - _controlPath: rightStick/x
+    _sprite: {fileID: 21300000, guid: 4bdb1f106d70bdb45a6b0eecf7a6d5a2, type: 3}
+  - _controlPath: rightStick/y
+    _sprite: {fileID: 21300000, guid: d815ba85339f1534d9d29a929f6bec0f, type: 3}
+  - _controlPath: dpad
+    _sprite: {fileID: 21300000, guid: e6a505f01967d324093257175322988b, type: 3}
+  - _controlPath: dpad/up
+    _sprite: {fileID: 21300000, guid: b5cede630ac66604f899855c7459d7a5, type: 3}
+  - _controlPath: dpad/down
+    _sprite: {fileID: 21300000, guid: f0547f07b2ba0b942829ff908416e3fb, type: 3}
+  - _controlPath: dpad/left
+    _sprite: {fileID: 21300000, guid: ad94257174491b34dbdccd91c1327ae0, type: 3}
+  - _controlPath: dpad/right
+    _sprite: {fileID: 21300000, guid: 3616e6cb66f8d484eae1153b4b188ebd, type: 3}
+  - _controlPath: dpad/x
+    _sprite: {fileID: 21300000, guid: 5220dcd5cfa6c674ca24c11ff1f4553b, type: 3}
+  - _controlPath: dpad/y
+    _sprite: {fileID: 21300000, guid: 68b262c9c21814149b15c661de3af329, type: 3}
+  - _controlPath: leftStickPress
+    _sprite: {fileID: 21300000, guid: d93c7ef645de39841b9b4f785d880d4c, type: 3}
+  - _controlPath: rightStickPress
+    _sprite: {fileID: 21300000, guid: 8604706dbe340c54288941e4999b9ed4, type: 3}
+  - _controlPath: buttonSouth
+    _sprite: {fileID: 21300000, guid: a84521d5892f2fa49b329640eb2436c6, type: 3}
+  - _controlPath: buttonEast
+    _sprite: {fileID: 21300000, guid: 83ebf9b8747610648bec63457bb221ee, type: 3}
+  - _controlPath: buttonWest
+    _sprite: {fileID: 21300000, guid: cee0bd67efa27b2439557ed8caa05fce, type: 3}
+  - _controlPath: buttonNorth
+    _sprite: {fileID: 21300000, guid: 50262af6a9fb80f4283067a9ff541ae7, type: 3}
+  - _controlPath: leftShoulder
+    _sprite: {fileID: 21300000, guid: b4c3ed0f897310b4fbe817e5d65b7cf9, type: 3}
+  - _controlPath: rightShoulder
+    _sprite: {fileID: 21300000, guid: 51fc012fd9cf47b4fb86bfe9c343ca1d, type: 3}
+  - _controlPath: leftTrigger
+    _sprite: {fileID: 21300000, guid: 35c4ac8ab31eb1c4ab438fa0ebd9d281, type: 3}
+  - _controlPath: rightTrigger
+    _sprite: {fileID: 21300000, guid: 4f40ef20cd677ef4cafde94e0736f8c1, type: 3}
+  - _controlPath: start
+    _sprite: {fileID: 21300000, guid: 65c839b77e9efd340a6ac35907312f63, type: 3}
+  - _controlPath: select
+    _sprite: {fileID: 21300000, guid: 120b92ffd4bb3644fa4976d539fab3af, type: 3}

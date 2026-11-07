@@ -1,0 +1,21 @@
+{
+    "name": "FakeMG.InputHints",
+    "rootNamespace": "FakeMG.InputHints",
+    "references": [
+        "FakeMG.Framework",
+        "FakeMG.InputContexts",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "Unity.ugui",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
