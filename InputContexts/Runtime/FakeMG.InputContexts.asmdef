@@ -1,0 +1,20 @@
+{
+    "name": "FakeMG.InputContexts",
+    "rootNamespace": "FakeMG.InputContexts",
+    "references": [
+        "FakeMG.Framework",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "Unity.ugui",
+        "VContainer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
