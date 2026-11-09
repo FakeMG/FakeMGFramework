@@ -16,15 +16,29 @@ namespace FakeMG.Outline
         [Tooltip("Replaces the selected outline while the selection is hovered. Leave empty to keep the selected outline.")]
         [SerializeField] private RenderingLayerMask _hoveredOutlineMask;
 
+        [Tooltip("Replaces the selected and hovered outlines while the selection is marked unavailable. Leave empty to keep them.")]
+        [SerializeField] private RenderingLayerMask _unavailableOutlineMask;
+
         [SerializeField] private bool _keepOtherRenderingLayers = true;
 
         private Renderer[] _targetRenderers = Array.Empty<Renderer>();
         private uint[] _originalMasks = Array.Empty<uint>();
         private bool _isSelected;
         private bool _isHovered;
+        private bool _isUnavailable;
 
-        private uint ActiveOutlineMask =>
-            _isHovered && _hoveredOutlineMask.value != 0 ? _hoveredOutlineMask.value : _selectedOutlineMask.value;
+        private uint ActiveOutlineMask
+        {
+            get
+            {
+                if (_isUnavailable && _unavailableOutlineMask.value != 0)
+                {
+                    return _unavailableOutlineMask.value;
+                }
+
+                return _isHovered && _hoveredOutlineMask.value != 0 ? _hoveredOutlineMask.value : _selectedOutlineMask.value;
+            }
+        }
 
         #region Unity Lifecycle
 
@@ -126,6 +140,22 @@ namespace FakeMG.Outline
             }
 
             _isHovered = isHovered;
+            if (_isSelected)
+            {
+                ApplyRenderingLayers(true);
+                RefreshSelectionRegistration();
+            }
+        }
+
+        /// <summary>Swaps in the unavailable outline, e.g. for a target that cannot take what is held; no effect while not selected.</summary>
+        public void SetUnavailable(bool isUnavailable)
+        {
+            if (_isUnavailable == isUnavailable)
+            {
+                return;
+            }
+
+            _isUnavailable = isUnavailable;
             if (_isSelected)
             {
                 ApplyRenderingLayers(true);
