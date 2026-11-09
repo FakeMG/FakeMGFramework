@@ -8,7 +8,7 @@ using VContainer.Unity;
 
 namespace FakeMG.Outline.Tests
 {
-    public sealed class RenderingLayerOutlineControllerLifecycleTests
+    public sealed class RenderingLayerSelectionOutlineLifecycleTests
     {
         private const string PREFAB_GUID = "9a6acdf3cb2efbb4682df85875fa79bf";
         private const uint SELECTION_MASK = 2u;
@@ -46,7 +46,7 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void MovingSelection_ReportsCurrentWorldBounds()
         {
-            RenderingLayerOutlineController controller = InstantiateController();
+            RenderingLayerSelectionOutline controller = InstantiateController();
             Assert.That(controller.TryGetWorldBounds(out Bounds originalBoundsMeters), Is.True);
             Vector3 offsetMeters = new(10f, 3f, -2f);
 
@@ -61,7 +61,7 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void Selection_RegistersTheMaskAndPreservesOtherRenderingLayers()
         {
-            RenderingLayerOutlineController controller = InstantiateController();
+            RenderingLayerSelectionOutline controller = InstantiateController();
 
             controller.SetSelected(true);
 
@@ -72,8 +72,8 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void DeselectingOneController_PreservesTheOtherSelection()
         {
-            RenderingLayerOutlineController first = InstantiateController();
-            RenderingLayerOutlineController second = InstantiateController();
+            RenderingLayerSelectionOutline first = InstantiateController();
+            RenderingLayerSelectionOutline second = InstantiateController();
             first.SetSelected(true);
             second.SetSelected(true);
 
@@ -88,7 +88,7 @@ namespace FakeMG.Outline.Tests
         public void RepeatedSelection_DoesNotDuplicateRegistration()
         {
             int initialSelectionCount = RenderingLayerOutlineSelectionRegistry.Shared.ActiveSelectionCount;
-            RenderingLayerOutlineController controller = InstantiateController();
+            RenderingLayerSelectionOutline controller = InstantiateController();
 
             controller.SetSelected(true);
             controller.SetSelected(true);
@@ -102,7 +102,7 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void DisableAndReuse_RestoreThenRegisterTheSelection()
         {
-            RenderingLayerOutlineController controller = InstantiateController();
+            RenderingLayerSelectionOutline controller = InstantiateController();
             controller.SetSelected(true);
 
             controller.transform.parent.gameObject.SetActive(false);
@@ -118,7 +118,7 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void DestroyingASelectedController_UnregistersItsSelection()
         {
-            RenderingLayerOutlineController controller = InstantiateController();
+            RenderingLayerSelectionOutline controller = InstantiateController();
             controller.SetSelected(true);
 
             Object.DestroyImmediate(controller.transform.parent.gameObject);
@@ -129,8 +129,8 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void DestroyAfterDisable_DoesNotRemoveAnotherOwnersSelection()
         {
-            RenderingLayerOutlineController first = InstantiateController();
-            RenderingLayerOutlineController second = InstantiateController();
+            RenderingLayerSelectionOutline first = InstantiateController();
+            RenderingLayerSelectionOutline second = InstantiateController();
             first.SetSelected(true);
             second.SetSelected(true);
 
@@ -145,7 +145,7 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void SelectingWhileDisabled_RegistersOnlyAfterEnable()
         {
-            RenderingLayerOutlineController controller = InstantiateController();
+            RenderingLayerSelectionOutline controller = InstantiateController();
             controller.transform.parent.gameObject.SetActive(false);
 
             controller.SetSelected(true);
@@ -158,7 +158,7 @@ namespace FakeMG.Outline.Tests
         [Test]
         public void ReassertingSelectionAfterRegistryReset_RestoresOneRegistration()
         {
-            RenderingLayerOutlineController controller = InstantiateController();
+            RenderingLayerSelectionOutline controller = InstantiateController();
             controller.SetSelected(true);
             RenderingLayerOutlineSelectionRegistry.Shared.ClearSelections();
 
@@ -173,11 +173,11 @@ namespace FakeMG.Outline.Tests
 
         #region Private Methods
 
-        private RenderingLayerOutlineController InstantiateController()
+        private RenderingLayerSelectionOutline InstantiateController()
         {
             GameObject instance = _container.Instantiate(_prefab);
             _instances.Add(instance);
-            return instance.GetComponentInChildren<RenderingLayerOutlineController>();
+            return instance.GetComponentInChildren<RenderingLayerSelectionOutline>();
         }
 
         #endregion

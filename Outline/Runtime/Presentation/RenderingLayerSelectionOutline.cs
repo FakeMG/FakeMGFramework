@@ -1,5 +1,4 @@
 using System;
-using FakeMG.Framework;
 using Sirenix.OdinInspector;
 using UnityEngine;
 
@@ -9,7 +8,7 @@ namespace FakeMG.Outline
     /// Enables or disables an outline by changing the rendering layers of child renderers.
     /// </summary>
     [DisallowMultipleComponent]
-    public sealed class RenderingLayerOutlineController : MonoBehaviour, IOutlineSelectionBounds
+    public sealed class RenderingLayerSelectionOutline : MonoBehaviour, IOutlineSelectionBounds
     {
         [SerializeField] private RenderingLayerMask _outlineMask;
         [SerializeField] private RenderingLayerMask _selectedOutlineMask;
@@ -66,7 +65,7 @@ namespace FakeMG.Outline
         {
             // With scene and domain reload disabled, already-enabled controllers retain their selection state.
             // Rebuild once at startup; the rendering feature never scans the scene or its renderers.
-            RenderingLayerOutlineController[] controllers = UnityEngine.Object.FindObjectsByType<RenderingLayerOutlineController>(
+            RenderingLayerSelectionOutline[] controllers = UnityEngine.Object.FindObjectsByType<RenderingLayerSelectionOutline>(
                 FindObjectsInactive.Exclude, FindObjectsSortMode.None);
             for (int controllerIndex = 0; controllerIndex < controllers.Length; controllerIndex++)
             {

@@ -102,7 +102,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d0f32498f1bfa6b44bac73bbc2fb80a3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FakeMG.Outline::FakeMG.Outline.RenderingLayerOutlineController
+  m_EditorClassIdentifier: FakeMG.Outline::FakeMG.Outline.RenderingLayerSelectionOutline
   _outlineMask:
     serializedVersion: 0
     m_Bits: 0

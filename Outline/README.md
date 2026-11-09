@@ -4,7 +4,7 @@ Requires Unity 6000.3 / URP 17.3 with Render Graph enabled.
 
 ## Pixel silhouette
 
-Add `RenderingLayerSilhouetteOutlineRenderFeature`, assign its material and layer filters, and use `RenderingLayerOutlineController` for selection.
+Add `RenderingLayerSilhouetteOutlineRenderFeature`, assign its material and layer filters, and use `RenderingLayerSelectionOutline` for selection.
 
 Selected meshes merge into one silhouette. Alpha cutouts and vertex deformation are unsupported; transparent occluders must write depth. Upgrade the shader and renderer feature together.
 
