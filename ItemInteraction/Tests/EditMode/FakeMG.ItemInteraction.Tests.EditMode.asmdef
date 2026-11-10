@@ -1,0 +1,27 @@
+{
+    "name": "FakeMG.ItemInteraction.Tests.EditMode",
+    "rootNamespace": "FakeMG.ItemInteraction.Tests",
+    "references": [
+        "FakeMG.ItemInteraction",
+        "FakeMG.Framework",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask",
+        "VContainer",
+        "TNRD.NSubstitute"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "precompiledReferences": [],
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

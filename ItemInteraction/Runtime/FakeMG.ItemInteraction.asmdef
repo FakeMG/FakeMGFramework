@@ -1,0 +1,23 @@
+{
+    "name": "FakeMG.ItemInteraction",
+    "rootNamespace": "FakeMG.ItemInteraction",
+    "references": [
+        "FakeMG.Framework",
+        "Unity.InputSystem",
+        "Unity.ugui",
+        "Unity.Addressables",
+        "Unity.ResourceManager",
+        "UniTask",
+        "VContainer",
+        "DOTween.Modules"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
