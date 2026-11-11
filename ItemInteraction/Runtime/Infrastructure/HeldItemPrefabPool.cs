@@ -12,7 +12,6 @@ namespace FakeMG.ItemInteraction
     public sealed class HeldItemPrefabPool : IAsyncStartable, IDisposable
     {
         private readonly IInteractionItemCatalog _itemCatalog;
-        private readonly IObjectResolver _objectResolver;
         private readonly IHeldItemPrefabProvider _prefabProvider;
         private readonly Dictionary<IUsableItem, IHeldItemPrefabHandle> _prefabHandles = new();
         private bool _isDisposed;
@@ -20,10 +19,9 @@ namespace FakeMG.ItemInteraction
         public bool ArePresentationAssetsReady { get; private set; }
         public event Action OnPresentationAssetsReady;
 
-        public HeldItemPrefabPool(IInteractionItemCatalog itemCatalog, IObjectResolver objectResolver, IHeldItemPrefabProvider prefabProvider)
+        public HeldItemPrefabPool(IInteractionItemCatalog itemCatalog, IHeldItemPrefabProvider prefabProvider)
         {
             _itemCatalog = itemCatalog;
-            _objectResolver = objectResolver;
             _prefabProvider = prefabProvider;
         }
 
@@ -66,7 +64,7 @@ namespace FakeMG.ItemInteraction
             }
         }
 
-        public GameObject Instantiate(IUsableItem item, Transform parent)
+        public GameObject Instantiate(IUsableItem item, Transform parent, IObjectResolver objectResolver)
         {
             if (!_prefabHandles.TryGetValue(item, out IHeldItemPrefabHandle handle) || !handle.IsSucceeded)
             {
@@ -74,7 +72,7 @@ namespace FakeMG.ItemInteraction
                 return null;
             }
 
-            return _objectResolver.Instantiate(handle.Prefab, parent);
+            return objectResolver.Instantiate(handle.Prefab, parent);
         }
 
         public void ReleaseInstance(GameObject itemInstance)

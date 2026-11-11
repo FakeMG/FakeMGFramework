@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using VContainer;
 
 namespace FakeMG.ItemInteraction
 {
@@ -9,17 +7,17 @@ namespace FakeMG.ItemInteraction
         private ISelectionChangeSource _selectionChangeSource;
         private HeldItemPrefabPool _heldItemPrefabPool;
         private InteractionInputState _inputState;
-        private IReadOnlyList<IItemSelectionPresentation> _selectionPresentations;
-        private bool _isInjected;
+        private IItemSelectionPresentation[] _selectionPresentations;
         private bool _isSubscribed;
-        private IInteractionItem _presentedItem;
-        private string _presentedInstanceId;
+        private bool _hasPresentedSelection;
+        private IInteractionItem _selectedItem;
+        private string _selectedInstanceId;
 
         #region Unity Lifecycle
 
         private void OnEnable()
         {
-            if (_isInjected)
+            if (_selectionChangeSource != null)
             {
                 Subscribe();
             }
@@ -27,25 +25,24 @@ namespace FakeMG.ItemInteraction
 
         private void OnDisable()
         {
-            Unsubscribe();
+            UnsubscribeAndClear();
         }
 
         #endregion
 
         #region Public Methods
 
-        [Inject]
-        public void Construct(
+        public void Bind(
             ISelectionChangeSource selectionChangeSource,
             HeldItemPrefabPool heldItemPrefabPool,
             InteractionInputState inputState,
-            IReadOnlyList<IItemSelectionPresentation> selectionPresentations)
+            params IItemSelectionPresentation[] selectionPresentations)
         {
+            UnsubscribeAndClear();
             _selectionChangeSource = selectionChangeSource;
             _heldItemPrefabPool = heldItemPrefabPool;
             _inputState = inputState;
             _selectionPresentations = selectionPresentations;
-            _isInjected = true;
 
             if (isActiveAndEnabled)
             {
@@ -64,57 +61,97 @@ namespace FakeMG.ItemInteraction
                 return;
             }
 
-            _selectionChangeSource.OnActiveItemChanged += ApplySelectionWhenPresentationAssetsAreReady;
-            _heldItemPrefabPool.OnPresentationAssetsReady += ApplySelectionPresentation;
+            _selectionChangeSource.OnActiveItemChanged += RefreshSelection;
+            _heldItemPrefabPool.OnPresentationAssetsReady += ApplyReadyPresentation;
             _isSubscribed = true;
-            ApplySelectionWhenPresentationAssetsAreReady();
+            RefreshSelection();
+            ApplyReadyPresentation();
         }
 
-        private void Unsubscribe()
+        private void UnsubscribeAndClear()
         {
             if (!_isSubscribed)
             {
                 return;
             }
 
-            _selectionChangeSource.OnActiveItemChanged -= ApplySelectionWhenPresentationAssetsAreReady;
-            _heldItemPrefabPool.OnPresentationAssetsReady -= ApplySelectionPresentation;
+            _selectionChangeSource.OnActiveItemChanged -= RefreshSelection;
+            _heldItemPrefabPool.OnPresentationAssetsReady -= ApplyReadyPresentation;
             _isSubscribed = false;
+            _inputState.Cancel();
+            HideSelection();
+            _selectedItem = null;
+            _selectedInstanceId = null;
         }
 
-        private void ApplySelectionWhenPresentationAssetsAreReady()
+        private void RefreshSelection()
         {
-            if (_heldItemPrefabPool.ArePresentationAssetsReady)
-            {
-                ApplySelectionPresentation();
-            }
-        }
-
-        private void ApplySelectionPresentation()
-        {
-            IInteractionItem activeItem = _selectionChangeSource.ActiveItem;
-            string instanceId = (_selectionChangeSource as IActiveItemInstanceSource)?.ActiveItemInstanceId;
-            if (!string.IsNullOrEmpty(instanceId) && _presentedItem == activeItem && _presentedInstanceId == instanceId)
+            if (!_isSubscribed)
             {
                 return;
             }
 
-            _presentedItem = activeItem;
-            _presentedInstanceId = instanceId;
+            IInteractionItem activeItem = _selectionChangeSource.ActiveItem;
+            string instanceId = (_selectionChangeSource as IActiveItemInstanceSource)?.ActiveItemInstanceId;
+            if (activeItem == _selectedItem && (activeItem == null ||
+                !string.IsNullOrEmpty(instanceId) && _selectedInstanceId == instanceId))
+            {
+                return;
+            }
+
+            _selectedItem = activeItem;
+            _selectedInstanceId = instanceId;
             _inputState.ChangeSelection();
+            HideSelection();
+            ShowSelectionWhenReady();
+        }
+
+        private void ShowSelectionWhenReady()
+        {
+            if (!_isSubscribed || _hasPresentedSelection || _selectedItem == null || !_heldItemPrefabPool.ArePresentationAssetsReady)
+            {
+                return;
+            }
+
+            _hasPresentedSelection = true;
+            foreach (IItemSelectionPresentation selectionPresentation in _selectionPresentations)
+            {
+                selectionPresentation.ShowSelection(_selectedItem);
+            }
+        }
+
+        private void ApplyReadyPresentation()
+        {
+            if (!_isSubscribed || !_heldItemPrefabPool.ArePresentationAssetsReady)
+            {
+                return;
+            }
+
+            if (_selectedItem == null)
+            {
+                ClearPresentation();
+                return;
+            }
+
+            ShowSelectionWhenReady();
+        }
+
+        private void HideSelection()
+        {
+            if (!_hasPresentedSelection)
+            {
+                return;
+            }
+
+            _hasPresentedSelection = false;
+            ClearPresentation();
+        }
+
+        private void ClearPresentation()
+        {
             foreach (IItemSelectionPresentation selectionPresentation in _selectionPresentations)
             {
                 selectionPresentation.HideSelection();
-            }
-
-            if (activeItem == null)
-            {
-                return;
-            }
-
-            foreach (IItemSelectionPresentation selectionPresentation in _selectionPresentations)
-            {
-                selectionPresentation.ShowSelection(activeItem);
             }
         }
 

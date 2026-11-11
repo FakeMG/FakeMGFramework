@@ -3,46 +3,30 @@ using VContainer.Unity;
 
 namespace FakeMG.ItemInteraction
 {
-    /// <summary>
-    /// Composes generic interaction routing and input delivery.
-    /// </summary>
     public static class ItemInteractionServiceInstaller
     {
         #region Public Methods
 
-        public static void Register(IContainerBuilder builder)
+        public static void RegisterShared(IContainerBuilder builder)
         {
-            RegisterServices(builder);
-            RegisterPresentation(builder);
-        }
-
-        public static void RegisterServices(IContainerBuilder builder)
-        {
-            builder.Register<InteractionControllerResolver>(Lifetime.Singleton);
-            builder.Register<InteractionInputState>(Lifetime.Singleton);
-            builder.Register<ConsumableEffectSignal>(Lifetime.Singleton).AsSelf().As<IConsumableEffect>();
-            builder.Register<ConsumableInteractionController>(Lifetime.Singleton).As<IInteractionController>();
             builder.Register<AddressablesHeldItemPrefabProvider>(Lifetime.Singleton).As<IHeldItemPrefabProvider>();
             builder.RegisterEntryPoint<HeldItemPrefabPool>(Lifetime.Singleton).AsSelf();
         }
 
-        public static void RegisterPresentation(IContainerBuilder builder)
+        /// <summary>
+        /// Register controllers, item sources, and presentations in the character's scope.
+        /// Use a common parent for shared services and sibling scopes for independently controlled characters.
+        /// </summary>
+        public static void RegisterCharacter(IContainerBuilder builder)
         {
-            builder.RegisterComponentInHierarchy<HeldItemSelectionView>().As<IItemSelectionPresentation>();
-            builder.RegisterComponentInHierarchy<UpperBodyItemAnimationView>()
-                .AsSelf()
-                .As<IItemSelectionPresentation>()
-                .As<IItemUsePresentation>()
-                .As<ISelectedItemUseAnimation>()
-                .As<ICharacterWaterStateListener>();
-            builder.Register<InteractionHudSelectionView>(Lifetime.Singleton).As<IItemSelectionPresentation>();
+            builder.Register<InteractionControllerResolver>(Lifetime.Scoped);
+            builder.Register<InteractionInputState>(Lifetime.Scoped);
+        }
 
-            builder.RegisterComponentInHierarchy<InteractionHudView>()
-                .AsSelf()
-                .As<ICharacterWaterStateListener>();
-            builder.RegisterComponentInHierarchy<MobileUseInput>().AsSelf().As<IUsableItemInteractionPointerInputSource>();
-            builder.RegisterComponentInHierarchy<InteractionInputSubscriber>();
-            builder.RegisterComponentInHierarchy<SelectionLifecycleSubscriber>();
+        public static void RegisterConsumables(IContainerBuilder builder)
+        {
+            builder.Register<ConsumableEffectSignal>(Lifetime.Scoped).AsSelf().As<IConsumableEffect>();
+            builder.Register<ConsumableInteractionController>(Lifetime.Scoped).As<IInteractionController>();
         }
 
         #endregion

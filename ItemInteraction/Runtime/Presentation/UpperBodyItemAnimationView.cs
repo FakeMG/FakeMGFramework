@@ -1,6 +1,5 @@
 using FakeMG.Framework;
 using UnityEngine;
-using VContainer;
 
 namespace FakeMG.ItemInteraction
 {
@@ -50,8 +49,7 @@ namespace FakeMG.ItemInteraction
 
         #region Public Methods
 
-        [Inject]
-        public void Construct(IItemCharacterAnimation itemCharacterAnimation)
+        public void Bind(IItemCharacterAnimation itemCharacterAnimation)
         {
             _itemCharacterAnimation = itemCharacterAnimation;
         }

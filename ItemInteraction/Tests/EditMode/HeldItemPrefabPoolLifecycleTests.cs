@@ -4,7 +4,6 @@ using Cysharp.Threading.Tasks;
 using NSubstitute;
 using NUnit.Framework;
 using UnityEngine;
-using VContainer;
 
 namespace FakeMG.ItemInteraction.Tests
 {
@@ -24,7 +23,7 @@ namespace FakeMG.ItemInteraction.Tests
             _catalog.Items.Returns(Array.Empty<IInteractionItem>());
             _item = Substitute.For<IConsumableItem>();
             _prefabProvider = Substitute.For<IHeldItemPrefabProvider>();
-            _pool = new HeldItemPrefabPool(_catalog, Substitute.For<IObjectResolver>(), _prefabProvider);
+            _pool = new HeldItemPrefabPool(_catalog, _prefabProvider);
         }
 
         [TearDown]
