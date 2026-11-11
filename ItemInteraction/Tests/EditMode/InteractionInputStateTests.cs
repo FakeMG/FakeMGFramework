@@ -11,18 +11,6 @@ namespace FakeMG.ItemInteraction.Tests
         #region Public Methods
 
         [Test]
-        public void ExplicitItemPress_DoesNotBeginWorldInteraction()
-        {
-            IInteractionController controller = CreateActiveController();
-            var world = Substitute.For<IWorldInteractionController>();
-            var state = new InteractionInputState(new InteractionControllerResolver(new[] { controller }), new[] { world });
-
-            Assert.That(state.PressItem(null, null, default, default, default), Is.True);
-
-            world.DidNotReceive().TryBeginInteraction(Arg.Any<Ray>(), Arg.Any<Vector3>(), Arg.Any<Vector2>());
-        }
-
-        [Test]
         public void PressDuringUnfinishedPunch_PreservesActiveInteraction()
         {
             IInteractionController controller = CreateActiveController();
@@ -44,16 +32,16 @@ namespace FakeMG.ItemInteraction.Tests
             IInteractionController controller = CreateActiveController();
             var state = CreateState(controller);
 
-            Assert.That(state.Press(null, null, default, default, default), Is.True);
+            Assert.That(state.PressItem(null, null, default, default, default), Is.True);
             state.ChangeSelection();
 
             controller.Received(1).CancelInteraction();
             Assert.That(state.RequiresFreshPress, Is.True);
-            Assert.That(state.Press(null, null, default, default, default), Is.False);
+            Assert.That(state.PressItem(null, null, default, default, default), Is.False);
 
             state.Release();
             Assert.That(state.RequiresFreshPress, Is.False);
-            Assert.That(state.Press(null, null, default, default, default), Is.True);
+            Assert.That(state.PressItem(null, null, default, default, default), Is.True);
             controller.Received(2).TryBeginInteraction(null, null, Arg.Any<Ray>(), Arg.Any<Vector3>(), Arg.Any<Vector2>());
         }
 
@@ -63,7 +51,7 @@ namespace FakeMG.ItemInteraction.Tests
             IInteractionController controller = CreateActiveController();
             var state = CreateState(controller);
 
-            state.Press(null, null, default, default, default);
+            state.PressItem(null, null, default, default, default);
             state.Release();
             state.Tick(0.5f);
 
@@ -77,17 +65,17 @@ namespace FakeMG.ItemInteraction.Tests
         {
             IInteractionController controller = CreateActiveController();
             var state = CreateState(controller);
-            Assert.That(state.Press(null, null, default, default, default), Is.True);
+            Assert.That(state.PressItem(null, null, default, default, default), Is.True);
 
             state.SetNormalActionsEnabled(false);
 
             controller.Received(1).CancelInteraction();
             Assert.That(state.HasActiveInteraction, Is.False);
-            Assert.That(state.Press(null, null, default, default, default), Is.False);
+            Assert.That(state.PressItem(null, null, default, default, default), Is.False);
 
             state.SetNormalActionsEnabled(true);
 
-            Assert.That(state.Press(null, null, default, default, default), Is.True);
+            Assert.That(state.PressItem(null, null, default, default, default), Is.True);
         }
 
         #endregion

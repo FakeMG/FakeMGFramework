@@ -12,8 +12,6 @@ namespace FakeMG.ItemInteraction
         event Action<IInteractionPointerInputSource> OnReleased;
     }
 
-    public interface IWorldInteractionPointerInputSource : IInteractionPointerInputSource { }
-
     public interface IUsableItemInteractionPointerInputSource : IInteractionPointerInputSource { }
 
     public interface IItemSelectionPresentation
@@ -51,14 +49,4 @@ namespace FakeMG.ItemInteraction
         void Stop(float fadeDurationSeconds);
     }
 
-    public interface ICharacterAimFacing
-    {
-        void SetCameraFacingOverride(bool isEnabled);
-    }
-
-    public interface IAimFieldOfView
-    {
-        void BeginAim(ItemCameraProfileSO cameraProfileSO);
-        void EndAim();
-    }
 }

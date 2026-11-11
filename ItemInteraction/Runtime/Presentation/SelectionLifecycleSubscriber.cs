@@ -6,7 +6,7 @@ namespace FakeMG.ItemInteraction
     {
         private ISelectionChangeSource _selectionChangeSource;
         private HeldItemPrefabPool _heldItemPrefabPool;
-        private InteractionInputState _inputState;
+        private IInteractionSelectionLifecycle _interactionLifecycle;
         private IItemSelectionPresentation[] _selectionPresentations;
         private bool _isSubscribed;
         private bool _hasPresentedSelection;
@@ -35,13 +35,13 @@ namespace FakeMG.ItemInteraction
         public void Bind(
             ISelectionChangeSource selectionChangeSource,
             HeldItemPrefabPool heldItemPrefabPool,
-            InteractionInputState inputState,
+            IInteractionSelectionLifecycle interactionLifecycle,
             params IItemSelectionPresentation[] selectionPresentations)
         {
             UnsubscribeAndClear();
             _selectionChangeSource = selectionChangeSource;
             _heldItemPrefabPool = heldItemPrefabPool;
-            _inputState = inputState;
+            _interactionLifecycle = interactionLifecycle;
             _selectionPresentations = selectionPresentations;
 
             if (isActiveAndEnabled)
@@ -78,7 +78,7 @@ namespace FakeMG.ItemInteraction
             _selectionChangeSource.OnActiveItemChanged -= RefreshSelection;
             _heldItemPrefabPool.OnPresentationAssetsReady -= ApplyReadyPresentation;
             _isSubscribed = false;
-            _inputState.Cancel();
+            _interactionLifecycle.Cancel();
             HideSelection();
             _selectedItem = null;
             _selectedInstanceId = null;
@@ -101,7 +101,7 @@ namespace FakeMG.ItemInteraction
 
             _selectedItem = activeItem;
             _selectedInstanceId = instanceId;
-            _inputState.ChangeSelection();
+            _interactionLifecycle.ChangeSelection();
             HideSelection();
             ShowSelectionWhenReady();
         }
