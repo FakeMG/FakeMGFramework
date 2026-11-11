@@ -170,7 +170,8 @@ namespace FakeMG.ItemInteraction.Tests
             _presentation.Received(1).EndUse(_item, _actionSO);
             otherPresentation.Received(1).BeginUse(_item, _actionSO);
             otherPresentation.Received(1).EndUse(_item, _actionSO);
-            Assert.That(first.Resolve<ConsumableEffectSignal>(), Is.Not.SameAs(second.Resolve<ConsumableEffectSignal>()));
+            first.Resolve<IConsumableEffect>().Received(1).TryApply(_item);
+            second.Resolve<IConsumableEffect>().DidNotReceive().TryApply(_item);
         }
 
         #endregion
@@ -192,7 +193,11 @@ namespace FakeMG.ItemInteraction.Tests
         {
             var source = Substitute.For<IActiveItemSource>();
             source.ActiveItem.Returns(_item);
+            var effect = Substitute.For<IConsumableEffect>();
+            effect.CanApply(_item).Returns(true);
+            effect.TryApply(_item).Returns(true);
             builder.RegisterInstance(source);
+            builder.RegisterInstance(effect);
             builder.RegisterInstance(consumption);
             builder.RegisterInstance(presentation);
             ItemInteractionServiceInstaller.RegisterCharacter(builder);

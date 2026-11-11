@@ -25,7 +25,6 @@ namespace FakeMG.ItemInteraction
 
         public static void RegisterConsumables(IContainerBuilder builder)
         {
-            builder.Register<ConsumableEffectSignal>(Lifetime.Scoped).AsSelf().As<IConsumableEffect>();
             builder.Register<ConsumableInteractionController>(Lifetime.Scoped).As<IInteractionController>();
         }
 
