@@ -13,7 +13,7 @@ namespace FakeMG.ItemInteraction
     {
         private readonly IInteractionItemCatalog _itemCatalog;
         private readonly IHeldItemPrefabProvider _prefabProvider;
-        private readonly Dictionary<IUsableItem, IHeldItemPrefabHandle> _prefabHandles = new();
+        private readonly Dictionary<IHeldItem, IHeldItemPrefabHandle> _prefabHandles = new();
         private bool _isDisposed;
 
         public bool ArePresentationAssetsReady { get; private set; }
@@ -26,6 +26,14 @@ namespace FakeMG.ItemInteraction
         }
 
         #region Public Methods
+
+        /// <summary>
+        /// An item without a held prefab, such as the empty hand, needs nothing preloaded and can be shown at once.
+        /// </summary>
+        public bool CanPresent(IInteractionItem item)
+        {
+            return ArePresentationAssetsReady || item is not IHeldItem;
+        }
 
         public async UniTask StartAsync(CancellationToken cancellationToken)
         {
@@ -40,12 +48,12 @@ namespace FakeMG.ItemInteraction
                         return;
                     }
 
-                    if (item is not IUsableItem usableItem)
+                    if (item is not IHeldItem heldItem)
                     {
                         continue;
                     }
 
-                    await PreloadAsync(usableItem, cancellationToken);
+                    await PreloadAsync(heldItem, cancellationToken);
                 }
 
                 if (_isDisposed || cancellationToken.IsCancellationRequested)
@@ -64,7 +72,7 @@ namespace FakeMG.ItemInteraction
             }
         }
 
-        public GameObject Instantiate(IUsableItem item, Transform parent, IObjectResolver objectResolver)
+        public GameObject Instantiate(IHeldItem item, Transform parent, IObjectResolver objectResolver)
         {
             if (!_prefabHandles.TryGetValue(item, out IHeldItemPrefabHandle handle) || !handle.IsSucceeded)
             {
@@ -102,7 +110,7 @@ namespace FakeMG.ItemInteraction
 
         #region Private Methods
 
-        private async UniTask PreloadAsync(IUsableItem item, CancellationToken cancellationToken)
+        private async UniTask PreloadAsync(IHeldItem item, CancellationToken cancellationToken)
         {
             IHeldItemPrefabHandle handle = null;
             bool hasTransferredOwnership = false;

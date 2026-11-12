@@ -5,32 +5,33 @@ namespace FakeMG.ItemInteraction
 {
     public sealed class HeldItemPresentation
     {
-        private readonly IReadOnlyList<IHeldItemSelectionObserver> _selectionObservers;
+        private readonly IReadOnlyList<IOffHandGripPresentation> _offHandGrips;
 
-        public HeldItemPresentation(IReadOnlyList<IHeldItemSelectionObserver> selectionObservers)
+        public HeldItemPresentation(IReadOnlyList<IOffHandGripPresentation> offHandGrips)
         {
-            _selectionObservers = selectionObservers;
+            _offHandGrips = offHandGrips;
         }
 
         #region Public Methods
 
-        public void ApplyHandPoseAndNotifyShown(IUsableItem item, GameObject heldItemInstance)
+        public void ApplyHandPoseAndBeginGrips(IHeldItem item, GameObject heldItemInstance)
         {
+            HandPose handPose = item.HoldingHandPose;
             heldItemInstance.transform.SetLocalPositionAndRotation(
-                item.RightHandLocalPositionMeters,
-                Quaternion.Euler(item.RightHandLocalRotationDegrees));
+                handPose.LocalPositionMeters,
+                Quaternion.Euler(handPose.LocalRotationDegrees));
 
-            foreach (IHeldItemSelectionObserver selectionObserver in _selectionObservers)
+            foreach (IOffHandGripPresentation offHandGrip in _offHandGrips)
             {
-                selectionObserver.HandleHeldItemShown(item, heldItemInstance);
+                offHandGrip.BeginOffHandGrip(item.HoldingHand, heldItemInstance);
             }
         }
 
-        public void NotifyHidden(GameObject heldItemInstance)
+        public void ReleaseGrips()
         {
-            foreach (IHeldItemSelectionObserver selectionObserver in _selectionObservers)
+            foreach (IOffHandGripPresentation offHandGrip in _offHandGrips)
             {
-                selectionObserver.HandleHeldItemHidden(heldItemInstance);
+                offHandGrip.ReleaseOffHandGrip();
             }
         }
 

@@ -41,6 +41,21 @@ namespace FakeMG.ItemInteraction.Tests
         }
 
         [Test]
+        public void CanPresent_BeforePreload_AcceptsOnlyItemsWithoutAHeldPrefab()
+        {
+            Assert.That(_pool.CanPresent(Substitute.For<IActionItem>()), Is.True);
+            Assert.That(_pool.CanPresent(_item), Is.False);
+        }
+
+        [Test]
+        public void CanPresent_AfterPreload_AcceptsItemsWithAHeldPrefab()
+        {
+            _pool.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
+
+            Assert.That(_pool.CanPresent(_item), Is.True);
+        }
+
+        [Test]
         public void StartAsync_CancelledBeforeStartup_CompletesWithoutPublishingReadiness()
         {
             var publishReadiness = Substitute.For<Action>();
