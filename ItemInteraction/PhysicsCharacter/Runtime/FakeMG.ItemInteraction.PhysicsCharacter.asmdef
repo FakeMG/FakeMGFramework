@@ -1,0 +1,21 @@
+{
+    "name": "FakeMG.ItemInteraction.PhysicsCharacter",
+    "rootNamespace": "FakeMG.ItemInteraction",
+    "references": [
+        "FakeMG.Framework",
+        "FakeMG.ItemInteraction",
+        "PhysicsCharacterController.Runtime",
+        "Kybernetik.Animancer"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "FAKEMG_PHYSICS_CHARACTER_CONTROLLER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

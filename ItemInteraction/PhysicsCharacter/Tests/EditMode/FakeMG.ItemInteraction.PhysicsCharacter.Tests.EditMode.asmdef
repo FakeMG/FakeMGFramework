@@ -1,0 +1,25 @@
+{
+    "name": "FakeMG.ItemInteraction.PhysicsCharacter.Tests.EditMode",
+    "rootNamespace": "FakeMG.ItemInteraction.Tests",
+    "references": [
+        "FakeMG.ItemInteraction",
+        "FakeMG.ItemInteraction.PhysicsCharacter",
+        "PhysicsCharacterController.Runtime"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "autoReferenced": false,
+    "precompiledReferences": [],
+    "defineConstraints": [
+        "FAKEMG_PHYSICS_CHARACTER_CONTROLLER"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
