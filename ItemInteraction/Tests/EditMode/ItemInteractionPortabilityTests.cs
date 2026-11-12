@@ -9,18 +9,18 @@ namespace FakeMG.ItemInteraction.Tests
         #region Public Methods
 
         [Test]
-        public void ActiveSource_CanStartUsingAnItemCreatedAtRuntime()
+        public void SelectedItemSource_CanStartUsingAnItemCreatedAtRuntime()
         {
             var item = new RuntimeItem();
-            var source = Substitute.For<IActiveItemSource>();
-            source.ActiveItem.Returns(item);
+            var source = Substitute.For<ISelectedItemSource>();
+            source.SelectedItem.Returns(item);
             var controller = Substitute.For<IInteractionController>();
             controller.Supports(item, null).Returns(true);
             controller.TryBeginInteraction(item, null, Arg.Any<Ray>(), Arg.Any<Vector3>(), Arg.Any<Vector2>()).Returns(true);
             controller.IsInteractionActive.Returns(true);
             var input = new InteractionInputState(new InteractionControllerResolver(new[] { controller }));
 
-            bool hasStarted = input.PressItem(source.ActiveItem, null, default, default, default);
+            bool hasStarted = input.PressItem(source.SelectedItem, null, default, default, default);
 
             Assert.That(hasStarted, Is.True);
             Assert.That(input.HasActiveInteraction, Is.True);

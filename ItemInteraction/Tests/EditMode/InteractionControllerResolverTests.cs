@@ -7,22 +7,30 @@ namespace FakeMG.ItemInteraction.Tests
     public sealed class InteractionControllerResolverTests
     {
         private IInteractionItem _runtimeItem;
+        private EmptyHandItemSO _emptyHandItemSO;
+
+        #region Public Methods
 
         [SetUp]
         public void SetUp()
         {
             _runtimeItem = new RuntimeItem();
+            _emptyHandItemSO = ScriptableObject.CreateInstance<EmptyHandItemSO>();
         }
 
-        #region Public Methods
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(_emptyHandItemSO);
+        }
 
         [Test]
         public void TryResolve_WithExactlyOneItemMatch_ReturnsThatController()
         {
-            var expectedController = new StubInteractionController(_runtimeItem, false);
+            var expectedController = new StubInteractionController(_runtimeItem);
             var resolver = new InteractionControllerResolver(new IInteractionController[]
             {
-                new StubInteractionController(null, true),
+                new StubInteractionController(_emptyHandItemSO),
                 expectedController,
             });
 
@@ -33,12 +41,12 @@ namespace FakeMG.ItemInteraction.Tests
         }
 
         [Test]
-        public void TryResolve_WithExplicitEmptyHandSupport_ReturnsThatController()
+        public void TryResolve_WithTheEmptyHandItem_ReturnsTheControllerThatSupportsIt()
         {
-            var expectedController = new StubInteractionController(null, true);
+            var expectedController = new StubInteractionController(_emptyHandItemSO);
             var resolver = new InteractionControllerResolver(new[] { expectedController });
 
-            bool hasResolved = resolver.TryResolve(null, null, out IInteractionController resolvedController);
+            bool hasResolved = resolver.TryResolve(_emptyHandItemSO, null, out IInteractionController resolvedController);
 
             Assert.That(hasResolved, Is.True);
             Assert.That(resolvedController, Is.SameAs(expectedController));
@@ -49,7 +57,7 @@ namespace FakeMG.ItemInteraction.Tests
         {
             var resolver = new InteractionControllerResolver(new IInteractionController[]
             {
-                new StubInteractionController(null, true),
+                new StubInteractionController(_emptyHandItemSO),
             });
 
             Assert.That(resolver.TryResolve(_runtimeItem, null, out IInteractionController resolvedController), Is.False);
@@ -61,8 +69,8 @@ namespace FakeMG.ItemInteraction.Tests
         {
             var resolver = new InteractionControllerResolver(new IInteractionController[]
             {
-                new StubInteractionController(_runtimeItem, false),
-                new StubInteractionController(_runtimeItem, false),
+                new StubInteractionController(_runtimeItem),
+                new StubInteractionController(_runtimeItem),
             });
 
             Assert.That(resolver.TryResolve(_runtimeItem, null, out IInteractionController resolvedController), Is.False);
@@ -79,19 +87,17 @@ namespace FakeMG.ItemInteraction.Tests
         private sealed class StubInteractionController : IInteractionController
         {
             private readonly IInteractionItem _supportedItem;
-            private readonly bool _supportsEmptyHand;
 
             public bool IsInteractionActive { get; private set; }
 
-            public StubInteractionController(IInteractionItem supportedItem, bool supportsEmptyHand)
+            public StubInteractionController(IInteractionItem supportedItem)
             {
                 _supportedItem = supportedItem;
-                _supportsEmptyHand = supportsEmptyHand;
             }
 
             public bool Supports(IInteractionItem selectedItem, ItemActionSO actionSO)
             {
-                return actionSO == null && (selectedItem == null ? _supportsEmptyHand : selectedItem == _supportedItem);
+                return actionSO == null && selectedItem == _supportedItem;
             }
 
             public bool TryBeginInteraction(IInteractionItem selectedItem, ItemActionSO actionSO, Ray targetRay,

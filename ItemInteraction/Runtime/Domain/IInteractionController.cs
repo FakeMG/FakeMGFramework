@@ -5,6 +5,8 @@ namespace FakeMG.ItemInteraction
     public interface IInteractionController
     {
         bool IsInteractionActive { get; }
+
+        /// <param name="selectedItem">Never null: an empty hand is its owner's empty-hand item.</param>
         bool Supports(IInteractionItem selectedItem, ItemActionSO actionSO);
         bool TryBeginInteraction(
             IInteractionItem selectedItem,

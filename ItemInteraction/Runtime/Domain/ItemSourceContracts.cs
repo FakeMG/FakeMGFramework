@@ -1,20 +1,21 @@
 using System;
+using System.Collections.Generic;
 
 namespace FakeMG.ItemInteraction
 {
-    public interface IActiveItemSource
+    public interface ISelectedItemSource
     {
-        IInteractionItem ActiveItem { get; }
+        IInteractionItem SelectedItem { get; }
     }
 
-    public interface IActiveItemInstanceSource : IActiveItemSource
+    public interface ISelectedItemInstanceSource : ISelectedItemSource
     {
-        string ActiveItemInstanceId { get; }
+        string SelectedItemInstanceId { get; }
     }
 
-    public interface ISelectionChangeSource : IActiveItemSource
+    public interface ISelectionChangeSource : ISelectedItemSource
     {
-        event Action OnActiveItemChanged;
+        event Action OnSelectedItemChanged;
     }
 
     public interface ISelectedItemConsumption
@@ -30,7 +31,7 @@ namespace FakeMG.ItemInteraction
 
     public interface IInteractionItemCatalog
     {
-        System.Collections.Generic.IReadOnlyList<IInteractionItem> Items { get; }
+        IReadOnlyList<IInteractionItem> Items { get; }
     }
 
     public interface IInteractionInputBlocker

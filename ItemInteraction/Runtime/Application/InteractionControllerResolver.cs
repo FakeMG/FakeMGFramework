@@ -29,17 +29,18 @@ namespace FakeMG.ItemInteraction
                 resolvedInteractionController = interactionController;
             }
 
-            string selectionName = selectedItem != null ? selectedItem.DisplayName : "empty hand";
             string actionName = actionSO != null ? actionSO.name : "default action";
             if (matchingControllerCount == 0)
             {
-                Echo.Warning($"Cannot begin {actionName} for {selectionName} because no interaction controller supports it.");
+                Echo.Warning($"Cannot begin {actionName} for {selectedItem.DisplayName} because no interaction controller supports it.");
                 return false;
             }
 
             if (matchingControllerCount > 1)
             {
-                Echo.Warning($"Cannot begin {actionName} for {selectionName} because {matchingControllerCount} controllers support it; exactly one is required.");
+                Echo.Warning(
+                    $"Cannot begin {actionName} for {selectedItem.DisplayName} because {matchingControllerCount} controllers "
+                    + "support it; exactly one is required.");
                 resolvedInteractionController = null;
                 return false;
             }

@@ -12,7 +12,7 @@ namespace FakeMG.ItemInteraction
 
         public void ShowSelection(IInteractionItem item)
         {
-            _hudView.SetMobileUseVisible(item == null || item is IUsableItem);
+            _hudView.SetMobileUseVisible(item is IActionItem);
         }
 
         public void HideSelection()
