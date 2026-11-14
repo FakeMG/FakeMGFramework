@@ -7,12 +7,11 @@ namespace FakeMG.ItemInteraction.Tests
 {
     public sealed class ConsumableInteractionControllerTests
     {
+        private ItemTestFixtures _fixtures;
         private IConsumableItem _item;
         private ItemActionSO _actionSO;
-        private ItemAnimationProfileSO _animationProfileSO;
         private PressToUseInputLifecycleSO _inputLifecycleSO;
-        private AnimationClip _animationClip;
-        private IActiveItemSource _selection;
+        private ISelectedItemSource _selection;
         private ISelectedItemConsumption _consumption;
         private ISelectedItemConsumptionReservation _reservation;
         private IConsumableEffect _effect;
@@ -24,17 +23,14 @@ namespace FakeMG.ItemInteraction.Tests
         [SetUp]
         public void SetUp()
         {
+            _fixtures = new ItemTestFixtures();
             _item = Substitute.For<IConsumableItem>();
-            _actionSO = ScriptableObject.CreateInstance<ItemActionSO>();
-            _animationProfileSO = ScriptableObject.CreateInstance<ItemAnimationProfileSO>();
-            _inputLifecycleSO = ScriptableObject.CreateInstance<PressToUseInputLifecycleSO>();
-            _animationClip = new AnimationClip();
-            _animationProfileSO.ConfigureAnimationsForEditor(_animationClip, _animationClip);
-            _actionSO.ConfigureForEditor(_inputLifecycleSO, null, _animationProfileSO, null);
+            _inputLifecycleSO = _fixtures.Track(ScriptableObject.CreateInstance<PressToUseInputLifecycleSO>());
+            _actionSO = _fixtures.CreateAction(_inputLifecycleSO);
             _item.Actions.Returns(new[] { _actionSO });
             _item.PrimaryActionSO.Returns(_actionSO);
-            _selection = Substitute.For<IActiveItemSource>();
-            _selection.ActiveItem.Returns(_item);
+            _selection = Substitute.For<ISelectedItemSource>();
+            _selection.SelectedItem.Returns(_item);
             _consumption = Substitute.For<ISelectedItemConsumption>();
             _reservation = Substitute.For<ISelectedItemConsumptionReservation>();
             _consumption.TryReserve(_item, 1, out Arg.Any<ISelectedItemConsumptionReservation>()).Returns(ReserveItem);
@@ -49,10 +45,7 @@ namespace FakeMG.ItemInteraction.Tests
         [TearDown]
         public void TearDown()
         {
-            Object.DestroyImmediate(_actionSO);
-            Object.DestroyImmediate(_animationProfileSO);
-            Object.DestroyImmediate(_inputLifecycleSO);
-            Object.DestroyImmediate(_animationClip);
+            _fixtures.Dispose();
         }
 
         [Test]
@@ -66,7 +59,7 @@ namespace FakeMG.ItemInteraction.Tests
             _effect.Received(1).TryApply(_item);
             _reservation.Received(1).TryCommit();
             _reservation.DidNotReceive().Cancel();
-            _presentation.Received(1).BeginUse(_item, _actionSO);
+            _presentation.Received(1).BeginUse(_item, _actionSO, 1f);
             _presentation.Received(1).EndUse(_item, _actionSO);
             Assert.That(_controller.IsInteractionActive, Is.False);
         }
@@ -110,7 +103,7 @@ namespace FakeMG.ItemInteraction.Tests
         public void SelectionChangedBeforeActionMoment_DoesNotConsumeStaleItem()
         {
             BeginUse();
-            _selection.ActiveItem.Returns((IInteractionItem)null);
+            _selection.SelectedItem.Returns(Substitute.For<IActionItem>());
 
             _controller.Tick(1f);
 
@@ -132,13 +125,13 @@ namespace FakeMG.ItemInteraction.Tests
         }
 
         [Test]
-        public void InvalidSelection_RejectsStartWithoutPresentation()
+        public void ItemNoLongerSelected_RejectsStartWithoutPresentation()
         {
-            _selection.ActiveItem.Returns((IInteractionItem)null);
+            _selection.SelectedItem.Returns(Substitute.For<IActionItem>());
 
             Assert.That(BeginUse(), Is.False);
 
-            _presentation.DidNotReceive().BeginUse(_item, _actionSO);
+            _presentation.DidNotReceive().BeginUse(_item, _actionSO, 1f);
             Assert.That(_controller.IsInteractionActive, Is.False);
         }
 
@@ -166,9 +159,9 @@ namespace FakeMG.ItemInteraction.Tests
 
             _reservation.Received(1).TryCommit();
             otherConsumption.DidNotReceiveWithAnyArgs().TryReserve(default, default, out _);
-            _presentation.Received(1).BeginUse(_item, _actionSO);
+            _presentation.Received(1).BeginUse(_item, _actionSO, 1f);
             _presentation.Received(1).EndUse(_item, _actionSO);
-            otherPresentation.Received(1).BeginUse(_item, _actionSO);
+            otherPresentation.Received(1).BeginUse(_item, _actionSO, 1f);
             otherPresentation.Received(1).EndUse(_item, _actionSO);
             first.Resolve<IConsumableEffect>().Received(1).TryApply(_item);
             second.Resolve<IConsumableEffect>().DidNotReceive().TryApply(_item);
@@ -191,8 +184,8 @@ namespace FakeMG.ItemInteraction.Tests
 
         private void RegisterCharacter(IContainerBuilder builder, ISelectedItemConsumption consumption, IItemUsePresentation presentation)
         {
-            var source = Substitute.For<IActiveItemSource>();
-            source.ActiveItem.Returns(_item);
+            var source = Substitute.For<ISelectedItemSource>();
+            source.SelectedItem.Returns(_item);
             var effect = Substitute.For<IConsumableEffect>();
             effect.CanApply(_item).Returns(true);
             effect.TryApply(_item).Returns(true);

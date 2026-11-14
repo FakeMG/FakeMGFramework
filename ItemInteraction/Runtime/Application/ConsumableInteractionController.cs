@@ -7,7 +7,7 @@ namespace FakeMG.ItemInteraction
 {
     public sealed class ConsumableInteractionController : IInteractionController
     {
-        private readonly IActiveItemSource _activeItemSource;
+        private readonly ISelectedItemSource _selectedItemSource;
         private readonly ISelectedItemConsumption _selectedItemConsumption;
         private readonly IConsumableEffect _consumableEffect;
         private readonly IReadOnlyList<IItemUsePresentation> _usePresentations;
@@ -19,12 +19,12 @@ namespace FakeMG.ItemInteraction
         public bool IsInteractionActive => _actionState?.IsActive == true;
 
         public ConsumableInteractionController(
-            IActiveItemSource activeItemSource,
+            ISelectedItemSource selectedItemSource,
             ISelectedItemConsumption selectedItemConsumption,
             IConsumableEffect consumableEffect,
             IReadOnlyList<IItemUsePresentation> usePresentations)
         {
-            _activeItemSource = activeItemSource;
+            _selectedItemSource = selectedItemSource;
             _selectedItemConsumption = selectedItemConsumption;
             _consumableEffect = consumableEffect;
             _usePresentations = usePresentations;
@@ -47,23 +47,24 @@ namespace FakeMG.ItemInteraction
         {
             if (selectedItem is not IConsumableItem consumableItem
                 || actionSO == null
-                || _activeItemSource.ActiveItem != consumableItem
+                || _selectedItemSource.SelectedItem != consumableItem
                 || !_consumableEffect.CanApply(consumableItem))
             {
                 Echo.Warning("Cannot begin consumable interaction because selection, action, or effect validation failed.");
                 return false;
             }
 
-            AnimationClip useAnimationClip = actionSO.AnimationProfileSO.UseAnimationClip;
             _activeConsumableItem = consumableItem;
             _activeActionSO = actionSO;
-            float completionSeconds = Mathf.Max(useAnimationClip.length, 0.01f);
-            float actionMomentSeconds = completionSeconds * actionSO.AnimationProfileSO.ActionMomentNormalized;
-            _actionState = new TimedItemActionState(actionSO.InputLifecycleSO, actionMomentSeconds, completionSeconds);
+            ItemAnimationProfileSO animationProfileSO = actionSO.AnimationProfileSO;
+            _actionState = new TimedItemActionState(
+                actionSO.InputLifecycleSO,
+                animationProfileSO.ActionMomentSeconds,
+                animationProfileSO.UseDurationSeconds);
 
             foreach (IItemUsePresentation usePresentation in _usePresentations)
             {
-                usePresentation.BeginUse(consumableItem, actionSO);
+                usePresentation.BeginUse(consumableItem, actionSO, playbackSpeedMultiplier: 1f);
             }
             return true;
         }
@@ -106,7 +107,7 @@ namespace FakeMG.ItemInteraction
 
         private void TryCommitConsumption()
         {
-            if (_activeItemSource.ActiveItem != _activeConsumableItem ||
+            if (_selectedItemSource.SelectedItem != _activeConsumableItem ||
                 !_consumableEffect.CanApply(_activeConsumableItem))
             {
                 Echo.Warning($"Canceled {_activeConsumableItem.DisplayName} at its action moment because it is no longer valid.");

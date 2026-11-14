@@ -10,39 +10,36 @@ namespace FakeMG.ItemInteraction
         ISelectedItemUseAnimation,
         ICharacterWaterStateListener
     {
+        private const float STOP_FADE_DURATION_SECONDS = 0.2f;
+
+        private readonly ItemUsePlayhead _usePlayhead = new();
         private IItemCharacterAnimation _itemCharacterAnimation;
         private IInteractionItem _selectedItem;
-        private IItemAnimationProfileProvider _selectedAnimationProfileProvider;
+        // Null when the selected item has no holding pose, such as the empty hand, which keeps the base locomotion.
+        private ItemAnimationProfileSO _holdingAnimationProfileSO;
         private ItemActionSO _activeActionSO;
-        private float _selectedItemUseRemainingSeconds;
         private bool _isInWater;
 
         #region Unity Lifecycle
 
         private void Update()
         {
-            if (_isInWater || _selectedItem == null)
+            if (_isInWater)
             {
                 return;
             }
 
-            if (_activeActionSO != null)
+            if (_usePlayhead.IsPlaying)
             {
-                PlayUseAnimation(_activeActionSO.AnimationProfileSO);
+                AdvanceUseAnimation();
                 return;
             }
 
-            if (_selectedItemUseRemainingSeconds > 0f)
+            // Replayed every frame because whether the character layers its holding pose can change with its locomotion state.
+            if (_holdingAnimationProfileSO != null)
             {
-                _selectedItemUseRemainingSeconds = Mathf.Max(0f, _selectedItemUseRemainingSeconds - Time.deltaTime);
-                if (_selectedItemUseRemainingSeconds > 0f)
-                {
-                    PlayUseAnimation(_selectedAnimationProfileProvider.AnimationProfileSO);
-                    return;
-                }
+                PlayHoldingPose();
             }
-
-            RefreshSelectionAnimation();
         }
 
         #endregion
@@ -57,41 +54,40 @@ namespace FakeMG.ItemInteraction
         public void SetWaterState(bool isInWater)
         {
             _isInWater = isInWater;
-            if (isInWater)
+            if (!isInWater)
             {
-                _selectedItemUseRemainingSeconds = 0f;
-                _itemCharacterAnimation.Stop(0.2f);
+                ShowCurrentAnimation(STOP_FADE_DURATION_SECONDS);
                 return;
             }
 
-            ResumeAnimationAfterLeavingWater();
+            // An interaction's use resumes after the water; a one-off use animation does not.
+            if (_activeActionSO == null)
+            {
+                _usePlayhead.Stop();
+            }
+
+            _itemCharacterAnimation.Stop(STOP_FADE_DURATION_SECONDS);
         }
 
         public void ShowSelection(IInteractionItem item)
         {
-            if (item is not IItemAnimationProfileProvider animationProfileProvider)
-            {
-                return;
-            }
-
             _selectedItem = item;
-            _selectedAnimationProfileProvider = animationProfileProvider;
+            _holdingAnimationProfileSO = (item as IItemAnimationProfileProvider)?.AnimationProfileSO;
             _activeActionSO = null;
-            _selectedItemUseRemainingSeconds = 0f;
-            _itemCharacterAnimation.SetLocomotionProfile(animationProfileProvider.AnimationProfileSO);
-            RefreshSelectionAnimation();
+            _usePlayhead.Stop();
+            ShowCurrentAnimation(STOP_FADE_DURATION_SECONDS);
         }
 
         public void HideSelection()
         {
             _selectedItem = null;
-            _selectedAnimationProfileProvider = null;
+            _holdingAnimationProfileSO = null;
             _activeActionSO = null;
-            _selectedItemUseRemainingSeconds = 0f;
-            _itemCharacterAnimation.Stop(0.2f);
+            _usePlayhead.Stop();
+            _itemCharacterAnimation.Stop(STOP_FADE_DURATION_SECONDS);
         }
 
-        public void BeginUse(IInteractionItem item, ItemActionSO actionSO)
+        public void BeginUse(IInteractionItem item, ItemActionSO actionSO, float playbackSpeedMultiplier)
         {
             if (_selectedItem != item)
             {
@@ -100,13 +96,8 @@ namespace FakeMG.ItemInteraction
             }
 
             _activeActionSO = actionSO;
-            _selectedItemUseRemainingSeconds = 0f;
-            if (_isInWater)
-            {
-                return;
-            }
-
-            PlayUseAnimation(actionSO.AnimationProfileSO);
+            _usePlayhead.Start(actionSO.AnimationProfileSO, playbackSpeedMultiplier, stopsAtSequenceEnd: false);
+            ShowUseAnimationFromStart();
         }
 
         public void EndUse(IInteractionItem item, ItemActionSO actionSO)
@@ -118,20 +109,19 @@ namespace FakeMG.ItemInteraction
             }
 
             _activeActionSO = null;
-            RefreshSelectionAnimation();
+            _usePlayhead.Stop();
+            ShowCurrentAnimation(actionSO.AnimationProfileSO.FadeDurationSeconds);
         }
 
         public bool TryPlaySelectedItemUseAnimation()
         {
-            if (_isInWater || _selectedAnimationProfileProvider == null || _activeActionSO != null)
+            if (_isInWater || _holdingAnimationProfileSO == null || _activeActionSO != null)
             {
                 return false;
             }
 
-            ItemAnimationProfileSO animationProfileSO = _selectedAnimationProfileProvider.AnimationProfileSO;
-            AnimationClip useAnimationClip = animationProfileSO.UseAnimationClip;
-            _selectedItemUseRemainingSeconds = useAnimationClip.length;
-            PlayUseAnimation(animationProfileSO, shouldRestartAnimation: true);
+            _usePlayhead.Start(_holdingAnimationProfileSO, playbackSpeedMultiplier: 1f, stopsAtSequenceEnd: true);
+            ShowUseAnimationFromStart();
             return true;
         }
 
@@ -139,43 +129,69 @@ namespace FakeMG.ItemInteraction
 
         #region Private Methods
 
-        private void ResumeAnimationAfterLeavingWater()
-        {
-            if (_activeActionSO != null)
-            {
-                PlayUseAnimation(_activeActionSO.AnimationProfileSO);
-                return;
-            }
-
-            if (_selectedItem != null)
-            {
-                RefreshSelectionAnimation();
-            }
-        }
-
-        private void RefreshSelectionAnimation()
-        {
-            ItemAnimationProfileSO animationProfileSO = _selectedAnimationProfileProvider.AnimationProfileSO;
-            _itemCharacterAnimation.SetLocomotionProfile(animationProfileSO);
-            ItemAnimationPose animationPose = animationProfileSO.GetHoldingPose();
-            PlayItemAnimation(animationPose, animationProfileSO.FadeDurationSeconds);
-        }
-
-        private void PlayUseAnimation(ItemAnimationProfileSO animationProfileSO, bool shouldRestartAnimation = false)
-        {
-            _itemCharacterAnimation.SetLocomotionProfile(_selectedAnimationProfileProvider.AnimationProfileSO);
-            ItemAnimationPose animationPose = animationProfileSO.GetUsePose();
-            PlayItemAnimation(animationPose, animationProfileSO.FadeDurationSeconds, shouldRestartAnimation);
-        }
-
-        private void PlayItemAnimation(ItemAnimationPose animationPose, float fadeDurationSeconds, bool shouldRestartAnimation = false)
+        private void ShowCurrentAnimation(float stopFadeDurationSeconds)
         {
             if (_isInWater)
             {
                 return;
             }
 
-            _itemCharacterAnimation.Play(animationPose, fadeDurationSeconds, shouldRestartAnimation);
+            _itemCharacterAnimation.SetLocomotionProfile(_holdingAnimationProfileSO);
+            if (_usePlayhead.IsPlaying)
+            {
+                PlayUsePose(shouldRestartAnimation: false);
+            }
+            else if (_holdingAnimationProfileSO != null)
+            {
+                PlayHoldingPose();
+            }
+            else
+            {
+                _itemCharacterAnimation.Stop(stopFadeDurationSeconds);
+            }
+        }
+
+        private void ShowUseAnimationFromStart()
+        {
+            if (_isInWater)
+            {
+                return;
+            }
+
+            _itemCharacterAnimation.SetLocomotionProfile(_holdingAnimationProfileSO);
+            PlayUsePose(shouldRestartAnimation: true);
+        }
+
+        private void AdvanceUseAnimation()
+        {
+            bool hasReachedNextClip = _usePlayhead.Advance(Time.deltaTime);
+            if (_usePlayhead.HasFinished)
+            {
+                float fadeDurationSeconds = _usePlayhead.AnimationProfileSO.FadeDurationSeconds;
+                _usePlayhead.Stop();
+                ShowCurrentAnimation(fadeDurationSeconds);
+                return;
+            }
+
+            if (hasReachedNextClip)
+            {
+                PlayUsePose(shouldRestartAnimation: true);
+            }
+        }
+
+        private void PlayUsePose(bool shouldRestartAnimation)
+        {
+            _itemCharacterAnimation.PlayUsePose(
+                _usePlayhead.CurrentPose,
+                _usePlayhead.AnimationProfileSO.FadeDurationSeconds,
+                shouldRestartAnimation);
+        }
+
+        private void PlayHoldingPose()
+        {
+            _itemCharacterAnimation.PlayHoldingPose(
+                _holdingAnimationProfileSO.GetHoldingPose(),
+                _holdingAnimationProfileSO.FadeDurationSeconds);
         }
 
         #endregion
