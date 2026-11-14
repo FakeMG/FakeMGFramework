@@ -2,22 +2,22 @@ using UnityEngine;
 
 namespace FakeMG.ItemInteraction
 {
+    /// <summary>
+    /// Subscribes a character's <see cref="SelectionPresenter"/> to its selection and held-prefab preload while enabled.
+    /// </summary>
     public sealed class SelectionLifecycleSubscriber : MonoBehaviour
     {
         private ISelectionChangeSource _selectionChangeSource;
         private HeldItemPrefabPool _heldItemPrefabPool;
-        private IInteractionSelectionLifecycle _interactionLifecycle;
-        private IItemSelectionPresentation[] _selectionPresentations;
-        private bool _isSubscribed;
-        private bool _hasPresentedSelection;
-        private IInteractionItem _selectedItem;
-        private string _selectedInstanceId;
+        private SelectionPresenter _selectionPresenter;
+
+        private bool IsBound => _selectionPresenter != null;
 
         #region Unity Lifecycle
 
         private void OnEnable()
         {
-            if (_selectionChangeSource != null)
+            if (IsBound)
             {
                 Subscribe();
             }
@@ -25,7 +25,10 @@ namespace FakeMG.ItemInteraction
 
         private void OnDisable()
         {
-            UnsubscribeAndClear();
+            if (IsBound)
+            {
+                UnsubscribeAndClear();
+            }
         }
 
         #endregion
@@ -38,11 +41,18 @@ namespace FakeMG.ItemInteraction
             IInteractionSelectionLifecycle interactionLifecycle,
             params IItemSelectionPresentation[] selectionPresentations)
         {
-            UnsubscribeAndClear();
+            if (IsBound && isActiveAndEnabled)
+            {
+                UnsubscribeAndClear();
+            }
+
             _selectionChangeSource = selectionChangeSource;
             _heldItemPrefabPool = heldItemPrefabPool;
-            _interactionLifecycle = interactionLifecycle;
-            _selectionPresentations = selectionPresentations;
+            _selectionPresenter = new SelectionPresenter(
+                selectionChangeSource,
+                heldItemPrefabPool,
+                interactionLifecycle,
+                selectionPresentations);
 
             if (isActiveAndEnabled)
             {
@@ -56,103 +66,26 @@ namespace FakeMG.ItemInteraction
 
         private void Subscribe()
         {
-            if (_isSubscribed)
-            {
-                return;
-            }
-
-            _selectionChangeSource.OnActiveItemChanged += RefreshSelection;
-            _heldItemPrefabPool.OnPresentationAssetsReady += ApplyReadyPresentation;
-            _isSubscribed = true;
-            RefreshSelection();
-            ApplyReadyPresentation();
+            _selectionChangeSource.OnSelectedItemChanged += PresentSelectedItem;
+            _heldItemPrefabPool.OnPresentationAssetsReady += ShowSelectionWhenReady;
+            _selectionPresenter.PresentSelectedItem();
         }
 
         private void UnsubscribeAndClear()
         {
-            if (!_isSubscribed)
-            {
-                return;
-            }
-
-            _selectionChangeSource.OnActiveItemChanged -= RefreshSelection;
-            _heldItemPrefabPool.OnPresentationAssetsReady -= ApplyReadyPresentation;
-            _isSubscribed = false;
-            _interactionLifecycle.Cancel();
-            HideSelection();
-            _selectedItem = null;
-            _selectedInstanceId = null;
+            _selectionChangeSource.OnSelectedItemChanged -= PresentSelectedItem;
+            _heldItemPrefabPool.OnPresentationAssetsReady -= ShowSelectionWhenReady;
+            _selectionPresenter.CancelAndClear();
         }
 
-        private void RefreshSelection()
+        private void PresentSelectedItem()
         {
-            if (!_isSubscribed)
-            {
-                return;
-            }
-
-            IInteractionItem activeItem = _selectionChangeSource.ActiveItem;
-            string instanceId = (_selectionChangeSource as IActiveItemInstanceSource)?.ActiveItemInstanceId;
-            if (activeItem == _selectedItem && (activeItem == null ||
-                !string.IsNullOrEmpty(instanceId) && _selectedInstanceId == instanceId))
-            {
-                return;
-            }
-
-            _selectedItem = activeItem;
-            _selectedInstanceId = instanceId;
-            _interactionLifecycle.ChangeSelection();
-            HideSelection();
-            ShowSelectionWhenReady();
+            _selectionPresenter.PresentSelectedItem();
         }
 
         private void ShowSelectionWhenReady()
         {
-            if (!_isSubscribed || _hasPresentedSelection || _selectedItem == null || !_heldItemPrefabPool.ArePresentationAssetsReady)
-            {
-                return;
-            }
-
-            _hasPresentedSelection = true;
-            foreach (IItemSelectionPresentation selectionPresentation in _selectionPresentations)
-            {
-                selectionPresentation.ShowSelection(_selectedItem);
-            }
-        }
-
-        private void ApplyReadyPresentation()
-        {
-            if (!_isSubscribed || !_heldItemPrefabPool.ArePresentationAssetsReady)
-            {
-                return;
-            }
-
-            if (_selectedItem == null)
-            {
-                ClearPresentation();
-                return;
-            }
-
-            ShowSelectionWhenReady();
-        }
-
-        private void HideSelection()
-        {
-            if (!_hasPresentedSelection)
-            {
-                return;
-            }
-
-            _hasPresentedSelection = false;
-            ClearPresentation();
-        }
-
-        private void ClearPresentation()
-        {
-            foreach (IItemSelectionPresentation selectionPresentation in _selectionPresentations)
-            {
-                selectionPresentation.HideSelection();
-            }
+            _selectionPresenter.ShowSelectionWhenReady();
         }
 
         #endregion
