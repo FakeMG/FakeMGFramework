@@ -7,11 +7,6 @@ using VContainer;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// General-purpose step that completes when all of its inspector-authored
-    /// completion conditions are satisfied. Programmers compose multiple checks
-    /// without writing a bespoke step class.
-    /// </summary>
     public class TutorialCompositeStep : TutorialStepBase
     {
         [SerializeReference] private List<ITutorialCompletionCondition> _completionConditions = new();

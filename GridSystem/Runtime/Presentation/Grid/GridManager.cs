@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Converts grid coordinates to cell bottom-center anchors and maintains a derived occupancy index
-    /// for placed structure footprints.
-    /// </summary>
     public class GridManager : MonoBehaviour, IGridPlacementGateway
     {
         [SerializeField] private Grid _grid;

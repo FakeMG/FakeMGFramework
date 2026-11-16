@@ -1,8 +1,5 @@
 namespace FakeMG.ItemInteraction
 {
-    /// <summary>
-    /// How far a use sequence has played and which of its clips is on, advanced at the use's playback speed.
-    /// </summary>
     public sealed class ItemUsePlayhead
     {
         private float _playbackSpeedMultiplier;

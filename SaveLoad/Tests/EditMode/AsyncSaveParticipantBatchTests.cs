@@ -8,9 +8,6 @@ using NUnit.Framework;
 
 namespace FakeMG.SaveLoad.Tests
 {
-    /// <summary>
-    /// Verifies ordered participant preparation and reverse cleanup when a participant fails midway.
-    /// </summary>
     public sealed class AsyncSaveParticipantBatchTests
     {
         [Test]

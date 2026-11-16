@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Defines one profile-owned value evaluated from presentation time.
-    /// </summary>
     [Serializable]
     public abstract class CycleOutputDefinition
     {

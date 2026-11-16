@@ -101,7 +101,6 @@ namespace FakeMG.ActionMapManagement
             return _suspensions.Suspend(reason, mapNames);
         }
 
-        /// <summary>Disables every enabled map, then enables the given one.</summary>
         public void SwitchToActionMap(string newMapName)
         {
             foreach (string activeMap in _activeMaps.ToArray())

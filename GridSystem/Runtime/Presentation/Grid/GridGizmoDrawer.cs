@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Draws editor gizmos for grid bounds and occupancy without owning grid state.
-    /// </summary>
     internal sealed class GridGizmoDrawer
     {
         private readonly GridManager _gridManager;

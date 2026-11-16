@@ -1,8 +1,5 @@
 namespace FakeMG.Framework
 {
-    /// <summary>
-    /// Central constants for all FakeMG editor menu paths
-    /// </summary>
     public static class FakeMGEditorMenus
     {
         public const string ROOT = "FakeMGFramework";
@@ -16,49 +13,36 @@ namespace FakeMG.Framework
         public const string CHECK_MISSING_UNITY_EVENTS = ROOT + "/Check Missing Unity Events";
         public const string GRID_SYSTEM = ROOT + "/Grid System";
 
-        // Audio
         public const string AUDIO = ROOT + "/Audio";
         public const string AUDIO_CREATE_AUDIO_CUE_FROM_SELECTED_CLIPS =
             "Assets/Create/" + AUDIO + "/AudioCueSO From Selected Clips";
 
-        // Action Map Management
         public const string ACTION_MAP_MANAGEMENT = ROOT + "/Action Map Management";
 
-        // Input Hints
         public const string INPUT_HINTS = ROOT + "/Input Hints";
         public const string INPUT_HINTS_BUILD_KENNEY_GLYPH_SETS = "Assets/" + INPUT_HINTS + "/Build Kenney Glyph Sets";
 
-        // Item Interaction
         public const string ITEM_INTERACTION = ROOT + "/Item Interaction";
 
-        // Localization
         public const string LOCALIZATION = ROOT + "/Localization";
         public const string LOCALIZATION_VALIDATE_ALL_KEYS = LOCALIZATION + "/Validate All Keys";
 
-        // Inventory
         public const string INVENTORY = ROOT + "/Inventory";
 
-        // Save files
         public const string SAVE_FILE_VIEWER = ROOT + "/Save File Viewer";
 
-        // Settings
         public const string SETTINGS = ROOT + "/Settings";
         public const string SETTINGS_COMMON = SETTINGS + "/Common";
         public const string SETTINGS_DISPLAY = SETTINGS + "/Display";
 
-        // Shop
         public const string SHOP = ROOT + "/Shop";
 
-        // Toast
         public const string TOAST = ROOT + "/Toast";
 
-        // Tutorial
         public const string TUTORIAL = ROOT + "/Tutorial";
 
-        // Camera
         public const string CAMERA = ROOT + "/Camera Movement";
 
-        // Time Cycle
         public const string TIME_CYCLE = ROOT + "/Time Cycle";
     }
 }

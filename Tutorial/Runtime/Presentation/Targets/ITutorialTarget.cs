@@ -2,11 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// High-level abstraction for anything a tutorial step can point at or gate
-    /// interaction on, identified by a key asset. Implementations adapt UI elements,
-    /// world objects, or abstract conditions.
-    /// </summary>
     public interface ITutorialTarget
     {
         TutorialTargetKeySO Key { get; }

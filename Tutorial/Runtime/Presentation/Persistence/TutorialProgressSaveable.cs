@@ -2,10 +2,6 @@ using FakeMG.SaveLoad;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Bridges tutorial progress into the save system. Captures and restores the
-    /// canonical progress held by <see cref="TutorialProgressStore"/>.
-    /// </summary>
     public sealed class TutorialProgressSaveable : ISaveable
     {
         public const string SAVE_ID = nameof(TutorialProgressSaveable);

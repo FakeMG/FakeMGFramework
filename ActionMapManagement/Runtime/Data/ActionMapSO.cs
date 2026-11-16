@@ -53,7 +53,6 @@ namespace FakeMG.ActionMapManagement
             if (string.IsNullOrEmpty(name))
                 return;
 
-            // Remove " Action Map" suffix from asset name
             if (name.EndsWith(SUFFIX))
             {
                 _actionMapName = name.Substring(0, name.Length - SUFFIX.Length);
@@ -69,7 +68,6 @@ namespace FakeMG.ActionMapManagement
         {
             if (string.IsNullOrEmpty(_actionMapName)) return;
 
-            // Add " Action Map" suffix to create asset name
             string newAssetName = _actionMapName + SUFFIX;
             if (name == newAssetName) return;
 

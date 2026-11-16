@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Calculates focus and zoom corrections that keep the visible ground area inside allowed bounds.
-    /// </summary>
     public class CameraBoundsClamp
     {
         private const int ZOOM_CLAMP_SEARCH_ITERATIONS = 8;

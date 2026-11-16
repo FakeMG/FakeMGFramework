@@ -5,13 +5,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Hand pointer that follows an <see cref="ITutorialPointerAnchor"/> every frame, so it stays
-    /// on targets that move or animate (popup buttons scaling in, world points while the camera
-    /// turns). It fades out while the anchor is hidden and back in when it reappears, flips to stay
-    /// on screen near edges, and loops a tap animation with a ripple at the exact target point.
-    /// The hand image's pivot must sit on the fingertip.
-    /// </summary>
     public sealed class TrackingTutorialPointerView : AnimatedTutorialVisualView
     {
         [Header("Hierarchy")]

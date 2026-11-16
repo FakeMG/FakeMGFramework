@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Authoritative committed structure-placement state shared by runtime placement and save/load.
-    /// </summary>
     [Serializable]
     public sealed class PlacementState
     {
@@ -91,9 +88,6 @@ namespace FakeMG.GridSystem
         #endregion
     }
 
-    /// <summary>
-    /// Committed, save-ready placement state for one structure instance.
-    /// </summary>
     [Serializable]
     public sealed class CommittedGridOccupantPlacement
     {

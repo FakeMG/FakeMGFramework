@@ -7,10 +7,6 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>
-    /// The hints of the <see cref="InputContext"/> on the same GameObject, shown while that context is active. Display-only:
-    /// handle the actions through the input context.
-    /// </summary>
     [RequireComponent(typeof(InputContext))]
     public sealed class InputHintContext : MonoBehaviour, IInputHintContext
     {

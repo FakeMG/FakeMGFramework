@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.Outline
 {
-    /// <summary>
-    /// Enables or disables an outline by adding or removing an outline material.
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class MaterialOutlineController : MonoBehaviour
     {

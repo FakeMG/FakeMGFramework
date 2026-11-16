@@ -4,7 +4,6 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.InputContexts.Tests.EditMode
 {
-    /// <summary>Builds the actions the tests share, inside one action asset as the Input System expects, and destroys them.</summary>
     internal sealed class InputContextTestFactory
     {
         private readonly List<Object> _createdObjects = new();

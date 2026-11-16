@@ -5,9 +5,6 @@ using UnityEngine.UI;
 
 namespace FakeMG.Framework.UI.Tab.TabButton
 {
-    /// <summary>
-    /// Base visual tab button that requests tab changes from pointer clicks and non-pointer UI selection.
-    /// </summary>
     public abstract class TabButtonBase : MonoBehaviour, ISelectHandler
     {
         [SerializeField] private Button _button;

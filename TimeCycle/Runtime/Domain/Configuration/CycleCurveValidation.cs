@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Validates every numeric field used by authored animation curves.
-    /// </summary>
     internal static class CycleCurveValidation
     {
         #region Public Methods

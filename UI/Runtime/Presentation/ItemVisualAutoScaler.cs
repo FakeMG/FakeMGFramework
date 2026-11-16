@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.UI
 {
-    /// <summary>
-    /// Automatically scales item visuals to fit their parent slot.
-    /// </summary>
     [ExecuteAlways]
     public sealed class ItemVisualAutoScaler : MonoBehaviour
     {

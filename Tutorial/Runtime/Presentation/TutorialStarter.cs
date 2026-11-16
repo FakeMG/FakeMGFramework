@@ -5,11 +5,6 @@ using VContainer;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Scene component that starts a tutorial from code, optionally on Start. Acts as
-    /// the simplest trigger; condition-based triggers can call <see cref="StartTutorial"/>.
-    /// The sequence source is any component implementing <see cref="ITutorialSequence"/>.
-    /// </summary>
     public sealed class TutorialStarter : MonoBehaviour
     {
         [SerializeField] private bool _startOnStart = true;

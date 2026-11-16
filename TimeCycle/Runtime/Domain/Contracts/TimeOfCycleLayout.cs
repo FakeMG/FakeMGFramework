@@ -20,7 +20,6 @@ namespace FakeMG.TimeCycle
         #endregion
     }
 
-    /// <summary>Immutable active cycle geometry. Zero-duration periods remain available for inspection.</summary>
     public sealed class TimeOfCycleLayout
     {
         public double CycleDurationSeconds { get; }

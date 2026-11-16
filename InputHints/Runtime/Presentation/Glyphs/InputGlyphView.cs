@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>Draws one control: its glyph, or its name when the glyph set has no glyph for it.</summary>
     public sealed class InputGlyphView : MonoBehaviour
     {
         [FormerlySerializedAs("_icon")]

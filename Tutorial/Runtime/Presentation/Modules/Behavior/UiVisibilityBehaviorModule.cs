@@ -7,11 +7,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Hides a set of UI canvas groups for the duration of a step and restores their
-    /// previous visibility on deactivation, both with a smooth fade. Captures each
-    /// group's prior alpha so restoration returns to the exact previous state.
-    /// </summary>
     [Serializable]
     public sealed class UiVisibilityBehaviorModule : ITutorialModule
     {

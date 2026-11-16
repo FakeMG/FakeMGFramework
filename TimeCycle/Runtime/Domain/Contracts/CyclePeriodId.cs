@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Identifies one named period within a repeating cycle.
-    /// </summary>
     [Serializable]
     public readonly struct CyclePeriodId : IEquatable<CyclePeriodId>
     {

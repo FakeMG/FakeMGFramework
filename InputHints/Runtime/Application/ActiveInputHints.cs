@@ -13,7 +13,6 @@ namespace FakeMG.InputHints
     public sealed class ActiveInputHints : IDisposable
     {
         private readonly InputContextStack _contextStack;
-        /// <remarks>One hint context per input context.</remarks>
         private readonly Dictionary<IInputContext, IInputHintContext> _hintContextsByContext = new();
         private readonly List<InputHint> _hints = new();
 

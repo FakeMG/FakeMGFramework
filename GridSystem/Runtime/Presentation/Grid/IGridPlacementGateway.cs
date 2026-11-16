@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Provides grid snapping, occupancy validation, and occupancy-index rebuilding for placement workflows.
-    /// </summary>
     public interface IGridPlacementGateway
     {
         float CellSizeMeters { get; }

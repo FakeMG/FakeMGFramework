@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Configures real-time duration and easing for a time command.
-    /// </summary>
     [Serializable]
     public readonly struct TimeCommandTransition
     {

@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Evaluates authored Euler points with quaternion interpolation.
-    /// </summary>
     [Serializable]
     public sealed class RotationCycleOutputDefinition : CycleOutputDefinition
     {

@@ -12,9 +12,6 @@ using Object = UnityEngine.Object;
 
 namespace FakeMG.GridSystem.Tests.EditMode
 {
-    /// <summary>
-    /// Locks GridOccupantPlacementService behavior through substituted grid and factory collaborators.
-    /// </summary>
     public sealed class GridOccupantPlacementServiceTests
     {
         private const int ROTATION_DEGREES = 90;

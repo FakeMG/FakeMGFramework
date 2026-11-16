@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// One structure to place as part of a batch, such as procedurally generated world content.
-    /// </summary>
     public readonly struct GridOccupantPlacementRequest
     {
         public GridOccupantPlacementRequest(StructureSO structureSO, Vector3 worldPosition, int rotationDegrees)

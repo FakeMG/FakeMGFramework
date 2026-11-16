@@ -7,10 +7,6 @@ using FakeMG.Framework;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Owns canonical global/world path conventions and discovers only files created by the current
-    /// persistence layout. All returned paths remain relative to Application.persistentDataPath.
-    /// </summary>
     public sealed class SaveFileCatalog
     {
         public const string WORLD_ROOT_DIRECTORY_PATH = "Saves";

@@ -3,9 +3,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Owns cyclic authoritative and presentation time plus chronological boundary detection.
-    /// </summary>
     internal sealed class CycleClock
     {
         private const double TIME_EPSILON_SECONDS = 0.000001d;
@@ -229,9 +226,6 @@ namespace FakeMG.TimeCycle
 
         #endregion
 
-        /// <summary>
-        /// Stores one sortable cycle or period boundary.
-        /// </summary>
         private readonly struct CycleBoundary
         {
             public double DistanceSeconds { get; }

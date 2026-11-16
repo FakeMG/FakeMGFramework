@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Describes one observable boundary crossed while advancing the cyclic clock.
-    /// </summary>
     internal readonly struct CycleClockNotification
     {
         public bool IsCycleCompleted { get; }

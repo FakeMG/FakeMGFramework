@@ -6,9 +6,6 @@ using UnityEngine;
 
 namespace FakeMG.Framework.Database.Editor
 {
-    /// <summary>
-    /// Editor utility for building and rebuilding AssetDatabaseSO instances
-    /// </summary>
     public static class DatabaseRebuilderUtility
     {
         private const string ASSET_SEARCH_FILTER_FORMAT = "t:{0}";
@@ -43,7 +40,6 @@ namespace FakeMG.Framework.Database.Editor
                     continue;
                 }
 
-                // Check if the asset is derived from AssetDatabaseSO
                 var assetType = asset.GetType();
                 if (!IsAssetDatabase(assetType))
                 {

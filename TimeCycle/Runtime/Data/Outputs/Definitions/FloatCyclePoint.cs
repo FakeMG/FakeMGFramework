@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores one floating-point value at a normalized cycle position.
-    /// </summary>
     [Serializable]
     public sealed class FloatCyclePoint : IContinuousCyclePoint<float>
     {

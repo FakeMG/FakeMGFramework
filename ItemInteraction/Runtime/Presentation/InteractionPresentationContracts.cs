@@ -20,9 +20,6 @@ namespace FakeMG.ItemInteraction
         void HideSelection();
     }
 
-    /// <summary>
-    /// Grips a shown held item with the hand that is not holding it.
-    /// </summary>
     public interface IOffHandGripPresentation
     {
         void BeginOffHandGrip(HeldItemHand holdingHand, GameObject heldItemInstance);

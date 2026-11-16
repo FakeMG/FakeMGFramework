@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Detects objects obstructing the camera-to-focus path and drives their fade transitions.
-    /// </summary>
     public class CameraObstructionFader : MonoBehaviour
     {
         [SerializeField] private CameraRigView _cameraRigView;

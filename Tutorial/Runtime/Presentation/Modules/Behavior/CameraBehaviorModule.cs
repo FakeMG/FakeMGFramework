@@ -7,13 +7,6 @@ using VContainer;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Spawns a camera controller from an addressable prefab for the duration of a step the
-    /// same way visual modules spawn their views: it loads and instantiates the prefab,
-    /// injects the controller's scene dependencies, moves the camera, then restores and
-    /// despawns it on deactivation. A game that needs no tutorial camera simply leaves this
-    /// module off its steps. Blocks completion so the step waits for the move to finish.
-    /// </summary>
     [Serializable]
     public sealed class CameraBehaviorModule : ITutorialModule
     {

@@ -5,10 +5,6 @@ using NUnit.Framework;
 
 namespace FakeMG.SaveLoad.Tests
 {
-    /// <summary>
-    /// Verifies that managed-file discovery uses the storage boundary and therefore does not require
-    /// ES3 behavior inside the catalog itself.
-    /// </summary>
     public sealed class SaveFileCatalogTests
     {
         [Test]

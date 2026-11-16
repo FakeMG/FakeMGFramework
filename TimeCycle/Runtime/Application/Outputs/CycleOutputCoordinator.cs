@@ -3,9 +3,6 @@ using System.Linq;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Validates applicator contracts, evaluates configured outputs, and applies their current values.
-    /// </summary>
     internal sealed class CycleOutputCoordinator
     {
         private readonly IReadOnlyList<ITimeOfCycleOutputApplicator> _applicators;

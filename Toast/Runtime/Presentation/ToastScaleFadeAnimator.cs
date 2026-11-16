@@ -6,7 +6,6 @@ using UnityEngine;
 
 namespace FakeMG.Toast
 {
-    /// <summary>Default toast animation: scale + fade for show/hide, tweened reposition. Unscaled time.</summary>
     [RequireComponent(typeof(CanvasGroup))]
     public class ToastScaleFadeAnimator : ToastAnimator
     {

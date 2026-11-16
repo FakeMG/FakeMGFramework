@@ -8,9 +8,6 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Owns camera input bindings and translates raw Input System callbacks into camera commands.
-    /// </summary>
     public class CameraInputSubscriber : MonoBehaviour
     {
         private const float LEGACY_MOUSE_SCROLL_STEP_UNITS = 120f;

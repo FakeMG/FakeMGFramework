@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>Owns pan smoothing and the ground point grabbed by a pointer drag.</summary>
     public sealed class CameraPanMotion
     {
         private readonly CameraPanCalculator _panCalculator;

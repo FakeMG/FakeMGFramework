@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Base for tutorial targets that announce themselves to the registry over the event
-    /// bus. Owns the register/unregister handshake (idempotent, guarded by enable state,
-    /// always unregistering when disabled) so each concrete target only decides *when* it
-    /// is eligible to be a target rather than re-implementing the registration protocol.
-    /// </summary>
     public abstract class SelfRegisteringTutorialTarget : MonoBehaviour, ITutorialTarget
     {
         public abstract TutorialTargetKeySO Key { get; }

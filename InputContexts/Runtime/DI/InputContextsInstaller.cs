@@ -3,7 +3,6 @@ using VContainer.Unity;
 
 namespace FakeMG.InputContexts
 {
-    /// <summary>Registers input contexts in the persistent scope, so contexts from every scene share one stack.</summary>
     public static class InputContextsInstaller
     {
         #region Public Methods

@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Coalesces procedural-sky changes into bounded environment-cubemap refresh requests.
-    /// </summary>
     public sealed class EnvironmentCubemapRefreshController : MonoBehaviour
     {
         private const float ENVIRONMENT_CUBEMAP_REFRESH_INTERVAL_SECONDS = 1f;

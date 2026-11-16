@@ -9,7 +9,6 @@ namespace FakeMG.SceneLoading
 
         public AssetReferenceScene(string guid) : base(guid) { }
 
-        //-----------------------------------------------------------------------------
 
         public override bool ValidateAsset(string path)
         {

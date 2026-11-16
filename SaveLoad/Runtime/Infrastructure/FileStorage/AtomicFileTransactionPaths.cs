@@ -1,9 +1,5 @@
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Builds every companion path owned by atomic file transactions. Centralized suffix ownership
-    /// prevents durability implementations and repositories from disagreeing about file names.
-    /// </summary>
     public static class AtomicFileTransactionPaths
     {
         private const string BACKUP_SUFFIX = ".bak";

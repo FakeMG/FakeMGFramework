@@ -6,11 +6,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Completion condition satisfied when the player interacts with a tutorial target
-    /// resolved by key, whether that target raises a custom activation event or is a plain
-    /// UI Button. Works with runtime UI such as a button inside a popup.
-    /// </summary>
     [Serializable]
     public sealed class TargetClickCompletionCondition : ITutorialCompletionCondition
     {

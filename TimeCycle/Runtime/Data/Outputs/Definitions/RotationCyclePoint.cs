@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores one Euler-angle rotation at a normalized cycle position for readable authoring.
-    /// </summary>
     [Serializable]
     public sealed class RotationCyclePoint : IContinuousCyclePoint<Quaternion>
     {

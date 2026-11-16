@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores one integer state change at an independent cycle time.
-    /// </summary>
     [Serializable]
     public sealed class IntCyclePoint : IDiscreteCyclePoint<int>
     {

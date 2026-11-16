@@ -13,7 +13,6 @@ namespace FakeMG.ActionMapManagement
         private readonly Dictionary<string, int> _suspensionCountsByMapName = new();
         private int _allMapsSuspensionCount;
 
-        /// <summary>Raised whenever a suspension starts or ends, so the owner can re-apply which maps are on.</summary>
         public event Action OnChanged;
 
         #region Public Methods
@@ -24,7 +23,6 @@ namespace FakeMG.ActionMapManagement
                 || (_suspensionCountsByMapName.TryGetValue(mapName, out int suspensionCount) && suspensionCount > 0);
         }
 
-        /// <summary>Holds every map off until the returned suspension is disposed.</summary>
         public IDisposable SuspendAll(string reason)
         {
             _allMapsSuspensionCount++;
@@ -32,7 +30,6 @@ namespace FakeMG.ActionMapManagement
             return new Suspension(this, reason, null);
         }
 
-        /// <summary>Holds the named maps off until the returned suspension is disposed.</summary>
         public IDisposable Suspend(string reason, IReadOnlyCollection<string> mapNames)
         {
             var suspendedMapNames = new List<string>(mapNames);

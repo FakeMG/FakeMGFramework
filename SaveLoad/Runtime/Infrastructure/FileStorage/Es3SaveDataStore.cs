@@ -3,10 +3,6 @@ using System.IO;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Adapts Easy Save 3 serialization and key/file discovery to ISaveDataStore. Durability,
-    /// temporary-file handling, backup rotation, flushing, and recovery belong to another service.
-    /// </summary>
     public sealed class Es3SaveDataStore : ISaveDataStore
     {
         private readonly ES3Settings _settingsTemplate;

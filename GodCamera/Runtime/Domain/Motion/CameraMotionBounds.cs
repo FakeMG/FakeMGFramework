@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Constrains current and target camera motion state to the configured world bounds.
-    /// </summary>
     public sealed class CameraMotionBounds
     {
         private readonly CameraBoundsClamp _boundsClamp;

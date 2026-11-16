@@ -2,13 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Everything the runner hands to steps and modules during a tutorial: the running
-    /// tutorial's id, its progress, the target registry for resolving targets by id, the
-    /// services modules use (gate, loader, visual root), and the force-complete signal a
-    /// step races against its conditions. The optional camera controller is not held here;
-    /// the camera module resolves it from the scope when present.
-    /// </summary>
     public sealed class TutorialContext
     {
         public TutorialContext(TutorialId tutorialId, TutorialProgress progress, TutorialTargetRegistry targetRegistry,

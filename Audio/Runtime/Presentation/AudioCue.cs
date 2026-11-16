@@ -30,7 +30,6 @@ namespace FakeMG.Audio
         private AudioConfigurationSO _audioConfiguration;
 
         #region Override Settings
-        // Priority
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings")]
@@ -45,7 +44,6 @@ namespace FakeMG.Audio
         [EnumToggleButtons]
         private AudioConfigurationSO.PriorityLevel _priorityLevel = AudioConfigurationSO.PriorityLevel.Standard;
 
-        // Sound Properties
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Sound Properties")]
@@ -110,7 +108,6 @@ namespace FakeMG.Audio
         [Range(0f, 1.1f)]
         private float _reverbZoneMix = 1f;
 
-        // Spatialization
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Spatialization")]
@@ -190,7 +187,6 @@ namespace FakeMG.Audio
         [Range(0f, 5f)]
         private float _dopplerLevel = 1f;
 
-        // Bypass/Ignore Settings
         [SerializeField]
         [ShowIf(nameof(ShowOverrideSettings))]
         [BoxGroup("Override Settings/Bypass & Ignore")]
@@ -408,7 +404,6 @@ namespace FakeMG.Audio
                 return CreateFullyCustomConfiguration();
             }
 
-            // ConfigurationMode.OverridePredefined
             return CreateOverriddenConfiguration();
         }
 
@@ -446,7 +441,6 @@ namespace FakeMG.Audio
 
             var overriddenConfig = ScriptableObject.CreateInstance<AudioConfigurationSO>();
 
-            // Start with base configuration values
             overriddenConfig.Priority = _audioConfiguration.Priority;
             overriddenConfig.Mute = _audioConfiguration.Mute;
             overriddenConfig.Volume = _audioConfiguration.Volume;
@@ -465,7 +459,6 @@ namespace FakeMG.Audio
             overriddenConfig.IgnoreListenerVolume = _audioConfiguration.IgnoreListenerVolume;
             overriddenConfig.IgnoreListenerPause = _audioConfiguration.IgnoreListenerPause;
 
-            // Apply overrides where specified
             if (_overridePriority) overriddenConfig.Priority = (int)_priorityLevel;
             if (_overrideMute) overriddenConfig.Mute = _mute;
             if (_overrideVolume) overriddenConfig.Volume = _volume;
@@ -513,11 +506,9 @@ namespace FakeMG.Audio
         {
             Vector3 position = transform.position;
 
-            // Draw min distance sphere in green
             Gizmos.color = new Color(0f, 1f, 0f, 0.3f);
             Gizmos.DrawWireSphere(position, minDist);
 
-            // Draw max distance sphere in red
             Gizmos.color = new Color(1f, 0f, 0f, 0.3f);
             Gizmos.DrawWireSphere(position, maxDist);
         }

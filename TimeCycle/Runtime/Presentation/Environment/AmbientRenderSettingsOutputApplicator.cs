@@ -5,9 +5,6 @@ using UnityEngine.Rendering;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Applies supported ambient-light modes and colors while preserving the previous RenderSettings state.
-    /// </summary>
     [DefaultExecutionOrder(TimeOfCycleExecutionOrder.ENVIRONMENT_APPLICATOR)]
     public sealed class AmbientRenderSettingsOutputApplicator : MonoBehaviour, ITimeOfCycleOutputApplicator
     {

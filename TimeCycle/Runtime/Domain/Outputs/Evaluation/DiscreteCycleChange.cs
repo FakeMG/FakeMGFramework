@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores one ordered discrete state change and its tie-breaking priority.
-    /// </summary>
     internal readonly struct DiscreteCycleChange<T>
     {
         public double TimeSeconds { get; }

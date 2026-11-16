@@ -2,9 +2,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores the current evaluated value for every active output key.
-    /// </summary>
     internal sealed class CycleOutputState : IReadOnlyCycleOutputState
     {
         private readonly Dictionary<CycleOutputKeySO, object> _valueByOutputKey = new();

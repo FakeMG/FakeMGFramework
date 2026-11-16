@@ -9,10 +9,6 @@ using UnityEngine.Pool;
 
 namespace FakeMG.Toast
 {
-    /// <summary>
-    /// Globally accessible toast service. Shows short, non-blocking, auto-hiding text messages
-    /// stacked at the configured container anchor. Registered in ManagerLifetimeScope.
-    /// </summary>
     public class ToastManager : MonoBehaviour, IToastService
     {
         [Required]
@@ -76,7 +72,6 @@ namespace FakeMG.Toast
             ShowInternalAsync(text, customTextColor).Forget();
         }
 
-        /// <summary>Clears every active toast through the normal hide animation flow.</summary>
         public void ClearAll()
         {
             if (IsNotReady()) return;

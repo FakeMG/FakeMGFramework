@@ -10,7 +10,6 @@ namespace FakeMG.Localization.Editor
 {
     public class LocalizationValidator : IPreprocessBuildWithReport
     {
-        // Interface requirement: runs automatically before Build
         public int callbackOrder => 0;
         public void OnPreprocessBuild(BuildReport report) => ValidateAllKeys(true);
 

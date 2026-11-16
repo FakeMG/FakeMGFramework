@@ -11,17 +11,17 @@ namespace FakeMG.Framework.ExtensionMethods
 
         public static bool ContainLayerMasks(this LayerMask mask, LayerMask maskB)
         {
-            return (mask & maskB) == maskB; // Bitwise AND checks if all layers in maskB are in mask
+            return (mask & maskB) == maskB;
         }
 
         public static LayerMask AddLayerMasks(this LayerMask mask, LayerMask maskB)
         {
-            return mask | maskB; // Bitwise OR combines both LayerMasks
+            return mask | maskB;
         }
 
         public static LayerMask RemoveLayerMasks(this LayerMask mask, LayerMask maskB)
         {
-            return mask & ~maskB; // Bitwise AND with NOT properly removes layers
+            return mask & ~maskB;
         }
     }
 }

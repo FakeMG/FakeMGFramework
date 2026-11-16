@@ -309,9 +309,6 @@ namespace FakeMG.Framework.UI.Popup
             }
         }
 
-        /// <summary>
-        /// Returns whichever of A/B is not assigned to the current top layer.
-        /// </summary>
         private Image NextBackground()
         {
             if (_layers.Count == 0)

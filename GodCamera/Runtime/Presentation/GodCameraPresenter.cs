@@ -9,7 +9,6 @@ namespace FakeMG.GodCamera
         void RequestFocus(Vector3 focusPositionMeters);
     }
 
-    /// <summary>Reads engine input/projections and coordinates camera motion and rig presentation.</summary>
     public sealed class GodCameraPresenter : IInitializable, ITickable, System.IDisposable, ICameraFocusRequests
     {
         private readonly CameraInputSubscriber _cameraInputSubscriber;

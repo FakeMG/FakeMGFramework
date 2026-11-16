@@ -16,9 +16,6 @@ namespace FakeMG.ItemInteraction
 
         public bool HasHeldItem => _heldItemInstance != null;
 
-        /// <summary>
-        /// The visual of the held item, or null when nothing is held.
-        /// </summary>
         public GameObject HeldItemInstance => _heldItemInstance;
 
         #region Public Methods

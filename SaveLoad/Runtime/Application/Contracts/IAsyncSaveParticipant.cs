@@ -4,11 +4,6 @@ using Cysharp.Threading.Tasks;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Extends a normal Saveable with asynchronous preparation and restoration work. Large systems
-    /// use this boundary to persist external payloads before the small metadata file commits,
-    /// while existing synchronous Saveable components continue working without modification.
-    /// </summary>
     public interface IAsyncSaveParticipant
     {
         string ParticipantId { get; }

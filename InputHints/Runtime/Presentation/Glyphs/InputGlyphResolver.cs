@@ -22,7 +22,6 @@ namespace FakeMG.InputHints
 
         #region Public Methods
 
-        /// <param name="glyphs">Receives the glyphs of every action in the hint, in order.</param>
         public void Resolve(InputHint hint, InputGlyphSetSO glyphSetSO, List<InputGlyph> glyphs)
         {
             foreach (InputActionReference actionReference in hint.ActionReferences)

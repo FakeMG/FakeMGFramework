@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Projects camera frustum corners onto the ground plane to calculate the visible world area.
-    /// </summary>
     public class CameraVisibleAreaCalculator
     {
         private readonly Plane _groundPlane = new(Vector3.up, Vector3.zero);

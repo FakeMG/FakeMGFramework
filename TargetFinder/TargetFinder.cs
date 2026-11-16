@@ -126,7 +126,6 @@ namespace FakeMG.Framework.TargetFinder
 
             float distance = direction.magnitude;
 
-            // Check if positions are too close to get a meaningful direction
             if (distance < 0.5f) return true;
 
             return _is2DMode

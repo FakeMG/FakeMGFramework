@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Centralizes validation shared by concrete output-definition types.
-    /// </summary>
     internal static class CycleOutputValidation
     {
         #region Public Methods

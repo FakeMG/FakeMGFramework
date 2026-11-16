@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Represents a one-time request to change authoritative or presentation time.
-    /// </summary>
     public readonly struct TimeCommand
     {
         public TimeCommandMode Mode { get; }

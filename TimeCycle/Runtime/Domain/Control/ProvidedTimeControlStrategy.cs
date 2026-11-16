@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Samples authoritative cycle time from one externally owned provider.
-    /// </summary>
     internal sealed class ProvidedTimeControlStrategy : ITimeControlStrategy
     {
         private readonly ITimeOfCycleTimeProvider _timeProvider;

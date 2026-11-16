@@ -7,14 +7,6 @@ using UnityEngine.AddressableAssets;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Shared behavior for visual modules: load the addressable visual prefab,
-    /// instantiate it under the default tutorial visual root or under a tutorial target
-    /// chosen per module, configure its content, then animate it in. Expected failures
-    /// (missing parent target, failed configuration) are reported by returning false so
-    /// the step can skip (required) or continue (optional) without exceptions.
-    /// Visual modules block completion so the step waits for the show animation to finish.
-    /// </summary>
     [Serializable]
     public abstract class TutorialVisualModuleBase<TView> : ITutorialModule where TView : TutorialVisualView
     {

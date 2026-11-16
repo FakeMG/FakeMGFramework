@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Tracks evaluation and an optional in-flight profile transition for one output.
-    /// </summary>
     internal sealed class CycleOutputRuntimeEntry
     {
         public CycleOutputDefinition Definition { get; }

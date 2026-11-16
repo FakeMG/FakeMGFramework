@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Converts rectangular grid bounds to deterministic cell offsets and validates saved offsets
-    /// before reconstructing their canonical bounds.
-    /// </summary>
     public static class RectangularGridFootprintCellOffsets
     {
         #region Public Methods

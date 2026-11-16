@@ -5,10 +5,6 @@ using FakeMG.Framework;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Discovers self-contained world folders and validates manifest/snapshot ownership before
-    /// exposing them to world selection code.
-    /// </summary>
     public sealed class WorldSaveCatalog
     {
         private readonly ISaveDataStore _saveDataStore;

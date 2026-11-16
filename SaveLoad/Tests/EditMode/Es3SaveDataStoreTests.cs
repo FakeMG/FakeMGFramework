@@ -6,10 +6,6 @@ using NUnit.Framework;
 
 namespace FakeMG.SaveLoad.Tests
 {
-    /// <summary>
-    /// Verifies that the ES3 adapter serializes save content without owning atomic replacement or
-    /// backup files.
-    /// </summary>
     public sealed class Es3SaveDataStoreTests
     {
         private string _temporaryFilePath;

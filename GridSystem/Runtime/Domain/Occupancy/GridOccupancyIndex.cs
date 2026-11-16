@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Maintains a lookup from grid cells to the objects occupying them.
-    /// </summary>
     internal sealed class GridOccupancyIndex
     {
         private readonly Dictionary<Vector3Int, GridOccupantData> _occupiedCells = new();

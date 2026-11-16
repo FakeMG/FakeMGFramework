@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Stores the authoritative current and target values shared by camera motion behaviors.
-    /// </summary>
     public sealed class CameraMotionState
     {
         private CameraRigState _currentRigState;

@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>Owns zoom targets, ground-anchor correction, and zoom/focus smoothing.</summary>
     public sealed class CameraZoomMotion
     {
         private readonly CameraZoomCalculator _zoomCalculator;

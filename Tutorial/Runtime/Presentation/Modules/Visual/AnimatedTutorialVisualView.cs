@@ -5,11 +5,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Fade-and-scale visual view usable directly for simple visuals or as a base for
-    /// content-specific views (text box, pointer, framing). Animates via DOTween so
-    /// nothing appears or disappears instantly.
-    /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
     public class AnimatedTutorialVisualView : TutorialVisualView
     {
@@ -48,9 +43,6 @@ namespace FakeMG.Tutorial
             gameObject.SetActive(false);
         }
 
-        /// <summary>
-        /// Clamps an overlay-canvas screen position so the element stays fully on screen.
-        /// </summary>
         protected static Vector3 ClampToScreen(Vector3 screenPosition, Vector2 paddingPixels)
         {
             screenPosition.x = Mathf.Clamp(screenPosition.x, paddingPixels.x, Screen.width - paddingPixels.x);

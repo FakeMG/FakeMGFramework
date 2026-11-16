@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Converts screen-space pointer positions into grid-aligned placement positions.
-    /// </summary>
     public sealed class GridPointerProjector
     {
         private const float MAX_POINTER_RAYCAST_DISTANCE_METERS = 100f;

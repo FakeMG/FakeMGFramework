@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Resolves profile layers and rejects invalid effective configurations atomically.
-    /// </summary>
     internal static class TimeOfCycleConfigurationResolver
     {
         #region Public Methods

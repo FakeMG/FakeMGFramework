@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Calculates discrete yaw targets and interpolates correctly across the zero-degree boundary.
-    /// </summary>
     public class CameraRotationStepper
     {
         #region Public Methods

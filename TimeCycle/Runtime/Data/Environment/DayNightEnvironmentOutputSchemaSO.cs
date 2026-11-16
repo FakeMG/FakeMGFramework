@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Owns the compiler-checked output-key contract shared by the default profile and environment applicators.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.TIME_CYCLE + "/Environment Output Schema")]
     public sealed class DayNightEnvironmentOutputSchemaSO : ScriptableObject
     {

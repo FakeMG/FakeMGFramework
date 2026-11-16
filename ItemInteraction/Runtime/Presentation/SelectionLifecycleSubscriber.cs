@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.ItemInteraction
 {
-    /// <summary>
-    /// Subscribes a character's <see cref="SelectionPresenter"/> to its selection and held-prefab preload while enabled.
-    /// </summary>
     public sealed class SelectionLifecycleSubscriber : MonoBehaviour
     {
         private ISelectionChangeSource _selectionChangeSource;

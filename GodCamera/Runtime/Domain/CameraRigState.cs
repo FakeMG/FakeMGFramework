@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Represents the complete transform and projection state applied to a camera rig.
-    /// </summary>
     public struct CameraRigState
     {
         public Vector3 FocusPositionMeters;

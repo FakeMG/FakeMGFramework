@@ -24,14 +24,12 @@ namespace FakeMG.SOEventSystem.Editor
         private ScriptableObject _selectedChannel;
         private Vector2 _scrollPosition;
 
-        // Caches for optimization
         private List<MonoBehaviour> _cachedListeners;
         private List<MonoBehaviour> _cachedCallers;
         private ScriptableObject _lastSelectedChannel;
         private readonly Dictionary<MonoBehaviour, SerializedObject> _listenerSerializedObjects = new();
         private readonly Dictionary<MonoBehaviour, bool> _listenerFoldouts = new();
 
-        // Resize state
         private float _treeViewHeight = 200;
         private const float MIN_TREE_VIEW_HEIGHT = 50;
         private const float MAX_TREE_VIEW_HEIGHT = 500;
@@ -77,7 +75,6 @@ namespace FakeMG.SOEventSystem.Editor
 
         private void OnGUI()
         {
-            // Top bar for label and refresh button
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Event Channels", EditorStyles.boldLabel);
             if (GUILayout.Button("Refresh", GUILayout.Width(80)))
@@ -87,18 +84,14 @@ namespace FakeMG.SOEventSystem.Editor
 
             EditorGUILayout.EndHorizontal();
 
-            // Calculate the total available height, accounting for the top bar
-            float topBarHeight = EditorGUIUtility.singleLineHeight + 5; // Label height + spacing
+            float topBarHeight = EditorGUIUtility.singleLineHeight + 5;
             float totalHeight = position.height - topBarHeight;
 
-            // Ensure TreeView height is within bounds
             _treeViewHeight = Mathf.Clamp(_treeViewHeight, MIN_TREE_VIEW_HEIGHT, MAX_TREE_VIEW_HEIGHT);
 
-            // TreeView section
             Rect treeRect = new Rect(0, topBarHeight, position.width, _treeViewHeight);
             _treeView.OnGUI(treeRect);
 
-            // Splitter
             _splitterRect = new Rect(0, topBarHeight + _treeViewHeight, position.width, SPLITTER_WIDTH);
             EditorGUIUtility.AddCursorRect(_splitterRect, MouseCursor.ResizeVertical);
             if (Event.current.type == EventType.MouseDown && _splitterRect.Contains(Event.current.mousePosition))
@@ -120,9 +113,8 @@ namespace FakeMG.SOEventSystem.Editor
                 }
             }
 
-            EditorGUI.DrawRect(_splitterRect, new Color(0.3f, 0.3f, 0.3f)); // Draw splitter line
+            EditorGUI.DrawRect(_splitterRect, new Color(0.3f, 0.3f, 0.3f));
 
-            // Details section
             if (_selectedChannel)
             {
                 Rect detailsRect = new Rect(0, topBarHeight + _treeViewHeight + SPLITTER_WIDTH, position.width,

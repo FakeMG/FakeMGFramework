@@ -47,19 +47,16 @@ namespace FakeMG.Framework
         {
             if (_currentBounces < _bounceCount)
             {
-                // Bounce logic: reverse Y velocity and reduce its magnitude
                 _velocity.y = -_velocity.y * 0.5f;
                 _velocity.x *= _velocityXZDamping;
                 _velocity.z *= _velocityXZDamping;
 
                 _currentBounces++;
 
-                // Ensure the object stays above the ground
                 transform.position = new Vector3(transform.position.x, _groundY + 0.01f, transform.position.z);
             }
             else
             {
-                // Stop the object
                 _isFalling = false;
                 _currentBounces = 0;
                 _velocity = Vector3.zero;

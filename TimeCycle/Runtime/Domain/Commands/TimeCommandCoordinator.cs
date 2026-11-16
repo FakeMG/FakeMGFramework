@@ -7,9 +7,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Validates and executes one-time clock commands while publishing their observable outcomes.
-    /// </summary>
     internal sealed class TimeCommandCoordinator
     {
         private const double TIME_EPSILON_SECONDS = 0.000001d;

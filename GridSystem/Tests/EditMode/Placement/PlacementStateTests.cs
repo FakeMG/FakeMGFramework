@@ -5,9 +5,6 @@ using UnityEngine.TestTools;
 
 namespace FakeMG.GridSystem.Tests.EditMode
 {
-    /// <summary>
-    /// Locks the committed placement-state contract used by runtime placement and save/load.
-    /// </summary>
     public sealed class PlacementStateTests
     {
         private const string FIRST_INSTANCE_ID = "instance-a";

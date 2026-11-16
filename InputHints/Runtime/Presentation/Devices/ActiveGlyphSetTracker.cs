@@ -5,11 +5,6 @@ using VContainer.Unity;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>
-    /// Follows the device the player pressed last and picks the glyph set that draws it, so hints switch between keyboard,
-    /// Xbox, PlayStation and other families as the player switches. Falls back to the most recently used device that is
-    /// still connected when the followed one is unplugged.
-    /// </summary>
     public sealed class ActiveGlyphSetTracker : IInitializable, IDisposable
     {
         private readonly InputGlyphLibrarySO _glyphLibrarySO;

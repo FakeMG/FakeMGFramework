@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Applies configured time outputs to the primary directional light and RenderSettings sun reference.
-    /// </summary>
     [DefaultExecutionOrder(TimeOfCycleExecutionOrder.ENVIRONMENT_APPLICATOR)]
     public sealed class DirectionalLightOutputApplicator : MonoBehaviour, ITimeOfCycleOutputApplicator
     {

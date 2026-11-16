@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Owns the lifetime, monotonic progress, cancellation, and completion of one active time command.
-    /// </summary>
     internal sealed class TimeCommandRunner
     {
         private ActiveCommand _activeCommand;
@@ -85,9 +82,6 @@ namespace FakeMG.TimeCycle
 
         #endregion
 
-        /// <summary>
-        /// Stores mutable state belonging only to the active command execution.
-        /// </summary>
         private sealed class ActiveCommand
         {
             public long CommandId { get; }

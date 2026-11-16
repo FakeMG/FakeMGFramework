@@ -27,7 +27,6 @@ namespace FakeMG.Framework.UI
         /// <summary>Every view created so far, shown or not, e.g. to unsubscribe from them on teardown.</summary>
         public IReadOnlyList<TView> CreatedViews => _views;
 
-        /// <summary>A shown view.</summary>
         public TView this[int index]
         {
             get
@@ -43,7 +42,6 @@ namespace FakeMG.Framework.UI
 
         #region Public Methods
 
-        /// <summary>Creates views by instantiating the prefab under the parent.</summary>
         public ReusableViewList(TView prefab, Transform parent)
         {
             _prefab = prefab;
@@ -56,7 +54,6 @@ namespace FakeMG.Framework.UI
             _createView = createView;
         }
 
-        /// <summary>Shows exactly the first <paramref name="count"/> views.</summary>
         public void Show(int count)
         {
             for (int i = ShownCount; i < count; i++)
@@ -89,7 +86,6 @@ namespace FakeMG.Framework.UI
             return view;
         }
 
-        /// <summary>Hides every shown view from the index on.</summary>
         public void HideFrom(int count)
         {
             int keptCount = Mathf.Max(0, count);

@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Exposes evaluated output values without exposing runtime storage.
-    /// </summary>
     public interface IReadOnlyCycleOutputState
     {
         bool TryGetValue(BoolCycleOutputKeySO outputKeySO, out bool value);

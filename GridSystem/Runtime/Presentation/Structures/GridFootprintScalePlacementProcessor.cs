@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Applies canonical cell bounds and their runtime-derived dimensions before grid validation.
-    /// </summary>
     public sealed class GridFootprintScalePlacementProcessor : IGridOccupantPlacementProcessor
     {
         private readonly BoundsInt _cellBounds;

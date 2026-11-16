@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Maps one named period start to an integer or enum-backed state.
-    /// </summary>
     [Serializable]
     public sealed class IntPeriodValue : IPeriodCycleValue<int>
     {

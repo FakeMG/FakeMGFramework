@@ -19,7 +19,7 @@ namespace FakeMG.FortuneWheel
         [SerializeField] private Image _auraImage;
         [SerializeField] private Transform _x2Text;
 
-        private Vector3 _initialTextScale; // used in the x2 text animation
+        private Vector3 _initialTextScale;
         private Dictionary<IdentitySO, int> _rewardItems;
 
         public event Action<Action> OnClaimWithAdRequested;
@@ -54,7 +54,6 @@ namespace FakeMG.FortuneWheel
 
         protected override Sequence CreateShowSequence()
         {
-            // Clear existing items
             foreach (Transform child in _gridLayoutContainer.transform)
             {
                 Destroy(child.gameObject);
@@ -77,15 +76,13 @@ namespace FakeMG.FortuneWheel
                 .SetEase(Ease.OutCubic)
                 .SetLink(_canvasGroup.gameObject));
 
-            // Populate with new items
             foreach (var kvp in _rewardItems)
             {
                 var itemUI = Instantiate(_itemUIUpdaterPrefab, _gridLayoutContainer.transform);
                 itemUI.transform.SetAsFirstSibling();
                 itemUI.UpdateUIAsync(kvp.Key, kvp.Value).Forget();
-                itemUI.transform.localScale = Vector3.zero; // Start with scale zero
+                itemUI.transform.localScale = Vector3.zero;
 
-                // Animate the item into view
                 sequence.Append(itemUI.transform.DOScale(Vector3.one, 0.3f)
                     .SetEase(Ease.OutBack)
                     .SetLink(itemUI.gameObject));
@@ -120,7 +117,6 @@ namespace FakeMG.FortuneWheel
 
         protected override void ShowImmediate()
         {
-            // Clear existing items
             foreach (Transform child in _gridLayoutContainer.transform)
             {
                 Destroy(child.gameObject);
@@ -142,7 +138,7 @@ namespace FakeMG.FortuneWheel
                 var itemUI = Instantiate(_itemUIUpdaterPrefab, _gridLayoutContainer.transform);
                 itemUI.transform.SetAsFirstSibling();
                 itemUI.UpdateUIAsync(kvp.Key, kvp.Value).Forget();
-                itemUI.transform.localScale = Vector3.one; // Set to one for immediate visibility
+                itemUI.transform.localScale = Vector3.one;
             }
 
             _claimButton.transform.localScale = Vector3.one;

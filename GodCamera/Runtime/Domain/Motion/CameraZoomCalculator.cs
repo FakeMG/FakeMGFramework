@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Calculates profile-limited zoom targets and world-space anchor corrections.
-    /// </summary>
     public class CameraZoomCalculator
     {
         #region Public Methods

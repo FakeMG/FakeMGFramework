@@ -12,10 +12,6 @@ using ObjectID = System.Int32;
 
 namespace FakeMG.ActionMapManagement
 {
-    /// <summary>
-    /// Stores unordered pairs of action maps which cannot be active together.
-    /// It validates duplicate and self-referencing pairs and can remove invalid entries in the editor.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ACTION_MAP_MANAGEMENT + "/ActionMapConflictsPairsSO")]
     public class ActionMapConflictsPairsSO : ScriptableObject
     {
@@ -73,7 +69,6 @@ namespace FakeMG.ActionMapManagement
                 ObjectID idA = GetObjectID(pair.ActionMapA);
                 ObjectID idB = GetObjectID(pair.ActionMapB);
 
-                // Normalize pair order to treat (A,B) and (B,A) as identical
                 var normalizedPair = idA < idB ? (idA, idB) : (idB, idA);
 
                 if (seen.Add(normalizedPair))

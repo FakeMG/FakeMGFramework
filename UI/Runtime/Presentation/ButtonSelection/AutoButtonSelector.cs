@@ -6,12 +6,6 @@ using UnityEngine.UI;
 
 namespace FakeMG.Framework.UI.ButtonSelection
 {
-    /// <summary>
-    /// Automatically selects a default button when enabled and restores the previous selection when disabled.
-    /// <para>
-    /// Used for pop-up menus or panels to ensure a button is always selected.
-    /// </para>
-    /// </summary>
     public class AutoButtonSelector : MonoBehaviour
     {
         [SerializeField] private Button _defaultButton;

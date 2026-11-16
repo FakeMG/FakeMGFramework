@@ -7,11 +7,6 @@ using UnityEngine.U2D;
 
 namespace FakeMG.InputHints.Editor
 {
-    /// <summary>
-    /// Packs the glyph sprites of one device family into a Sprite Atlas V2, so a hint bar drawn for that family batches into
-    /// one draw call. Only the sprites the glyph sets use are packed, which keeps unused glyphs of a pack out of the atlas.
-    /// Packing again replaces the atlas's sprites and keeps its GUID, so references survive a rebuild.
-    /// </summary>
     public static class InputGlyphAtlasPacker
     {
         private const int PADDING_PIXELS = 4;

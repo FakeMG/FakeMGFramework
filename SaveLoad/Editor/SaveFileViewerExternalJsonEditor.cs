@@ -6,11 +6,6 @@ using UnityEditor;
 
 namespace FakeMG.SaveLoad.Editor
 {
-    /// <summary>
-    /// Round-trips raw JSON through the external script editor (Preferences > External Tools). The JSON is written to a
-    /// file under the project's Temp folder, which Unity wipes on exit, and every save made in the external editor is
-    /// reported back through <see cref="TryReadSavedJson"/>.
-    /// </summary>
     internal sealed class SaveFileViewerExternalJsonEditor
     {
         private const string TEMP_SUBDIRECTORY_NAME = "SaveFileViewer";

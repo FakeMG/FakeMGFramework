@@ -4,11 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.ItemInteraction
 {
-    /// <summary>
-    /// What a character holds when its hand is empty, so a selection is never null.
-    /// It has no held prefab and no holding pose; its actions play through the same use pipeline as held items.
-    /// Games subclass it, or implement IActionItem on their own asset, to attach data such as an empty-hand attack.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ITEM_INTERACTION + "/Empty Hand Item")]
     public class EmptyHandItemSO : ScriptableObject, IActionItem
     {

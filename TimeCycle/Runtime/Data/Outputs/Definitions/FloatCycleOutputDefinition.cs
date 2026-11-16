@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Evaluates a cyclic floating-point curve.
-    /// </summary>
     [Serializable]
     public sealed class FloatCycleOutputDefinition : CycleOutputDefinition
     {

@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Carries the final status of one time command request.
-    /// </summary>
     public readonly struct TimeCommandResult
     {
         public long CommandId { get; }

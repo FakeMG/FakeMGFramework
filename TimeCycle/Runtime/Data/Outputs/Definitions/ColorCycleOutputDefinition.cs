@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Evaluates a cyclic color curve.
-    /// </summary>
     [Serializable]
     public sealed class ColorCycleOutputDefinition : CycleOutputDefinition
     {

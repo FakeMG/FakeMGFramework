@@ -86,9 +86,6 @@ namespace FakeMG.Audio
         }
     }
 
-    /// <summary>
-    /// Represents a group of AudioClips that can be treated as one, and provides automatic randomisation or sequencing based on the <c>SequenceMode</c> value.
-    /// </summary>
     [Serializable]
     public class AudioClipsGroup
     {
@@ -98,26 +95,19 @@ namespace FakeMG.Audio
         private int _nextClipToPlay = -1;
         private int _lastClipPlayed = -1;
 
-        /// <summary>
-        /// Chooses the next clip in the sequence, either following the order or randomly.
-        /// </summary>
-        /// <returns>A reference to an AudioClip</returns>
         public AudioClip GetNextClip()
         {
-            // Fast out if there is only one clip to play
             if (AudioClips.Length == 1)
                 return AudioClips[0];
 
             if (_nextClipToPlay == -1)
             {
-                // Index needs to be initialised: 0 if Sequential, random if otherwise
                 _nextClipToPlay = (_sequenceMode == SequenceMode.Sequential)
                     ? 0
                     : UnityEngine.Random.Range(0, AudioClips.Length);
             }
             else
             {
-                // Select next clip index based on the appropriate SequenceMode
                 switch (_sequenceMode)
                 {
                     case SequenceMode.Random:

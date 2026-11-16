@@ -4,9 +4,6 @@ using UnityEngine.AddressableAssets;
 
 namespace FakeMG.Framework
 {
-    /// <summary>
-    /// Base class for all items in the game
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/IdentitySO")]
     public class IdentitySO : SerializedScriptableObject
     {

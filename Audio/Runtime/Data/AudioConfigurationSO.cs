@@ -74,10 +74,8 @@ namespace FakeMG.Audio
 
         public void ApplyToWithVariations(AudioSource audioSource, AudioCueSO audioCue)
         {
-            // Apply base configuration first
             ApplyTo(audioSource);
 
-            // Apply random variations if specified
             if (audioCue.RandomVolume > 0f)
             {
                 float volumeMultiplier = Random.Range(1f - audioCue.RandomVolume, 1f + audioCue.RandomVolume);

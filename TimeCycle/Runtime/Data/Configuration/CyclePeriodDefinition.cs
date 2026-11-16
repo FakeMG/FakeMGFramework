@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Defines the identifier and normalized inclusive start position of one named cycle period.
-    /// </summary>
     [Serializable]
     public sealed class CyclePeriodDefinition
     {

@@ -68,8 +68,8 @@ namespace ExtensionMethods.EditMode
         public void ContainLayerMasks_WhenMaskContainsAllLayersOfMaskB_ReturnsTrue()
         {
             // Arrange
-            LayerMask mask = (1 << 3) | (1 << 5) | (1 << 7); // Layers 3, 5, and 7
-            LayerMask maskB = (1 << 3) | (1 << 5); // Layers 3 and 5
+            LayerMask mask = (1 << 3) | (1 << 5) | (1 << 7);
+            LayerMask maskB = (1 << 3) | (1 << 5);
 
             // Act
             bool result = mask.ContainLayerMasks(maskB);
@@ -82,8 +82,8 @@ namespace ExtensionMethods.EditMode
         public void ContainLayerMasks_WhenMaskMissingLayersFromMaskB_ReturnsFalse()
         {
             // Arrange
-            LayerMask mask = (1 << 3) | (1 << 7); // Layers 3 and 7
-            LayerMask maskB = (1 << 3) | (1 << 5); // Layers 3 and 5
+            LayerMask mask = (1 << 3) | (1 << 7);
+            LayerMask maskB = (1 << 3) | (1 << 5);
 
             // Act
             bool result = mask.ContainLayerMasks(maskB);
@@ -96,8 +96,8 @@ namespace ExtensionMethods.EditMode
         public void ContainLayerMasks_WithEmptyMaskB_ReturnsTrue()
         {
             // Arrange
-            LayerMask mask = (1 << 3) | (1 << 5); // Layers 3 and 5
-            LayerMask emptyMask = 0; // No layers
+            LayerMask mask = (1 << 3) | (1 << 5);
+            LayerMask emptyMask = 0;
 
             // Act
             bool result = mask.ContainLayerMasks(emptyMask);
@@ -110,8 +110,8 @@ namespace ExtensionMethods.EditMode
         public void ContainLayerMasks_WithEmptyMask_ReturnsFalseForNonEmptyMaskB()
         {
             // Arrange
-            LayerMask emptyMask = 0; // No layers
-            LayerMask maskB = (1 << 3); // Layer 3
+            LayerMask emptyMask = 0;
+            LayerMask maskB = (1 << 3);
 
             // Act
             bool result = emptyMask.ContainLayerMasks(maskB);
@@ -124,8 +124,8 @@ namespace ExtensionMethods.EditMode
         public void ContainLayerMasks_IdenticalMasks_ReturnsTrue()
         {
             // Arrange
-            LayerMask mask = (1 << 3) | (1 << 5) | (1 << 7); // Layers 3, 5, and 7
-            LayerMask identicalMask = (1 << 3) | (1 << 5) | (1 << 7); // Same layers
+            LayerMask mask = (1 << 3) | (1 << 5) | (1 << 7);
+            LayerMask identicalMask = (1 << 3) | (1 << 5) | (1 << 7);
 
             // Act
             bool result = mask.ContainLayerMasks(identicalMask);
@@ -138,9 +138,9 @@ namespace ExtensionMethods.EditMode
         public void AddLayerMasks_WithNoOverlap_CombinesMasks()
         {
             // Arrange
-            LayerMask mask1 = 1 << 3; // Layer 3
-            LayerMask mask2 = 1 << 5; // Layer 5
-            LayerMask expected = (1 << 3) | (1 << 5); // Both layers
+            LayerMask mask1 = 1 << 3;
+            LayerMask mask2 = 1 << 5;
+            LayerMask expected = (1 << 3) | (1 << 5);
 
             // Act
             LayerMask result = mask1.AddLayerMasks(mask2);
@@ -155,9 +155,9 @@ namespace ExtensionMethods.EditMode
         public void AddLayerMasks_WithOverlap_CombinesCorrectly()
         {
             // Arrange
-            LayerMask mask1 = (1 << 3) | (1 << 5); // Layers 3 and 5
-            LayerMask mask2 = (1 << 5) | (1 << 7); // Layers 5 and 7
-            LayerMask expected = (1 << 3) | (1 << 5) | (1 << 7); // Layers 3, 5, and 7
+            LayerMask mask1 = (1 << 3) | (1 << 5);
+            LayerMask mask2 = (1 << 5) | (1 << 7);
+            LayerMask expected = (1 << 3) | (1 << 5) | (1 << 7);
 
             // Act
             LayerMask result = mask1.AddLayerMasks(mask2);
@@ -173,8 +173,8 @@ namespace ExtensionMethods.EditMode
         public void RemoveLayerMasks_WithPresentLayer_RemovesLayers()
         {
             // Arrange
-            LayerMask original = (1 << 3) | (1 << 5) | (1 << 7); // Layers 3, 5, and 7
-            LayerMask toRemove = (1 << 5); // Layer 5
+            LayerMask original = (1 << 3) | (1 << 5) | (1 << 7);
+            LayerMask toRemove = (1 << 5);
 
             // Act
             LayerMask result = original.RemoveLayerMasks(toRemove);
@@ -192,8 +192,8 @@ namespace ExtensionMethods.EditMode
         public void RemoveLayerMasks_WithNonPresentLayer_Unchanged()
         {
             // Arrange
-            LayerMask original = (1 << 3) | (1 << 7); // Layers 3 and 7
-            LayerMask toRemove = (1 << 5); // Layer 5 (not in original)
+            LayerMask original = (1 << 3) | (1 << 7);
+            LayerMask toRemove = (1 << 5);
 
             // Act
             LayerMask result = original.RemoveLayerMasks(toRemove);

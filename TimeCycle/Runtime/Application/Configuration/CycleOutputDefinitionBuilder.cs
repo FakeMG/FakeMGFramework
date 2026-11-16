@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Centralizes evaluator construction shared by concrete Unity-serializable output definitions.
-    /// </summary>
     internal static class CycleOutputDefinitionBuilder
     {
         #region Public Methods

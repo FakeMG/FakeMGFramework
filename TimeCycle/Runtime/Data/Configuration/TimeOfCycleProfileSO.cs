@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores reusable defaults, named periods, and time-driven output definitions.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/Time Cycle/Time Of Cycle Profile SO")]
     public sealed class TimeOfCycleProfileSO : ScriptableObject
     {

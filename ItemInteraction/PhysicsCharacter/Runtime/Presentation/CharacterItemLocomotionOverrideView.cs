@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.ItemInteraction
 {
-    /// <summary>
-    /// Hands the selected item's locomotion overrides to the character.
-    /// A profile that is not a <see cref="CharacterItemAnimationProfileSO"/>, or no profile, keeps the base locomotion.
-    /// </summary>
     public sealed class CharacterItemLocomotionOverrideView : MonoBehaviour
     {
         [SerializeField] private CharacterAnimator _characterAnimator;

@@ -7,11 +7,6 @@ using VContainer;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Debug tools for programmers: jump to a step, reset progress, and force-complete
-    /// the current step. Force-completing the live step advances the flow and is
-    /// recorded in saved progress by the runner (unless the session is a forced replay).
-    /// </summary>
     public sealed class TutorialDebugController : MonoBehaviour
     {
         [SerializeField] private string _tutorialId;
@@ -55,10 +50,6 @@ namespace FakeMG.Tutorial
             _store.ResetAll();
         }
 
-        /// <summary>
-        /// Marks the given preceding steps completed in saved progress so the next start
-        /// of the tutorial resumes at the target step.
-        /// </summary>
         [Button]
         public void PrepareJumpToStep()
         {

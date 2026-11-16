@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Describes the observable state of the repeating cycle at one frame.
-    /// </summary>
     public readonly struct TimeOfCycleState
     {
         public double CycleTimeSeconds { get; }

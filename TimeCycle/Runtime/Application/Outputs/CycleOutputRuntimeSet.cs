@@ -4,9 +4,6 @@ using FakeMG.Framework;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Owns evaluated output values and independent transitions between effective profiles.
-    /// </summary>
     internal sealed class CycleOutputRuntimeSet
     {
         private readonly Dictionary<CycleOutputKeySO, CycleOutputRuntimeEntry> _entryByOutputKey = new();

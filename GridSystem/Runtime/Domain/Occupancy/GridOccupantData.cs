@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Describes an object occupying one or more grid cells.
-    /// </summary>
     public sealed class GridOccupantData
     {
         private readonly List<Vector3Int> _occupiedCells;

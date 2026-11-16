@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.Toast
 {
-    /// <summary>
-    /// Pure stack layout math. Offsets assume each toast's pivot faces the stack direction
-    /// (see <see cref="GetPivotForDirection"/>); the manager applies that pivot to pooled views.
-    /// </summary>
     public static class ToastStackLayout
     {
         /// <summary>Pivot that makes a toast grow away from the entry position, so stacked toasts never overlap.</summary>

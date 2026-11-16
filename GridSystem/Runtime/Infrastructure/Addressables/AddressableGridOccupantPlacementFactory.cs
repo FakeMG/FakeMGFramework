@@ -10,9 +10,6 @@ using VContainer.Unity;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Loads structure prefabs through Addressables and owns matching instance/handle cleanup.
-    /// </summary>
     internal sealed class AddressableGridOccupantPlacementFactory : IGridOccupantPlacementFactory
     {
         private readonly bool _enableLogging;

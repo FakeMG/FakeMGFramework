@@ -34,7 +34,6 @@ namespace FakeMG.FortuneWheel
         [SerializeField] private Button _exitButton;
 
         [Header("Visual Effects")]
-        // [SerializeField] private ParticleSystem confettiParticleSystem;
         [SerializeField] private AudioCue _claimAudioCue;
         [SerializeField] private AudioCue _spinAudioCue;
 
@@ -51,10 +50,8 @@ namespace FakeMG.FortuneWheel
             UpdateSegmentAngle();
             UpdateCooldownUI();
 
-            // Subscribe to game logic events
             _fortuneWheelGameLogic.OnSpinStarted += Rotate;
 
-            // Init reward items
             for (int rewardIndex = 0; rewardIndex < _gachaSystem.Rewards.Count; rewardIndex++)
             {
                 var reward = _gachaSystem.Rewards[rewardIndex];
@@ -86,7 +83,6 @@ namespace FakeMG.FortuneWheel
 
         private void OnDestroy()
         {
-            // Unsubscribe from events
             _fortuneWheelGameLogic.OnSpinStarted -= Rotate;
         }
 
@@ -111,7 +107,6 @@ namespace FakeMG.FortuneWheel
         {
             if (_isRotating) return;
 
-            // Hide buttons
             _spinButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
             _spinWithAdButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
             _exitButton.transform.DOScale(Vector3.zero, 0.2f).SetEase(Ease.InBack);
@@ -120,16 +115,12 @@ namespace FakeMG.FortuneWheel
 
             _isRotating = true;
 
-            // Get current wheel rotation and normalize it
             float currentRotation = NormalizeAngle(_wheel.eulerAngles.z);
 
-            // Calculate the target angle for the chosen reward
             float targetAngle = NormalizeAngle(GetRewardAngle(_fortuneWheelGameLogic.ChosenRewardIndex));
 
-            // Calculate the shortest rotation needed to reach the target
             float angleDifference = Mathf.DeltaAngle(currentRotation, targetAngle);
 
-            // Add minimum rotations (ensure at least 2 full rotations)
             float totalRotation = MIN_ROTATIONS * 360f + angleDifference;
 
             _wheel.DORotate(new Vector3(0, 0, _wheel.eulerAngles.z + totalRotation), _spinDuration,
@@ -145,13 +136,11 @@ namespace FakeMG.FortuneWheel
 
         private void ShowRewardPopup(int rewardIndex)
         {
-            // confettiParticleSystem.Play();
             _claimAudioCue.PlayAudioCue();
 
             _rewardClaimPopupAnimator.UnsubscribeAllFromClaimButton();
             _rewardClaimPopupAnimator.SubscribeToClaimButton(multiplier =>
             {
-                // confettiParticleSystem.Stop();
                 _fortuneWheelGameLogic.GrantReward(multiplier);
 
                 _spinButton.transform.DOScale(Vector3.one, 0.2f).SetEase(Ease.OutBack);

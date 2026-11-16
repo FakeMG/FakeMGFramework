@@ -1,8 +1,5 @@
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Describes the committed operation that changed runtime placement state.
-    /// </summary>
     public enum PlacementChangeKind
     {
         Created,

@@ -6,10 +6,6 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>
-    /// The glyphs of one device family, such as keyboard and mouse or PlayStation controllers, keyed by control path.
-    /// Swapping glyph packs means swapping these assets; nothing else knows which pack is in use.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.INPUT_HINTS + "/Input Glyph Set SO")]
     public sealed class InputGlyphSetSO : ScriptableObject
     {

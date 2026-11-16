@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Pauses automatic advancement while retaining command policy in the owning request.
-    /// </summary>
     internal sealed class PauseTimeControlStrategy : ITimeControlStrategy
     {
         public bool IsValid => true;

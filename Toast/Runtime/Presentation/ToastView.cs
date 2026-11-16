@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.Toast
 {
-    /// <summary>
-    /// Applies message text and color, measures the wrapped text, clamps the visible height
-    /// and reports the final height so the manager can stack toasts. Width is owned by the prefab layout.
-    /// </summary>
     public class ToastView : MonoBehaviour
     {
         [Required]

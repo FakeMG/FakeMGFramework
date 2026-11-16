@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>One hint in the bar: its glyphs and label. Display-only, so it ignores the pointer.</summary>
     public sealed class InputHintBarEntry : MonoBehaviour
     {
         [SerializeField] private InputGlyphView _glyphPrefab;

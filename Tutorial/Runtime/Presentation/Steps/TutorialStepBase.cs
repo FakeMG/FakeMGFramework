@@ -8,14 +8,6 @@ using VContainer;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Base for code-defined tutorial steps. Handles the reusable lifecycle: validate
-    /// required targets (resolved by key so runtime UI works), skip if already satisfied,
-    /// activate modules (waiting for required and completion-blocking intros), wait for
-    /// completion, then always animate modules out. Subclasses declare how the step is
-    /// completed and whether it branches. Modules and required target keys are authored on
-    /// the inspector.
-    /// </summary>
     public abstract class TutorialStepBase : MonoBehaviour, ITutorialStep
     {
         [SerializeField] private string _stepId;

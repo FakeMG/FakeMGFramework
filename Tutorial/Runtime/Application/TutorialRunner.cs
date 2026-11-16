@@ -6,13 +6,6 @@ using VContainer;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Drives a single tutorial sequence from its first valid step to a valid end
-    /// state: executes each step, records the outcome into the session's progress,
-    /// and resolves the next step. Always clears the gate and releases loaded visuals
-    /// when the sequence ends. Whether progress is committed is decided by the progress
-    /// the service supplies (saved vs throwaway replay copy).
-    /// </summary>
     public sealed class TutorialRunner
     {
         private readonly TutorialTargetRegistry _targets;

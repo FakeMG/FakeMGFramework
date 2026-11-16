@@ -2,10 +2,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Defines serialization and key-based file access required by save orchestration. Implementations
-    /// do not own atomic replacement, backup rotation, flushing, or recovery policy.
-    /// </summary>
     public interface ISaveDataStore
     {
         bool FileExists(string saveFilePath);

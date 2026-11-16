@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle.Editor
 {
-    /// <summary>
-    /// Draws normalized authored positions with their current runtime-second equivalent.
-    /// </summary>
     [CustomPropertyDrawer(typeof(CycleProgressAttribute))]
     public sealed class CycleProgressPropertyDrawer : PropertyDrawer
     {

@@ -19,7 +19,6 @@ namespace FakeMG.Framework.Timer
             int minutes = currentTimeInSeconds / 60;
             int seconds = currentTimeInSeconds % 60;
 
-            // Format minutes
             _timeFormatBuffer[0] = (char)('0' + minutes / 10);
             _timeFormatBuffer[1] = (char)('0' + minutes % 10);
             _timeFormatBuffer[2] = ':';

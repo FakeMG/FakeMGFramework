@@ -16,9 +16,6 @@ namespace FakeMG.ItemInteraction
         Left,
     }
 
-    /// <summary>
-    /// Where a held prefab sits relative to the socket of the hand holding it.
-    /// </summary>
     [Serializable]
     public struct HandPose
     {
@@ -47,9 +44,6 @@ namespace FakeMG.ItemInteraction
         ItemActionSO PrimaryActionSO { get; }
     }
 
-    /// <summary>
-    /// An action item held in one hand as a prefab, with its own holding pose.
-    /// </summary>
     public interface IHeldItem : IActionItem, IItemAnimationProfileProvider
     {
         AssetReferenceGameObject HeldPrefabReference { get; }

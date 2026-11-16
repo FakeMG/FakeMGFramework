@@ -65,7 +65,6 @@ namespace FakeMG.InputContexts
             EventBus<HideInputContextEvent>.Raise(new HideInputContextEvent { Context = this });
         }
 
-        /// <summary>Handles the action with <paramref name="handler"/> while this context owns it. Pair with <see cref="RemoveHandler"/>.</summary>
         public void AddHandler(InputActionReference actionReference, Action handler)
         {
             _handlers.AddHandler(actionReference.action, handler);

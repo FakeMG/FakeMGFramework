@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Converts input vectors and pointer displacement into ground-plane pan movement.
-    /// </summary>
     public class CameraPanCalculator
     {
         #region Public Methods

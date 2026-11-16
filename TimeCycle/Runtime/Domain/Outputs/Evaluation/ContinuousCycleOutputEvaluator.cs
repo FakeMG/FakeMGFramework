@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Evaluates sorted continuous points including the cyclic final-to-first segment.
-    /// </summary>
     internal sealed class ContinuousCycleOutputEvaluator<T> : ICycleOutputEvaluator
     {
         private readonly double _cycleDurationSeconds;

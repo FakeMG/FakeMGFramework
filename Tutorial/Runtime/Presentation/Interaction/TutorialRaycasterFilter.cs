@@ -8,13 +8,6 @@ using VContainer;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// GraphicRaycaster that drops UI hits outside the tutorial's allowed targets while
-    /// a restriction is active. Replaces the default GraphicRaycaster on a canvas so the
-    /// EventSystem simply never reports blocked elements; interactables stay unaware of
-    /// the tutorial. Fires <see cref="OnBlockedSelectableClicked"/> when the player
-    /// presses a Selectable that was dropped by the filter.
-    /// </summary>
     public sealed class TutorialRaycasterFilter : GraphicRaycaster
     {
         [SerializeField] private List<RectTransform> _alwaysAllowedRoots = new();

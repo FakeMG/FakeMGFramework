@@ -3,10 +3,6 @@ using System.IO;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Owns crash-resistant file durability. It flushes complete temporary payloads, atomically
-    /// replaces canonical files while retaining one backup, and promotes only validated backups.
-    /// </summary>
     public sealed class AtomicFileTransaction : IAtomicFileTransaction
     {
         private readonly string _storageRootPath;

@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Converts profile-authored normalized positions into runtime clock seconds.
-    /// </summary>
     internal static class CycleProgressConversion
     {
         #region Public Methods

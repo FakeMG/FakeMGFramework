@@ -5,10 +5,6 @@ using NUnit.Framework;
 
 namespace FakeMG.SaveLoad.Tests
 {
-    /// <summary>
-    /// Verifies durable replacement independently from the serializer, including retained backup and
-    /// temporary-file cleanup under an injected test-only storage root.
-    /// </summary>
     public sealed class AtomicFileTransactionTests
     {
         private string _temporaryStorageRootPath;

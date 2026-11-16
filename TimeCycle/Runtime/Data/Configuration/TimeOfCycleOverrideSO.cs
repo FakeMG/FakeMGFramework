@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Replaces selected profile configuration while leaving unspecified values inherited.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/Time Cycle/Time Of Cycle Override SO")]
     public sealed class TimeOfCycleOverrideSO : ScriptableObject
     {

@@ -135,10 +135,8 @@ namespace FakeMG.Localization.Editor
             sb.AppendLine("\tpublic static class Loc");
             sb.AppendLine("\t{");
 
-            // section: Loc.Get(key) — data-driven lookup across all tables
             GenerateGetMethod(sb, tableResults);
 
-            // section: Per-table nested classes
             foreach (var (className, result) in tableResults)
             {
                 GenerateTableClass(sb, className, result);
@@ -191,7 +189,6 @@ namespace FakeMG.Localization.Editor
             sb.AppendLine($"\t\tpublic static class {className}");
             sb.AppendLine("\t\t{");
 
-            // Keys sub-class
             sb.AppendLine("\t\t\tpublic static class Keys");
             sb.AppendLine("\t\t\t{");
             foreach (var entry in entries)
@@ -201,7 +198,6 @@ namespace FakeMG.Localization.Editor
             sb.AppendLine("\t\t\t}");
             sb.AppendLine("");
 
-            // Strongly typed methods
             foreach (var entry in entries)
             {
                 string methodParams = BuildMethodParams(entry.Args);
@@ -245,7 +241,6 @@ namespace FakeMG.Localization.Editor
             return sanitized;
         }
 
-        // --- Helpers ---
 
         private static int RemoveStaleKeys(StringTableCollection collection, HashSet<string> csvKeys)
         {

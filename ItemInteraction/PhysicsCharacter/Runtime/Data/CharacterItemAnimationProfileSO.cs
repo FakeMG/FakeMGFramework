@@ -7,10 +7,6 @@ using UnityEngine.Serialization;
 
 namespace FakeMG.ItemInteraction
 {
-    /// <summary>
-    /// An item animation profile for Physics Character Controller characters, which can also replace their base locomotion
-    /// in chosen states while the item is held.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ITEM_INTERACTION + "/Character Animation Profile")]
     public sealed class CharacterItemAnimationProfileSO : ItemAnimationProfileSO, ICharacterLocomotionOverride
     {

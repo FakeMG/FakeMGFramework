@@ -15,7 +15,7 @@ namespace FakeMG.ActionMapManagement.Editor
         private ActionMapConflictsPairsSO _conflictPairsSO;
         private Vector2 _scrollPosition;
         private double _lastUpdateTime;
-        private const double UPDATE_INTERVAL = 0.5; // Update every 500ms
+        private const double UPDATE_INTERVAL = 0.5;
 
         [MenuItem(FakeMGEditorMenus.ROOT + "/Action Map Manager")]
         public static void ShowWindow()
@@ -114,7 +114,6 @@ namespace FakeMG.ActionMapManagement.Editor
         {
             EditorGUILayout.LabelField("Action Maps Status", EditorStyles.boldLabel);
 
-            // Get reflection info to access private fields
             Type managerType = _actionMapManager.GetType();
             FieldInfo activeMapsField = managerType.GetField("_activeMaps", BindingFlags.NonPublic | BindingFlags.Instance);
             FieldInfo suppressedByField = managerType.GetField("_suppressedBy", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -136,7 +135,6 @@ namespace FakeMG.ActionMapManagement.Editor
 
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition);
 
-            // Display all action maps from the InputActionAsset
             List<InputActionMap> actionMaps = new(_inputActionAsset.actionMaps);
 
             if (actionMaps.Count == 0)
@@ -158,16 +156,13 @@ namespace FakeMG.ActionMapManagement.Editor
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
-            // Determine status
             bool isActive = activeMaps.Contains(mapName);
             bool isSuppressed = suppressedBy.ContainsKey(mapName);
 
-            // Header with map name and status badge
             EditorGUILayout.BeginHorizontal();
 
             EditorGUILayout.LabelField(mapName, EditorStyles.boldLabel, GUILayout.ExpandWidth(true));
 
-            // Status badge
             if (isSuppressed)
             {
                 GUI.backgroundColor = Color.yellow;
@@ -187,7 +182,6 @@ namespace FakeMG.ActionMapManagement.Editor
 
             EditorGUILayout.EndHorizontal();
 
-            // Suppression info
             if (isSuppressed && suppressedBy.TryGetValue(mapName, out HashSet<string> suppressors))
             {
                 EditorGUILayout.BeginHorizontal();
@@ -196,7 +190,6 @@ namespace FakeMG.ActionMapManagement.Editor
                 EditorGUILayout.EndHorizontal();
             }
 
-            // Conflicts info
             HashSet<string> conflicts = _conflictPairsSO.GetConflictsFor(mapName);
             if (conflicts.Count > 0)
             {
@@ -212,7 +205,6 @@ namespace FakeMG.ActionMapManagement.Editor
 
         private void OnInspectorUpdate()
         {
-            // Request repaint periodically to update status
             double timeSinceLastUpdate = EditorApplication.timeSinceStartup - _lastUpdateTime;
             if (timeSinceLastUpdate >= UPDATE_INTERVAL)
             {

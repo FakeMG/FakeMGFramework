@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Defines one persistent request participating in priority arbitration.
-    /// </summary>
     public sealed class TimeControlRequest
     {
         public int Priority { get; }

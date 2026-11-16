@@ -3,9 +3,6 @@ using UnityEditor.TestTools.TestRunner.Api;
 
 namespace FakeMG.TestRunAddressablesLoadDelay.Editor
 {
-    /// <summary>
-    /// Applies the test-run Addressables load delay for the duration of every test run.
-    /// </summary>
     [InitializeOnLoad]
     public sealed class TestRunAddressablesLoadDelaySubscriber : ICallbacks
     {

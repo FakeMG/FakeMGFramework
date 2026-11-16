@@ -11,7 +11,6 @@ namespace FakeMG.Framework
 
         private void Awake()
         {
-            // Orthographic size is half the vertical size of the camera view in world units.
             _mainCamera.orthographicSize = (_targetWidth / _mainCamera.aspect) * 0.5f;
         }
 

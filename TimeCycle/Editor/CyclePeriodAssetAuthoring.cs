@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle.Editor
 {
-    /// <summary>Preserves shared period asset identity when display labels or filenames change.</summary>
     public static class CyclePeriodAssetAuthoring
     {
         #region Public Methods

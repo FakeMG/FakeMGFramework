@@ -6,11 +6,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Visual view that points at a UI target. The pointer is offset from the target so
-    /// it does not cover it, flips when any part would be outside the canvas,
-    /// and pulses with a looping scale animation to draw the eye.
-    /// </summary>
     public sealed class TutorialPointerView : AnimatedTutorialVisualView
     {
         [SerializeField] private RectTransform _positionRoot;

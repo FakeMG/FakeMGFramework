@@ -10,9 +10,6 @@ using UnityEngine.SceneManagement;
 
 namespace FakeMG.TimeCycle.Editor
 {
-    /// <summary>
-    /// Migrates legacy timeline seconds to normalized progress and environment applicators to typed output schemas.
-    /// </summary>
     public static class TimeCycleLegacyAssetMigration
     {
         private const int CURRENT_MIGRATION_VERSION = 2;

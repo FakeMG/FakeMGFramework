@@ -6,7 +6,6 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.InputHints.Tests.EditMode
 {
-    /// <summary>Builds the hints, contexts and glyph sets the tests share, and destroys what it created.</summary>
     internal sealed class InputHintTestFactory
     {
         private readonly List<Object> _createdObjects = new();

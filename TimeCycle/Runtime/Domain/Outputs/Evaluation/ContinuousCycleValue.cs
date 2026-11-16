@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores one typed continuous value at an evaluated time.
-    /// </summary>
     internal readonly struct ContinuousCycleValue<T>
     {
         public double TimeSeconds { get; }

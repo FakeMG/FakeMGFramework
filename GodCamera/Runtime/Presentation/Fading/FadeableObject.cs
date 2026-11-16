@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Defines how a scene object changes and restores its visibility for camera obstruction fading.
-    /// </summary>
     public abstract class FadeableObject : MonoBehaviour
     {
         #region Public Methods

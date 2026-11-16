@@ -6,9 +6,6 @@ using NUnit.Framework;
 
 namespace FakeMG.SaveLoad.Tests
 {
-    /// <summary>
-    /// Verifies migration ordering and per-step metadata advancement through storage abstractions.
-    /// </summary>
     public sealed class VersionMigratorTests
     {
         [Test]

@@ -2,10 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Carries the stable placement instance id and the placed definition on a runtime structure GameObject,
-    /// so occupant components can read their definition without duplicating it on the prefab.
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class GridOccupantIdentity : MonoBehaviour
     {

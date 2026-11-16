@@ -33,13 +33,10 @@ namespace FakeMG.Framework.ExtensionMethods
 
             Sequence animationSequence = DOTween.Sequence();
 
-            // Scale up animation
             animationSequence.Join(
                 canvasGroup.transform.DOScale(endScale, duration * 0.15f).SetEase(scaleEase)
             );
 
-            // Fly up animation (starts during scale up)
-            // Use screen percentage instead of fixed height
             float adaptiveFlyHeight = moveScreenPercentage;
             var canvas = canvasGroup.GetComponentInParent<Canvas>();
             if (canvas && canvas.renderMode != RenderMode.WorldSpace)
@@ -55,7 +52,6 @@ namespace FakeMG.Framework.ExtensionMethods
                 canvasGroup.transform.DOMoveY(initialPosition.y + adaptiveFlyHeight, duration).SetEase(moveEase)
             );
 
-            // Fade out animation (starts after scale up is halfway done)
             animationSequence.Insert(duration * 0.3f,
                 canvasGroup.DOFade(0f, duration * 0.4f).SetEase(fadeEase)
             );

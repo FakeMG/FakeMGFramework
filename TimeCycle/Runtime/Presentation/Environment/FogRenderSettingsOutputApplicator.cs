@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Applies time-driven fog state to Unity RenderSettings and restores the previous global state on teardown.
-    /// </summary>
     [DefaultExecutionOrder(TimeOfCycleExecutionOrder.ENVIRONMENT_APPLICATOR)]
     public sealed class FogRenderSettingsOutputApplicator : MonoBehaviour, ITimeOfCycleOutputApplicator
     {

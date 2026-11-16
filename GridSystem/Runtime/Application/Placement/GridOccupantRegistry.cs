@@ -2,9 +2,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Keeps placed structure runtime records keyed by their stable placement instance id.
-    /// </summary>
     internal sealed class GridOccupantRegistry
     {
         private readonly Dictionary<string, GridOccupantPlacement> _placedStructures = new();

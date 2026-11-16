@@ -2,10 +2,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.ItemInteraction
 {
-    /// <summary>
-    /// Keeps a character's selection presentations on its selected item: a new selection cancels the running use,
-    /// hides the old item, and shows the new one once its held prefab can be presented.
-    /// </summary>
     public sealed class SelectionPresenter
     {
         private readonly ISelectedItemSource _selectedItemSource;

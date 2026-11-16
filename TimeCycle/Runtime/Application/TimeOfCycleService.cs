@@ -8,9 +8,6 @@ using VContainer.Unity;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Coordinates configuration, clock, commands, persistent control, outputs, and public notifications.
-    /// </summary>
     public sealed class TimeOfCycleService : ITimeOfCycle, ITimeControlContext, IInitializable, ITickable, IDisposable
     {
         private readonly CycleOutputCoordinator _outputCoordinator;

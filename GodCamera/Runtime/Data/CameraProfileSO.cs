@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Defines projection, movement, zoom, rotation, and clipping settings for a camera rig.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.CAMERA + "/Camera Profile SO")]
     public class CameraProfileSO : ScriptableObject
     {

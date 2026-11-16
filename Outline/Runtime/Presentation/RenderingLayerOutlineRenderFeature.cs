@@ -7,9 +7,6 @@ using UnityEngine.Rendering.Universal;
 
 namespace FakeMG.Outline
 {
-    /// <summary>
-    /// Renders objects assigned to configured rendering layers with an outline material.
-    /// </summary>
     public sealed class RenderingLayerOutlineRenderFeature : ScriptableRendererFeature
     {
         [Serializable]
@@ -157,13 +154,11 @@ namespace FakeMG.Outline
 
                 builder.UseRendererList(passData.rendererList);
 
-                // Draw over the existing camera color.
                 builder.SetRenderAttachment(
                     resourceData.activeColorTexture,
                     0,
                     AccessFlags.Write);
 
-                // Use the existing camera depth for occlusion.
                 builder.SetRenderAttachmentDepth(
                     resourceData.activeDepthTexture,
                     AccessFlags.Read);

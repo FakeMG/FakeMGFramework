@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.Framework.UI.Tab.TabContentTransition
 {
-    /// <summary>
-    /// Base class for tab transition animators providing common functionality
-    /// </summary>
     public abstract class TabTransitionBase : MonoBehaviour
     {
         [Header("Animation Settings")]

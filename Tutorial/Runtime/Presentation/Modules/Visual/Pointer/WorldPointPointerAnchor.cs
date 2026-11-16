@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Anchors a pointer to a world-space point projected through the main camera. The point
-    /// is re-read every frame, and the anchor is hidden while the point is behind the camera
-    /// or outside the viewport.
-    /// </summary>
     public sealed class WorldPointPointerAnchor : ITutorialPointerAnchor
     {
         private readonly Func<Vector3?> _resolveWorldPositionMeters;

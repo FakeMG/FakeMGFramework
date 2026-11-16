@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores one boolean state change at an independent cycle time.
-    /// </summary>
     [Serializable]
     public sealed class BoolCyclePoint : IDiscreteCyclePoint<bool>
     {

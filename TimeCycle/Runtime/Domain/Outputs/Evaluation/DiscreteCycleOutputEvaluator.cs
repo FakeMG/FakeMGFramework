@@ -3,9 +3,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Evaluates the most recent discrete state change in a cyclic stream.
-    /// </summary>
     internal sealed class DiscreteCycleOutputEvaluator<T> : ICycleOutputEvaluator
     {
         private readonly List<DiscreteCycleChange<T>> _changes;

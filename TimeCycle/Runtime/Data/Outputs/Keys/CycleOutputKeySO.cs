@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Provides stable asset identity and value-type metadata for one cycle output.
-    /// </summary>
     public abstract class CycleOutputKeySO : ScriptableObject
     {
         [SerializeField, HideInInspector] private string _legacyId;

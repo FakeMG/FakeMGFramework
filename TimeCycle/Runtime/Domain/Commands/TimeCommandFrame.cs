@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Reports one monotonic progress step produced by the active time command.
-    /// </summary>
     internal readonly struct TimeCommandFrame
     {
         public double SignedDistanceDeltaSeconds { get; }

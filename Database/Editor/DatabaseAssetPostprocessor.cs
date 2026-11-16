@@ -21,13 +21,11 @@ namespace FakeMG.Framework.Database.Editor
 
                 Type assetType = asset.GetType();
 
-                // Only care about concrete DatabaseSO subclasses
                 if (!IsConcreteDatabaseType(assetType)) continue;
 
                 var guids = AssetDatabase.FindAssets($"t:{assetType.Name}");
                 if (guids.Length <= 1) continue;
 
-                // Collect duplicates (everything that isn't the newly imported asset)
                 var duplicatePaths = new List<string>();
                 foreach (var guid in guids)
                 {

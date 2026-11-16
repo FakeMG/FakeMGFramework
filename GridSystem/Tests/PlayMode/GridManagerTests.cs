@@ -8,9 +8,6 @@ using VContainer.Unity;
 
 namespace FakeMG.GridSystem.Tests.PlayMode
 {
-    /// <summary>
-    /// Locks GridManager's public coordinate, bounds, footprint, and occupancy behavior against framework-owned fixtures.
-    /// </summary>
     public sealed class GridManagerTests
     {
         private const string FIRST_INSTANCE_ID = "structure-a";

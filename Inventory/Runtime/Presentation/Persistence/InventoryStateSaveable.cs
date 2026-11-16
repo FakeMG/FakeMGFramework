@@ -12,11 +12,6 @@ namespace FakeMG.Inventory
         public Dictionary<string, string> AmountByItemId = new();
     }
 
-    /// <summary>
-    /// Persists inventory balances across sessions. Delegates all state to InventoryBalanceState, which is
-    /// injected so other systems can resolve it directly (or via IInventoryBalanceRepository) without going
-    /// through this Saveable.
-    /// </summary>
     public sealed class InventoryStateSaveable : ISaveable
     {
         public const string SAVE_ID = nameof(InventoryStateSaveable);

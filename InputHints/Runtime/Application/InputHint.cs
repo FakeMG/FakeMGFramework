@@ -5,10 +5,6 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>
-    /// One prompt shown to the player: the inputs that do something and what they do, such as "[F] Back". Display-only:
-    /// what the input does is owned by an input context. Its owner can relabel or hide it as the situation changes.
-    /// </summary>
     [Serializable]
     public sealed class InputHint
     {

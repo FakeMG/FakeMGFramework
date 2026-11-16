@@ -3,9 +3,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Owns persistent-control registrations and selects the newest highest-priority valid request.
-    /// </summary>
     internal sealed class TimeControlArbiter
     {
         private readonly List<Registration> _registrations = new();
@@ -105,9 +102,6 @@ namespace FakeMG.TimeCycle
 
         #endregion
 
-        /// <summary>
-        /// Owns the disposable lifetime of one persistent-control request.
-        /// </summary>
         private sealed class Registration : IDisposable
         {
             private readonly TimeControlArbiter _owner;

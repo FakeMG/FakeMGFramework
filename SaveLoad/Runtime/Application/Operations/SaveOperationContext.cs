@@ -14,10 +14,6 @@ namespace FakeMG.SaveLoad
         }
     }
 
-    /// <summary>
-    /// Describes one save operation without exposing either high-level save manager. External
-    /// payload participants use its stable path and save kind to coordinate their own transactions.
-    /// </summary>
     public readonly struct SaveOperationContext
     {
         public string SaveDirectoryPath { get; }
@@ -35,10 +31,6 @@ namespace FakeMG.SaveLoad
         }
     }
 
-    /// <summary>
-    /// Describes the metadata file that has just been restored. Participants use this after their
-    /// Saveable state is available to validate or prepare external payload repositories.
-    /// </summary>
     public readonly struct LoadOperationContext
     {
         public string SaveDirectoryPath { get; }

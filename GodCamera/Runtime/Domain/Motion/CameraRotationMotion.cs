@@ -2,9 +2,6 @@ using FakeMG.Framework;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Owns stepped yaw requests and smooths the camera toward the requested orientation.
-    /// </summary>
     public sealed class CameraRotationMotion
     {
         private readonly CameraRotationStepper _rotationStepper;

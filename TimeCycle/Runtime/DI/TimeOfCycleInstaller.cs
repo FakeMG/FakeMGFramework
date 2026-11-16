@@ -8,9 +8,6 @@ using VContainer.Unity;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Registers a time-of-cycle runtime and its scene-specific output applicators in a VContainer scope.
-    /// </summary>
     public static class TimeOfCycleInstaller
     {
         #region Public Methods

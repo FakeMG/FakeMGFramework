@@ -5,7 +5,6 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>Every glyph set a game ships, and which one draws a given device.</summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.INPUT_HINTS + "/Input Glyph Library SO")]
     public sealed class InputGlyphLibrarySO : ScriptableObject
     {

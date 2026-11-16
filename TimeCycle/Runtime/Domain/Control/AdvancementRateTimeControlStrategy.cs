@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Advances the clock at one persistent cycle-to-real-time rate.
-    /// </summary>
     internal sealed class AdvancementRateTimeControlStrategy : ITimeControlStrategy
     {
         private readonly double _rateCycleSecondsPerRealSecond;

@@ -32,10 +32,6 @@ namespace FakeMG.Tutorial
             HasRestriction = false;
         }
 
-        /// <summary>
-        /// True when a raycast hit belongs to an allowed UI target (the hit object is the
-        /// target or nested under it). Used by the raycaster filter to drop other hits.
-        /// </summary>
         public bool IsRaycastAllowed(GameObject hitObject)
         {
             if (!HasRestriction) return true;

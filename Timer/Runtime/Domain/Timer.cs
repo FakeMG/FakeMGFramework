@@ -16,10 +16,10 @@ namespace FakeMG.Framework.Timer
             if (CurrentTimeLeftInSeconds <= 0f)
             {
                 CurrentTimeLeftInSeconds = 0f;
-                return true; // Timer has finished
+                return true;
             }
 
-            return false; // Timer is still running
+            return false;
         }
 
         public void SetTime(float time)

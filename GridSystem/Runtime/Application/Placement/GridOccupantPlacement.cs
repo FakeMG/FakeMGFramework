@@ -3,9 +3,6 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Owns one structure placement's stable identity, runtime instance, footprint, Addressables handle, and held-position state.
-    /// </summary>
     public sealed class GridOccupantPlacement
     {
         internal GridOccupantPlacement(

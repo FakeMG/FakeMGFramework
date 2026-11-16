@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Fades renderers with temporary transparent material instances and restores their originals afterward.
-    /// </summary>
     public sealed class TransparentMaterialFadeableObject : FadeableObject
     {
         private static readonly int BASE_COLOR_ID = Shader.PropertyToID("_BaseColor");

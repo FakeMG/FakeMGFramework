@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Visual view that displays instruction text via TextMeshPro, positioned near a UI
-    /// target with an offset so it does not cover the target, clamped on screen.
-    /// </summary>
     public sealed class TutorialTextBoxView : AnimatedTutorialVisualView
     {
         [SerializeField] private TMP_Text _instructionText;

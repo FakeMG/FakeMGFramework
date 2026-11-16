@@ -3,11 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Shows an instruction text box positioned near a UI target resolved by key, so it
-    /// can anchor to runtime UI. Localization is out of scope; the raw string is passed
-    /// straight to TextMeshPro.
-    /// </summary>
     [Serializable]
     public sealed class TextBoxVisualModule : TutorialVisualModuleBase<TutorialTextBoxView>
     {

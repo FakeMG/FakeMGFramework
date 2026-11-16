@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.Toast.Editor
 {
-    /// <summary>Play-mode debug entries for manually triggering toasts.</summary>
     public static class ToastDebugMenu
     {
         [MenuItem(FakeMGEditorMenus.TOAST + "/Show Info Toast")]

@@ -7,12 +7,6 @@ using UnityEngine.UI;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Hides every interactable UI widget (any <see cref="Selectable"/> — buttons, toggles,
-    /// sliders, ...) on a HUD canvas except those inside the allowed roots, scaling them out
-    /// and disabling interaction, and restores their prior scale and interactable state with
-    /// a smooth animation when the step ends.
-    /// </summary>
     public sealed class TutorialSelectableVisibilityController
     {
         private const float RESTORE_DURATION_SECONDS = 0.35f;

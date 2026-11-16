@@ -2,9 +2,6 @@ using UnityEditor;
 
 namespace FakeMG.TestRunThrottleBypass.Editor
 {
-    /// <summary>
-    /// Drives <see cref="TestRunBackgroundThrottleBypass"/> from the editor loop for the lifetime of each domain.
-    /// </summary>
     [InitializeOnLoad]
     public static class TestRunBackgroundThrottleBypassSubscriber
     {

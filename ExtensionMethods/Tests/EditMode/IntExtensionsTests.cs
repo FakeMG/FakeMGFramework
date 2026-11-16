@@ -90,7 +90,7 @@ namespace ExtensionMethods.EditMode
         public void WrapValue_MinEqualsMax_ReturnsMin()
         {
             // Arrange & Act & Assert
-            Assert.AreEqual(5, 10.WrapValue(5, 5)); // When min equals max, should always return min
+            Assert.AreEqual(5, 10.WrapValue(5, 5));
             Assert.AreEqual(5, 5.WrapValue(5, 5));
             Assert.AreEqual(5, 0.WrapValue(5, 5));
             Assert.AreEqual(0, 100.WrapValue(0, 0));

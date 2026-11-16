@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Stores one color value at a normalized cycle position.
-    /// </summary>
     [Serializable]
     public sealed class ColorCyclePoint : IContinuousCyclePoint<Color>
     {

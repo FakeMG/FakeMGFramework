@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Defines one ordered save-version transformation. Implementations receive the configured data
-    /// store, so migration rules remain independent from the active serializer.
-    /// </summary>
     public abstract class MigrationStepSO : ScriptableObject, ISaveMigrationStep
     {
         [Tooltip("The exact version accepted by this migration, for example 1.0.0.")]

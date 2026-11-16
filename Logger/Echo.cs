@@ -6,7 +6,6 @@ namespace FakeMG.Framework
 {
     public static class Echo
     {
-        // === Global toggle ===
         // Add/remove LOGGER_ENABLED in Project Settings > Player > Scripting Define Symbols
 
         [Conditional("LOGGER_ENABLED")]

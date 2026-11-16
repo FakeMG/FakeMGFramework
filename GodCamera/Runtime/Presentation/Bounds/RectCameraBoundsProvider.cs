@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Provides a manually configured rectangular camera boundary on the ground plane.
-    /// </summary>
     public class RectCameraBoundsProvider : CameraBoundsProvider
     {
         [SerializeField] private Vector2 _centerMeters;

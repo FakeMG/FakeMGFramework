@@ -16,13 +16,6 @@ namespace FakeMG.Tutorial
         public ITutorialTarget Target;
     }
 
-    /// <summary>
-    /// Resolves tutorial targets by their key asset. Targets self-register through the
-    /// event bus when they become available and unregister when they go away, so both
-    /// scene targets and runtime-instantiated ones (e.g. a button inside a popup created
-    /// by PopupManager) are found without serialized references. Registered as an entry
-    /// point so it subscribes during scope build, before scene targets raise enable events.
-    /// </summary>
     public sealed class TutorialTargetRegistry : IStartable, IDisposable
     {
         private readonly Dictionary<TutorialTargetKeySO, ITutorialTarget> _targetsByKey = new();

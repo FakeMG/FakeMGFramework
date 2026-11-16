@@ -4,9 +4,6 @@ using VContainer;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Applies camera rig state to Unity and projects screen positions onto the ground plane.
-    /// </summary>
     public class CameraRigView : MonoBehaviour
     {
         [SerializeField] private Transform _focusRoot;

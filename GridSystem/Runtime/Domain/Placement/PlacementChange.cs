@@ -1,8 +1,5 @@
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Event payload for a committed structure placement change.
-    /// </summary>
     public readonly struct PlacementChange
     {
         public PlacementChange(

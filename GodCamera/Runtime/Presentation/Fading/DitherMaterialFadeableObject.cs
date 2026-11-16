@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.GodCamera
 {
-    /// <summary>
-    /// Fades renderers by overriding material color alpha through per-renderer property blocks.
-    /// </summary>
     public sealed class DitherMaterialFadeableObject : FadeableObject
     {
         private static readonly int COLOR_ID = Shader.PropertyToID("_Color");

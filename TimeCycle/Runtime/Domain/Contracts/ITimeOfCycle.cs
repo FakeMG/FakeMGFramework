@@ -4,9 +4,6 @@ using Cysharp.Threading.Tasks;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Defines the complete public control surface of a time-of-cycle runtime.
-    /// </summary>
     public interface ITimeOfCycle : IReadOnlyTimeOfCycle
     {
         event Action<CyclePeriodChange> OnPeriodChanged;

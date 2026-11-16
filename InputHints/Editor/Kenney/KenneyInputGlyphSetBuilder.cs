@@ -7,13 +7,6 @@ using UnityEngine;
 
 namespace FakeMG.InputHints.Editor
 {
-    /// <summary>
-    /// Builds glyph sets and a glyph library from a copy of the Kenney Input Prompts pack. Select the folder holding the
-    /// pack's family folders ("Xbox Series", "Keyboard &amp; Mouse"...) and run the menu item. The assets go to a
-    /// ScriptableObjects folder beside it, with one sprite atlas per family folder in a SpriteAtlases folder. Running it
-    /// again updates them in place, keeping references intact. Nothing is written unless every family folder and glyph the
-    /// tables name is found, so a rebuild never drops glyphs from the library silently.
-    /// </summary>
     public static class KenneyInputGlyphSetBuilder
     {
         private const string LIBRARY_ASSET_NAME = "Kenney Input Glyph Library SO";

@@ -3,7 +3,6 @@ using FakeMG.InputContexts;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>The hints of one input context, shown while that context is active.</summary>
     public interface IInputHintContext
     {
         IInputContext InputContext { get; }

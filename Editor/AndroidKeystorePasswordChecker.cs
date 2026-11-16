@@ -5,7 +5,6 @@ using UnityEditor.Build.Reporting;
 
 namespace FakeMG.Framework.Editor
 {
-    // Works in Unity 6+ and older Unity versions
     [InitializeOnLoad]
     public class AndroidKeystorePasswordChecker : IPreprocessBuildWithReport
     {
@@ -33,16 +32,14 @@ namespace FakeMG.Framework.Editor
 #if !UNITY_6000_0_OR_NEWER
         private static void OnBuildPlayer(BuildPlayerOptions options)
         {
-            // Check for Android release builds with custom keystore
             if (EditorUserBuildSettings.activeBuildTarget == BuildTarget.Android &&
                 (options.options & BuildOptions.Development) == 0 &&
                 PlayerSettings.Android.useCustomKeystore)
             {
                 if (!ValidateKeystorePasswords())
-                    return; // Cancel build
+                    return;
             }
 
-            // Continue build
             BuildPlayerWindow.DefaultBuildMethods.BuildPlayer(options);
         }
 #endif

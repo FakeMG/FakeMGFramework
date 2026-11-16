@@ -3,10 +3,6 @@ using Cysharp.Threading.Tasks;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Reusable unit of tutorial presentation or behavior activated by a step. Modules
-    /// animate or set up on activate and restore or animate out on deactivate.
-    /// </summary>
     public interface ITutorialModule
     {
         /// <summary>

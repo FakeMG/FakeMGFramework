@@ -2,9 +2,6 @@ using System.Collections.Generic;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Resolves and atomically applies the active profile and override layers to runtime collaborators.
-    /// </summary>
     internal sealed class TimeOfCycleConfigurationSession
     {
         private readonly TimeOfCycleProfileSO _sharedProfileSO;

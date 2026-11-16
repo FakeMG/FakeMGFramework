@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Holds one validated and precedence-resolved configuration used by the runtime.
-    /// </summary>
     internal sealed class ResolvedTimeOfCycleConfiguration
     {
         public double CycleDurationSeconds { get; }

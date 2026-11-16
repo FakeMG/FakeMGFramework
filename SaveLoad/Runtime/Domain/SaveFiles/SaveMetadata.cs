@@ -2,9 +2,6 @@ using System;
 
 namespace FakeMG.SaveLoad
 {
-    /// <summary>
-    /// Identifies when and by which application version a managed save file was committed.
-    /// </summary>
     [Serializable]
     public class SaveMetadata
     {

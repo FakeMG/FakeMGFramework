@@ -5,10 +5,6 @@ using Object = UnityEngine.Object;
 
 namespace FakeMG.ItemInteraction.Tests
 {
-    /// <summary>
-    /// Creates the assets item interaction tests share: an animation profile with a holding and a use clip,
-    /// and actions animated by that profile. Dispose destroys everything it created.
-    /// </summary>
     public sealed class ItemTestFixtures : IDisposable
     {
         private readonly List<Object> _createdObjects = new();

@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Shows a hand that keeps following a UI target resolved by key. Unlike
-    /// <see cref="PointerVisualModule"/>, the target does not need to exist when the step starts:
-    /// the hand stays hidden until the target appears (e.g. its popup opens) and hides again while
-    /// the target is gone or faded out.
-    /// </summary>
     [Serializable]
     public sealed class TrackingPointerVisualModule : TutorialVisualModuleBase<TrackingTutorialPointerView>
     {

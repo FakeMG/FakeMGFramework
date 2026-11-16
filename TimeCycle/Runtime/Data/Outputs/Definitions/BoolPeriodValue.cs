@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Maps one named period start to a boolean state.
-    /// </summary>
     [Serializable]
     public sealed class BoolPeriodValue : IPeriodCycleValue<bool>
     {

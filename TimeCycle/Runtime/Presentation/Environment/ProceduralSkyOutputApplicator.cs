@@ -4,9 +4,6 @@ using UnityEngine.SceneManagement;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Applies supported procedural-sky outputs to a runtime material clone without mutating its source asset.
-    /// </summary>
     [DefaultExecutionOrder(TimeOfCycleExecutionOrder.ENVIRONMENT_APPLICATOR)]
     public sealed class ProceduralSkyOutputApplicator : MonoBehaviour, ITimeOfCycleOutputApplicator
     {

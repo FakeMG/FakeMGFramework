@@ -8,12 +8,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Manages structure placement on the grid.
-    /// It creates, moves, replaces, removes, and restores structures while keeping
-    /// the saved placement state, runtime structure registry, and grid occupancy data synchronized.
-    /// It also notifies other systems whenever the committed placement state changes.
-    /// </summary>
     public sealed class GridOccupantPlacementService : ILoadedSceneDataApplier, IGridOccupantDestroyer, IGridOccupantReplacer, IDisposable
     {
         public const string DATA_APPLIER_ID = "grid.occupant-placement";

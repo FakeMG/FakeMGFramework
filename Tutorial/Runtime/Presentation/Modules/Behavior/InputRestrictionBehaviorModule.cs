@@ -7,12 +7,6 @@ using UnityEngine;
 
 namespace FakeMG.Tutorial
 {
-    /// <summary>
-    /// Restricts interaction to an allow-list of targets (resolved by key, so runtime UI
-    /// such as a popup button is supported) through the central gate for the duration of a
-    /// step, then clears the restriction on deactivation. Enforcement is done by the
-    /// gate's raycaster filter; setup is instantaneous so it does not block completion.
-    /// </summary>
     [Serializable]
     public sealed class InputRestrictionBehaviorModule : ITutorialModule
     {

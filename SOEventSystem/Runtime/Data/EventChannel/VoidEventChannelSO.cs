@@ -5,9 +5,6 @@ using UnityEngine.Events;
 
 namespace FakeMG.SOEventSystem.EventChannel
 {
-    /// <summary>
-    /// General Event Channel that carries no extra data.
-    /// </summary>
     [CreateAssetMenu(menuName = FakeMGEditorMenus.ROOT + "/Events/VoidEventChannelSO")]
     public class VoidEventChannelSO : ScriptableObject
     {

@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Evaluates boolean changes from period conditions and independent points.
-    /// </summary>
     [Serializable]
     public sealed class BoolCycleOutputDefinition : CycleOutputDefinition
     {

@@ -3,9 +3,6 @@ using NUnit.Framework;
 
 namespace FakeMG.SaveLoad.Tests
 {
-    /// <summary>
-    /// Verifies the centralized companion-file naming contract used by atomic transactions.
-    /// </summary>
     public sealed class AtomicFileTransactionPathsTests
     {
         [Test]

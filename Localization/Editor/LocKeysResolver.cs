@@ -5,11 +5,6 @@ using System.Reflection;
 
 namespace FakeMG.Localization.Editor
 {
-    /// <summary>
-    /// Resolves the generated Loc nested Keys types via reflection,
-    /// allowing editor tools in this asmdef to work without
-    /// a compile-time reference to Assembly-CSharp.
-    /// </summary>
     public static class LocKeysResolver
     {
         private const string LOC_TYPE_NAME = "FakeMG.Localization.Loc";
@@ -32,10 +27,6 @@ namespace FakeMG.Localization.Editor
             return s_cachedLocType;
         }
 
-        /// <summary>
-        /// Returns all nested "Keys" types (one per table) inside the Loc class.
-        /// e.g. Loc+UI+Keys, Loc+Gameplay+Keys
-        /// </summary>
         public static Type[] FindAllKeysTypes()
         {
             if (s_cachedKeysTypes != null)
@@ -71,9 +62,6 @@ namespace FakeMG.Localization.Editor
             return types.Length > 0 ? types[0] : null;
         }
 
-        /// <summary>
-        /// Returns all key fields across every table's Keys class.
-        /// </summary>
         public static FieldInfo[] GetKeyFields()
         {
             var allKeysTypes = FindAllKeysTypes();
@@ -85,10 +73,6 @@ namespace FakeMG.Localization.Editor
                 .ToArray();
         }
 
-        /// <summary>
-        /// Returns key fields grouped by table class name for use in grouped dropdowns.
-        /// Key = table class name (e.g. "UI"), Value = fields for that table's Keys class.
-        /// </summary>
         public static Dictionary<string, FieldInfo[]> GetKeyFieldsGrouped()
         {
             var allKeysTypes = FindAllKeysTypes();

@@ -1,8 +1,5 @@
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Centralizes finite-number invariants shared by cycle configuration and runtime commands.
-    /// </summary>
     internal static class CycleNumericValidation
     {
         #region Public Methods

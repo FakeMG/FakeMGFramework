@@ -7,9 +7,6 @@ using UnityEngine.Rendering;
 
 namespace FakeMG.TimeCycle.Editor
 {
-    /// <summary>
-    /// Creates or refreshes the reusable default profile, procedural-sky material, and environment prefab.
-    /// </summary>
     public static class DefaultTimeCycleAssetCreator
     {
         private const string FEATURE_ROOT_PATH = "Assets/Thirdparty/FakeMGFramework/TimeCycle";

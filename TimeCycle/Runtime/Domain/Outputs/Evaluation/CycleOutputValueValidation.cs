@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.TimeCycle
 {
-    /// <summary>
-    /// Validates authored and evaluated values before they cross the type-erased runtime boundary.
-    /// </summary>
     internal static class CycleOutputValueValidation
     {
         #region Public Methods

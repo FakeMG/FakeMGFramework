@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.GridSystem
 {
-    /// <summary>
-    /// Creates and destroys runtime structure placements for placement workflows.
-    /// </summary>
     public interface IGridOccupantPlacementFactory
     {
         #region Public Methods

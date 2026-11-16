@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace FakeMG.Outline
 {
-    /// <summary>
-    /// Enables or disables an outline by changing the rendering layers of child renderers.
-    /// </summary>
     [DisallowMultipleComponent]
     public sealed class RenderingLayerSelectionOutline : MonoBehaviour, IOutlineSelectionBounds
     {

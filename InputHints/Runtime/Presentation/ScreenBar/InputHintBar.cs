@@ -5,10 +5,6 @@ using VContainer;
 
 namespace FakeMG.InputHints
 {
-    /// <summary>
-    /// Lists the active hints in one strip along a screen edge, as console games do, drawn for the device the player uses
-    /// now. Hints that device cannot perform are left out, and the bar hides while it has nothing to show.
-    /// </summary>
     public sealed class InputHintBar : MonoBehaviour
     {
         [SerializeField] private InputHintBarEntry _entryPrefab;
