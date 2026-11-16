@@ -1,0 +1,22 @@
+{
+    "name": "FakeMG.TestRunThrottleBypass.Editor",
+    "rootNamespace": "FakeMG.TestRunThrottleBypass.Editor",
+    "references": [
+        "FakeMG.Framework",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "defineConstraints": [
+        "UNITY_TESTS_FRAMEWORK"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "",
+            "define": "UNITY_TESTS_FRAMEWORK"
+        }
+    ]
+}
