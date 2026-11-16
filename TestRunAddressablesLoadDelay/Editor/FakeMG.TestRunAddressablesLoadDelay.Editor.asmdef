@@ -1,0 +1,29 @@
+{
+    "name": "FakeMG.TestRunAddressablesLoadDelay.Editor",
+    "rootNamespace": "FakeMG.TestRunAddressablesLoadDelay.Editor",
+    "references": [
+        "Unity.Addressables",
+        "Unity.Addressables.Editor",
+        "UnityEngine.TestRunner",
+        "UnityEditor.TestRunner"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "defineConstraints": [
+        "UNITY_TESTS_FRAMEWORK",
+        "FAKEMG_ADDRESSABLES"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.test-framework",
+            "expression": "",
+            "define": "UNITY_TESTS_FRAMEWORK"
+        },
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "FAKEMG_ADDRESSABLES"
+        }
+    ]
+}
