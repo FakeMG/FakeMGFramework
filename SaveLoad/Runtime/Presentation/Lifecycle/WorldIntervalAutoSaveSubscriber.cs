@@ -34,9 +34,9 @@ namespace FakeMG.SaveLoad
         #region Public Methods
 
         [Inject]
-        public void Construct(IWorldAutoSaveRequester autoSaveRequester, WorldSaveConfiguration configuration, AutoSaveGate gate)
+        public void Construct(IntervalAutoSaveService autoSave)
         {
-            _autoSave = new IntervalAutoSaveService(autoSaveRequester, configuration, gate);
+            _autoSave = autoSave;
         }
 
         #endregion
