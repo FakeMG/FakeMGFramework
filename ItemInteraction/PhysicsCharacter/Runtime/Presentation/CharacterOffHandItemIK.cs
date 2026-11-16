@@ -51,8 +51,9 @@ namespace FakeMG.ItemInteraction
 
             animator.SetIKPosition(_offHandGoal, _solver.GetOffHandPositionMeters(_holdingHandPositionMeters, _holdingHandRotation));
             animator.SetIKRotation(_offHandGoal, _solver.GetOffHandRotation(_holdingHandRotation));
-            animator.SetIKPositionWeight(_offHandGoal, _solver.Weight01);
-            animator.SetIKRotationWeight(_offHandGoal, _solver.Weight01 * _grip.RotationWeight01);
+            float gripWeight01 = _solver.Weight01 * _grip.GripWeight01;
+            animator.SetIKPositionWeight(_offHandGoal, gripWeight01);
+            animator.SetIKRotationWeight(_offHandGoal, gripWeight01 * _grip.RotationWeight01);
         }
 
         private void LateUpdate()
