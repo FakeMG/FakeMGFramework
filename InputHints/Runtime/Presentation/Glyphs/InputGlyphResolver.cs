@@ -26,15 +26,11 @@ namespace FakeMG.InputHints
         {
             foreach (InputActionReference actionReference in hint.ActionReferences)
             {
-                ResolveAction(actionReference.action, glyphSetSO, glyphs);
+                Resolve(actionReference.action, glyphSetSO, glyphs);
             }
         }
 
-        #endregion
-
-        #region Private Methods
-
-        private void ResolveAction(InputAction action, InputGlyphSetSO glyphSetSO, List<InputGlyph> glyphs)
+        public void Resolve(InputAction action, InputGlyphSetSO glyphSetSO, List<InputGlyph> glyphs)
         {
             ReadOnlyArray<InputBinding> bindings = action.bindings;
             for (int i = 0; i < bindings.Count; i++)
@@ -63,6 +59,32 @@ namespace FakeMG.InputHints
                 }
             }
         }
+
+        /// <returns>The glyph of one binding, or its readable path when no device the set draws has that control.</returns>
+        public InputGlyph ResolveBindingPath(string bindingPath, InputGlyphSetSO glyphSetSO)
+        {
+            if (TryFindControl(bindingPath, glyphSetSO, out InputControl control))
+            {
+                return ToGlyph(control, glyphSetSO);
+            }
+
+            return new InputGlyph(null, InputControlPath.ToHumanReadableString(bindingPath, InputControlPath.HumanReadableStringOptions.OmitDevice));
+        }
+
+        public bool TryGetDiagramHotspot(string bindingPath, InputGlyphSetSO glyphSetSO, out InputGlyphDiagramHotspot hotspot)
+        {
+            if (TryFindControl(bindingPath, glyphSetSO, out InputControl control))
+            {
+                return glyphSetSO.TryGetDiagramHotspot(PathOnDevice(control), out hotspot);
+            }
+
+            hotspot = default;
+            return false;
+        }
+
+        #endregion
+
+        #region Private Methods
 
         /// <returns>False unless every part has a control the glyph set draws.</returns>
         /// <remarks>A part bound several times, such as "up" to both W and the up arrow, shows its first binding only.</remarks>
@@ -158,6 +180,11 @@ namespace FakeMG.InputHints
                 return printed.ToLowerInvariant();
             }
 
+            return PathOnDevice(control);
+        }
+
+        private static string PathOnDevice(InputControl control)
+        {
             return control.path.Substring(control.device.path.Length + 1);
         }
 

@@ -109,6 +109,16 @@ namespace FakeMG.Framework.UI.Tab
             return _tabs.Count;
         }
 
+        public TabButtonBase GetTabButton(int tabIndex)
+        {
+            return _tabs[tabIndex].TabButton;
+        }
+
+        public RectTransform GetTabContent(int tabIndex)
+        {
+            return _tabs[tabIndex].TabContent;
+        }
+
         public void NextTab()
         {
             if (GetTabCount() == 0)

@@ -110,7 +110,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a21e0e4213d5cf3429d7df269c3c763c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: FakeMG.InputHints::FakeMG.InputHints.InputGlyphView
-  _icon: {fileID: 459860727899671876}
+  _glyphImage: {fileID: 459860727899671876}
   _controlName: {fileID: 2345311984401521276}
 --- !u!1 &5084695768550060440
 GameObject:

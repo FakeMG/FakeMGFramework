@@ -55,3 +55,33 @@ shadowResolutionIndex = 1, // Default to Medium shadow resolution
 textureQualityIndex = 0, // Default to Full Res texture quality
 antiAliasingIndex = 0, // Default to Off anti-aliasing
 postProcessingIndex = 1 // Default to On post-processing
+## Settings Menu
+
+A tabbed panel (`Prefabs/Settings Panel`) with display, audio and controls pages. It works with mouse, keyboard and
+gamepad. Its Controls page comes from `FakeMG.KeyBinding`; see that module's README.
+
+- **Rows** (`Runtime/Presentation/Menu/Rows`): each row implements `ISettingRow`. `SettingFocusTracker` follows the UI
+  selection, highlights the focused row, shows it in `SettingDetailsView` and raises `OnSelectedControlChanged` for
+  anything else that pictures the selection. The details panel stays hidden while nothing is selected.
+- **Panel** (`Runtime/Presentation/Menu/Panel`): explicit navigation between tabs and rows, and tab paging input.
+- **Display** (`Runtime/Presentation/Display`): `DisplaySettingsApplier` applies window mode, resolution, VSync and frame
+  rate from boot.
+
+### Setup
+
+1. Create a `Display Settings Config` (Create > FakeMGFramework > Settings > Display) and call
+   `SettingsInstaller.InstallDisplay(builder, displaySettingsConfigSO)` in the persistent scope.
+2. Make a prefab variant of `Prefabs/Settings Panel` in the game and assign the input the framework cannot own:
+   - `SettingsTabInputSubscriber`: previous and next tab actions, and the settings menu `ActionMapSO`;
+   - the tab glyphs' `ActionGlyphView` actions;
+   - on `Tab Contents/Controls Page`, the reset-all and reset-selected actions in `KeyBindingListSubscriber` and in its
+     `InputHintContext`.
+3. Place the variant where the menu opens it, and give the instance an `InputContext` assigned to the subscriber's panel
+   context.
+
+Row prefabs (`Prefabs/Setting Slider Row`, `Setting Dropdown Row`, `Setting Toggle Switch Row`) serve both touch and
+focus-driven menus. `Icon` and `Background` ship disabled and the slider's `Value` enabled; a game's variant turns on what
+it needs and moves the label when it shows the icon. Rows are placed by anchors, not a layout group.
+Binders take their `SettingsStateRepository` by injection: the scope that opens the menu calls `InjectGameObject` on it.
+
+New rows: add a prefab with a `SettingRowView` and an `ISettingUIBinder`.

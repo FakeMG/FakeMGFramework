@@ -6,7 +6,7 @@ using VContainer;
 
 namespace FakeMG.Settings
 {
-    public class ToggleSettingUIBinder : MonoBehaviour
+    public class ToggleSettingUIBinder : MonoBehaviour, ISettingUIBinder
     {
         [Required, SerializeField] private SliderSettingSO _sliderSettingSO;
         [Required, SerializeField] private Toggle _toggle;
@@ -14,6 +14,8 @@ namespace FakeMG.Settings
         [SerializeField] private bool _revert;
 
         [Inject] private readonly SettingsStateRepository _settingsStateRepository;
+
+        public SettingDefinitionSO SettingSO => _sliderSettingSO;
 
         #region Unity Lifecycle
 

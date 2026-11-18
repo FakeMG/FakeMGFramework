@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.SliderSettingSO
   _settingId: MusicVolume
   _label: Music
+  _description: The loudness of the music.
   _defaultValue: 1
   _storageMinValue: 0
   _storageMaxValue: 1

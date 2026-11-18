@@ -15,6 +15,15 @@ MonoBehaviour:
   _deviceLayouts:
   - XInputController
   - Gamepad
+  _deviceDiagram: {fileID: 21300000, guid: 6f16a8aa81eaec24b99ba2b5df56bfd3, type: 3}
+  _diagramMasks: {fileID: 0}
+  _diagramFillUvRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0
+    height: 0
+  _diagramHotspots: []
   _glyphs:
   - _controlPath: leftStick
     _sprite: {fileID: 21300000, guid: eee2106540d73464ab3e759615317265, type: 3}

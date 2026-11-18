@@ -1,0 +1,7 @@
+{
+    "name": "FakeMG.KeyBinding.Domain",
+    "rootNamespace": "FakeMG.KeyBinding",
+    "references": [],
+    "noEngineReferences": true,
+    "autoReferenced": true
+}

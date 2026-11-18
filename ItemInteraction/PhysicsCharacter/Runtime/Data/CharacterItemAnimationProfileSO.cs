@@ -3,7 +3,6 @@ using FakeMG.Framework;
 using PhysicsCharacterController;
 using Sirenix.OdinInspector;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FakeMG.ItemInteraction
 {
@@ -21,7 +20,6 @@ namespace FakeMG.ItemInteraction
         [Header("Holding Idle Replacement")]
         [Tooltip("Plays a state's locomotion override on the whole body while the item is only held, instead of layering "
             + "Holding Idle over it. Enable when the overrides already hold the item. Use Item still layers over them.")]
-        [FormerlySerializedAs("_doesLocomotionReplaceHoldingIdle")]
         [SerializeField] private bool _isHoldingPoseReplacedByLocomotionOverride;
 
         public bool IsHoldingPoseReplacedByLocomotionOverride => _isHoldingPoseReplacedByLocomotionOverride;

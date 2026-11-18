@@ -1,0 +1,19 @@
+{
+    "name": "FakeMG.KeyBinding",
+    "rootNamespace": "FakeMG.KeyBinding",
+    "references": [
+        "FakeMG.KeyBinding.Domain",
+        "FakeMG.ActionMapManagement",
+        "FakeMG.Framework",
+        "FakeMG.InputContexts",
+        "FakeMG.InputHints",
+        "FakeMG.Settings",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "Unity.ugui",
+        "VContainer",
+        "UniTask",
+        "DOTween.Modules"
+    ],
+    "autoReferenced": true
+}

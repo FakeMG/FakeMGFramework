@@ -6,7 +6,11 @@ using UnityEngine.UI;
 
 namespace FakeMG.Framework.UI.Toggle
 {
-    public class ToggleSwitch : MonoBehaviour, IPointerClickHandler
+    /// <remarks>
+    /// Pair it with a Selectable on the same object for keyboard and gamepad: navigation focuses that, and Submit reaches this.
+    /// Not a Selectable itself, which runs in edit mode and would let the visuals rewrite the prefab.
+    /// </remarks>
+    public class ToggleSwitch : MonoBehaviour, IPointerClickHandler, ISubmitHandler
     {
         private const float MIN_VALUE = 0f;
         private const float MAX_VALUE = 1f;
@@ -161,6 +165,11 @@ namespace FakeMG.Framework.UI.Toggle
         }
 
         public void OnPointerClick(PointerEventData eventData)
+        {
+            Toggle();
+        }
+
+        public void OnSubmit(BaseEventData eventData)
         {
             Toggle();
         }

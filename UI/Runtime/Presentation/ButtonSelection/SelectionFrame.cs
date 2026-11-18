@@ -1,11 +1,13 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 namespace FakeMG.Framework.UI.ButtonSelection
 {
     /// <summary>
     /// Draws a frame behind the selected object. The frame is drawn where it sits in the hierarchy, so a popup that covers
-    /// the screen needs its own frame placed behind its buttons, e.g. as the first child of its panel.
+    /// the screen needs its own frame placed behind its buttons, e.g. as the first child of its panel. A selected object
+    /// inside a scroll view's <see cref="RectMask2D"/> clips the frame to that mask, as the object itself is clipped.
     /// </summary>
     public class SelectionFrame : MonoBehaviour
     {
@@ -18,6 +20,8 @@ namespace FakeMG.Framework.UI.ButtonSelection
         private bool _isAppearing;
         private GameObject _lastSelected;
         private RectTransform _lastSelectedRect;
+        private RectMask2D _lastSelectedMask;
+        private MaskableGraphic[] _frameGraphics;
         private float _appearThresholdSquared;
 
         #region Unity Lifecycle
@@ -25,6 +29,7 @@ namespace FakeMG.Framework.UI.ButtonSelection
         private void Awake()
         {
             _appearThresholdSquared = _appearThreshold * _appearThreshold;
+            _frameGraphics = _frameRectTransform.GetComponentsInChildren<MaskableGraphic>(true);
         }
 
         private void Update()
@@ -35,6 +40,7 @@ namespace FakeMG.Framework.UI.ButtonSelection
             {
                 _lastSelected = selected;
                 _lastSelectedRect = selected ? selected.GetComponent<RectTransform>() : null;
+                _lastSelectedMask = selected ? selected.GetComponentInParent<RectMask2D>() : null;
             }
 
             // The EventSystem keeps a selection whose panel was hidden, e.g. the button that opened an empty panel.
@@ -74,6 +80,22 @@ namespace FakeMG.Framework.UI.ButtonSelection
 
             _frameRectTransform.position = _lastSelectedRect.TransformPoint(_lastSelectedRect.rect.center);
             _frameRectTransform.sizeDelta = targetSizePixels;
+            ClipToSelectedObjectMask();
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <remarks>The mask's rect and the frame's clip rect share one space only while both sit under the same root canvas.</remarks>
+        private void ClipToSelectedObjectMask()
+        {
+            bool isClipped = _lastSelectedMask && _lastSelectedMask.isActiveAndEnabled;
+            Rect clipRect = isClipped ? _lastSelectedMask.canvasRect : default;
+            foreach (MaskableGraphic frameGraphic in _frameGraphics)
+            {
+                frameGraphic.SetClipRect(clipRect, isClipped);
+            }
         }
 
         #endregion

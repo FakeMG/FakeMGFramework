@@ -26,6 +26,13 @@ namespace FakeMG.Settings.Display
             return frameRateOptions;
         }
 
+        /// <remarks>An unknown label falls back to the first option, matching how the dropdown resolves it.</remarks>
+        public int GetFrameRateValue(string optionLabel)
+        {
+            int optionIndex = GetOptions().IndexOf(optionLabel);
+            return GetFrameRateValue(Mathf.Max(optionIndex, 0));
+        }
+
         public int GetFrameRateValue(int optionIndex)
         {
             if (_frameRateValues.Length == 0)

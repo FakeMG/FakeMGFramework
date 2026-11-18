@@ -1,0 +1,20 @@
+{
+    "name": "FakeMG.KeyBinding.Tests.EditMode",
+    "rootNamespace": "FakeMG.KeyBinding.Tests",
+    "references": [
+        "FakeMG.KeyBinding.Domain",
+        "FakeMG.KeyBinding",
+        "FakeMG.Settings",
+        "FakeMG.ActionMapManagement",
+        "Unity.InputSystem",
+        "Unity.InputSystem.TestFramework",
+        "TNRD.NSubstitute"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "autoReferenced": false
+}

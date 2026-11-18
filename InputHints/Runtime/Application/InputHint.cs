@@ -12,12 +12,13 @@ namespace FakeMG.InputHints
         [Tooltip("Shown side by side, e.g. Rotate Left and Rotate Right as one 'Rotate' hint.")]
         [SerializeField] private InputActionReference[] _actionReferences = Array.Empty<InputActionReference>();
 
-        [NonSerialized] private bool _isShown = true;
+        /// <remarks>Stored inverted: Unity deserializes this class without running field initializers.</remarks>
+        [NonSerialized] private bool _isHidden;
 
         public event Action OnChanged;
 
         public string Label => _label;
-        public bool IsShown => _isShown;
+        public bool IsShown => !_isHidden;
         public IReadOnlyList<InputActionReference> ActionReferences => _actionReferences;
 
         public InputHint(string label, params InputActionReference[] actionReferences)
@@ -54,12 +55,12 @@ namespace FakeMG.InputHints
 
         public void SetShown(bool isShown)
         {
-            if (_isShown == isShown)
+            if (IsShown == isShown)
             {
                 return;
             }
 
-            _isShown = isShown;
+            _isHidden = !isShown;
             OnChanged?.Invoke();
         }
 

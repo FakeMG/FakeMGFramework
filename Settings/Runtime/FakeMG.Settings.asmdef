@@ -6,7 +6,13 @@
         "FakeMG.Framework",
         "VContainer",
         "UniTask",
-        "EasySave3"
+        "EasySave3",
+        "FakeMG.ActionMapManagement",
+        "FakeMG.InputContexts",
+        "FakeMG.InputHints",
+        "Unity.InputSystem",
+        "Unity.ugui",
+        "DOTween.Modules"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

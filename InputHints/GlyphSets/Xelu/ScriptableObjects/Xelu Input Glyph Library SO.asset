@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1de06d191144fa54988e2e3c53adad2d, type: 3}
+  m_Name: Xelu Input Glyph Library SO
+  m_EditorClassIdentifier: FakeMG.InputHints::FakeMG.InputHints.InputGlyphLibrarySO
+  _glyphSetSOs:
+  - {fileID: 11400000, guid: c1313fc8c20c68443bdf8551052a9997, type: 2}
+  - {fileID: 11400000, guid: 71c04dbbe063a5545be9edd2f5fb1c12, type: 2}
+  - {fileID: 11400000, guid: b458e861edbe90544ad229684b3da8c0, type: 2}
+  - {fileID: 11400000, guid: bcb10d8993f6dae4ca63342cc9d14cc6, type: 2}
+  - {fileID: 11400000, guid: 537ee147b8343f54d963f9c4aaa75929, type: 2}

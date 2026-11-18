@@ -1,0 +1,242 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f01c590c966d5e498c16b3ddf1266d3, type: 3}
+  m_Name: Xelu Xbox Glyph Set SO
+  m_EditorClassIdentifier: FakeMG.InputHints::FakeMG.InputHints.InputGlyphSetSO
+  _deviceLayouts:
+  - XInputController
+  - Gamepad
+  _deviceDiagram: {fileID: 21300000, guid: a47fa1ef3440f4a4c80aba2b6e60fbda, type: 3}
+  _diagramMasks: {fileID: 2800000, guid: f08ba8ab7a1a6e34aa123cf8be5d64cc, type: 3}
+  _diagramFillUvRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0.99725276
+    height: 0.734375
+  _diagramHotspots:
+  - _controlPath: buttonNorth
+    _center01: {x: 0.7527548, y: 0.66170216}
+    _size01: {x: 0.06473827, y: 0.100000024}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.7375
+      width: 0.06456044
+      height: 0.0734375
+  - _controlPath: buttonEast
+    _center01: {x: 0.81749314, y: 0.5723404}
+    _size01: {x: 0.06611574, y: 0.100000024}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.067307696
+      y: 0.7375
+      width: 0.06593407
+      height: 0.0734375
+  - _controlPath: buttonWest
+    _center01: {x: 0.6859504, y: 0.5648936}
+    _size01: {x: 0.06611574, y: 0.10212767}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.13598901
+      y: 0.7375
+      width: 0.06593407
+      height: 0.075
+  - _controlPath: buttonSouth
+    _center01: {x: 0.75, y: 0.47446805}
+    _size01: {x: 0.06611574, y: 0.099999994}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.20467032
+      y: 0.7375
+      width: 0.06593407
+      height: 0.0734375
+  - _controlPath: leftStick
+    _center01: {x: 0.25895315, y: 0.55}
+    _size01: {x: 0.11983472, y: 0.19787231}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.27335164
+      y: 0.7375
+      width: 0.119505495
+      height: 0.1453125
+  - _controlPath: rightStick
+    _center01: {x: 0.6301653, y: 0.33723405}
+    _size01: {x: 0.11983466, y: 0.19999999}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.3956044
+      y: 0.7375
+      width: 0.119505495
+      height: 0.146875
+  - _controlPath: dpad
+    _center01: {x: 0.37947658, y: 0.34468085}
+    _size01: {x: 0.16391188, y: 0.22978723}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.51785713
+      y: 0.7375
+      width: 0.16346154
+      height: 0.16875
+  - _controlPath: dpad/up
+    _center01: {x: 0.37947658, y: 0.41170213}
+    _size01: {x: 0.05234158, y: 0.07021278}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.68406594
+      y: 0.7375
+      width: 0.052197803
+      height: 0.0515625
+  - _controlPath: dpad/down
+    _center01: {x: 0.37947658, y: 0.27553192}
+    _size01: {x: 0.05234158, y: 0.06382978}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.739011
+      y: 0.7375
+      width: 0.052197803
+      height: 0.046875
+  - _controlPath: dpad/left
+    _center01: {x: 0.3319559, y: 0.34148937}
+    _size01: {x: 0.049586773, y: 0.08085108}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.79395604
+      y: 0.7375
+      width: 0.04945055
+      height: 0.059375
+  - _controlPath: dpad/right
+    _center01: {x: 0.42699724, y: 0.34148937}
+    _size01: {x: 0.050964177, y: 0.08085108}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.84615386
+      y: 0.7375
+      width: 0.050824177
+      height: 0.059375
+  - _controlPath: select
+    _center01: {x: 0.4338843, y: 0.56276596}
+    _size01: {x: 0.044077158, y: 0.068085074}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.89972526
+      y: 0.7375
+      width: 0.043956045
+      height: 0.05
+  - _controlPath: start
+    _center01: {x: 0.57300276, y: 0.56276596}
+    _size01: {x: 0.044077158, y: 0.068085074}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.9464286
+      y: 0.7375
+      width: 0.043956045
+      height: 0.05
+  - _controlPath: leftShoulder
+    _center01: {x: 0.2651515, y: 0.81702125}
+    _size01: {x: 0.20661157, y: 0.074468136}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.909375
+      width: 0.20604396
+      height: 0.0546875
+  - _controlPath: rightShoulder
+    _center01: {x: 0.7348485, y: 0.81702125}
+    _size01: {x: 0.20661163, y: 0.074468136}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.20879121
+      y: 0.909375
+      width: 0.20604396
+      height: 0.0546875
+  - _controlPath: leftTrigger
+    _center01: {x: 0.24104683, y: 0.912766}
+    _size01: {x: 0.08953169, y: 0.11702132}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.41758242
+      y: 0.909375
+      width: 0.08928572
+      height: 0.0859375
+  - _controlPath: rightTrigger
+    _center01: {x: 0.7623967, y: 0.912766}
+    _size01: {x: 0.08264458, y: 0.11702132}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.50961536
+      y: 0.909375
+      width: 0.082417585
+      height: 0.0859375
+  _glyphs:
+  - _controlPath: leftStick
+    _sprite: {fileID: 21300000, guid: 44eca56d367d614409bf4982ac966277, type: 3}
+  - _controlPath: leftStick/up
+    _sprite: {fileID: 21300000, guid: 44eca56d367d614409bf4982ac966277, type: 3}
+  - _controlPath: leftStick/down
+    _sprite: {fileID: 21300000, guid: 44eca56d367d614409bf4982ac966277, type: 3}
+  - _controlPath: leftStick/left
+    _sprite: {fileID: 21300000, guid: 44eca56d367d614409bf4982ac966277, type: 3}
+  - _controlPath: leftStick/right
+    _sprite: {fileID: 21300000, guid: 44eca56d367d614409bf4982ac966277, type: 3}
+  - _controlPath: leftStick/x
+    _sprite: {fileID: 21300000, guid: 44eca56d367d614409bf4982ac966277, type: 3}
+  - _controlPath: leftStick/y
+    _sprite: {fileID: 21300000, guid: 44eca56d367d614409bf4982ac966277, type: 3}
+  - _controlPath: rightStick
+    _sprite: {fileID: 21300000, guid: ae8c80aea592c834494a83db93211262, type: 3}
+  - _controlPath: rightStick/up
+    _sprite: {fileID: 21300000, guid: ae8c80aea592c834494a83db93211262, type: 3}
+  - _controlPath: rightStick/down
+    _sprite: {fileID: 21300000, guid: ae8c80aea592c834494a83db93211262, type: 3}
+  - _controlPath: rightStick/left
+    _sprite: {fileID: 21300000, guid: ae8c80aea592c834494a83db93211262, type: 3}
+  - _controlPath: rightStick/right
+    _sprite: {fileID: 21300000, guid: ae8c80aea592c834494a83db93211262, type: 3}
+  - _controlPath: rightStick/x
+    _sprite: {fileID: 21300000, guid: ae8c80aea592c834494a83db93211262, type: 3}
+  - _controlPath: rightStick/y
+    _sprite: {fileID: 21300000, guid: ae8c80aea592c834494a83db93211262, type: 3}
+  - _controlPath: leftStickPress
+    _sprite: {fileID: 21300000, guid: 49cf0351e4eedf84d8c6887e8e3f29d1, type: 3}
+  - _controlPath: rightStickPress
+    _sprite: {fileID: 21300000, guid: 39f777eca2c880f4a8b985aa7c237e8b, type: 3}
+  - _controlPath: dpad
+    _sprite: {fileID: 21300000, guid: 8020fe5780f113644a524eddfddbbee1, type: 3}
+  - _controlPath: dpad/up
+    _sprite: {fileID: 21300000, guid: 8f90d93ca67b31f4985b273afa03f2c5, type: 3}
+  - _controlPath: dpad/down
+    _sprite: {fileID: 21300000, guid: 401ebd586275df648a2ca2cd214efa6d, type: 3}
+  - _controlPath: dpad/left
+    _sprite: {fileID: 21300000, guid: a72a7f658c2581f4d9266e9f1dd07152, type: 3}
+  - _controlPath: dpad/right
+    _sprite: {fileID: 21300000, guid: 0620772bf4dc1a146bd33dfea6ff7e50, type: 3}
+  - _controlPath: buttonSouth
+    _sprite: {fileID: 21300000, guid: 9e5776eea2d48f44ba5b0f885a5c04ff, type: 3}
+  - _controlPath: buttonEast
+    _sprite: {fileID: 21300000, guid: cca44b2af412d0840bd1ba6116b38320, type: 3}
+  - _controlPath: buttonWest
+    _sprite: {fileID: 21300000, guid: f8a198870902b9146b70da24592932a3, type: 3}
+  - _controlPath: buttonNorth
+    _sprite: {fileID: 21300000, guid: 580f3fa749f64d84687fcafafbc9abf8, type: 3}
+  - _controlPath: leftShoulder
+    _sprite: {fileID: 21300000, guid: 2b1e213a61b94f344ad78ce9ac559b9c, type: 3}
+  - _controlPath: rightShoulder
+    _sprite: {fileID: 21300000, guid: e5fc8a7a1910747468a49fda30ac760c, type: 3}
+  - _controlPath: leftTrigger
+    _sprite: {fileID: 21300000, guid: 3f5d8b440b9a75e49b9d54b9eb24df2c, type: 3}
+  - _controlPath: rightTrigger
+    _sprite: {fileID: 21300000, guid: eb9936a986f63fb4ba158802564d06d5, type: 3}
+  - _controlPath: start
+    _sprite: {fileID: 21300000, guid: 8aa928f4b7e3a794e8e62a3fe7902dd1, type: 3}
+  - _controlPath: select
+    _sprite: {fileID: 21300000, guid: 21c60c5ed2e983541b0de159f4fb7c57, type: 3}

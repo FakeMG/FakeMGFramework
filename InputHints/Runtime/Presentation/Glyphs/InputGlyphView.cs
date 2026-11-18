@@ -1,13 +1,11 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace FakeMG.InputHints
 {
     public sealed class InputGlyphView : MonoBehaviour
     {
-        [FormerlySerializedAs("_icon")]
         [SerializeField] private Image _glyphImage;
         [SerializeField] private TMP_Text _controlName;
 

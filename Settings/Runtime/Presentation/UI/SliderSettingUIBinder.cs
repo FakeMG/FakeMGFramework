@@ -7,7 +7,7 @@ using VContainer;
 
 namespace FakeMG.Settings
 {
-    public class SliderSettingUIBinder : MonoBehaviour
+    public class SliderSettingUIBinder : MonoBehaviour, ISettingUIBinder
     {
         private const string DEFAULT_VALUE_FORMAT = "0.##";
 
@@ -21,6 +21,8 @@ namespace FakeMG.Settings
         [SerializeField] private string _valueFormat = DEFAULT_VALUE_FORMAT;
 
         [Inject] private readonly SettingsStateRepository _settingsStateRepository;
+
+        public SettingDefinitionSO SettingSO => _sliderSettingSO;
 
         #region Unity Lifecycle
 

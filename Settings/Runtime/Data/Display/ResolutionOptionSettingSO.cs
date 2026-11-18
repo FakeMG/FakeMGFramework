@@ -11,28 +11,12 @@ namespace FakeMG.Settings.Display
 
         public override string GetDefaultValue()
         {
-            Resolution[] availableResolutions = Screen.resolutions;
             Resolution currentResolution = Screen.currentResolution;
-
-            for (int index = 0; index < availableResolutions.Length; index++)
-            {
-                Resolution resolution = availableResolutions[index];
-                if (resolution.width != currentResolution.width)
-                {
-                    continue;
-                }
-
-                if (resolution.height != currentResolution.height)
-                {
-                    continue;
-                }
-
-                return FormatResolutionLabel(resolution);
-            }
-
-            return base.GetDefaultValue();
+            string currentLabel = FormatResolutionLabel(currentResolution.width, currentResolution.height);
+            return GetOptions().Contains(currentLabel) ? currentLabel : base.GetDefaultValue();
         }
 
+        /// <remarks>Screen.resolutions lists each size once per refresh rate, so sizes are deduplicated.</remarks>
         public override List<string> GetOptions()
         {
             Resolution[] availableResolutions = Screen.resolutions;
@@ -41,20 +25,36 @@ namespace FakeMG.Settings.Display
             for (int index = 0; index < availableResolutions.Length; index++)
             {
                 Resolution resolution = availableResolutions[index];
-                string optionLabel = string.Format(
-                    RESOLUTION_FORMAT,
-                    resolution.width,
-                    resolution.height);
-
-                resolutionOptions.Add(optionLabel);
+                string optionLabel = FormatResolutionLabel(resolution.width, resolution.height);
+                if (!resolutionOptions.Contains(optionLabel))
+                {
+                    resolutionOptions.Add(optionLabel);
+                }
             }
 
             return resolutionOptions;
         }
 
-        private static string FormatResolutionLabel(Resolution resolution)
+        public bool TryGetResolutionSize(string optionLabel, out Vector2Int sizePixels)
         {
-            return string.Format(RESOLUTION_FORMAT, resolution.width, resolution.height);
+            Resolution[] availableResolutions = Screen.resolutions;
+            for (int index = 0; index < availableResolutions.Length; index++)
+            {
+                Resolution resolution = availableResolutions[index];
+                if (FormatResolutionLabel(resolution.width, resolution.height) == optionLabel)
+                {
+                    sizePixels = new Vector2Int(resolution.width, resolution.height);
+                    return true;
+                }
+            }
+
+            sizePixels = default;
+            return false;
+        }
+
+        private static string FormatResolutionLabel(int widthPixels, int heightPixels)
+        {
+            return string.Format(RESOLUTION_FORMAT, widthPixels, heightPixels);
         }
     }
 }

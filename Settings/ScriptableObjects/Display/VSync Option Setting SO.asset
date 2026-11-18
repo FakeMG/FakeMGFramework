@@ -14,4 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: FakeMG.Settings::FakeMG.Settings.OnOffOptionSettingSO
   _settingId: display.vSync
   _label: VSync
+  _description: Matches frames to your monitor's refresh rate to stop screen tearing,
+    at the cost of a little input delay.
   _defaultValue: Off

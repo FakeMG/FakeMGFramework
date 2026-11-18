@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3b69660a152bd04409c3d36236a8190f, type: 3}
+  m_Name: Keyboard Mouse Binding Device Family SO
+  m_EditorClassIdentifier: Animals.Settings::Animals.Settings.BindingDeviceFamilySO
+  _displayName: Keyboard & mouse
+  _listeningPrompt: Press a key
+  _glyphSetSOs:
+  - {fileID: 11400000, guid: bcb10d8993f6dae4ca63342cc9d14cc6, type: 2}
+  _bindingGroup: Keyboard&Mouse
+  _slotsPerAction: 2
+  _rebindableControlPaths:
+  - <Keyboard>
+  - <Mouse>/middleButton
+  - <Mouse>/forwardButton
+  - <Mouse>/backButton
+  _excludedControlPaths:
+  - <Keyboard>/anyKey
+  _cancelControlPath: <Keyboard>/escape

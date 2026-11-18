@@ -1,12 +1,10 @@
 using DG.Tweening;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FakeMG.Framework
 {
     public sealed class ContinuousRotation : MonoBehaviour
     {
-        [FormerlySerializedAs("_raysRectTransform")]
         [SerializeField] private Transform _targetTransform;
         [SerializeField] private Vector3 _localRotationDegrees = new(0f, 0f, 360f);
         [Min(0.1f)]

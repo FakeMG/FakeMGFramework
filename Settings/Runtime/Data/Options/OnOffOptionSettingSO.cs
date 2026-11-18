@@ -24,5 +24,10 @@ namespace FakeMG.Settings
 
             return onOffOptions;
         }
+
+        public bool IsOn(string optionLabel)
+        {
+            return optionLabel == ON_OFF_OPTIONS[1];
+        }
     }
 }

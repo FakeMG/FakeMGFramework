@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using FakeMG.Framework;
 using UnityEngine;
@@ -14,16 +15,23 @@ namespace FakeMG.Settings.Display
             "Windowed"
         };
 
+        private static readonly FullScreenMode[] WINDOW_MODES =
+        {
+            FullScreenMode.ExclusiveFullScreen,
+            FullScreenMode.FullScreenWindow,
+            FullScreenMode.Windowed
+        };
+
         public override List<string> GetOptions()
         {
-            List<string> windowModeOptions = new(WINDOW_MODE_OPTIONS.Length);
+            return new List<string>(WINDOW_MODE_OPTIONS);
+        }
 
-            for (int index = 0; index < WINDOW_MODE_OPTIONS.Length; index++)
-            {
-                windowModeOptions.Add(WINDOW_MODE_OPTIONS[index]);
-            }
-
-            return windowModeOptions;
+        /// <remarks>An unknown label falls back to the first option, matching how the dropdown resolves it.</remarks>
+        public FullScreenMode GetFullScreenMode(string optionLabel)
+        {
+            int optionIndex = Array.IndexOf(WINDOW_MODE_OPTIONS, optionLabel);
+            return WINDOW_MODES[Mathf.Max(optionIndex, 0)];
         }
     }
 }

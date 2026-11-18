@@ -7,13 +7,15 @@ using VContainer;
 
 namespace FakeMG.Settings
 {
-    public class DropdownSettingUIBinder : MonoBehaviour
+    public class DropdownSettingUIBinder : MonoBehaviour, ISettingUIBinder
     {
         [Required, SerializeField] private OptionSettingSO _optionSettingSO;
         [Required, SerializeField] private TMP_Dropdown _dropdown;
         [Required, SerializeField] private TMP_Text _labelText;
 
         [Inject] private readonly SettingsStateRepository _settingsStateRepository;
+
+        public SettingDefinitionSO SettingSO => _optionSettingSO;
 
         #region Unity Lifecycle
 

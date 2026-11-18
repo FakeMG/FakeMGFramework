@@ -1,0 +1,1240 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f01c590c966d5e498c16b3ddf1266d3, type: 3}
+  m_Name: Xelu Keyboard Mouse Glyph Set SO
+  m_EditorClassIdentifier: FakeMG.InputHints::FakeMG.InputHints.InputGlyphSetSO
+  _deviceLayouts:
+  - Keyboard
+  - Mouse
+  _deviceDiagram: {fileID: 21300000, guid: 72b48c4aa04acf544a2ea5aa2a1c8c7d, type: 3}
+  _diagramMasks: {fileID: 2800000, guid: 7f715771de559044a996a9f21e371237, type: 3}
+  _diagramFillUvRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 0.6
+  _diagramHotspots:
+  - _controlPath: escape
+    _center01: {x: 0.022222223, y: 0.95238096}
+    _size01: {x: 0.04074074, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f1
+    _center01: {x: 0.11111111, y: 0.95238096}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.044444446
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f2
+    _center01: {x: 0.15555556, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.08888889
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f3
+    _center01: {x: 0.2, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.13333334
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f4
+    _center01: {x: 0.24444446, y: 0.95238096}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.17777778
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f5
+    _center01: {x: 0.31111112, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.22222222
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f6
+    _center01: {x: 0.35555556, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.26666668
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f7
+    _center01: {x: 0.4, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.31111112
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f8
+    _center01: {x: 0.44444445, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.35555556
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f9
+    _center01: {x: 0.51111114, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.4
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f10
+    _center01: {x: 0.5555556, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.44444445
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f11
+    _center01: {x: 0.6, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.4888889
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f12
+    _center01: {x: 0.64444447, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.53333336
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: backquote
+    _center01: {x: 0.022222223, y: 0.8095238}
+    _size01: {x: 0.04074074, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5777778
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 1
+    _center01: {x: 0.06666667, y: 0.8095238}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.62222224
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 2
+    _center01: {x: 0.11111111, y: 0.8095238}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.6666667
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 3
+    _center01: {x: 0.15555556, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.7111111
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 4
+    _center01: {x: 0.2, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.75555557
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 5
+    _center01: {x: 0.24444446, y: 0.8095238}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.8
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 6
+    _center01: {x: 0.2888889, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.84444445
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 7
+    _center01: {x: 0.33333334, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.8888889
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 8
+    _center01: {x: 0.37777779, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.93333334
+      y: 0.6047619
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 9
+    _center01: {x: 0.42222223, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: 0
+    _center01: {x: 0.46666667, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.044444446
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: minus
+    _center01: {x: 0.51111114, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.08888889
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: equals
+    _center01: {x: 0.5555556, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.13333334
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: backspace
+    _center01: {x: 0.62222224, y: 0.8095238}
+    _size01: {x: 0.08518517, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.17777778
+      y: 0.66190475
+      width: 0.085185185
+      height: 0.052380953
+  - _controlPath: tab
+    _center01: {x: 0.03333334, y: 0.71428573}
+    _size01: {x: 0.062962964, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.26666668
+      y: 0.66190475
+      width: 0.062962964
+      height: 0.052380953
+  - _controlPath: q
+    _center01: {x: 0.08888889, y: 0.71428573}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.33333334
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: w
+    _center01: {x: 0.13333334, y: 0.71428573}
+    _size01: {x: 0.040740736, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.37777779
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: e
+    _center01: {x: 0.17777778, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.42222223
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: r
+    _center01: {x: 0.22222222, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.46666667
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: t
+    _center01: {x: 0.26666668, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.51111114
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: y
+    _center01: {x: 0.31111112, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5555556
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: u
+    _center01: {x: 0.35555556, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.6
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: i
+    _center01: {x: 0.4, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.64444447
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: o
+    _center01: {x: 0.44444445, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.6888889
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: p
+    _center01: {x: 0.48888892, y: 0.71428573}
+    _size01: {x: 0.04074076, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.73333335
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: leftBracket
+    _center01: {x: 0.53333336, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.7777778
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: rightBracket
+    _center01: {x: 0.5777778, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.82222223
+      y: 0.66190475
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: backslash
+    _center01: {x: 0.6333333, y: 0.71428573}
+    _size01: {x: 0.06296301, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.8666667
+      y: 0.66190475
+      width: 0.062962964
+      height: 0.052380953
+  - _controlPath: capsLock
+    _center01: {x: 0.038888894, y: 0.61904764}
+    _size01: {x: 0.074074075, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.7190476
+      width: 0.074074075
+      height: 0.052380953
+  - _controlPath: a
+    _center01: {x: 0.1, y: 0.61904764}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.07777778
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: s
+    _center01: {x: 0.14444445, y: 0.61904764}
+    _size01: {x: 0.040740736, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.12222222
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: d
+    _center01: {x: 0.18888889, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.16666667
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: f
+    _center01: {x: 0.23333335, y: 0.61904764}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.21111111
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: g
+    _center01: {x: 0.2777778, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.25555557
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: h
+    _center01: {x: 0.32222223, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.3
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: j
+    _center01: {x: 0.36666667, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.34444445
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: k
+    _center01: {x: 0.41111112, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.3888889
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: l
+    _center01: {x: 0.45555556, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.43333334
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: semicolon
+    _center01: {x: 0.5, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.47777778
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: quote
+    _center01: {x: 0.54444444, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5222222
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: enter
+    _center01: {x: 0.6166667, y: 0.61904764}
+    _size01: {x: 0.09629631, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.56666666
+      y: 0.7190476
+      width: 0.096296296
+      height: 0.052380953
+  - _controlPath: leftShift
+    _center01: {x: 0.050000004, y: 0.52380955}
+    _size01: {x: 0.096296296, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.6666667
+      y: 0.7190476
+      width: 0.096296296
+      height: 0.052380953
+  - _controlPath: z
+    _center01: {x: 0.12222222, y: 0.52380955}
+    _size01: {x: 0.040740743, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.76666665
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: x
+    _center01: {x: 0.16666667, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.8111111
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: c
+    _center01: {x: 0.21111111, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.85555553
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: v
+    _center01: {x: 0.25555557, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.9
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: b
+    _center01: {x: 0.3, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.9444444
+      y: 0.7190476
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: n
+    _center01: {x: 0.34444445, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.77619046
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: m
+    _center01: {x: 0.3888889, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.044444446
+      y: 0.77619046
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: comma
+    _center01: {x: 0.43333334, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.08888889
+      y: 0.77619046
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: period
+    _center01: {x: 0.47777778, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.13333334
+      y: 0.77619046
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: slash
+    _center01: {x: 0.5222222, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.17777778
+      y: 0.77619046
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: rightShift
+    _center01: {x: 0.60555553, y: 0.52380955}
+    _size01: {x: 0.11851847, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.22222222
+      y: 0.77619046
+      width: 0.11851852
+      height: 0.052380953
+  - _controlPath: leftCtrl
+    _center01: {x: 0.027777778, y: 0.42857143}
+    _size01: {x: 0.05185185, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.34444445
+      y: 0.77619046
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: leftMeta
+    _center01: {x: 0.083333336, y: 0.42857143}
+    _size01: {x: 0.051851854, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.4
+      y: 0.77619046
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: leftAlt
+    _center01: {x: 0.1388889, y: 0.42857143}
+    _size01: {x: 0.051851846, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.45555556
+      y: 0.77619046
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: space
+    _center01: {x: 0.30555555, y: 0.42857143}
+    _size01: {x: 0.27407408, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.51111114
+      y: 0.77619046
+      width: 0.27407408
+      height: 0.052380953
+  - _controlPath: rightAlt
+    _center01: {x: 0.4722222, y: 0.42857143}
+    _size01: {x: 0.05185187, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.7888889
+      y: 0.77619046
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: rightMeta
+    _center01: {x: 0.5277778, y: 0.42857143}
+    _size01: {x: 0.05185187, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.84444445
+      y: 0.77619046
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: contextMenu
+    _center01: {x: 0.5833333, y: 0.42857143}
+    _size01: {x: 0.05185187, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.9
+      y: 0.77619046
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: rightCtrl
+    _center01: {x: 0.6388889, y: 0.42857143}
+    _size01: {x: 0.05185187, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.8333333
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: printScreen
+    _center01: {x: 0.7, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.055555556
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: scrollLock
+    _center01: {x: 0.74444443, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.1
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: pause
+    _center01: {x: 0.7888889, y: 0.95238096}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.14444445
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: insert
+    _center01: {x: 0.7, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.18888889
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: home
+    _center01: {x: 0.74444443, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.23333333
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: pageUp
+    _center01: {x: 0.7888889, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.2777778
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: delete
+    _center01: {x: 0.7, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.32222223
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: end
+    _center01: {x: 0.74444443, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.36666667
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: pageDown
+    _center01: {x: 0.7888889, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.41111112
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: upArrow
+    _center01: {x: 0.74444443, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.45555556
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: leftArrow
+    _center01: {x: 0.7, y: 0.42857143}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: downArrow
+    _center01: {x: 0.74444443, y: 0.42857143}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.54444444
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: rightArrow
+    _center01: {x: 0.7888889, y: 0.42857143}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5888889
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numLock
+    _center01: {x: 0.84444445, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.6333333
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpadDivide
+    _center01: {x: 0.8888889, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.67777777
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpadMultiply
+    _center01: {x: 0.93333334, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.7222222
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpadMinus
+    _center01: {x: 0.9777778, y: 0.8095238}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.76666665
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad7
+    _center01: {x: 0.84444445, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.8111111
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad8
+    _center01: {x: 0.8888889, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.85555553
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad9
+    _center01: {x: 0.93333334, y: 0.71428573}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.9
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad4
+    _center01: {x: 0.84444445, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.9444444
+      y: 0.8333333
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad5
+    _center01: {x: 0.8888889, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.89047617
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad6
+    _center01: {x: 0.93333334, y: 0.61904764}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.044444446
+      y: 0.89047617
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad1
+    _center01: {x: 0.84444445, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.08888889
+      y: 0.89047617
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad2
+    _center01: {x: 0.8888889, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.13333334
+      y: 0.89047617
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad3
+    _center01: {x: 0.93333334, y: 0.52380955}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.17777778
+      y: 0.89047617
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpad0
+    _center01: {x: 0.8666667, y: 0.42857143}
+    _size01: {x: 0.08518517, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.22222222
+      y: 0.89047617
+      width: 0.085185185
+      height: 0.052380953
+  - _controlPath: numpadPeriod
+    _center01: {x: 0.93333334, y: 0.42857143}
+    _size01: {x: 0.04074073, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.31111112
+      y: 0.89047617
+      width: 0.04074074
+      height: 0.052380953
+  - _controlPath: numpadPlus
+    _center01: {x: 0.9777778, y: 0.6666667}
+    _size01: {x: 0.03888893, y: 0.1825397}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.35555556
+      y: 0.89047617
+      width: 0.03888889
+      height: 0.10952381
+  - _controlPath: numpadEnter
+    _center01: {x: 0.9777778, y: 0.47619045}
+    _size01: {x: 0.03888893, y: 0.18253967}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.39814815
+      y: 0.89047617
+      width: 0.03888889
+      height: 0.10952381
+  - _controlPath: shift
+    _center01: {x: 0.050000004, y: 0.52380955}
+    _size01: {x: 0.096296296, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.44074073
+      y: 0.89047617
+      width: 0.096296296
+      height: 0.052380953
+  - _controlPath: ctrl
+    _center01: {x: 0.027777778, y: 0.42857143}
+    _size01: {x: 0.05185185, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5407407
+      y: 0.89047617
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: alt
+    _center01: {x: 0.1388889, y: 0.42857143}
+    _size01: {x: 0.051851846, y: 0.08730161}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5962963
+      y: 0.89047617
+      width: 0.05185185
+      height: 0.052380953
+  - _controlPath: leftButton
+    _center01: {x: 0.7175926, y: 0.2638889}
+    _size01: {x: 0.04444444, y: 0.12301588}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.65185183
+      y: 0.89047617
+      width: 0.044444446
+      height: 0.07380953
+  - _controlPath: rightButton
+    _center01: {x: 0.7722222, y: 0.2638889}
+    _size01: {x: 0.04444444, y: 0.12301588}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.7
+      y: 0.89047617
+      width: 0.044444446
+      height: 0.07380953
+  - _controlPath: middleButton
+    _center01: {x: 0.74444443, y: 0.26587301}
+    _size01: {x: 0.024074078, y: 0.075396836}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.74814814
+      y: 0.89047617
+      width: 0.024074074
+      height: 0.045238096
+  - _controlPath: scroll
+    _center01: {x: 0.74444443, y: 0.26587301}
+    _size01: {x: 0.024074078, y: 0.075396836}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.77592593
+      y: 0.89047617
+      width: 0.024074074
+      height: 0.045238096
+  _glyphs:
+  - _controlPath: space
+    _sprite: {fileID: 21300000, guid: baee12381351b404e9086dca389be55b, type: 3}
+  - _controlPath: enter
+    _sprite: {fileID: 21300000, guid: 333f6b9093ddddc42be83367142593e8, type: 3}
+  - _controlPath: numpadEnter
+    _sprite: {fileID: 21300000, guid: 333f6b9093ddddc42be83367142593e8, type: 3}
+  - _controlPath: tab
+    _sprite: {fileID: 21300000, guid: 68e326cb38678734da05fcae9e6a9cab, type: 3}
+  - _controlPath: escape
+    _sprite: {fileID: 21300000, guid: 74e5167d9575cdc489225218f60719c3, type: 3}
+  - _controlPath: backspace
+    _sprite: {fileID: 21300000, guid: 12eb5e5362afead4eb29f9a10f4252c6, type: 3}
+  - _controlPath: delete
+    _sprite: {fileID: 21300000, guid: d1d32cc38f4a80d4182360889e50449e, type: 3}
+  - _controlPath: insert
+    _sprite: {fileID: 21300000, guid: a5552fe75ab0e0b4283eece9961b5916, type: 3}
+  - _controlPath: home
+    _sprite: {fileID: 21300000, guid: bebdc58d681860649b41fee35b663c3e, type: 3}
+  - _controlPath: end
+    _sprite: {fileID: 21300000, guid: 01435fdaebb1c7249a9ee828e1241dcc, type: 3}
+  - _controlPath: pageUp
+    _sprite: {fileID: 21300000, guid: 342e2b4a5adbb0b468bec47ca27d64a2, type: 3}
+  - _controlPath: pageDown
+    _sprite: {fileID: 21300000, guid: d18c99a4fd8b132489281a13cda1d359, type: 3}
+  - _controlPath: leftShift
+    _sprite: {fileID: 21300000, guid: 8f84396af40311248a170354bbf91af7, type: 3}
+  - _controlPath: rightShift
+    _sprite: {fileID: 21300000, guid: 8f84396af40311248a170354bbf91af7, type: 3}
+  - _controlPath: shift
+    _sprite: {fileID: 21300000, guid: 8f84396af40311248a170354bbf91af7, type: 3}
+  - _controlPath: leftCtrl
+    _sprite: {fileID: 21300000, guid: cdba1ccbb50de1a4e9a866e3ae0dab28, type: 3}
+  - _controlPath: rightCtrl
+    _sprite: {fileID: 21300000, guid: cdba1ccbb50de1a4e9a866e3ae0dab28, type: 3}
+  - _controlPath: ctrl
+    _sprite: {fileID: 21300000, guid: cdba1ccbb50de1a4e9a866e3ae0dab28, type: 3}
+  - _controlPath: leftAlt
+    _sprite: {fileID: 21300000, guid: d565f86b18608b642b8c23414d8c48e1, type: 3}
+  - _controlPath: rightAlt
+    _sprite: {fileID: 21300000, guid: d565f86b18608b642b8c23414d8c48e1, type: 3}
+  - _controlPath: alt
+    _sprite: {fileID: 21300000, guid: d565f86b18608b642b8c23414d8c48e1, type: 3}
+  - _controlPath: leftMeta
+    _sprite: {fileID: 21300000, guid: ec805dfeac77ac94592901372f083c39, type: 3}
+  - _controlPath: rightMeta
+    _sprite: {fileID: 21300000, guid: ec805dfeac77ac94592901372f083c39, type: 3}
+  - _controlPath: capsLock
+    _sprite: {fileID: 21300000, guid: da1a6868bf00a1e40aa75b4337a2aed8, type: 3}
+  - _controlPath: numLock
+    _sprite: {fileID: 21300000, guid: caa726992f78a8246aa884ae186b1e2f, type: 3}
+  - _controlPath: printScreen
+    _sprite: {fileID: 21300000, guid: 17e4706d91605b3409d0dda90a9f1f4c, type: 3}
+  - _controlPath: upArrow
+    _sprite: {fileID: 21300000, guid: 2ce6c1b6171f0f04199c5f9b2cdf7754, type: 3}
+  - _controlPath: downArrow
+    _sprite: {fileID: 21300000, guid: a26392aa8832cef4ea78e477331f73af, type: 3}
+  - _controlPath: leftArrow
+    _sprite: {fileID: 21300000, guid: aa14e882876d2254bada63d6f9162ad6, type: 3}
+  - _controlPath: rightArrow
+    _sprite: {fileID: 21300000, guid: ac6f9aad5381bae4aa0aa234febd9378, type: 3}
+  - _controlPath: backquote
+    _sprite: {fileID: 21300000, guid: a63e82d2f4aa4514eb34cdf6b6949897, type: 3}
+  - _controlPath: quote
+    _sprite: {fileID: 21300000, guid: 9edecb5d2c8d51e4599518759726fbc0, type: 3}
+  - _controlPath: semicolon
+    _sprite: {fileID: 21300000, guid: 01d1d1c9673897046b9c7b1b37663b55, type: 3}
+  - _controlPath: slash
+    _sprite: {fileID: 21300000, guid: 5e9c1db19e69dd74d92b477e6924c0fc, type: 3}
+  - _controlPath: leftBracket
+    _sprite: {fileID: 21300000, guid: 2d2363b0ffe2c7e438b2628439c199f6, type: 3}
+  - _controlPath: rightBracket
+    _sprite: {fileID: 21300000, guid: 3651031fab7412a47b127a7baf67fc85, type: 3}
+  - _controlPath: minus
+    _sprite: {fileID: 21300000, guid: 290047d74ac81d64e9b7d895c6b15c66, type: 3}
+  - _controlPath: numpadMinus
+    _sprite: {fileID: 21300000, guid: 290047d74ac81d64e9b7d895c6b15c66, type: 3}
+  - _controlPath: numpadPlus
+    _sprite: {fileID: 21300000, guid: a82f30f8b346cb740adc675c38e5de13, type: 3}
+  - _controlPath: numpadMultiply
+    _sprite: {fileID: 21300000, guid: 8b5c084bd3bc90f4392dbe9e59af3d33, type: 3}
+  - _controlPath: leftButton
+    _sprite: {fileID: 21300000, guid: 9e8ee5123e6a1aa46958ecf8b3149001, type: 3}
+  - _controlPath: rightButton
+    _sprite: {fileID: 21300000, guid: 62b38b5b1f1e9214991d87a89a105743, type: 3}
+  - _controlPath: middleButton
+    _sprite: {fileID: 21300000, guid: 1cefb0914ad9dbf4aa9e2ae441e1e02a, type: 3}
+  - _controlPath: position
+    _sprite: {fileID: 21300000, guid: 3a9e9a878b4874a4297a67ac2d9ed429, type: 3}
+  - _controlPath: delta
+    _sprite: {fileID: 21300000, guid: 3a9e9a878b4874a4297a67ac2d9ed429, type: 3}
+  - _controlPath: scroll
+    _sprite: {fileID: 21300000, guid: 1cefb0914ad9dbf4aa9e2ae441e1e02a, type: 3}
+  - _controlPath: scroll/y
+    _sprite: {fileID: 21300000, guid: 1cefb0914ad9dbf4aa9e2ae441e1e02a, type: 3}
+  - _controlPath: scroll/up
+    _sprite: {fileID: 21300000, guid: 1cefb0914ad9dbf4aa9e2ae441e1e02a, type: 3}
+  - _controlPath: scroll/down
+    _sprite: {fileID: 21300000, guid: 1cefb0914ad9dbf4aa9e2ae441e1e02a, type: 3}
+  - _controlPath: a
+    _sprite: {fileID: 21300000, guid: d3d28218d6d6c01408df0ca981f23ae4, type: 3}
+  - _controlPath: b
+    _sprite: {fileID: 21300000, guid: 7db174467d7aa7641931527b11e6bf63, type: 3}
+  - _controlPath: c
+    _sprite: {fileID: 21300000, guid: b9845b416e2ed1442accdee23da44ed6, type: 3}
+  - _controlPath: d
+    _sprite: {fileID: 21300000, guid: ca64b3b0725e56d4c9211b2f933d5d7e, type: 3}
+  - _controlPath: e
+    _sprite: {fileID: 21300000, guid: 2bb21e6d33b2d19419c452d7e610bf8b, type: 3}
+  - _controlPath: f
+    _sprite: {fileID: 21300000, guid: 15f997a0410d5794fa4d791c765e34c2, type: 3}
+  - _controlPath: g
+    _sprite: {fileID: 21300000, guid: 292618797aeed2a45b52331d47f3c1ea, type: 3}
+  - _controlPath: h
+    _sprite: {fileID: 21300000, guid: 87f5ac9f094140d4e87b4855372ce355, type: 3}
+  - _controlPath: i
+    _sprite: {fileID: 21300000, guid: 2b31ee6242597044595a191168e25b59, type: 3}
+  - _controlPath: j
+    _sprite: {fileID: 21300000, guid: 913704515416ef74ea6c66512af3d486, type: 3}
+  - _controlPath: k
+    _sprite: {fileID: 21300000, guid: 50af4c4b5a75ae943a0f47854556ba5c, type: 3}
+  - _controlPath: l
+    _sprite: {fileID: 21300000, guid: 0f57ca8752155624293ec76307dd6936, type: 3}
+  - _controlPath: m
+    _sprite: {fileID: 21300000, guid: 96d7020500347e44586091495563cf51, type: 3}
+  - _controlPath: n
+    _sprite: {fileID: 21300000, guid: 3e73b451cdfeb6d4fa259fcb20988f1f, type: 3}
+  - _controlPath: o
+    _sprite: {fileID: 21300000, guid: db58ebc8e5a3744419a6a867aa92f818, type: 3}
+  - _controlPath: p
+    _sprite: {fileID: 21300000, guid: 185e9b7da1bb40744937dc78af8503b9, type: 3}
+  - _controlPath: q
+    _sprite: {fileID: 21300000, guid: a88f6008d796c21499421ba5ea0ceb69, type: 3}
+  - _controlPath: r
+    _sprite: {fileID: 21300000, guid: 2785f1cb8abe9a84596a7dd9e6a5e8ce, type: 3}
+  - _controlPath: s
+    _sprite: {fileID: 21300000, guid: 6ed600502e9e9614e8c4c6748c11de47, type: 3}
+  - _controlPath: t
+    _sprite: {fileID: 21300000, guid: dc743ec08e4b5fa43ac78efd2321c985, type: 3}
+  - _controlPath: u
+    _sprite: {fileID: 21300000, guid: ca81cc8eba62832498826b0815b8c86b, type: 3}
+  - _controlPath: v
+    _sprite: {fileID: 21300000, guid: 7b217fb6ba00a894e8651cc014b98e8b, type: 3}
+  - _controlPath: w
+    _sprite: {fileID: 21300000, guid: bbdae71940ea0d14e8c88ff359a41287, type: 3}
+  - _controlPath: x
+    _sprite: {fileID: 21300000, guid: b03a19c6f52d4fd4eb454ad4f96e823d, type: 3}
+  - _controlPath: y
+    _sprite: {fileID: 21300000, guid: 42d4b4c53ad6fc6488740776d7a974bb, type: 3}
+  - _controlPath: z
+    _sprite: {fileID: 21300000, guid: f10bf83c6afc77f479a37940591356f6, type: 3}
+  - _controlPath: 0
+    _sprite: {fileID: 21300000, guid: 40161f239f0263044850390d3efcc735, type: 3}
+  - _controlPath: numpad0
+    _sprite: {fileID: 21300000, guid: 40161f239f0263044850390d3efcc735, type: 3}
+  - _controlPath: 1
+    _sprite: {fileID: 21300000, guid: 6c5b1c5d8da31444cbdcc6a694ac8541, type: 3}
+  - _controlPath: numpad1
+    _sprite: {fileID: 21300000, guid: 6c5b1c5d8da31444cbdcc6a694ac8541, type: 3}
+  - _controlPath: 2
+    _sprite: {fileID: 21300000, guid: f902494282d72eb4b81211cb2bb8b706, type: 3}
+  - _controlPath: numpad2
+    _sprite: {fileID: 21300000, guid: f902494282d72eb4b81211cb2bb8b706, type: 3}
+  - _controlPath: 3
+    _sprite: {fileID: 21300000, guid: 525c595e1e164b94097ed06f2924dbef, type: 3}
+  - _controlPath: numpad3
+    _sprite: {fileID: 21300000, guid: 525c595e1e164b94097ed06f2924dbef, type: 3}
+  - _controlPath: 4
+    _sprite: {fileID: 21300000, guid: 92f7f333f5b02264c824b2861acd0f03, type: 3}
+  - _controlPath: numpad4
+    _sprite: {fileID: 21300000, guid: 92f7f333f5b02264c824b2861acd0f03, type: 3}
+  - _controlPath: 5
+    _sprite: {fileID: 21300000, guid: 8cfde4f5480fd8f48ab455c44af884a7, type: 3}
+  - _controlPath: numpad5
+    _sprite: {fileID: 21300000, guid: 8cfde4f5480fd8f48ab455c44af884a7, type: 3}
+  - _controlPath: 6
+    _sprite: {fileID: 21300000, guid: fd341b67b66cd234dbf39031874f19bd, type: 3}
+  - _controlPath: numpad6
+    _sprite: {fileID: 21300000, guid: fd341b67b66cd234dbf39031874f19bd, type: 3}
+  - _controlPath: 7
+    _sprite: {fileID: 21300000, guid: e2589dbc1a3172e4fb3c3af318a73c15, type: 3}
+  - _controlPath: numpad7
+    _sprite: {fileID: 21300000, guid: e2589dbc1a3172e4fb3c3af318a73c15, type: 3}
+  - _controlPath: 8
+    _sprite: {fileID: 21300000, guid: 3d13061a08ed48c41acf16e7975dfb27, type: 3}
+  - _controlPath: numpad8
+    _sprite: {fileID: 21300000, guid: 3d13061a08ed48c41acf16e7975dfb27, type: 3}
+  - _controlPath: 9
+    _sprite: {fileID: 21300000, guid: e7c9913837bcd2e4cb55ca6a21c232fa, type: 3}
+  - _controlPath: numpad9
+    _sprite: {fileID: 21300000, guid: e7c9913837bcd2e4cb55ca6a21c232fa, type: 3}
+  - _controlPath: f1
+    _sprite: {fileID: 21300000, guid: 12d22b1ac76e791479515c7c7a402fa3, type: 3}
+  - _controlPath: f2
+    _sprite: {fileID: 21300000, guid: ae63eb9831576ba488fd700f32c4fe1b, type: 3}
+  - _controlPath: f3
+    _sprite: {fileID: 21300000, guid: c90b2555ef323f8448501df50a718ae8, type: 3}
+  - _controlPath: f4
+    _sprite: {fileID: 21300000, guid: 496f7956354e0f446b7c2a7159021c8e, type: 3}
+  - _controlPath: f5
+    _sprite: {fileID: 21300000, guid: b22bea596a416084facfbccc794f6700, type: 3}
+  - _controlPath: f6
+    _sprite: {fileID: 21300000, guid: fea59455d15ff9445b1ea0adac547ad2, type: 3}
+  - _controlPath: f7
+    _sprite: {fileID: 21300000, guid: 9e5a4377ac5643847ac165b9359d37c2, type: 3}
+  - _controlPath: f8
+    _sprite: {fileID: 21300000, guid: c6f476a379c2b3e48930935f81423cb7, type: 3}
+  - _controlPath: f9
+    _sprite: {fileID: 21300000, guid: 11ff66d2bf12abf46ae8f2645dc28ef7, type: 3}
+  - _controlPath: f10
+    _sprite: {fileID: 21300000, guid: f7912fa6210bbdc4d9bc342c7de1005b, type: 3}
+  - _controlPath: f11
+    _sprite: {fileID: 21300000, guid: 2d7ffee1597448841804b256794f0dae, type: 3}
+  - _controlPath: f12
+    _sprite: {fileID: 21300000, guid: dd9d508c8fd74e542890495fddfae083, type: 3}

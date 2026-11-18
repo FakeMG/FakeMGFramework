@@ -1,0 +1,252 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f01c590c966d5e498c16b3ddf1266d3, type: 3}
+  m_Name: Xelu PlayStation 4 Glyph Set SO
+  m_EditorClassIdentifier: FakeMG.InputHints::FakeMG.InputHints.InputGlyphSetSO
+  _deviceLayouts:
+  - DualShockGamepad
+  _deviceDiagram: {fileID: 21300000, guid: 4a30a6865497ab94bb3995fe64d0ad4d, type: 3}
+  _diagramMasks: {fileID: 2800000, guid: f154ba03f05367e45a1283d115311558, type: 3}
+  _diagramFillUvRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 0.99725276
+    height: 0.63858694
+  _diagramHotspots:
+  - _controlPath: buttonNorth
+    _center01: {x: 0.7844353, y: 0.662766}
+    _size01: {x: 0.06473827, y: 0.10212767}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.6413044
+      width: 0.06456044
+      height: 0.06521739
+  - _controlPath: buttonEast
+    _center01: {x: 0.84917355, y: 0.56914896}
+    _size01: {x: 0.06473827, y: 0.10212767}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.067307696
+      y: 0.6413044
+      width: 0.06456044
+      height: 0.06521739
+  - _controlPath: buttonWest
+    _center01: {x: 0.7203857, y: 0.56914896}
+    _size01: {x: 0.06473827, y: 0.10212767}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.13461539
+      y: 0.6413044
+      width: 0.06456044
+      height: 0.06521739
+  - _controlPath: buttonSouth
+    _center01: {x: 0.7844353, y: 0.47765958}
+    _size01: {x: 0.06473827, y: 0.10212767}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.20192307
+      y: 0.6413044
+      width: 0.06456044
+      height: 0.06521739
+  - _controlPath: dpad
+    _center01: {x: 0.22038567, y: 0.5744681}
+    _size01: {x: 0.1721763, y: 0.26595747}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.26923078
+      y: 0.6413044
+      width: 0.1717033
+      height: 0.16983695
+  - _controlPath: dpad/up
+    _center01: {x: 0.22107439, y: 0.63404256}
+    _size01: {x: 0.05647382, y: 0.106382966}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.44368133
+      y: 0.6413044
+      width: 0.05631868
+      height: 0.06793478
+  - _controlPath: dpad/down
+    _center01: {x: 0.22107439, y: 0.506383}
+    _size01: {x: 0.05647382, y: 0.106382966}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.50274724
+      y: 0.6413044
+      width: 0.05631868
+      height: 0.06793478
+  - _controlPath: dpad/left
+    _center01: {x: 0.17837466, y: 0.5702128}
+    _size01: {x: 0.07162535, y: 0.08723402}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.5618132
+      y: 0.6413044
+      width: 0.071428575
+      height: 0.055706523
+  - _controlPath: dpad/right
+    _center01: {x: 0.2637741, y: 0.5702128}
+    _size01: {x: 0.07162535, y: 0.08723402}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.635989
+      y: 0.6413044
+      width: 0.071428575
+      height: 0.055706523
+  - _controlPath: leftStick
+    _center01: {x: 0.35950413, y: 0.34893617}
+    _size01: {x: 0.10743803, y: 0.16595745}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.71016484
+      y: 0.6413044
+      width: 0.10714286
+      height: 0.10597826
+  - _controlPath: rightStick
+    _center01: {x: 0.6446281, y: 0.34893617}
+    _size01: {x: 0.10743797, y: 0.16595745}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.82005495
+      y: 0.6413044
+      width: 0.10714286
+      height: 0.10597826
+  - _controlPath: select
+    _center01: {x: 0.3181818, y: 0.70531917}
+    _size01: {x: 0.035812676, y: 0.091489315}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.92994505
+      y: 0.6413044
+      width: 0.035714287
+      height: 0.058423914
+  - _controlPath: start
+    _center01: {x: 0.68663913, y: 0.70531917}
+    _size01: {x: 0.035812616, y: 0.091489315}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0
+      y: 0.8138587
+      width: 0.035714287
+      height: 0.058423914
+  - _controlPath: leftShoulder
+    _center01: {x: 0.22520661, y: 0.8351064}
+    _size01: {x: 0.121212125, y: 0.06382978}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.03846154
+      y: 0.8138587
+      width: 0.12087912
+      height: 0.04076087
+  - _controlPath: rightShoulder
+    _center01: {x: 0.7775482, y: 0.8351064}
+    _size01: {x: 0.11845732, y: 0.06382978}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.16208792
+      y: 0.8138587
+      width: 0.11813187
+      height: 0.04076087
+  - _controlPath: leftTrigger
+    _center01: {x: 0.23071626, y: 0.88723403}
+    _size01: {x: 0.10330577, y: 0.06382978}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.28296703
+      y: 0.8138587
+      width: 0.10302198
+      height: 0.04076087
+  - _controlPath: rightTrigger
+    _center01: {x: 0.7720386, y: 0.88723403}
+    _size01: {x: 0.099173546, y: 0.06382978}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.38873628
+      y: 0.8138587
+      width: 0.0989011
+      height: 0.04076087
+  - _controlPath: touchpadButton
+    _center01: {x: 0.5013774, y: 0.6680851}
+    _size01: {x: 0.30303034, y: 0.28723407}
+    _maskUvRect:
+      serializedVersion: 2
+      x: 0.4903846
+      y: 0.8138587
+      width: 0.3021978
+      height: 0.1834239
+  _glyphs:
+  - _controlPath: leftStick
+    _sprite: {fileID: 21300000, guid: 8815b95700dbeb14790383337f8af220, type: 3}
+  - _controlPath: leftStick/up
+    _sprite: {fileID: 21300000, guid: 8815b95700dbeb14790383337f8af220, type: 3}
+  - _controlPath: leftStick/down
+    _sprite: {fileID: 21300000, guid: 8815b95700dbeb14790383337f8af220, type: 3}
+  - _controlPath: leftStick/left
+    _sprite: {fileID: 21300000, guid: 8815b95700dbeb14790383337f8af220, type: 3}
+  - _controlPath: leftStick/right
+    _sprite: {fileID: 21300000, guid: 8815b95700dbeb14790383337f8af220, type: 3}
+  - _controlPath: leftStick/x
+    _sprite: {fileID: 21300000, guid: 8815b95700dbeb14790383337f8af220, type: 3}
+  - _controlPath: leftStick/y
+    _sprite: {fileID: 21300000, guid: 8815b95700dbeb14790383337f8af220, type: 3}
+  - _controlPath: rightStick
+    _sprite: {fileID: 21300000, guid: 27a7ca57b4ee7b44591e77cb12153e48, type: 3}
+  - _controlPath: rightStick/up
+    _sprite: {fileID: 21300000, guid: 27a7ca57b4ee7b44591e77cb12153e48, type: 3}
+  - _controlPath: rightStick/down
+    _sprite: {fileID: 21300000, guid: 27a7ca57b4ee7b44591e77cb12153e48, type: 3}
+  - _controlPath: rightStick/left
+    _sprite: {fileID: 21300000, guid: 27a7ca57b4ee7b44591e77cb12153e48, type: 3}
+  - _controlPath: rightStick/right
+    _sprite: {fileID: 21300000, guid: 27a7ca57b4ee7b44591e77cb12153e48, type: 3}
+  - _controlPath: rightStick/x
+    _sprite: {fileID: 21300000, guid: 27a7ca57b4ee7b44591e77cb12153e48, type: 3}
+  - _controlPath: rightStick/y
+    _sprite: {fileID: 21300000, guid: 27a7ca57b4ee7b44591e77cb12153e48, type: 3}
+  - _controlPath: leftStickPress
+    _sprite: {fileID: 21300000, guid: 5a8a3be64f1cab549be1fd429bfe02c5, type: 3}
+  - _controlPath: rightStickPress
+    _sprite: {fileID: 21300000, guid: d16a7ab843ed80e42b737e690fcbfa11, type: 3}
+  - _controlPath: dpad
+    _sprite: {fileID: 21300000, guid: 54209af00f3b81340a455fed9fbc0c58, type: 3}
+  - _controlPath: dpad/up
+    _sprite: {fileID: 21300000, guid: 11c1d7d19b04f034eaf537b590a27a34, type: 3}
+  - _controlPath: dpad/down
+    _sprite: {fileID: 21300000, guid: 5235e1e950f50084d9b08acf4c95703b, type: 3}
+  - _controlPath: dpad/left
+    _sprite: {fileID: 21300000, guid: 4bdff5387becaf749bbb92281fe62389, type: 3}
+  - _controlPath: dpad/right
+    _sprite: {fileID: 21300000, guid: a9696c87e6f0a584a92ecc06b80d030f, type: 3}
+  - _controlPath: buttonSouth
+    _sprite: {fileID: 21300000, guid: 28a0d1bb08f05d84b9ee847c43489f70, type: 3}
+  - _controlPath: buttonEast
+    _sprite: {fileID: 21300000, guid: f18559032d9d44c4e96d96418ab99c7a, type: 3}
+  - _controlPath: buttonWest
+    _sprite: {fileID: 21300000, guid: d709a8f355d58f2408069fc3a392a14a, type: 3}
+  - _controlPath: buttonNorth
+    _sprite: {fileID: 21300000, guid: 61aed6ae62bc9f143b790dcc4a2e9a06, type: 3}
+  - _controlPath: leftShoulder
+    _sprite: {fileID: 21300000, guid: 643c40a64c0c90f46afc032e7c332ac4, type: 3}
+  - _controlPath: rightShoulder
+    _sprite: {fileID: 21300000, guid: b7b370bbd25547947b833cc3d3824217, type: 3}
+  - _controlPath: leftTrigger
+    _sprite: {fileID: 21300000, guid: 9badfc10080a28b4b8723ae10bda7f5a, type: 3}
+  - _controlPath: rightTrigger
+    _sprite: {fileID: 21300000, guid: 265f128dbeb0d614983af46f9a633e23, type: 3}
+  - _controlPath: start
+    _sprite: {fileID: 21300000, guid: d00f31e88dd647940bf5a29961e57add, type: 3}
+  - _controlPath: select
+    _sprite: {fileID: 21300000, guid: 35601f31dda1f9a4d9ce146a940fae4d, type: 3}
+  - _controlPath: touchpadButton
+    _sprite: {fileID: 21300000, guid: ba01b837887d99140876168b1ffdf75a, type: 3}

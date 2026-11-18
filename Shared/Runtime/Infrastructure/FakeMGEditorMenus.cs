@@ -21,6 +21,9 @@ namespace FakeMG.Framework
 
         public const string INPUT_HINTS = ROOT + "/Input Hints";
         public const string INPUT_HINTS_BUILD_KENNEY_GLYPH_SETS = "Assets/" + INPUT_HINTS + "/Build Kenney Glyph Sets";
+        public const string INPUT_HINTS_BUILD_XELU_GLYPH_SETS = "Assets/" + INPUT_HINTS + "/Build Xelu Glyph Sets";
+
+        public const string KEY_BINDING = ROOT + "/Key Binding";
 
         public const string ITEM_INTERACTION = ROOT + "/Item Interaction";
 
