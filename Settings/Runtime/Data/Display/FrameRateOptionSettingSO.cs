@@ -1,47 +1,35 @@
 using System.Collections.Generic;
+using System.Globalization;
 using FakeMG.Framework;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace FakeMG.Settings.Display
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Frame Rate Option Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Frame Rate Option Setting SO")]
     public class FrameRateOptionSettingSO : OptionSettingSO
     {
-        private const int DEFAULT_FRAME_RATE = 60;
-        private const string FRAME_RATE_FORMAT = "{0} FPS";
+        private const int DEFAULT_FRAME_RATE_FPS = 60;
+        private const string FRAME_RATE_LABEL_FORMAT = "{0} FPS";
 
-        [SerializeField] private int[] _frameRateValues = { 30, 60, 120, 144, 240 };
+        [FormerlySerializedAs("_frameRateValues")]
+        [SerializeField] private int[] _frameRateOptionsFps = { 30, 60, 120, 144, 240 };
 
-        public override List<string> GetOptions()
+        public override IReadOnlyList<SettingOption> GetOptions()
         {
-            List<string> frameRateOptions = new(_frameRateValues.Length);
-
-            for (int index = 0; index < _frameRateValues.Length; index++)
+            List<SettingOption> options = new(_frameRateOptionsFps.Length);
+            foreach (int frameRateFps in _frameRateOptionsFps)
             {
-                int frameRate = _frameRateValues[index];
-                string optionLabel = string.Format(FRAME_RATE_FORMAT, frameRate);
-                frameRateOptions.Add(optionLabel);
+                options.Add(new SettingOption(frameRateFps.ToString(CultureInfo.InvariantCulture), string.Format(FRAME_RATE_LABEL_FORMAT, frameRateFps)));
             }
 
-            return frameRateOptions;
+            return options;
         }
 
-        /// <remarks>An unknown label falls back to the first option, matching how the dropdown resolves it.</remarks>
-        public int GetFrameRateValue(string optionLabel)
+        public int GetFrameRateFps(string optionId)
         {
-            int optionIndex = GetOptions().IndexOf(optionLabel);
-            return GetFrameRateValue(Mathf.Max(optionIndex, 0));
-        }
-
-        public int GetFrameRateValue(int optionIndex)
-        {
-            if (_frameRateValues.Length == 0)
-            {
-                return DEFAULT_FRAME_RATE;
-            }
-
-            int clampedIndex = Mathf.Clamp(optionIndex, 0, _frameRateValues.Length - 1);
-            return _frameRateValues[clampedIndex];
+            int optionIndex = IndexOfOptionOrDefault(optionId);
+            return optionIndex == NO_OPTION_INDEX ? DEFAULT_FRAME_RATE_FPS : _frameRateOptionsFps[optionIndex];
         }
     }
 }

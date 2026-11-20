@@ -16,5 +16,5 @@ MonoBehaviour:
   _label: FPS
   _description: The most frames the game draws each second while VSync is off. A
     lower cap saves power and heat.
-  _defaultValue: 60 FPS
-  _frameRateValues: 1e0000003c0000007800000090000000f0000000
+  _defaultValue: 60
+  _frameRateOptionsFps: 1e0000003c0000007800000090000000f0000000

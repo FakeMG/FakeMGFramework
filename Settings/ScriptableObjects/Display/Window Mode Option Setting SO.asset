@@ -16,4 +16,4 @@ MonoBehaviour:
   _label: Window Mode
   _description: How the game fills your screen. Borderless switches to other windows
     fastest; Fullscreen can run smoother.
-  _defaultValue: 0
+  _defaultValue: ExclusiveFullScreen

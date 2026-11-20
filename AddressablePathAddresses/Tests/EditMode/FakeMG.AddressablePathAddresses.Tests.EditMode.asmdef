@@ -1,0 +1,26 @@
+{
+    "name": "FakeMG.AddressablePathAddresses.Tests.EditMode",
+    "rootNamespace": "FakeMG.AddressablePathAddresses.Tests",
+    "references": [
+        "FakeMG.AddressablePathAddresses.Editor",
+        "Unity.Addressables",
+        "Unity.Addressables.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "FAKEMG_ADDRESSABLES"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "FAKEMG_ADDRESSABLES"
+        }
+    ]
+}

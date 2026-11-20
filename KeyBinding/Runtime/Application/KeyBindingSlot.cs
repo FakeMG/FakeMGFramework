@@ -2,7 +2,7 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.KeyBinding
 {
-    public sealed class KeyBindingSlot
+    public sealed class KeyBindingSlot : IBoundKey
     {
         public RebindableAction RebindableAction { get; }
         public BindingDeviceFamilySO DeviceFamilySO { get; }

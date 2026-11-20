@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 namespace FakeMG.KeyBinding
 {
     /// <summary>An action is listed only for the device families that have a binding for it.</summary>
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.KEY_BINDING + "/Key Binding Catalog")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.KEY_BINDING + "/Key Binding Catalog SO")]
     public sealed class KeyBindingCatalogSO : ScriptableObject
     {
         [InfoBox("Leave out actions bound to Escape, Start or the left and right mouse buttons: those stay reserved for menus and clicks.")]

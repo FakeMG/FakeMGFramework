@@ -5,33 +5,24 @@ using UnityEngine;
 
 namespace FakeMG.Settings.Display
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Window Mode Option Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Window Mode Option Setting SO")]
     public class WindowModeOptionSettingSO : OptionSettingSO
     {
-        private static readonly string[] WINDOW_MODE_OPTIONS =
+        private static readonly SettingOption[] WINDOW_MODE_OPTIONS =
         {
-            "Fullscreen",
-            "Borderless",
-            "Windowed"
+            new(nameof(FullScreenMode.ExclusiveFullScreen), "Fullscreen"),
+            new(nameof(FullScreenMode.FullScreenWindow), "Borderless"),
+            new(nameof(FullScreenMode.Windowed), "Windowed")
         };
 
-        private static readonly FullScreenMode[] WINDOW_MODES =
+        public override IReadOnlyList<SettingOption> GetOptions()
         {
-            FullScreenMode.ExclusiveFullScreen,
-            FullScreenMode.FullScreenWindow,
-            FullScreenMode.Windowed
-        };
-
-        public override List<string> GetOptions()
-        {
-            return new List<string>(WINDOW_MODE_OPTIONS);
+            return WINDOW_MODE_OPTIONS;
         }
 
-        /// <remarks>An unknown label falls back to the first option, matching how the dropdown resolves it.</remarks>
-        public FullScreenMode GetFullScreenMode(string optionLabel)
+        public FullScreenMode GetFullScreenMode(string optionId)
         {
-            int optionIndex = Array.IndexOf(WINDOW_MODE_OPTIONS, optionLabel);
-            return WINDOW_MODES[Mathf.Max(optionIndex, 0)];
+            return Enum.Parse<FullScreenMode>(WINDOW_MODE_OPTIONS[IndexOfOptionOrDefault(optionId)].Id);
         }
     }
 }

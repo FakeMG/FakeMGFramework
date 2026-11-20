@@ -1,182 +1,82 @@
 using System;
 using System.Collections.Generic;
 using FakeMG.Framework;
-using FakeMG.Settings.Converters;
 
 namespace FakeMG.Settings
 {
+    /// <summary>
+    /// Holds every setting's current value. A setting needs no registration: its storage is created the first time it is read
+    /// or written, from the saved value if one was loaded, or from its default.
+    /// </summary>
     public sealed class SettingsStateRepository
     {
-        private readonly Dictionary<string, PersistedSettingValue> _persistedValues = new(StringComparer.Ordinal);
-        private readonly Dictionary<string, ISettingValueRuntimeStorage> _runtimeStorages = new(StringComparer.Ordinal);
+        private readonly Dictionary<string, ISettingValueRuntimeStorage> _storages = new(StringComparer.Ordinal);
 
-        public event Action OnSettingsChanged;
+        /// <summary>Saved values whose setting has not been used yet. They are kept so saving does not drop them.</summary>
+        private readonly Dictionary<string, string> _unusedSavedValues = new(StringComparer.Ordinal);
+
+        /// <summary>Raised for every value change, restores included.</summary>
+        public event Action<SettingDefinitionSO> OnSettingChanged;
+
+        /// <summary>Raised only by <see cref="SetValue{T}"/>, so restoring saved values never triggers a save.</summary>
+        public event Action OnSettingsEdited;
 
         #region Public Methods
 
-        public void RegisterSetting<T>(SettingDefinitionGenericSO<T> settingSO)
-        {
-            if (settingSO == null)
-            {
-                throw new ArgumentNullException(nameof(settingSO));
-            }
-
-            if (_runtimeStorages.TryGetValue(settingSO.SettingId, out ISettingValueRuntimeStorage existingStorage))
-            {
-                if (existingStorage.ValueType != typeof(T))
-                {
-                    throw new InvalidOperationException($"Setting '{settingSO.SettingId}' is already registered as '{existingStorage.ValueType.FullName}'.");
-                }
-
-                return;
-            }
-
-            var storage = new SettingValueRuntimeStorage<T>(settingSO);
-            if (_persistedValues.TryGetValue(settingSO.SettingId, out PersistedSettingValue persistedValue) && !storage.TryRestore(persistedValue, out string failureReason))
-            {
-                Echo.Warning($"Resetting setting '{settingSO.SettingId}': {failureReason}");
-                storage.RestoreDefault();
-            }
-
-            _runtimeStorages.Add(settingSO.SettingId, storage);
-            _persistedValues[settingSO.SettingId] = storage.CapturePersistedValue();
-        }
-
         public T GetValue<T>(SettingDefinitionGenericSO<T> settingSO)
         {
-            return GetRegisteredStorage(settingSO).Value;
+            return GetOrCreateStorage(settingSO).Value;
         }
 
         public void SetValue<T>(SettingDefinitionGenericSO<T> settingSO, T newValue)
         {
-            SettingValueRuntimeStorage<T> storage = GetRegisteredStorage(settingSO);
-            if (EqualityComparer<T>.Default.Equals(storage.Value, newValue))
+            if (!GetOrCreateStorage(settingSO).ChangeValue(newValue))
             {
                 return;
             }
 
-            storage.SetValue(newValue);
-            _persistedValues[settingSO.SettingId] = storage.CapturePersistedValue();
-            OnSettingsChanged?.Invoke();
-        }
-
-        public void Subscribe<T>(
-            SettingDefinitionGenericSO<T> settingSO,
-            Action<SettingDefinitionGenericSO<T>, T> callback)
-        {
-            GetRegisteredStorage(settingSO).OnValueChanged += callback;
-        }
-
-        public void Unsubscribe<T>(
-            SettingDefinitionGenericSO<T> settingSO,
-            Action<SettingDefinitionGenericSO<T>, T> callback)
-        {
-            GetRegisteredStorage(settingSO).OnValueChanged -= callback;
+            OnSettingChanged?.Invoke(settingSO);
+            OnSettingsEdited?.Invoke();
         }
 
         public SettingDataSnapshot CaptureSnapshot()
         {
-            var snapshot = new SettingDataSnapshot();
-            foreach (KeyValuePair<string, PersistedSettingValue> persistedEntry in _persistedValues)
+            var snapshot = new SettingDataSnapshot { Values = new Dictionary<string, string>(_unusedSavedValues, StringComparer.Ordinal) };
+            foreach (ISettingValueRuntimeStorage storage in _storages.Values)
             {
-                snapshot.Values.Add(persistedEntry.Key, persistedEntry.Value.SerializedValue);
-                snapshot.ValueTypes.Add(persistedEntry.Key, persistedEntry.Value.TypeId);
+                snapshot.Values[storage.SettingSO.SettingId] = storage.FormatValue();
             }
 
             return snapshot;
         }
 
-        public bool TryValidateSnapshot(SettingDataSnapshot snapshot, out string failureReason)
-        {
-            if (snapshot?.Values == null || snapshot.ValueTypes == null)
-            {
-                failureReason = "Settings snapshot or one of its maps is missing.";
-                return false;
-            }
-
-            failureReason = string.Empty;
-            return true;
-        }
-
+        /// <remarks>A setting missing from the snapshot, or saved with an invalid value, goes back to its default.</remarks>
         public void RestoreSnapshot(SettingDataSnapshot snapshot)
         {
-            if (!TryValidateSnapshot(snapshot, out string failureReason))
+            _unusedSavedValues.Clear();
+            foreach (KeyValuePair<string, string> savedValue in snapshot.Values)
             {
-                throw new ArgumentException(failureReason, nameof(snapshot));
-            }
-
-            var nextPersistedValues = new Dictionary<string, PersistedSettingValue>(StringComparer.Ordinal);
-            List<string> diagnostics = new();
-            foreach (KeyValuePair<string, string> valueEntry in snapshot.Values)
-            {
-                if (!snapshot.ValueTypes.TryGetValue(valueEntry.Key, out string typeId))
+                if (!_storages.ContainsKey(savedValue.Key))
                 {
-                    diagnostics.Add($"Setting '{valueEntry.Key}' is missing its type ID.");
-                    continue;
-                }
-
-                if (!SettingValueConverterRegistry.TryResolveType(typeId, out Type valueType) ||
-                    !SettingValueConverterRegistry.TryDeserialize(valueType, valueEntry.Value, out _))
-                {
-                    diagnostics.Add($"Setting '{valueEntry.Key}' has an unsupported type or corrupt value.");
-                    continue;
-                }
-
-                nextPersistedValues.Add(valueEntry.Key, new PersistedSettingValue(valueEntry.Value, typeId));
-            }
-
-            foreach (string typedSettingId in snapshot.ValueTypes.Keys)
-            {
-                if (!snapshot.Values.ContainsKey(typedSettingId))
-                {
-                    diagnostics.Add($"Setting type '{typedSettingId}' has no matching value.");
+                    _unusedSavedValues.Add(savedValue.Key, savedValue.Value);
                 }
             }
 
-            foreach (string registeredSettingId in _runtimeStorages.Keys)
+            foreach (ISettingValueRuntimeStorage storage in _storages.Values)
             {
-                if (!snapshot.Values.ContainsKey(registeredSettingId))
-                {
-                    diagnostics.Add($"Registered setting '{registeredSettingId}' is missing and will use its default.");
-                }
-            }
-
-            foreach (string diagnostic in diagnostics)
-            {
-                Echo.Warning(diagnostic);
-            }
-
-            _persistedValues.Clear();
-            foreach (KeyValuePair<string, PersistedSettingValue> persistedEntry in nextPersistedValues)
-            {
-                _persistedValues.Add(persistedEntry.Key, persistedEntry.Value);
-            }
-
-            foreach (ISettingValueRuntimeStorage storage in _runtimeStorages.Values)
-            {
-                string storageFailureReason = string.Empty;
-                if (_persistedValues.TryGetValue(storage.SettingId, out PersistedSettingValue persistedValue) && storage.TryRestore(persistedValue, out storageFailureReason))
-                {
-                    continue;
-                }
-
-                if (_persistedValues.ContainsKey(storage.SettingId))
-                {
-                    Echo.Warning($"Resetting setting '{storage.SettingId}': {storageFailureReason}");
-                }
-
-                storage.RestoreDefault();
-                _persistedValues[storage.SettingId] = storage.CapturePersistedValue();
+                bool hasChanged = snapshot.Values.TryGetValue(storage.SettingSO.SettingId, out string savedText)
+                    ? RestoreOrResetToDefault(storage, savedText)
+                    : storage.ResetToDefault();
+                RaiseSettingChangedIf(hasChanged, storage.SettingSO);
             }
         }
 
         public void RestoreDefaults()
         {
-            _persistedValues.Clear();
-            foreach (ISettingValueRuntimeStorage storage in _runtimeStorages.Values)
+            _unusedSavedValues.Clear();
+            foreach (ISettingValueRuntimeStorage storage in _storages.Values)
             {
-                storage.RestoreDefault();
-                _persistedValues.Add(storage.SettingId, storage.CapturePersistedValue());
+                RaiseSettingChangedIf(storage.ResetToDefault(), storage.SettingSO);
             }
         }
 
@@ -184,20 +84,43 @@ namespace FakeMG.Settings
 
         #region Private Methods
 
-        private SettingValueRuntimeStorage<T> GetRegisteredStorage<T>(SettingDefinitionGenericSO<T> settingSO)
+        /// <exception cref="InvalidOperationException">Two settings share an id but not a value type.</exception>
+        private SettingValueRuntimeStorage<T> GetOrCreateStorage<T>(SettingDefinitionGenericSO<T> settingSO)
         {
-            if (settingSO == null)
+            if (_storages.TryGetValue(settingSO.SettingId, out ISettingValueRuntimeStorage existingStorage))
             {
-                throw new ArgumentNullException(nameof(settingSO));
+                return existingStorage as SettingValueRuntimeStorage<T> ??
+                       throw new InvalidOperationException($"Setting id '{settingSO.SettingId}' is used by settings of different value types.");
             }
 
-            if (!_runtimeStorages.TryGetValue(settingSO.SettingId, out ISettingValueRuntimeStorage storage))
+            var storage = new SettingValueRuntimeStorage<T>(settingSO);
+            if (_unusedSavedValues.Remove(settingSO.SettingId, out string savedText))
             {
-                throw new InvalidOperationException($"Setting '{settingSO.SettingId}' must be registered before use.");
+                RestoreOrResetToDefault(storage, savedText);
             }
 
-            return storage as SettingValueRuntimeStorage<T> ??
-                   throw new InvalidOperationException($"Setting '{settingSO.SettingId}' is registered with a different value type.");
+            _storages.Add(settingSO.SettingId, storage);
+            return storage;
+        }
+
+        /// <returns>Whether the value changed.</returns>
+        private static bool RestoreOrResetToDefault(ISettingValueRuntimeStorage storage, string savedText)
+        {
+            if (storage.TryRestoreFromText(savedText, out bool hasChanged))
+            {
+                return hasChanged;
+            }
+
+            Echo.Warning($"Resetting setting '{storage.SettingSO.SettingId}' to its default: its saved value '{savedText}' is invalid.");
+            return storage.ResetToDefault();
+        }
+
+        private void RaiseSettingChangedIf(bool hasChanged, SettingDefinitionSO settingSO)
+        {
+            if (hasChanged)
+            {
+                OnSettingChanged?.Invoke(settingSO);
+            }
         }
 
         #endregion

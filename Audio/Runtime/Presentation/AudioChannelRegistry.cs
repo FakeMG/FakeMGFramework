@@ -15,6 +15,7 @@ namespace FakeMG.Audio
         private readonly HashSet<AudioCueEventChannelSO> _registeredPooledChannels = new();
         private readonly Dictionary<string, AudioCueEventChannelSO> _settingIdToChannel = new();
         private HashSet<AudioCueEventChannelSO> _subscribedVolumeChannels = new();
+        private SettingsStateRepository _volumeSettings;
 
         private AudioCuePlayAction _pooledPlayHandler;
         private AudioCueStopAction _pooledStopHandler;
@@ -105,36 +106,27 @@ namespace FakeMG.Audio
                                    "Check the channel configuration and make sure it has a valid volume slider setting assigned.");
                     continue;
                 }
-                settingsStateRepository.RegisterSetting(channel.VolumeSliderSetting);
-                settingsStateRepository.Subscribe(channel.VolumeSliderSetting, ApplyVolumeWhenSettingChanged);
             }
+
+            _volumeSettings = settingsStateRepository;
+            _volumeSettings.OnSettingChanged += ApplyVolumeWhenSettingChanged;
         }
 
-        public void UnsubscribeFromVolumeChanges(SettingsStateRepository settingsStateRepository)
+        public void UnsubscribeFromVolumeChanges()
         {
-            foreach (var channel in _subscribedVolumeChannels)
-            {
-                if (!channel.VolumeSliderSetting)
-                {
-                    Echo.Error($"Channel '{channel.name}' is missing a reference to a volume slider setting, " +
-                                   "but it was included in the unique volume channels list. " +
-                                   "Check the channel configuration and make sure it has a valid volume slider setting assigned.");
-                    continue;
-                }
-                settingsStateRepository.Unsubscribe(channel.VolumeSliderSetting, ApplyVolumeWhenSettingChanged);
-            }
-
+            _volumeSettings.OnSettingChanged -= ApplyVolumeWhenSettingChanged;
+            _volumeSettings = null;
             _subscribedVolumeChannels.Clear();
         }
 
-        private void ApplyVolumeWhenSettingChanged(SettingDefinitionGenericSO<float> setting, float volume)
+        private void ApplyVolumeWhenSettingChanged(SettingDefinitionSO changedSettingSO)
         {
-            if (!_settingIdToChannel.TryGetValue(setting.SettingId, out AudioCueEventChannelSO channel))
+            if (!_settingIdToChannel.TryGetValue(changedSettingSO.SettingId, out AudioCueEventChannelSO channel))
             {
                 return;
             }
 
-            ApplyVolumeToChannel(channel, volume);
+            ApplyVolumeToChannel(channel, _volumeSettings.GetValue(channel.VolumeSliderSetting));
         }
 
         public void InitializeChannelVolumes(SettingsStateRepository settingsStateRepository)

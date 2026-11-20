@@ -5,6 +5,7 @@ using VContainer;
 
 namespace FakeMG.InputHints
 {
+    /// <summary>Shows the glyph of one action's binding; <see cref="ActionGlyphSubscriber"/> tells it the active device's set.</summary>
     /// <remarks>Hidden while the device has no binding for the action.</remarks>
     public sealed class ActionGlyphView : MonoBehaviour
     {
@@ -12,43 +13,23 @@ namespace FakeMG.InputHints
         [SerializeField] private InputGlyphView _glyphView;
 
         private readonly List<InputGlyph> _glyphs = new();
-        private ActiveGlyphSetTracker _glyphSetTracker;
         private InputGlyphResolver _glyphResolver;
-
-        #region Unity Lifecycle
-
-        private void OnEnable()
-        {
-            _glyphSetTracker.OnGlyphsChanged += ShowGlyphOfActiveDevice;
-            ShowGlyphOfActiveDevice();
-        }
-
-        private void OnDisable()
-        {
-            _glyphSetTracker.OnGlyphsChanged -= ShowGlyphOfActiveDevice;
-        }
-
-        #endregion
 
         #region Public Methods
 
         [Inject]
-        public void Construct(ActiveGlyphSetTracker glyphSetTracker, InputGlyphResolver glyphResolver)
+        public void Construct(InputGlyphResolver glyphResolver)
         {
-            _glyphSetTracker = glyphSetTracker;
             _glyphResolver = glyphResolver;
         }
 
-        #endregion
-
-        #region Private Methods
-
-        private void ShowGlyphOfActiveDevice()
+        /// <param name="activeSetSO">Null before any device is known; the glyph is then hidden.</param>
+        public void ShowGlyphFrom(InputGlyphSetSO activeSetSO)
         {
             _glyphs.Clear();
-            if (_glyphSetTracker.ActiveSetSO)
+            if (activeSetSO)
             {
-                _glyphResolver.Resolve(_actionReference.action, _glyphSetTracker.ActiveSetSO, _glyphs);
+                _glyphResolver.Resolve(_actionReference.action, activeSetSO, _glyphs);
             }
 
             bool hasGlyph = _glyphs.Count > 0;

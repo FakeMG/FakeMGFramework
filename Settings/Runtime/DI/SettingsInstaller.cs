@@ -11,7 +11,8 @@ namespace FakeMG.Settings
         public static void InstallDisplay(IContainerBuilder builder, DisplaySettingsConfigSO configSO)
         {
             builder.RegisterInstance(configSO);
-            builder.RegisterEntryPoint<DisplaySettingsApplier>();
+            builder.Register<DisplaySettingsApplier>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<DisplaySettingsSubscriber>();
         }
 
         #endregion

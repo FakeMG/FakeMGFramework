@@ -1,5 +1,3 @@
-using System.Threading;
-using Cysharp.Threading.Tasks;
 using FakeMG.SaveLoad;
 
 namespace FakeMG.Settings.SaveLoad
@@ -32,13 +30,8 @@ namespace FakeMG.Settings.SaveLoad
 
         public bool TryValidateState(object state, out string failureReason)
         {
-            if (state is not SettingDataSnapshot snapshot)
-            {
-                failureReason = "Settings document state has the wrong type.";
-                return false;
-            }
-
-            return _settingsStateRepository.TryValidateSnapshot(snapshot, out failureReason);
+            failureReason = state is SettingDataSnapshot { Values: not null } ? string.Empty : "Settings document state is not a settings snapshot.";
+            return failureReason.Length == 0;
         }
 
         public void RestoreState(object state)
@@ -52,22 +45,5 @@ namespace FakeMG.Settings.SaveLoad
         }
 
         #endregion
-
-    }
-
-    public sealed class SettingsPersistenceRequester : ISettingsPersistenceRequester
-    {
-        private readonly IGlobalDocumentSaveRequester _globalDocumentSaveRequester;
-
-        public SettingsPersistenceRequester(IGlobalDocumentSaveRequester globalDocumentSaveRequester)
-        {
-            _globalDocumentSaveRequester = globalDocumentSaveRequester;
-        }
-
-        public async UniTask<SettingsPersistenceResult> SaveSettingsAsync(CancellationToken cancellationToken)
-        {
-            GlobalDocumentSaveResult result = await _globalDocumentSaveRequester.SaveAsync(SettingsGlobalSaveDocument.DOCUMENT_ID, cancellationToken);
-            return new SettingsPersistenceResult(result.Succeeded, result.FailureReason);
-        }
     }
 }

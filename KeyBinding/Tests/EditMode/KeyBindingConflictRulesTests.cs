@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 
@@ -19,124 +18,114 @@ namespace FakeMG.KeyBinding.Tests
         }
 
         [Test]
-        public void FindConflictingSlotIndex_SameKeyInMapsLiveTogether_ReturnsOtherSlot()
+        public void FindConflictingSlot_SameKeyInMapsLiveTogether_ReturnsOtherSlot()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(CAMERA_MAP, "<Keyboard>/q"),
-                new BoundKey(TIME_MAP, "<Keyboard>/space")
-            };
+            var changedSlot = new FakeBoundKey(CAMERA_MAP, "<Keyboard>/space");
+            var otherSlot = new FakeBoundKey(TIME_MAP, "<Keyboard>/space");
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, "<Keyboard>/space");
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, otherSlot }, changedSlot);
 
-            Assert.AreEqual(1, conflictIndex);
+            Assert.That(conflictingSlot, Is.SameAs(otherSlot));
         }
 
         [Test]
-        public void FindConflictingSlotIndex_SameKeyInSameMap_ReturnsOtherSlot()
+        public void FindConflictingSlot_SameKeyInSameMap_ReturnsOtherSlot()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(CAMERA_MAP, "<Keyboard>/w"),
-                new BoundKey(CAMERA_MAP, "<Keyboard>/s")
-            };
+            var changedSlot = new FakeBoundKey(CAMERA_MAP, "<Keyboard>/s");
+            var otherSlot = new FakeBoundKey(CAMERA_MAP, "<Keyboard>/s");
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, "<Keyboard>/s");
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, otherSlot }, changedSlot);
 
-            Assert.AreEqual(1, conflictIndex);
+            Assert.That(conflictingSlot, Is.SameAs(otherSlot));
         }
 
         [Test]
-        public void FindConflictingSlotIndex_SameKeyInExclusiveMaps_ReturnsNoConflict()
+        public void FindConflictingSlot_SameKeyInMapsNeverLiveTogether_ReturnsNull()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(CAMERA_MAP, "<Keyboard>/e"),
-                new BoundKey(BUILD_MENU_MAP, "<Keyboard>/q")
-            };
+            var changedSlot = new FakeBoundKey(CAMERA_MAP, "<Keyboard>/q");
+            var otherSlot = new FakeBoundKey(BUILD_MENU_MAP, "<Keyboard>/q");
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, "<Keyboard>/q");
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, otherSlot }, changedSlot);
 
-            Assert.AreEqual(KeyBindingConflictRules.NO_CONFLICT, conflictIndex);
+            Assert.That(conflictingSlot, Is.Null);
         }
 
         [Test]
-        public void FindConflictingSlotIndex_ExclusivePairListedInEitherOrder_ReturnsNoConflict()
+        public void FindConflictingSlot_MapPairListedInEitherOrder_ReturnsNull()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(BUILD_MENU_MAP, "<Keyboard>/r"),
-                new BoundKey(CAMERA_MAP, "<Keyboard>/q")
-            };
+            var changedSlot = new FakeBoundKey(BUILD_MENU_MAP, "<Keyboard>/q");
+            var otherSlot = new FakeBoundKey(CAMERA_MAP, "<Keyboard>/q");
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, "<Keyboard>/q");
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, otherSlot }, changedSlot);
 
-            Assert.AreEqual(KeyBindingConflictRules.NO_CONFLICT, conflictIndex);
+            Assert.That(conflictingSlot, Is.Null);
         }
 
         [Test]
-        public void FindConflictingSlotIndex_DifferentCase_ReturnsOtherSlot()
+        public void FindConflictingSlot_DifferentCase_ReturnsOtherSlot()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(TIME_MAP, "<Keyboard>/1"),
-                new BoundKey(TIME_MAP, "<Keyboard>/Space")
-            };
+            var changedSlot = new FakeBoundKey(TIME_MAP, "<keyboard>/space");
+            var otherSlot = new FakeBoundKey(TIME_MAP, "<Keyboard>/Space");
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, "<keyboard>/space");
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, otherSlot }, changedSlot);
 
-            Assert.AreEqual(1, conflictIndex);
+            Assert.That(conflictingSlot, Is.SameAs(otherSlot));
         }
 
         [Test]
-        public void FindConflictingSlotIndex_ReboundSlotAlreadyHoldsKey_IgnoresItself()
+        public void FindConflictingSlot_OnlyTheChangedSlotHoldsTheKey_ReturnsNull()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(TIME_MAP, "<Keyboard>/space"),
-                new BoundKey(TIME_MAP, "<Keyboard>/1")
-            };
+            var changedSlot = new FakeBoundKey(TIME_MAP, "<Keyboard>/space");
+            var otherSlot = new FakeBoundKey(TIME_MAP, "<Keyboard>/1");
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, "<Keyboard>/space");
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, otherSlot }, changedSlot);
 
-            Assert.AreEqual(KeyBindingConflictRules.NO_CONFLICT, conflictIndex);
+            Assert.That(conflictingSlot, Is.Null);
         }
 
         [Test]
-        public void FindConflictingSlotIndex_EmptyNewPath_ReturnsNoConflict()
+        public void FindConflictingSlot_ChangedSlotUnbound_ReturnsNull()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(TIME_MAP, "<Keyboard>/1"),
-                new BoundKey(TIME_MAP, string.Empty)
-            };
+            var changedSlot = new FakeBoundKey(TIME_MAP, string.Empty);
+            var otherSlot = new FakeBoundKey(TIME_MAP, string.Empty);
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, string.Empty);
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, otherSlot }, changedSlot);
 
-            Assert.AreEqual(KeyBindingConflictRules.NO_CONFLICT, conflictIndex);
+            Assert.That(conflictingSlot, Is.Null);
         }
 
         [Test]
-        public void FindConflictingSlotIndex_SeveralClashes_ReturnsFirst()
+        public void FindConflictingSlot_SeveralConflicts_ReturnsFirst()
         {
-            List<BoundKey> slots = new()
-            {
-                new BoundKey(TIME_MAP, "<Keyboard>/1"),
-                new BoundKey(CAMERA_MAP, "<Keyboard>/f"),
-                new BoundKey(TIME_MAP, "<Keyboard>/f")
-            };
+            var changedSlot = new FakeBoundKey(TIME_MAP, "<Keyboard>/f");
+            var firstOtherSlot = new FakeBoundKey(CAMERA_MAP, "<Keyboard>/f");
+            var secondOtherSlot = new FakeBoundKey(TIME_MAP, "<Keyboard>/f");
 
-            int conflictIndex = _rules.FindConflictingSlotIndex(slots, 0, "<Keyboard>/f");
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new[] { changedSlot, firstOtherSlot, secondOtherSlot }, changedSlot);
 
-            Assert.AreEqual(1, conflictIndex);
+            Assert.That(conflictingSlot, Is.SameAs(firstOtherSlot));
         }
 
         [Test]
-        public void FindConflictingSlotIndex_ReboundIndexOutOfRange_Throws()
+        public void FindConflictingSlot_EmptyList_ReturnsNull()
         {
-            List<BoundKey> slots = new() { new BoundKey(TIME_MAP, "<Keyboard>/1") };
+            var changedSlot = new FakeBoundKey(TIME_MAP, "<Keyboard>/f");
 
-            Assert.Throws<ArgumentOutOfRangeException>(() => _rules.FindConflictingSlotIndex(slots, 3, "<Keyboard>/2"));
+            FakeBoundKey conflictingSlot = _rules.FindConflictingSlot(new List<FakeBoundKey>(), changedSlot);
+
+            Assert.That(conflictingSlot, Is.Null);
+        }
+
+        private sealed class FakeBoundKey : IBoundKey
+        {
+            public string ActionMapName { get; }
+            public string ControlPath { get; }
+
+            public FakeBoundKey(string actionMapName, string controlPath)
+            {
+                ActionMapName = actionMapName;
+                ControlPath = controlPath;
+            }
         }
     }
 }

@@ -49,8 +49,7 @@ namespace FakeMG.Framework.UI
 
         public void ShowError(string message)
         {
-            PlayMessage(message, _errorColor)
-                .Insert(0f, _label.rectTransform.DOPunchAnchorPos(_errorPunchPixels, _errorPunchSeconds, 8));
+            PlayMessage(message, _errorColor).Insert(0f, _label.rectTransform.DOPunchAnchorPos(_errorPunchPixels, _errorPunchSeconds, 8));
         }
 
         #endregion

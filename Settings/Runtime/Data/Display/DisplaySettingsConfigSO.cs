@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace FakeMG.Settings.Display
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Display Settings Config")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_DISPLAY + "/Display Settings Config SO")]
     public sealed class DisplaySettingsConfigSO : ScriptableObject
     {
         [Header("Screen")]
@@ -13,13 +13,13 @@ namespace FakeMG.Settings.Display
 
         [Space]
         [Header("Frame Pacing")]
-        [Required, SerializeField] private OnOffOptionSettingSO _vSyncSettingSO;
+        [Required, SerializeField] private BoolSettingSO _vSyncSettingSO;
         [Tooltip("Only takes effect while VSync is off.")]
         [Required, SerializeField] private FrameRateOptionSettingSO _frameRateSettingSO;
 
         public WindowModeOptionSettingSO WindowModeSettingSO => _windowModeSettingSO;
         public ResolutionOptionSettingSO ResolutionSettingSO => _resolutionSettingSO;
-        public OnOffOptionSettingSO VSyncSettingSO => _vSyncSettingSO;
+        public BoolSettingSO VSyncSettingSO => _vSyncSettingSO;
         public FrameRateOptionSettingSO FrameRateSettingSO => _frameRateSettingSO;
     }
 }

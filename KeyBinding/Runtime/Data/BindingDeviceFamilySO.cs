@@ -4,6 +4,7 @@ using FakeMG.Framework;
 using FakeMG.InputHints;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace FakeMG.KeyBinding
 {
@@ -11,13 +12,14 @@ namespace FakeMG.KeyBinding
     /// Devices whose bindings are listed and rebound together, such as keyboard and mouse, or any gamepad. The Controls list
     /// shows the family the player is using, judged by the glyph set the input hints draw.
     /// </summary>
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.KEY_BINDING + "/Binding Device Family")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.KEY_BINDING + "/Binding Device Family SO")]
     public sealed class BindingDeviceFamilySO : ScriptableObject
     {
         [Header("Display")]
         [SerializeField] private string _displayName;
         [Tooltip("Shown in a binding slot while it waits for input, e.g. 'Press a key'.")]
-        [SerializeField] private string _listeningPrompt;
+        [FormerlySerializedAs("_listeningPrompt")]
+        [SerializeField] private string _rebindPrompt;
 
         [Space]
         [Header("Glyphs")]
@@ -43,7 +45,7 @@ namespace FakeMG.KeyBinding
         [SerializeField] private string _cancelControlPath;
 
         public string DisplayName => _displayName;
-        public string ListeningPrompt => _listeningPrompt;
+        public string RebindPrompt => _rebindPrompt;
         public string BindingGroup => _bindingGroup;
         public int SlotsPerAction => _slotsPerAction;
         public IReadOnlyList<string> ExcludedControlPaths => _excludedControlPaths;

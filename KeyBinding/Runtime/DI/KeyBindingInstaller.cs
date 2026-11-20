@@ -10,7 +10,8 @@ namespace FakeMG.KeyBinding
         public static void InstallPersistent(IContainerBuilder builder, KeyBindingConfigSO configSO)
         {
             builder.RegisterInstance(configSO);
-            builder.RegisterEntryPoint<KeyBindingService>().AsSelf();
+            builder.Register<KeyBindingService>(Lifetime.Singleton);
+            builder.RegisterEntryPoint<KeyBindingOverridesSubscriber>();
         }
 
         #endregion

@@ -23,6 +23,9 @@ namespace FakeMG.Framework.UI.ButtonSelection
         private RectMask2D _lastSelectedMask;
         private MaskableGraphic[] _frameGraphics;
         private float _appearThresholdSquared;
+        private bool _isClipApplied;
+        private bool _wasClipped;
+        private Rect _appliedClipRect;
 
         #region Unity Lifecycle
 
@@ -30,6 +33,12 @@ namespace FakeMG.Framework.UI.ButtonSelection
         {
             _appearThresholdSquared = _appearThreshold * _appearThreshold;
             _frameGraphics = _frameRectTransform.GetComponentsInChildren<MaskableGraphic>(true);
+        }
+
+        /// <remarks>Re-enabled graphics may have lost their clip, so the next update applies it again.</remarks>
+        private void OnEnable()
+        {
+            _isClipApplied = false;
         }
 
         private void Update()
@@ -79,19 +88,34 @@ namespace FakeMG.Framework.UI.ButtonSelection
             }
 
             _frameRectTransform.position = _lastSelectedRect.TransformPoint(_lastSelectedRect.rect.center);
-            _frameRectTransform.sizeDelta = targetSizePixels;
-            ClipToSelectedObjectMask();
+            if (_frameRectTransform.sizeDelta != targetSizePixels)
+            {
+                _frameRectTransform.sizeDelta = targetSizePixels;
+            }
+
+            ClipToSelectedObjectMaskIfChanged();
         }
 
         #endregion
 
         #region Private Methods
 
-        /// <remarks>The mask's rect and the frame's clip rect share one space only while both sit under the same root canvas.</remarks>
-        private void ClipToSelectedObjectMask()
+        /// <remarks>
+        /// The mask's rect and the frame's clip rect share one space only while both sit under the same root canvas. Only
+        /// writes when the clip changes, since every write dirties the frame's canvas.
+        /// </remarks>
+        private void ClipToSelectedObjectMaskIfChanged()
         {
             bool isClipped = _lastSelectedMask && _lastSelectedMask.isActiveAndEnabled;
             Rect clipRect = isClipped ? _lastSelectedMask.canvasRect : default;
+            if (_isClipApplied && isClipped == _wasClipped && clipRect == _appliedClipRect)
+            {
+                return;
+            }
+
+            _isClipApplied = true;
+            _wasClipped = isClipped;
+            _appliedClipRect = clipRect;
             foreach (MaskableGraphic frameGraphic in _frameGraphics)
             {
                 frameGraphic.SetClipRect(clipRect, isClipped);

@@ -28,7 +28,6 @@ namespace FakeMG.Settings.SaveLoad
             builder.Register(
                     resolver => new SettingsGlobalSaveDocument(resolver.Resolve<SettingsStateRepository>(), storageProfile),
                     Lifetime.Singleton).As<IGlobalSaveDocument>();
-            builder.Register<SettingsPersistenceRequester>(Lifetime.Singleton).As<ISettingsPersistenceRequester>();
             builder.RegisterComponentInHierarchy<SettingsSaveSubscriber>();
         }
 

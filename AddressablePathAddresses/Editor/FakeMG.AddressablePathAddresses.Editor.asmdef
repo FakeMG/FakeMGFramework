@@ -1,0 +1,21 @@
+{
+    "name": "FakeMG.AddressablePathAddresses.Editor",
+    "rootNamespace": "FakeMG.AddressablePathAddresses.Editor",
+    "references": [
+        "Unity.Addressables",
+        "Unity.Addressables.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "defineConstraints": [
+        "FAKEMG_ADDRESSABLES"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.addressables",
+            "expression": "",
+            "define": "FAKEMG_ADDRESSABLES"
+        }
+    ]
+}

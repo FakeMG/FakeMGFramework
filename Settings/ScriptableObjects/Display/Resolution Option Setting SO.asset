@@ -16,4 +16,4 @@ MonoBehaviour:
   _label: Resolution
   _description: How many pixels the game draws. Lower values run faster but look
     softer.
-  _defaultValue: 1920 x 1080
+  _defaultValue: 1920x1080

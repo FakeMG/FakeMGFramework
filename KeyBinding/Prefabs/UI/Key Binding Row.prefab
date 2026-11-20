@@ -226,6 +226,7 @@ GameObject:
   - component: {fileID: 8053196390499629065}
   - component: {fileID: 8213449353086495021}
   - component: {fileID: 415057500902065240}
+  - component: {fileID: 6229199701122626188}
   m_Layer: 5
   m_Name: Secondary Key
   m_TagString: Untagged
@@ -365,15 +366,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Animals.Settings::Animals.Settings.KeyBindingSlotView
   _button: {fileID: 8053196390499629065}
-  _background: {fileID: 4684963493306520773}
   _glyphView: {fileID: 5250046337830645388}
+  _visual: {fileID: 6229199701122626188}
+--- !u!114 &6229199701122626188
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 989969677683663341}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c433c9d68780534c831e0c3bc361c4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.KeyBinding::FakeMG.KeyBinding.KeyBindingSlotTweenVisual
+  _background: {fileID: 4684963493306520773}
   _glyphCanvasGroup: {fileID: 1228886224602527573}
   _idleColor: {r: 0.902, g: 0.867, b: 0.796, a: 1}
-  _listeningColor: {r: 0.851, g: 0.588, b: 0.169, a: 1}
+  _rebindingColor: {r: 0.851, g: 0.588, b: 0.169, a: 1}
   _changedFlashColor: {r: 0.431, g: 0.62, b: 0.29, a: 1}
   _colorFadeSeconds: 0.15
-  _listeningPulseSeconds: 0.45
-  _listeningPulseMinAlpha01: 0.35
+  _rebindingPulseSeconds: 0.45
+  _rebindingPulseMinAlpha01: 0.35
   _changedFlashSeconds: 0.5
   _changedPunchScale: {x: 0.12, y: 0.12, z: 0}
 --- !u!1 &1851070759686204605
@@ -458,9 +472,9 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5183257594098531852}
-  - {fileID: 4082897258084775390}
   - {fileID: 3217948880650361215}
   - {fileID: 7497878800143668545}
+  - {fileID: 4082897258084775390}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
@@ -609,6 +623,7 @@ GameObject:
   - component: {fileID: 3612675425278405256}
   - component: {fileID: 4203627648573743478}
   - component: {fileID: 4418142236472335676}
+  - component: {fileID: 8347277892696703426}
   m_Layer: 5
   m_Name: Primary Key
   m_TagString: Untagged
@@ -748,15 +763,28 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Animals.Settings::Animals.Settings.KeyBindingSlotView
   _button: {fileID: 3612675425278405256}
-  _background: {fileID: 771410220162676106}
   _glyphView: {fileID: 798410137730407856}
+  _visual: {fileID: 8347277892696703426}
+--- !u!114 &8347277892696703426
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6718955817247053302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6c433c9d68780534c831e0c3bc361c4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: FakeMG.KeyBinding::FakeMG.KeyBinding.KeyBindingSlotTweenVisual
+  _background: {fileID: 771410220162676106}
   _glyphCanvasGroup: {fileID: 5457254437630468346}
   _idleColor: {r: 0.902, g: 0.867, b: 0.796, a: 1}
-  _listeningColor: {r: 0.851, g: 0.588, b: 0.169, a: 1}
+  _rebindingColor: {r: 0.851, g: 0.588, b: 0.169, a: 1}
   _changedFlashColor: {r: 0.431, g: 0.62, b: 0.29, a: 1}
   _colorFadeSeconds: 0.15
-  _listeningPulseSeconds: 0.45
-  _listeningPulseMinAlpha01: 0.35
+  _rebindingPulseSeconds: 0.45
+  _rebindingPulseMinAlpha01: 0.35
   _changedFlashSeconds: 0.5
   _changedPunchScale: {x: 0.12, y: 0.12, z: 0}
 --- !u!1001 &1703325320888256595

@@ -9,6 +9,8 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
         [Tooltip("Exit duration as a fraction of the entrance, so the outgoing tab clears out of the way quickly.")]
         [SerializeField, Range(0.1f, 1f)] private float _exitDurationRatio01 = 0.65f;
 
+        #region Public Methods
+
         public override void PlayTabTransitionAnimation(TabData fromTab, TabData toTab, int fromIndex, int toIndex, Action onComplete = null)
         {
             StopTabContentAnimations(fromTab);
@@ -50,17 +52,6 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
                 });
         }
 
-        private CanvasGroup GetOrAddCanvasGroup(RectTransform rectTransform)
-        {
-            var canvasGroup = rectTransform.GetComponent<CanvasGroup>();
-            if (!canvasGroup)
-            {
-                canvasGroup = rectTransform.gameObject.AddComponent<CanvasGroup>();
-            }
-
-            return canvasGroup;
-        }
-
         public override void SwitchTabInstantly(TabData fromTab, TabData toTab, Action onComplete = null)
         {
             StopTabContentAnimations(fromTab);
@@ -88,5 +79,22 @@ namespace FakeMG.Framework.UI.Tab.TabContentTransition
             canvasGroup.DOKill();
             canvasGroup.alpha = 0f;
         }
+
+        #endregion
+
+        #region Private Methods
+
+        private CanvasGroup GetOrAddCanvasGroup(RectTransform rectTransform)
+        {
+            var canvasGroup = rectTransform.GetComponent<CanvasGroup>();
+            if (!canvasGroup)
+            {
+                canvasGroup = rectTransform.gameObject.AddComponent<CanvasGroup>();
+            }
+
+            return canvasGroup;
+        }
+
+        #endregion
     }
 }

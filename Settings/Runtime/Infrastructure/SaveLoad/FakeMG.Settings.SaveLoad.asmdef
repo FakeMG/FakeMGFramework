@@ -4,6 +4,7 @@
     "references": [
         "FakeMG.Settings",
         "FakeMG.SaveLoad",
+        "FakeMG.Framework",
         "UniTask",
         "VContainer",
         "VContainer.Unity"

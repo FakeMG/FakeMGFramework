@@ -2,10 +2,8 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using FakeMG.ActionMapManagement;
-using FakeMG.Framework;
 using FakeMG.Settings;
 using UnityEngine.InputSystem;
-using VContainer.Unity;
 
 namespace FakeMG.KeyBinding
 {
@@ -14,10 +12,10 @@ namespace FakeMG.KeyBinding
     /// at the same time. A slot that had no key leaves that other slot empty.
     /// </summary>
     /// <remarks>
-    /// Every action map is suspended while listening: the Input System can only rebind a disabled action, and menu actions
+    /// Every action map is suspended while rebinding: the Input System can only rebind a disabled action, and menu actions
     /// such as Back must not react to the control being captured.
     /// </remarks>
-    public sealed class KeyBindingService : IStartable, IDisposable
+    public sealed class KeyBindingService : IDisposable
     {
         private const string REBIND_SUSPENSION_REASON = "Rebinding a key";
 
@@ -25,9 +23,7 @@ namespace FakeMG.KeyBinding
         private readonly IActionMapManager _actionMaps;
         private readonly KeyBindingConfigSO _configSO;
         private readonly KeyBindingConflictRules _conflictRules;
-        private readonly Dictionary<(RebindableAction, BindingDeviceFamilySO), List<KeyBindingSlot>> _slotsByActionAndFamily = new();
-        private readonly Dictionary<BindingDeviceFamilySO, List<KeyBindingSlot>> _slotsByFamily = new();
-        private readonly List<BoundKey> _boundKeysBuffer = new();
+        private readonly KeyBindingSlotIndex _slotIndex;
 
         private InputActionRebindingExtensions.RebindingOperation _rebinding;
         private KeyBindingSlot _reboundSlot;
@@ -36,6 +32,7 @@ namespace FakeMG.KeyBinding
 
         public bool IsRebinding => _rebinding != null;
 
+        /// <summary>Raised once for every change to the bindings, whether made here or restored from the saved settings.</summary>
         public event Action OnBindingsChanged;
         public event Action<KeyBindingSlot> OnRebindStarted;
         public event Action<KeyBindingRebindResult> OnRebindFinished;
@@ -45,29 +42,43 @@ namespace FakeMG.KeyBinding
             _settings = settings;
             _actionMaps = actionMaps;
             _configSO = configSO;
-            _conflictRules = new KeyBindingConflictRules(GetExclusiveMapPairs(configSO.ActionMapConflictsPairsSO));
+            _conflictRules = new KeyBindingConflictRules(GetNeverLiveTogetherMapPairs(configSO.ActionMapConflictsPairsSO));
+            _slotIndex = new KeyBindingSlotIndex(configSO);
         }
 
         #region Public Methods
 
-        public void Start()
-        {
-            BuildSlots();
-            _settings.RegisterSetting(_configSO.KeyBindingOverridesSettingSO);
-            ApplyOverrides(_settings.GetValue(_configSO.KeyBindingOverridesSettingSO));
-            _settings.Subscribe(_configSO.KeyBindingOverridesSettingSO, ApplyOverridesWhenSettingChanged);
-        }
-
         public void Dispose()
         {
-            _settings.Unsubscribe(_configSO.KeyBindingOverridesSettingSO, ApplyOverridesWhenSettingChanged);
             CancelRebind();
         }
 
         /// <returns>Empty when the family has no binding for the action.</returns>
         public IReadOnlyList<KeyBindingSlot> GetSlots(RebindableAction rebindableAction, BindingDeviceFamilySO deviceFamilySO)
         {
-            return _slotsByActionAndFamily[(rebindableAction, deviceFamilySO)];
+            return _slotIndex.GetSlots(rebindableAction, deviceFamilySO);
+        }
+
+        /// <summary>Loads saved overrides into the input actions.</summary>
+        /// <remarks>Does nothing when they already hold these overrides, e.g. when the settings echo this service's own save.</remarks>
+        public void ApplyOverrides(string overridesJson)
+        {
+            InputActionAsset inputActions = _configSO.InputActions;
+            if (overridesJson == inputActions.SaveBindingOverridesAsJson())
+            {
+                return;
+            }
+
+            if (string.IsNullOrEmpty(overridesJson))
+            {
+                inputActions.RemoveAllBindingOverrides();
+            }
+            else
+            {
+                inputActions.LoadBindingOverridesFromJson(overridesJson);
+            }
+
+            OnBindingsChanged?.Invoke();
         }
 
         public void StartRebind(KeyBindingSlot slot)
@@ -91,7 +102,7 @@ namespace FakeMG.KeyBinding
                 _rebinding.WithControlsExcluding(excludedControlPath);
             }
 
-            _rebinding.OnComplete(CompleteRebind).OnCancel(CancelledRebind).Start();
+            _rebinding.OnComplete(CompleteRebind).OnCancel(FinishCancelledRebind).Start();
             OnRebindStarted?.Invoke(slot);
         }
 
@@ -102,7 +113,7 @@ namespace FakeMG.KeyBinding
 
         /// <returns>
         /// The slot that took over this slot's previous key because it used the default one; null when none did, or while a
-        /// rebind is listening.
+        /// rebind is in progress.
         /// </returns>
         public KeyBindingSlot ResetToDefault(KeyBindingSlot slot)
         {
@@ -114,100 +125,30 @@ namespace FakeMG.KeyBinding
             string controlPathBeforeReset = slot.ControlPath;
             slot.Action.RemoveBindingOverride(slot.BindingIndex);
             KeyBindingSlot swappedSlot = SwapConflictingSlot(slot, controlPathBeforeReset);
-            SaveOverrides();
+            SaveOverridesAndNotify();
             return swappedSlot;
         }
 
         public void ResetToDefaults(BindingDeviceFamilySO deviceFamilySO)
         {
-            foreach (KeyBindingSlot slot in _slotsByFamily[deviceFamilySO])
+            foreach (KeyBindingSlot slot in _slotIndex.GetFamilySlots(deviceFamilySO))
             {
                 slot.Action.RemoveBindingOverride(slot.BindingIndex);
             }
 
-            SaveOverrides();
-            OnBindingsChanged?.Invoke();
+            SaveOverridesAndNotify();
         }
 
         #endregion
 
         #region Private Methods
 
-        private static IEnumerable<(string, string)> GetExclusiveMapPairs(ActionMapConflictsPairsSO conflictPairsSO)
+        private static IEnumerable<(string, string)> GetNeverLiveTogetherMapPairs(ActionMapConflictsPairsSO conflictPairsSO)
         {
             foreach (ConflictPair conflictPair in conflictPairsSO.ConflictPairs)
             {
                 yield return (conflictPair.ActionMapA.ActionMapName, conflictPair.ActionMapB.ActionMapName);
             }
-        }
-
-        private void BuildSlots()
-        {
-            foreach (BindingDeviceFamilySO deviceFamilySO in _configSO.BindingDeviceFamilySOs)
-            {
-                List<KeyBindingSlot> familySlots = new();
-                foreach (KeyBindingSection section in _configSO.KeyBindingCatalogSO.Sections)
-                {
-                    foreach (RebindableAction rebindableAction in section.Actions)
-                    {
-                        List<KeyBindingSlot> slots = FindSlots(rebindableAction, deviceFamilySO);
-                        _slotsByActionAndFamily.Add((rebindableAction, deviceFamilySO), slots);
-                        familySlots.AddRange(slots);
-                    }
-                }
-
-                _slotsByFamily.Add(deviceFamilySO, familySlots);
-            }
-        }
-
-        private static List<KeyBindingSlot> FindSlots(RebindableAction rebindableAction, BindingDeviceFamilySO deviceFamilySO)
-        {
-            List<KeyBindingSlot> slots = new(deviceFamilySO.SlotsPerAction);
-            IReadOnlyList<InputBinding> bindings = rebindableAction.Action.bindings;
-            for (int bindingIndex = 0; bindingIndex < bindings.Count && slots.Count < deviceFamilySO.SlotsPerAction; bindingIndex++)
-            {
-                InputBinding binding = bindings[bindingIndex];
-                if (HasSlotShape(rebindableAction, binding) && deviceFamilySO.Owns(binding))
-                {
-                    slots.Add(new KeyBindingSlot(rebindableAction, deviceFamilySO, bindingIndex));
-                }
-            }
-
-            if (slots.Count > 0 && slots.Count < deviceFamilySO.SlotsPerAction)
-            {
-                Echo.Warning(
-                    $"'{rebindableAction.Label}' has {slots.Count} of {deviceFamilySO.SlotsPerAction} {deviceFamilySO.DisplayName} " +
-                    $"bindings, so its other slots are inert. Add an empty binding in the '{deviceFamilySO.BindingGroup}' group.");
-            }
-
-            return slots;
-        }
-
-        private static bool HasSlotShape(RebindableAction rebindableAction, InputBinding binding)
-        {
-            return rebindableAction.IsCompositePart
-                ? binding.isPartOfComposite && string.Equals(binding.name, rebindableAction.CompositePartName, StringComparison.OrdinalIgnoreCase)
-                : !binding.isComposite && !binding.isPartOfComposite;
-        }
-
-        private void ApplyOverridesWhenSettingChanged(SettingDefinitionGenericSO<string> settingSO, string overridesJson)
-        {
-            ApplyOverrides(overridesJson);
-        }
-
-        private void ApplyOverrides(string overridesJson)
-        {
-            InputActionAsset inputActions = _configSO.InputActions;
-            if (string.IsNullOrEmpty(overridesJson))
-            {
-                inputActions.RemoveAllBindingOverrides();
-            }
-            else if (overridesJson != inputActions.SaveBindingOverridesAsJson())
-            {
-                inputActions.LoadBindingOverridesFromJson(overridesJson);
-            }
-
-            OnBindingsChanged?.Invoke();
         }
 
         private void CompleteRebind(InputActionRebindingExtensions.RebindingOperation rebinding)
@@ -216,7 +157,7 @@ namespace FakeMG.KeyBinding
             KeyBindingSlot swappedSlot = SwapConflictingSlot(reboundSlot, _controlPathBeforeRebind);
             EndRebind();
 
-            SaveOverrides();
+            SaveOverridesAndNotify();
             OnRebindFinished?.Invoke(new KeyBindingRebindResult(reboundSlot, swappedSlot, wasCancelled: false));
         }
 
@@ -243,38 +184,29 @@ namespace FakeMG.KeyBinding
             }
         }
 
-        private void CancelledRebind(InputActionRebindingExtensions.RebindingOperation rebinding)
+        private void FinishCancelledRebind(InputActionRebindingExtensions.RebindingOperation rebinding)
         {
             KeyBindingSlot reboundSlot = _reboundSlot;
             EndRebind();
             OnRebindFinished?.Invoke(new KeyBindingRebindResult(reboundSlot, swappedSlot: null, wasCancelled: true));
         }
 
-        /// <returns>The slot that now holds the changed slot's previous key, or null when nothing clashed.</returns>
+        /// <returns>The slot that now holds the changed slot's previous key, or null when nothing conflicted.</returns>
         private KeyBindingSlot SwapConflictingSlot(KeyBindingSlot changedSlot, string previousControlPath)
         {
-            List<KeyBindingSlot> familySlots = _slotsByFamily[changedSlot.DeviceFamilySO];
-            _boundKeysBuffer.Clear();
-            foreach (KeyBindingSlot slot in familySlots)
-            {
-                _boundKeysBuffer.Add(new BoundKey(slot.ActionMapName, slot.ControlPath));
-            }
-
-            int changedSlotIndex = familySlots.IndexOf(changedSlot);
-            int conflictingSlotIndex = _conflictRules.FindConflictingSlotIndex(_boundKeysBuffer, changedSlotIndex, changedSlot.ControlPath);
-            if (conflictingSlotIndex == KeyBindingConflictRules.NO_CONFLICT)
-            {
-                return null;
-            }
-
-            KeyBindingSlot conflictingSlot = familySlots[conflictingSlotIndex];
-            conflictingSlot.Action.ApplyBindingOverride(conflictingSlot.BindingIndex, previousControlPath);
+            KeyBindingSlot conflictingSlot = _conflictRules.FindConflictingSlot(_slotIndex.GetFamilySlots(changedSlot.DeviceFamilySO), changedSlot);
+            conflictingSlot?.Action.ApplyBindingOverride(conflictingSlot.BindingIndex, previousControlPath);
             return conflictingSlot;
         }
 
-        private void SaveOverrides()
+        /// <remarks>
+        /// The settings echo the save back through <see cref="ApplyOverrides"/>, which finds nothing to load, so this is the
+        /// only notification for the change.
+        /// </remarks>
+        private void SaveOverridesAndNotify()
         {
             _settings.SetValue(_configSO.KeyBindingOverridesSettingSO, _configSO.InputActions.SaveBindingOverridesAsJson());
+            OnBindingsChanged?.Invoke();
         }
 
         private void EndRebind()

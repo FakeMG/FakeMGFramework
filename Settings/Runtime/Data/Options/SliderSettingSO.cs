@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FakeMG.Settings
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_COMMON + "/Slider Setting")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.SETTINGS_COMMON + "/Slider Setting SO")]
     public class SliderSettingSO : SettingDefinitionGenericSO<float>
     {
         [SerializeField] private float _storageMinValue;

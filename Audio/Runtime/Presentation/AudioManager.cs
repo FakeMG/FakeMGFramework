@@ -52,7 +52,7 @@ namespace FakeMG.Audio
 
         private void OnDisable()
         {
-            _channelRegistry.UnsubscribeFromVolumeChanges(_settingsStateRepository);
+            _channelRegistry.UnsubscribeFromVolumeChanges();
             _channelRegistry.UnregisterPooledChannels();
             _channelRegistry.UnregisterMusicChannel();
 

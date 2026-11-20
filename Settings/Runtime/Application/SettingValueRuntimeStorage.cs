@@ -1,78 +1,61 @@
 using System;
 using System.Collections.Generic;
-using FakeMG.Settings.Converters;
 
 namespace FakeMG.Settings
 {
     public sealed class SettingValueRuntimeStorage<T> : ISettingValueRuntimeStorage
     {
         private readonly SettingDefinitionGenericSO<T> _settingSO;
-        private T _value;
 
-        public string SettingId => _settingSO.SettingId;
-        public Type ValueType => typeof(T);
-        public T Value => _value;
+        public SettingDefinitionSO SettingSO => _settingSO;
+        public T Value { get; private set; }
 
-        public event Action<SettingDefinitionGenericSO<T>, T> OnValueChanged;
-
+        /// <exception cref="InvalidOperationException">The value type cannot be saved as text.</exception>
         public SettingValueRuntimeStorage(SettingDefinitionGenericSO<T> settingSO)
         {
+            if (!SettingValueText.CanConvert(typeof(T)))
+            {
+                throw new InvalidOperationException($"Setting '{settingSO.SettingId}' has a value type that cannot be saved: '{typeof(T).FullName}'.");
+            }
+
             _settingSO = settingSO;
-            _value = settingSO.GetDefaultValue();
+            Value = settingSO.GetDefaultValue();
         }
 
         #region Public Methods
 
-        public void SetValue(T value)
+        /// <returns>Whether the value changed.</returns>
+        public bool ChangeValue(T value)
         {
-            if (EqualityComparer<T>.Default.Equals(_value, value))
+            if (EqualityComparer<T>.Default.Equals(Value, value))
             {
-                return;
-            }
-
-            _value = value;
-            OnValueChanged?.Invoke(_settingSO, _value);
-        }
-
-        public object GetValue()
-        {
-            return _value;
-        }
-
-        public PersistedSettingValue CapturePersistedValue()
-        {
-            if (!SettingValueConverterRegistry.TrySerialize(typeof(T), _value, out string serializedValue) ||
-                !SettingValueConverterRegistry.TryGetTypeId(typeof(T), out string typeId))
-            {
-                throw new InvalidOperationException($"No settings converter is registered for '{typeof(T).FullName}'.");
-            }
-
-            return new PersistedSettingValue(serializedValue, typeId);
-        }
-
-        public bool TryRestore(PersistedSettingValue persistedValue, out string failureReason)
-        {
-            if (!SettingValueConverterRegistry.TryGetTypeId(typeof(T), out string expectedTypeId) ||
-                !string.Equals(expectedTypeId, persistedValue.TypeId, StringComparison.Ordinal))
-            {
-                failureReason = $"Saved type '{persistedValue.TypeId}' does not match '{typeof(T).FullName}'.";
                 return false;
             }
 
-            if (!SettingValueConverterRegistry.TryDeserialize(persistedValue.SerializedValue, out T restoredValue))
-            {
-                failureReason = $"Saved value could not be converted to '{typeof(T).FullName}'.";
-                return false;
-            }
-
-            SetValue(restoredValue);
-            failureReason = string.Empty;
+            Value = value;
             return true;
         }
 
-        public void RestoreDefault()
+        public string FormatValue()
         {
-            SetValue(_settingSO.GetDefaultValue());
+            return SettingValueText.Format(Value);
+        }
+
+        public bool TryRestoreFromText(string savedText, out bool hasChanged)
+        {
+            if (!SettingValueText.TryParse(savedText, out T restoredValue))
+            {
+                hasChanged = false;
+                return false;
+            }
+
+            hasChanged = ChangeValue(restoredValue);
+            return true;
+        }
+
+        public bool ResetToDefault()
+        {
+            return ChangeValue(_settingSO.GetDefaultValue());
         }
 
         #endregion

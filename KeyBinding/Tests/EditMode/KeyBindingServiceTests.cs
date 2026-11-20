@@ -16,6 +16,8 @@ namespace FakeMG.KeyBinding.Tests
         private KeyBindingConfigSO _configSO;
         private SettingsStateRepository _settings;
         private KeyBindingService _service;
+        private KeyBindingOverridesSubscriber _overridesSubscriber;
+        private int _bindingsChangedCount;
         private InputAction _jump;
         private InputAction _fire;
         private Keyboard _keyboard;
@@ -34,12 +36,17 @@ namespace FakeMG.KeyBinding.Tests
             _configSO = _factory.CreateConfig(_familySO, _jump, _fire);
             _settings = new SettingsStateRepository();
             _service = new KeyBindingService(_settings, Substitute.For<IActionMapManager>(), _configSO);
-            _service.Start();
+            _overridesSubscriber = new KeyBindingOverridesSubscriber(_settings, _service, _configSO);
+            _overridesSubscriber.Start();
+            _bindingsChangedCount = 0;
+            _service.OnBindingsChanged += CountBindingsChange;
         }
 
         [TearDown]
         public override void TearDown()
         {
+            _service.OnBindingsChanged -= CountBindingsChange;
+            _overridesSubscriber.Dispose();
             _service.Dispose();
             _factory.DestroyAll();
             base.TearDown();
@@ -141,7 +148,7 @@ namespace FakeMG.KeyBinding.Tests
         }
 
         [Test]
-        public void ResetToDefault_WhileListening_ChangesNothing()
+        public void ResetToDefault_WhileRebinding_ChangesNothing()
         {
             _jump.ApplyBindingOverride(PRIMARY, "<Keyboard>/j");
             _service.StartRebind(Slot(_fire, SECONDARY));
@@ -150,6 +157,65 @@ namespace FakeMG.KeyBinding.Tests
 
             Assert.That(swappedSlot, Is.Null);
             Assert.That(Slot(_jump, PRIMARY).ControlPath, Is.EqualTo("<Keyboard>/j"));
+        }
+
+        /// <remarks>Regression: reset-all raised the event itself and again through the settings echo, rebuilding the list twice.</remarks>
+        [Test]
+        public void ResetToDefaults_RaisesBindingsChangedOnce()
+        {
+            _jump.ApplyBindingOverride(PRIMARY, "<Keyboard>/j");
+
+            _service.ResetToDefaults(_familySO);
+
+            Assert.That(_bindingsChangedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ResetToDefault_RaisesBindingsChangedOnce()
+        {
+            _jump.ApplyBindingOverride(PRIMARY, "<Keyboard>/j");
+
+            _service.ResetToDefault(Slot(_jump, PRIMARY));
+
+            Assert.That(_bindingsChangedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void Rebind_RaisesBindingsChangedOnce()
+        {
+            _service.StartRebind(Slot(_jump, SECONDARY));
+
+            Press(_keyboard.kKey);
+
+            Assert.That(_bindingsChangedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void RestoredSettings_ApplyTheSavedOverrides()
+        {
+            _jump.ApplyBindingOverride(PRIMARY, "<Keyboard>/j");
+            string savedOverrides = _configSO.InputActions.SaveBindingOverridesAsJson();
+            _jump.RemoveBindingOverride(PRIMARY);
+            var snapshot = new SettingDataSnapshot();
+            snapshot.Values.Add(_configSO.KeyBindingOverridesSettingSO.SettingId, savedOverrides);
+
+            _settings.RestoreSnapshot(snapshot);
+
+            Assert.That(Slot(_jump, PRIMARY).ControlPath, Is.EqualTo("<Keyboard>/j"));
+            Assert.That(_bindingsChangedCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void ApplyOverrides_SameOverridesTheActionsHold_RaisesNothing()
+        {
+            _service.ApplyOverrides(_configSO.InputActions.SaveBindingOverridesAsJson());
+
+            Assert.That(_bindingsChangedCount, Is.Zero);
+        }
+
+        private void CountBindingsChange()
+        {
+            _bindingsChangedCount++;
         }
 
         private KeyBindingSlot Slot(InputAction action, int slotIndex)

@@ -34,16 +34,17 @@ owned by `FakeMG.InputContexts`.
   - To restyle it, make prefab variants in the game.
   - For a different placement, such as prompts floating over world objects for a game with a controllable character, add
     a sibling folder whose view reads `ActiveInputHints` and `InputGlyphResolver` the way `InputHintBar` does.
-- **Glyph packs.** Runtime code only knows `InputGlyphSetSO` assets. `GlyphSets/Kenney` ships the Kenney Input Prompts
-  (CC0) for these families:
-  - keyboard and mouse;
-  - Xbox, which also draws any other gamepad;
-  - PlayStation 4 and 5;
-  - Switch Pro.
-  - To use another pack, create glyph sets for it, by hand or with an editor table like `Editor/Kenney`, and point the
-    library at them.
-  - Rebuild the Kenney sets: select `GlyphSets/Kenney/Textures`, then run *Assets > FakeMGFramework > Input Hints >
-    Build Kenney Glyph Sets*.
+- **Glyph packs.** Runtime code only knows `InputGlyphSetSO` assets. Two packs ship under `GlyphSets`, each covering
+  keyboard and mouse, Xbox (which also draws any other gamepad), PlayStation 4 and 5, and Nintendo Switch Pro:
+  - `Xelu`: the Xelu Free Controllers & Keyboard Prompts, with device diagrams for the key binding menu. Its keyboard
+    and mouse diagram is rendered from the editor-only blanks in `Editor/Packs/Xelu/Blanks`.
+  - `Kenney`: the Kenney Input Prompts (CC0).
+  - Each pack is one table under `Editor/Packs`, an `InputGlyphPack`. Its optional `PrepareTexturesFolder` step generates
+    art the pack does not ship. To add a pack, copy a table and its two menu items.
+  - Rebuild a pack: select its `Textures` folder, then run *Assets > FakeMGFramework > Input Hints > Build <Pack> Glyph
+    Sets*. Diagram masks are traced by `Editor/Diagram/Masks`.
+- **Single glyphs.** `ActionGlyphView` shows one action's glyph, such as a tab key beside a tab bar. Pair it with an
+  `ActionGlyphSubscriber`, which keeps it on the active device.
 - **More device families.** Add a glyph set whose *Device Layouts* name the Input System layout (e.g.
   `SteamDeckController`), and list it in the library before broader sets.
 
@@ -54,5 +55,5 @@ owned by `FakeMG.InputContexts`.
 - Hints ignore the pointer: the bar has no raycast targets or GraphicRaycaster. Keep it that way in variants, so the bar
   never blocks clicks on what is beneath it.
 - Glyphs batch only when sprite packing is on (*Project Settings > Editor > Sprite Packer Mode*: Sprite Atlas V2). The
-  Kenney build packs one atlas per texture folder under `GlyphSets/Kenney/SpriteAtlases`, holding only the glyphs the
-  glyph sets use. For another pack, call `InputGlyphAtlasPacker.Pack` with its sprites.
+  pack build makes one atlas per texture folder under the pack's `SpriteAtlases`, holding only the glyphs the glyph sets
+  use. For another pack, call `InputGlyphAtlasPacker.Pack` with its sprites.

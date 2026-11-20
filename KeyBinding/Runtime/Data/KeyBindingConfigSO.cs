@@ -8,7 +8,7 @@ using UnityEngine.InputSystem;
 
 namespace FakeMG.KeyBinding
 {
-    [CreateAssetMenu(menuName = FakeMGEditorMenus.KEY_BINDING + "/Key Binding Config")]
+    [CreateAssetMenu(menuName = FakeMGEditorMenus.KEY_BINDING + "/Key Binding Config SO")]
     public sealed class KeyBindingConfigSO : ScriptableObject
     {
         [Header("Actions")]
