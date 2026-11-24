@@ -1,5 +1,10 @@
+using System;
+
 namespace FakeMG.Framework.Timer
 {
+    /// <summary>
+    /// Remaining time never goes below zero. Invalid durations become zero, and invalid deltas leave the timer unchanged.
+    /// </summary>
     public class Timer
     {
         public float TimeToWait { get; private set; }
@@ -12,25 +17,27 @@ namespace FakeMG.Framework.Timer
 
         public bool Tick(float deltaTime)
         {
-            CurrentTimeLeftInSeconds -= deltaTime;
-            if (CurrentTimeLeftInSeconds <= 0f)
+            if (float.IsFinite(deltaTime) && deltaTime > 0f)
             {
-                CurrentTimeLeftInSeconds = 0f;
-                return true;
+                CurrentTimeLeftInSeconds = Math.Max(0f, CurrentTimeLeftInSeconds - deltaTime);
             }
 
-            return false;
+            return CurrentTimeLeftInSeconds <= 0f;
         }
 
         public void SetTime(float time)
         {
-            TimeToWait = time;
-            CurrentTimeLeftInSeconds = time;
+            float validTime = float.IsFinite(time) ? Math.Max(0f, time) : 0f;
+            TimeToWait = validTime;
+            CurrentTimeLeftInSeconds = validTime;
         }
 
         public void AddTime(float time)
         {
-            CurrentTimeLeftInSeconds += time;
+            if (float.IsFinite(time))
+            {
+                CurrentTimeLeftInSeconds = Math.Max(0f, CurrentTimeLeftInSeconds + time);
+            }
         }
     }
 }

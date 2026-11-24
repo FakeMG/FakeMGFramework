@@ -86,5 +86,54 @@ namespace Timer.EditMode
             Assert.AreEqual(START_TIME, timer.TimeToWait, "TimeToWait should remain unchanged");
             Assert.AreEqual(8f, timer.CurrentTimeLeftInSeconds, "CurrentTimeInSeconds should increase by added time");
         }
+
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(float.NegativeInfinity)]
+        public void Tick_InvalidDelta_LeavesRemainingTimeUnchanged(float deltaTimeSeconds)
+        {
+            var timer = new FakeMG.Framework.Timer.Timer(5f);
+
+            bool isFinished = timer.Tick(deltaTimeSeconds);
+
+            Assert.IsFalse(isFinished);
+            Assert.AreEqual(5f, timer.CurrentTimeLeftInSeconds);
+        }
+
+        [TestCase(-1f)]
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(float.NegativeInfinity)]
+        public void Constructor_InvalidDuration_FinishesImmediately(float durationSeconds)
+        {
+            var timer = new FakeMG.Framework.Timer.Timer(durationSeconds);
+
+            Assert.AreEqual(0f, timer.TimeToWait);
+            Assert.AreEqual(0f, timer.CurrentTimeLeftInSeconds);
+            Assert.IsTrue(timer.Tick(0f));
+        }
+
+        [TestCase(float.NaN)]
+        [TestCase(float.PositiveInfinity)]
+        [TestCase(float.NegativeInfinity)]
+        public void AddTime_NonFiniteValue_LeavesRemainingTimeUnchanged(float addedSeconds)
+        {
+            var timer = new FakeMG.Framework.Timer.Timer(5f);
+
+            timer.AddTime(addedSeconds);
+
+            Assert.AreEqual(5f, timer.CurrentTimeLeftInSeconds);
+        }
+
+        [Test]
+        public void AddTime_NegativeValueBeyondRemaining_StopsAtZero()
+        {
+            var timer = new FakeMG.Framework.Timer.Timer(5f);
+
+            timer.AddTime(-8f);
+
+            Assert.AreEqual(0f, timer.CurrentTimeLeftInSeconds);
+        }
     }
 }

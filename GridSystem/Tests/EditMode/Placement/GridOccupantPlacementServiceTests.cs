@@ -31,7 +31,6 @@ namespace FakeMG.GridSystem.Tests.EditMode
         private IGridPlacementGateway _gridPlacementGateway;
         private IGridOccupantPlacementFactory _structurePlacementFactory;
         private PlacementState _placementState;
-        private GridOccupantRegistry _placedStructureRegistry;
         private GridOccupantPlacementService _service;
         private StructureSO _structureSO;
         private Vector3 _worldPosition;
@@ -46,12 +45,7 @@ namespace FakeMG.GridSystem.Tests.EditMode
             _gridPlacementGateway = Substitute.For<IGridPlacementGateway>();
             _structurePlacementFactory = Substitute.For<IGridOccupantPlacementFactory>();
             _placementState = new PlacementState();
-            _placedStructureRegistry = new GridOccupantRegistry();
-            _service = new GridOccupantPlacementService(
-                _gridPlacementGateway,
-                _placementState,
-                _placedStructureRegistry,
-                _structurePlacementFactory);
+            _service = new GridOccupantPlacementService(_gridPlacementGateway, _placementState, _structurePlacementFactory);
             _service.OnPlacementChanged += RecordPlacementChange;
             _service.OnCommittedStateRestored += RecordCommittedStateRestored;
 
@@ -1022,18 +1016,21 @@ namespace FakeMG.GridSystem.Tests.EditMode
             Vector3 gridWorldPosition,
             int rotationDegrees)
         {
-            GridOccupantPlacement structurePlacement = CreateRuntimePlacement(
-                instanceId,
-                gridWorldPosition,
-                rotationDegrees);
-            _placedStructureRegistry.Upsert(structurePlacement);
-            _placementState.UpsertStructure(
-                instanceId,
-                _structureSO,
-                gridWorldPosition,
-                rotationDegrees,
-                OCCUPIED_CELL_OFFSETS);
+            GridOccupantPlacement structurePlacement = CreateRuntimePlacement(instanceId, gridWorldPosition, rotationDegrees);
+            SetFactoryCreatedPlacement(structurePlacement);
+            _service.PlaceStructureIfEmptyAsync(_structureSO, gridWorldPosition, rotationDegrees, null, CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+            ForgetArrangementActivity();
             return structurePlacement;
+        }
+
+        private void ForgetArrangementActivity()
+        {
+            _placementChanges.Clear();
+            _eventOrder.Clear();
+            _gridPlacementGateway.ClearReceivedCalls();
+            _structurePlacementFactory.ClearReceivedCalls();
         }
 
         private GridOccupantPlacement CreateRuntimePlacement(
@@ -1049,7 +1046,6 @@ namespace FakeMG.GridSystem.Tests.EditMode
                 structureSO ? structureSO : _structureSO,
                 runtimeInstance,
                 null,
-                default,
                 gridWorldPosition,
                 rotationDegrees);
         }

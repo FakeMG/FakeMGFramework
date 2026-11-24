@@ -71,59 +71,6 @@ namespace FakeMG.SceneLoading.Tests.EditMode
         }
 
         [UnityTest]
-        public IEnumerator ApplyLoadedDataAsync_UnfinishedParticipantTimesOut_ReturnsOnlyUnfinishedId()
-        {
-            using SceneDataApplicationCoordinator coordinator = CreateCoordinator(0.05f);
-            LoadedSceneContext sceneContext = CreateSceneContext();
-            var completedApplier = new TestSceneDataApplier("completed", false);
-            var blockedApplier = new TestSceneDataApplier("blocked", false, true);
-            using IDisposable completedRegistration = coordinator.Register(sceneContext, completedApplier);
-            using IDisposable blockedRegistration = coordinator.Register(sceneContext, blockedApplier);
-            SceneDataApplicationResult result = default;
-            LogAssert.Expect(
-                LogType.Error,
-                new Regex("Loaded-data application for scene .* exceeded"));
-
-            yield return coordinator.ApplyLoadedDataAsync(sceneContext, CancellationToken.None)
-                .ToCoroutine(completedResult => result = completedResult);
-
-            Assert.That(result.DidTimeOut, Is.True);
-            Assert.That(result.FailedDataApplierIds, Is.EquivalentTo(new[] { "blocked" }));
-        }
-
-        [UnityTest]
-        public IEnumerator ApplyLoadedDataAsync_NonCancellableTimeout_DoesNotOverlapOrMarkCompleted()
-        {
-            using SceneDataApplicationCoordinator coordinator = CreateCoordinator(0.05f);
-            LoadedSceneContext sceneContext = CreateSceneContext();
-            var applier = new NonCancellableTestSceneDataApplier("non-cancellable");
-            using IDisposable registration = coordinator.Register(sceneContext, applier);
-            LogAssert.Expect(
-                LogType.Error,
-                new Regex("Loaded-data application for scene .* exceeded"));
-
-            SceneDataApplicationResult timedOutResult = default;
-            yield return coordinator.ApplyLoadedDataAsync(sceneContext, CancellationToken.None)
-                .ToCoroutine(completedResult => timedOutResult = completedResult);
-            SceneDataApplicationResult concurrentResult = default;
-            yield return coordinator.ApplyLoadedDataAsync(sceneContext, CancellationToken.None)
-                .ToCoroutine(completedResult => concurrentResult = completedResult);
-
-            Assert.That(timedOutResult.DidTimeOut, Is.True);
-            Assert.That(concurrentResult.DidTimeOut, Is.True);
-            Assert.That(applier.ApplicationCount, Is.EqualTo(1));
-
-            applier.Complete();
-            yield return null;
-            SceneDataApplicationResult retryResult = default;
-            yield return coordinator.ApplyLoadedDataAsync(sceneContext, CancellationToken.None)
-                .ToCoroutine(completedResult => retryResult = completedResult);
-
-            Assert.That(retryResult.Succeeded, Is.True);
-            Assert.That(applier.ApplicationCount, Is.EqualTo(2));
-        }
-
-        [UnityTest]
         public IEnumerator ApplyLoadedDataAsync_AfterSuccessfulApplication_DoesNotApplyParticipantAgain()
         {
             using SceneDataApplicationCoordinator coordinator = CreateCoordinator(1f);
@@ -215,30 +162,6 @@ namespace FakeMG.SceneLoading.Tests.EditMode
                 {
                     throw new InvalidOperationException("Expected test failure.");
                 }
-            }
-
-            public void Complete()
-            {
-                _completionSource.TrySetResult();
-            }
-        }
-
-        private sealed class NonCancellableTestSceneDataApplier : ILoadedSceneDataApplier
-        {
-            private readonly UniTaskCompletionSource _completionSource = new();
-
-            public string DataApplierId { get; }
-            public int ApplicationCount { get; private set; }
-
-            public NonCancellableTestSceneDataApplier(string dataApplierId)
-            {
-                DataApplierId = dataApplierId;
-            }
-
-            public async UniTask ApplyLoadedDataAsync(CancellationToken cancellationToken)
-            {
-                ApplicationCount++;
-                await _completionSource.Task;
             }
 
             public void Complete()

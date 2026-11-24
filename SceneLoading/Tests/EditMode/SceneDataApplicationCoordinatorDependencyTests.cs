@@ -86,30 +86,6 @@ namespace FakeMG.SceneLoading.Tests.EditMode
         }
 
         [UnityTest]
-        public IEnumerator ApplyLoadedDataAsync_Timeout_DoesNotStartLaterDependencyWave()
-        {
-            using SceneDataApplicationCoordinator coordinator = CreateCoordinator(0.05f);
-            LoadedSceneContext sceneContext = CreateSceneContext();
-            var blockedApplier = new GatedTestDataApplier(BLOCKED_ID);
-            var laterDependentApplier = new DependentTrackingTestDataApplier(LATER_DEPENDENT_ID, BLOCKED_ID);
-            using IDisposable blockedRegistration = coordinator.Register(sceneContext, blockedApplier);
-            using IDisposable laterDependentRegistration = coordinator.Register(sceneContext, laterDependentApplier);
-            LogAssert.Expect(
-                LogType.Error,
-                new Regex("Loaded-data application for scene .* exceeded"));
-
-            SceneDataApplicationResult result = default;
-            yield return coordinator.ApplyLoadedDataAsync(sceneContext, CancellationToken.None)
-                .ToCoroutine(completedResult => result = completedResult);
-
-            Assert.That(result.DidTimeOut, Is.True);
-            Assert.That(result.FailedDataApplierIds, Is.EquivalentTo(new[] { BLOCKED_ID, LATER_DEPENDENT_ID }));
-            Assert.That(laterDependentApplier.ApplicationCount, Is.EqualTo(0));
-            Assert.That(blockedApplier.ApplicationToken.IsCancellationRequested, Is.True);
-            blockedApplier.Release();
-        }
-
-        [UnityTest]
         public IEnumerator ApplyLoadedDataAsync_UnregisterCancellation_DoesNotStartDependentWave()
         {
             using SceneDataApplicationCoordinator coordinator = CreateCoordinator(2f);

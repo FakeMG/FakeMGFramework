@@ -13,6 +13,20 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
         [Tooltip("Startup policy belonging to this Editor-only fixture.")]
         [SerializeField] private ResumeOrCreateWorldStartupPolicySO _worldStartupPolicySO;
 
+        private ISaveEnvironment _saveEnvironment;
+
+        #region Public Methods
+
+        /// <summary>
+        /// Must be called while the scope is inactive, because the container is built in <c>Awake</c>.
+        /// </summary>
+        public void UseSaveEnvironment(ISaveEnvironment saveEnvironment)
+        {
+            _saveEnvironment = saveEnvironment;
+        }
+
+        #endregion
+
         #region Protected Methods
 
         protected override void Configure(IContainerBuilder builder)
@@ -34,7 +48,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
                 true,
                 "Test World",
                 _worldStartupPolicySO);
-            SaveLoadInstaller.Install(builder, _migrationRegistrySO, worldStorageProfile, configuration);
+            SaveLoadInstaller.Install(builder, _migrationRegistrySO, worldStorageProfile, configuration, _saveEnvironment);
             SettingsSaveLoadInstaller.Install(builder, SaveFileProtectionSettings.Plain);
         }
 

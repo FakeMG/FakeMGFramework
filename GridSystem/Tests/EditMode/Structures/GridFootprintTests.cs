@@ -1,51 +1,33 @@
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.TestTools;
-using VContainer;
-using VContainer.Unity;
 
-namespace FakeMG.GridSystem.Tests.PlayMode
+namespace FakeMG.GridSystem.Tests.EditMode
 {
     public sealed class GridFootprintTests
     {
         private const float CELL_SIZE_METERS = 1f;
+        private const string GRID_FOOTPRINT_PREFAB_GUID = "6ad3613ca4f4f654284043be56fa7039";
 
-        private IObjectResolver _container;
         private GridFootprint _structureFootprint;
 
-        #region Unity Lifecycle
-
-        [UnitySetUp]
-        public IEnumerator SetUp()
-        {
-            GridFootprint structureFootprintPrefab =
-                GridSystemPlayModeTestAssets.LoadPrefabComponent<GridFootprint>(GridSystemPlayModeTestAssets.GRID_FOOTPRINT_PREFAB_GUID);
-
-            ContainerBuilder builder = new();
-            builder.RegisterComponentInNewPrefab(structureFootprintPrefab, Lifetime.Scoped);
-            _container = builder.Build();
-            _structureFootprint = _container.Resolve<GridFootprint>();
-            yield return null;
-        }
-
-        [UnityTearDown]
-        public IEnumerator TearDown()
-        {
-            _container?.Dispose();
-
-            if (_structureFootprint)
-            {
-                Object.Destroy(_structureFootprint.gameObject);
-            }
-
-            yield return null;
-        }
-
-        #endregion
-
         #region Public Methods
+
+        [SetUp]
+        public void SetUp()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(GRID_FOOTPRINT_PREFAB_GUID));
+            Assert.IsNotNull(prefab, $"Missing framework footprint fixture with GUID {GRID_FOOTPRINT_PREFAB_GUID}.");
+            _structureFootprint = Object.Instantiate(prefab).GetComponentInChildren<GridFootprint>(true);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            Object.DestroyImmediate(_structureFootprint.transform.root.gameObject);
+        }
 
         [Test]
         public void GetOccupiedCells_AsymmetricBoundsAtZeroDegrees_ReturnsExpectedCells()

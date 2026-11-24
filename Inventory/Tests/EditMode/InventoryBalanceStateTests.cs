@@ -9,8 +9,8 @@ namespace Inventory.EditMode
 {
     public class InventoryBalanceStateTests
     {
-        private const string FIXTURE_DIR =
-            "Assets/Thirdparty/FakeMGFramework/Inventory/Tests/EditMode/Fixtures/";
+        private const string COIN_FIXTURE_GUID = "2dacf0601163724408d1093acba7788c";
+        private const string GEM_FIXTURE_GUID = "b59a17a6fff50e5499079dafda09659b";
 
         private InventoryBalanceState _state;
         private IdentitySO _coin;
@@ -25,8 +25,8 @@ namespace Inventory.EditMode
         [SetUp]
         public void SetUp()
         {
-            _coin = LoadFixture("TestCoin");
-            _gem = LoadFixture("TestGem");
+            _coin = LoadFixture(COIN_FIXTURE_GUID);
+            _gem = LoadFixture(GEM_FIXTURE_GUID);
 
             _state = new InventoryBalanceState();
             _lastChange = default;
@@ -41,11 +41,10 @@ namespace Inventory.EditMode
             _state.BalancesReloaded -= RecordBalancesReloaded;
         }
 
-        private static IdentitySO LoadFixture(string assetName)
+        private static IdentitySO LoadFixture(string assetGuid)
         {
-            IdentitySO fixture = AssetDatabase.LoadAssetAtPath<IdentitySO>($"{FIXTURE_DIR}{assetName}.asset");
-            Assert.IsNotNull(fixture,
-                $"Missing test fixture '{assetName}'. Create an IdentitySO at '{FIXTURE_DIR}{assetName}.asset' with its Id set.");
+            IdentitySO fixture = AssetDatabase.LoadAssetAtPath<IdentitySO>(AssetDatabase.GUIDToAssetPath(assetGuid));
+            Assert.IsNotNull(fixture, $"Missing Inventory test fixture with GUID {assetGuid}.");
             return fixture;
         }
 

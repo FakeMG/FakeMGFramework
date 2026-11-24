@@ -15,32 +15,40 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
         private const string FRAMEWORK_PREFAB_GUID = "a66cf0cfc2964994198eea0bdfa71227";
         private const string SETTINGS_FILE_NAME = "settings.json";
         private const string WORLD_ROOT_DIRECTORY_NAME = "Saves";
-        private const string BACKUP_DIRECTORY_NAME = "SaveLoadPlayModeTestBackup";
+        private const string TEMPORARY_STORAGE_DIRECTORY_PREFIX = "FakeMGSaveLoadPlayModeTests_";
         private const int STARTUP_FRAME_LIMIT = 300;
 
         private GameObject _saveLoadInstance;
+        private GameObject _inactiveParent;
         private SaveLoadTestLifetimeScope _lifetimeScope;
         private IObjectResolver _testContainer;
-        private string _backupDirectoryPath;
-        private bool _hasIsolatedPersistentSaveFiles;
+        private string _temporaryStorageRootPath;
 
         #region Unity Lifecycle
 
         [UnitySetUp]
         public IEnumerator SetUp()
         {
-            IsolatePersistentSaveFiles();
+            _temporaryStorageRootPath = Path.Combine(
+                Path.GetTempPath(),
+                TEMPORARY_STORAGE_DIRECTORY_PREFIX + System.Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(_temporaryStorageRootPath);
             string prefabPath = AssetDatabase.GUIDToAssetPath(FRAMEWORK_PREFAB_GUID);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             Assert.IsNotNull(prefab, $"Missing framework SaveLoad fixture with GUID {FRAMEWORK_PREFAB_GUID}.");
             SaveLoadTestLifetimeScope lifetimeScopePrefab = prefab.GetComponent<SaveLoadTestLifetimeScope>();
             Assert.IsNotNull(lifetimeScopePrefab, "Framework SaveLoad fixture requires its test lifetime scope.");
+            _inactiveParent = new GameObject(nameof(FrameworkSaveCompositionTests));
+            _inactiveParent.SetActive(false);
             var containerBuilder = new ContainerBuilder();
-            containerBuilder.RegisterComponentInNewPrefab(lifetimeScopePrefab, Lifetime.Singleton);
+            containerBuilder.RegisterComponentInNewPrefab(lifetimeScopePrefab, Lifetime.Singleton)
+                .UnderTransform(_inactiveParent.transform);
             _testContainer = containerBuilder.Build();
             _lifetimeScope = _testContainer.Resolve<SaveLoadTestLifetimeScope>();
             _saveLoadInstance = _lifetimeScope.gameObject;
             Assert.IsNotNull(_lifetimeScope);
+            _lifetimeScope.UseSaveEnvironment(new TemporarySaveEnvironment(_temporaryStorageRootPath));
+            _inactiveParent.SetActive(true);
             yield return null;
         }
 
@@ -49,13 +57,13 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
         {
             (_testContainer as System.IDisposable)?.Dispose();
             _testContainer = null;
-            if (_saveLoadInstance)
+            if (_inactiveParent)
             {
-                Object.Destroy(_saveLoadInstance);
+                Object.Destroy(_inactiveParent);
             }
 
             yield return null;
-            RestorePersistentSaveFiles();
+            DeleteTemporaryStorage();
         }
 
         #endregion
@@ -76,7 +84,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             Assert.IsTrue(worldSaveManager.HasActiveWorld, "Resume-or-create did not activate a world.");
             Assert.AreEqual(1, worldSaveManager.GetWorlds().Count);
             string worldId = worldSaveManager.ActiveWorldId;
-            string worldDirectoryPath = Path.Combine(Application.persistentDataPath, WORLD_ROOT_DIRECTORY_NAME, worldId);
+            string worldDirectoryPath = Path.Combine(_temporaryStorageRootPath, WORLD_ROOT_DIRECTORY_NAME, worldId);
             string manifestFilePath = Path.Combine(worldDirectoryPath, SaveFileCatalog.WORLD_MANIFEST_FILE_NAME);
             Assert.IsTrue(File.Exists(manifestFilePath));
             Assert.AreEqual(0, Directory.GetFiles(worldDirectoryPath, "manual_*.sav").Length);
@@ -84,7 +92,7 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
             AssertProtectedFileIsNotReadableJson(manifestFilePath);
 
             yield return globalSaveManager.SaveAsync("settings").ToCoroutine();
-            string settingsFilePath = Path.Combine(Application.persistentDataPath, SETTINGS_FILE_NAME);
+            string settingsFilePath = Path.Combine(_temporaryStorageRootPath, SETTINGS_FILE_NAME);
             Assert.IsTrue(File.Exists(settingsFilePath));
             Assert.That(File.ReadAllText(settingsFilePath), Does.Contain(SaveFileCatalog.METADATA_KEY));
 
@@ -138,79 +146,11 @@ namespace FakeMG.SaveLoad.Tests.PlayMode
 
         #region Private Methods
 
-        private void IsolatePersistentSaveFiles()
+        private void DeleteTemporaryStorage()
         {
-            _backupDirectoryPath = Path.Combine(Application.persistentDataPath, BACKUP_DIRECTORY_NAME);
-            Assert.IsFalse(
-                Directory.Exists(_backupDirectoryPath),
-                $"Stale test backup exists at {_backupDirectoryPath}. Restore it before running save tests.");
-            Directory.CreateDirectory(_backupDirectoryPath);
-            _hasIsolatedPersistentSaveFiles = true;
-            MoveFileToBackup(SETTINGS_FILE_NAME);
-            MoveFileToBackup(SETTINGS_FILE_NAME + ".bak");
-
-            string worldRootPath = Path.Combine(Application.persistentDataPath, WORLD_ROOT_DIRECTORY_NAME);
-            if (Directory.Exists(worldRootPath))
+            if (Directory.Exists(_temporaryStorageRootPath))
             {
-                Directory.Move(worldRootPath, Path.Combine(_backupDirectoryPath, WORLD_ROOT_DIRECTORY_NAME));
-            }
-        }
-
-        private void RestorePersistentSaveFiles()
-        {
-            if (!_hasIsolatedPersistentSaveFiles)
-            {
-                return;
-            }
-
-            DeleteFileIfPresent(SETTINGS_FILE_NAME);
-            DeleteFileIfPresent(SETTINGS_FILE_NAME + ".bak");
-            string worldRootPath = Path.Combine(Application.persistentDataPath, WORLD_ROOT_DIRECTORY_NAME);
-            if (Directory.Exists(worldRootPath))
-            {
-                Directory.Delete(worldRootPath, true);
-            }
-
-            RestoreFileFromBackup(SETTINGS_FILE_NAME);
-            RestoreFileFromBackup(SETTINGS_FILE_NAME + ".bak");
-            string backupWorldRootPath = Path.Combine(_backupDirectoryPath, WORLD_ROOT_DIRECTORY_NAME);
-            if (Directory.Exists(backupWorldRootPath))
-            {
-                Directory.Move(backupWorldRootPath, worldRootPath);
-            }
-
-            if (Directory.Exists(_backupDirectoryPath))
-            {
-                Directory.Delete(_backupDirectoryPath, true);
-            }
-
-            _hasIsolatedPersistentSaveFiles = false;
-        }
-
-        private void MoveFileToBackup(string fileName)
-        {
-            string sourcePath = Path.Combine(Application.persistentDataPath, fileName);
-            if (File.Exists(sourcePath))
-            {
-                File.Move(sourcePath, Path.Combine(_backupDirectoryPath, fileName));
-            }
-        }
-
-        private void RestoreFileFromBackup(string fileName)
-        {
-            string backupPath = Path.Combine(_backupDirectoryPath, fileName);
-            if (File.Exists(backupPath))
-            {
-                File.Move(backupPath, Path.Combine(Application.persistentDataPath, fileName));
-            }
-        }
-
-        private static void DeleteFileIfPresent(string fileName)
-        {
-            string filePath = Path.Combine(Application.persistentDataPath, fileName);
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
+                Directory.Delete(_temporaryStorageRootPath, true);
             }
         }
 

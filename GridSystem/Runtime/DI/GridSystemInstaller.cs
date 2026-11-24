@@ -32,11 +32,7 @@ namespace FakeMG.GridSystem
 
             AddressableGridOccupantPlacementFactory structurePlacementFactory = new(true, gridManager, resolver);
 
-            return new GridOccupantPlacementService(
-                gridManager,
-                resolver.Resolve<PlacementState>(),
-                new GridOccupantRegistry(),
-                structurePlacementFactory);
+            return new GridOccupantPlacementService(gridManager, resolver.Resolve<PlacementState>(), structurePlacementFactory);
         }
 
         #endregion

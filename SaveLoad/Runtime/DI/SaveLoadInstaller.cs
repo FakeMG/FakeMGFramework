@@ -20,6 +20,16 @@ namespace FakeMG.SaveLoad
             ISaveDataStoreProfile worldStorageProfile,
             WorldSaveConfiguration worldSaveConfiguration)
         {
+            Install(builder, migrationPlan, worldStorageProfile, worldSaveConfiguration, new UnitySaveEnvironment());
+        }
+
+        public static void Install(
+            IContainerBuilder builder,
+            ISaveMigrationPlan migrationPlan,
+            ISaveDataStoreProfile worldStorageProfile,
+            WorldSaveConfiguration worldSaveConfiguration,
+            ISaveEnvironment saveEnvironment)
+        {
             if (builder == null)
             {
                 throw new ArgumentNullException(nameof(builder));
@@ -40,8 +50,12 @@ namespace FakeMG.SaveLoad
                 throw new ArgumentNullException(nameof(worldSaveConfiguration));
             }
 
-            var saveEnvironment = new UnitySaveEnvironment();
-            builder.RegisterInstance<ISaveEnvironment>(saveEnvironment);
+            if (saveEnvironment == null)
+            {
+                throw new ArgumentNullException(nameof(saveEnvironment));
+            }
+
+            builder.RegisterInstance(saveEnvironment);
             builder.RegisterInstance<ISaveDataStoreFactory>(new Es3SaveDataStoreFactory(saveEnvironment));
             builder.RegisterInstance<IAtomicFileTransaction>(new AtomicFileTransaction(saveEnvironment));
             builder.RegisterInstance<ISaveTimeProvider>(new SystemSaveTimeProvider());

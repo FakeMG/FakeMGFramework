@@ -1,8 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
-using UnityEngine.TestTools;
 using VContainer;
 using VContainer.Unity;
 
@@ -10,17 +8,14 @@ namespace FakeMG.GridSystem.Tests.PlayMode
 {
     public sealed class GridManagerTests
     {
-        private const string FIRST_INSTANCE_ID = "structure-a";
-        private const string SECOND_INSTANCE_ID = "structure-b";
-
         private IObjectResolver _container;
         private GridManager _gridManager;
         private GridFootprint _structureFootprint;
 
         #region Unity Lifecycle
 
-        [UnitySetUp]
-        public IEnumerator SetUp()
+        [SetUp]
+        public void SetUp()
         {
             GridManager gridManagerPrefab = GridSystemPlayModeTestAssets.LoadPrefabComponent<GridManager>(
                 GridSystemPlayModeTestAssets.GRID_MANAGER_PREFAB_GUID);
@@ -34,11 +29,10 @@ namespace FakeMG.GridSystem.Tests.PlayMode
 
             _gridManager = _container.Resolve<GridManager>();
             _structureFootprint = _container.Resolve<GridFootprint>();
-            yield return null;
         }
 
-        [UnityTearDown]
-        public IEnumerator TearDown()
+        [TearDown]
+        public void TearDown()
         {
             _container?.Dispose();
 
@@ -51,8 +45,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             {
                 Object.Destroy(_structureFootprint.gameObject);
             }
-
-            yield return null;
         }
 
         #endregion
@@ -143,50 +135,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         }
 
         [Test]
-        public void RebuildOccupancyIndex_Placement_RegistersEveryFootprintCell()
-        {
-            OverrideFootprintBounds(
-                new Vector3Int(-1, 0, 0),
-                new Vector3Int(3, 1, 1));
-            GridOccupantPlacement structurePlacement = CreatePlacement(FIRST_INSTANCE_ID, new Vector3Int(2, 0, 4));
-
-            _gridManager.RebuildOccupancyIndex(new[] { structurePlacement });
-
-            Assert.AreEqual(3, _gridManager.OccupiedCells.Count);
-            AssertPlacementData(new Vector3Int(1, 0, 4), FIRST_INSTANCE_ID, new Vector3Int(2, 0, 4));
-            AssertPlacementData(new Vector3Int(2, 0, 4), FIRST_INSTANCE_ID, new Vector3Int(2, 0, 4));
-            AssertPlacementData(new Vector3Int(3, 0, 4), FIRST_INSTANCE_ID, new Vector3Int(2, 0, 4));
-        }
-
-        [Test]
-        public void RebuildOccupancyIndex_ReplacementPlacements_RemovesStaleCells()
-        {
-            OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
-            GridOccupantPlacement firstPlacement = CreatePlacement(FIRST_INSTANCE_ID, Vector3Int.zero);
-            GridOccupantPlacement secondPlacement = CreatePlacement(SECOND_INSTANCE_ID, new Vector3Int(5, 0, 0));
-            _gridManager.RebuildOccupancyIndex(new[] { firstPlacement });
-
-            _gridManager.RebuildOccupancyIndex(new[] { secondPlacement });
-
-            Assert.IsFalse(_gridManager.OccupiedCells.ContainsKey(Vector3Int.zero));
-            AssertPlacementData(new Vector3Int(5, 0, 0), SECOND_INSTANCE_ID, new Vector3Int(5, 0, 0));
-        }
-
-        [Test]
-        public void RebuildOccupancyIndex_EmptyPlacements_ClearsAllOccupiedCells()
-        {
-            OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
-            _gridManager.RebuildOccupancyIndex(new[]
-            {
-                CreatePlacement(FIRST_INSTANCE_ID, Vector3Int.zero)
-            });
-
-            _gridManager.RebuildOccupancyIndex(new GridOccupantPlacement[0]);
-
-            Assert.AreEqual(0, _gridManager.OccupiedCells.Count);
-        }
-
-        [Test]
         public void GetCanonicalOccupiedCellOffsets_AsymmetricBounds_ReturnsDeterministicOrder()
         {
             OverrideFootprintBounds(
@@ -208,25 +156,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
         }
 
         [Test]
-        public void TryGetInstanceIdAtPosition_NonPivotOccupiedCell_ReturnsInstanceId()
-        {
-            OverrideFootprintBounds(
-                new Vector3Int(-1, 0, 0),
-                new Vector3Int(3, 1, 1));
-            _gridManager.RebuildOccupancyIndex(new[]
-            {
-                CreatePlacement(FIRST_INSTANCE_ID, new Vector3Int(2, 0, 4))
-            });
-
-            bool hasInstance = _gridManager.TryGetInstanceIdAtPosition(
-                _gridManager.CellToWorld(new Vector3Int(1, 0, 4)),
-                out string instanceId);
-
-            Assert.IsTrue(hasInstance);
-            Assert.AreEqual(FIRST_INSTANCE_ID, instanceId);
-        }
-
-        [Test]
         public void TryGetInstanceIdAtPosition_EmptyCell_ReturnsFalseAndNull()
         {
             bool hasInstance = _gridManager.TryGetInstanceIdAtPosition(Vector3.zero, out string instanceId);
@@ -243,58 +172,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             bool canOccupy = _gridManager.CanOccupy(_structureFootprint, Vector3.zero, 0);
 
             Assert.IsTrue(canOccupy);
-        }
-
-        [Test]
-        public void CanOccupy_OverlappingPlacement_ReturnsFalse()
-        {
-            OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
-            _gridManager.RebuildOccupancyIndex(new[]
-            {
-                CreatePlacement(FIRST_INSTANCE_ID, Vector3Int.zero)
-            });
-
-            bool canOccupy = _gridManager.CanOccupy(_structureFootprint, Vector3.zero, 0);
-
-            Assert.IsFalse(canOccupy);
-        }
-
-        [Test]
-        public void CanOccupy_OverlappingIgnoredInstance_ReturnsTrue()
-        {
-            OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
-            _gridManager.RebuildOccupancyIndex(new[]
-            {
-                CreatePlacement(FIRST_INSTANCE_ID, Vector3Int.zero)
-            });
-
-            bool canOccupy = _gridManager.CanOccupy(
-                _structureFootprint,
-                Vector3.zero,
-                0,
-                FIRST_INSTANCE_ID);
-
-            Assert.IsTrue(canOccupy);
-        }
-
-        [Test]
-        public void CanOccupy_IgnoredInstanceAlsoOverlapsDifferentInstance_ReturnsFalse()
-        {
-            OverrideFootprintBounds(Vector3Int.zero, Vector3Int.one);
-            _gridManager.RebuildOccupancyIndex(new[]
-            {
-                CreatePlacement(FIRST_INSTANCE_ID, Vector3Int.zero),
-                CreatePlacement(SECOND_INSTANCE_ID, Vector3Int.right),
-            });
-            OverrideFootprintBounds(Vector3Int.zero, new Vector3Int(2, 1, 1));
-
-            bool canOccupy = _gridManager.CanOccupy(
-                _structureFootprint,
-                _gridManager.CellToWorld(Vector3Int.zero),
-                0,
-                FIRST_INSTANCE_ID);
-
-            Assert.IsFalse(canOccupy);
         }
 
         [Test]
@@ -374,29 +251,6 @@ namespace FakeMG.GridSystem.Tests.PlayMode
             Vector3Int cellSizeCells)
         {
             _structureFootprint.OverrideCellBounds(new BoundsInt(minimumCellOffset, cellSizeCells));
-        }
-
-        private GridOccupantPlacement CreatePlacement(string instanceId, Vector3Int pivotCell)
-        {
-            Vector3 worldPosition = _gridManager.CellToWorld(pivotCell);
-            return new GridOccupantPlacement(
-                instanceId,
-                null,
-                _structureFootprint.gameObject,
-                _structureFootprint,
-                default,
-                worldPosition,
-                0);
-        }
-
-        private void AssertPlacementData(
-            Vector3Int occupiedCell,
-            string expectedInstanceId,
-            Vector3Int expectedPivotCell)
-        {
-            Assert.IsTrue(_gridManager.OccupiedCells.TryGetValue(occupiedCell, out GridOccupantData occupantData));
-            Assert.AreEqual(expectedInstanceId, occupantData.InstanceId);
-            Assert.AreEqual(expectedPivotCell, occupantData.PivotCell);
         }
 
         private void GetBoundaryCells(

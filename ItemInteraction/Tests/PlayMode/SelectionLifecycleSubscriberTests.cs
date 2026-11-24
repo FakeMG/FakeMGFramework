@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using System.Threading;
 using NSubstitute;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 namespace FakeMG.ItemInteraction.Tests
@@ -77,6 +79,29 @@ namespace FakeMG.ItemInteraction.Tests
             _interactionLifecycle.Received(1).ChangeSelection();
             _presentation.Received(1).HideSelection();
             _presentation.Received(1).ShowSelection(_emptyHandItem);
+        }
+
+        [UnityTest]
+        public IEnumerator DisablingStopsSelectionCallbacksAndReEnablingFiresEachChangeOnce()
+        {
+            _pool.StartAsync(CancellationToken.None).GetAwaiter().GetResult();
+            _subscriber.Bind(_selection, _pool, _interactionLifecycle, _presentation);
+            _selection.Select(_heldItem);
+
+            _subscriber.enabled = false;
+            yield return null;
+            _presentation.ClearReceivedCalls();
+            _selection.SelectEmptyHand();
+            _presentation.DidNotReceiveWithAnyArgs().ShowSelection(default);
+
+            _subscriber.enabled = true;
+            yield return null;
+            _presentation.Received(1).ShowSelection(_emptyHandItem);
+            _presentation.ClearReceivedCalls();
+
+            _selection.Select(_heldItem);
+
+            _presentation.Received(1).ShowSelection(_heldItem);
         }
 
         #endregion

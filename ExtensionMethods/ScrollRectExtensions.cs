@@ -16,14 +16,14 @@ namespace FakeMG.Framework.ExtensionMethods
                 float finalNormalizedY = CalculateNormalizedPosition(scrollRect, target, true);
 
                 DOTween.Kill(scrollRect);
-                scrollRect.DOVerticalNormalizedPos(finalNormalizedY, DURATION).SetUpdate(true).SetEase(Ease.OutQuad);
+                scrollRect.DOVerticalNormalizedPos(finalNormalizedY, DURATION).SetUpdate(true).SetEase(Ease.OutQuad).SetLink(scrollRect.gameObject);
             }
             else
             {
                 float finalNormalizedX = CalculateNormalizedPosition(scrollRect, target, false);
 
                 DOTween.Kill(scrollRect);
-                scrollRect.DOHorizontalNormalizedPos(finalNormalizedX, DURATION).SetUpdate(true).SetEase(Ease.OutQuad);
+                scrollRect.DOHorizontalNormalizedPos(finalNormalizedX, DURATION).SetUpdate(true).SetEase(Ease.OutQuad).SetLink(scrollRect.gameObject);
             }
         }
 

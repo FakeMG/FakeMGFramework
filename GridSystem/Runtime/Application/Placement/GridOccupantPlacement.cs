@@ -5,6 +5,18 @@ namespace FakeMG.GridSystem
 {
     public sealed class GridOccupantPlacement
     {
+        /// <summary>Creates a placement whose prefab is not owned through Addressables, for custom placement factories.</summary>
+        public GridOccupantPlacement(
+            string instanceId,
+            StructureSO structureSO,
+            GameObject structureInstance,
+            GridFootprint footprint,
+            Vector3 gridWorldPosition,
+            int rotationDegrees)
+            : this(instanceId, structureSO, structureInstance, footprint, default, gridWorldPosition, rotationDegrees)
+        {
+        }
+
         internal GridOccupantPlacement(
             string instanceId,
             StructureSO structureSO,

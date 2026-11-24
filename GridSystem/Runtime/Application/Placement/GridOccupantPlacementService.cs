@@ -15,19 +15,16 @@ namespace FakeMG.GridSystem
 
         private readonly IGridPlacementGateway _gridPlacementGateway;
         private readonly PlacementState _placementState;
-        private readonly GridOccupantRegistry _placedStructureRegistry;
+        private readonly GridOccupantRegistry _placedStructureRegistry = new();
         private readonly IGridOccupantPlacementFactory _structurePlacementFactory;
 
-        // Internal because the parameters are internal collaborators; GridSystemInstaller composes this in-assembly.
-        internal GridOccupantPlacementService(
+        public GridOccupantPlacementService(
             IGridPlacementGateway gridPlacementGateway,
             PlacementState placementState,
-            GridOccupantRegistry placedStructureRegistry,
             IGridOccupantPlacementFactory structurePlacementFactory)
         {
             _gridPlacementGateway = gridPlacementGateway;
             _placementState = placementState;
-            _placedStructureRegistry = placedStructureRegistry;
             _structurePlacementFactory = structurePlacementFactory;
         }
 
